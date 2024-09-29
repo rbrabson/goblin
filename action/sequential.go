@@ -3,22 +3,22 @@ package action
 // sequentialAction is an Action that runs a slice of actions in sequence.
 type sequentialAction struct {
 	ActionBase
-	Actions     []Action
-	ActionIndex int
+	actions     []Action
+	actionIndex int
 }
 
 // NewSequentialAction creates an action that returns the list of provided actions in sequence.
 func NewSequentialAction(actions ...Action) *sequentialAction {
 	action := &sequentialAction{
-		Actions: actions,
+		actions: actions,
 	}
 	return action
 }
 
 // Initialize is used to initialize the action.
 func (a *sequentialAction) Initialize() {
-	if len(a.Actions) > 0 {
-		a.Actions[0].Initialize()
+	if len(a.actions) > 0 {
+		a.actions[0].Initialize()
 	}
 }
 
@@ -26,21 +26,21 @@ func (a *sequentialAction) Initialize() {
 // execution, then the next action in the sequence will be executed.
 func (a *sequentialAction) Execute() {
 	// If the current action has completed, move to the next action in the list
-	if a.ActionIndex < len(a.Actions) {
-		action := a.Actions[a.ActionIndex]
+	if a.actionIndex < len(a.actions) {
+		action := a.actions[a.actionIndex]
 		if action.IsFinished() {
-			a.ActionIndex++
-			if a.ActionIndex < len(a.Actions) {
-				a.Actions[a.ActionIndex].Initialize()
+			a.actionIndex++
+			if a.actionIndex < len(a.actions) {
+				a.actions[a.actionIndex].Initialize()
 			}
 		}
 	}
 	// Already reached the end of the actions to run in paralle, so this is a no-op
-	if a.ActionIndex >= len(a.Actions) {
+	if a.actionIndex >= len(a.actions) {
 		return
 	}
 	//
-	action := a.Actions[a.ActionIndex]
+	action := a.actions[a.actionIndex]
 	action.Execute()
 }
 
@@ -48,10 +48,10 @@ func (a *sequentialAction) Execute() {
 // Otherwise, it returns `false`.
 func (a *sequentialAction) IsDone() bool {
 	// If not executing the last action, then the list of sequentail actions are not done executing
-	if a.ActionIndex < len(a.Actions)-1 {
+	if a.actionIndex < len(a.actions)-1 {
 		return false
 	}
 	// Executing the last action, so just check to see if it is done executing
-	action := a.Actions[a.ActionIndex]
+	action := a.actions[a.actionIndex]
 	return action.IsFinished()
 }

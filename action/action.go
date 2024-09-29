@@ -11,6 +11,9 @@ type Action interface {
 	// Execute runs the action
 	Execute()
 
+	// Interrupt is called if an action is interrupted during its execution
+	Interrupt()
+
 	// IsFinished returns an indication as to whether the action has completed execution.
 	IsFinished() bool
 
@@ -46,6 +49,9 @@ func (a *ActionBase) Initialize() {}
 
 // Execute runs the action. This is a no-op for a base Action.
 func (a *ActionBase) Execute() {}
+
+// Interrupt is called if an action is interrupted during its execution
+func (a *ActionBase) Interrupt() {}
 
 // isFinished always returns true, as the action has no function to perform in a base Action.
 func (a *ActionBase) IsFinished() bool {
