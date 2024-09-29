@@ -7,7 +7,7 @@ type parallelAction struct {
 }
 
 // NewParallelAction creates a new action that runs all the provided actions at the same time.
-func NewParallelAction(actions ...Action) Action {
+func NewParallelAction(actions ...Action) *parallelAction {
 	action := &parallelAction{
 		Actions: actions,
 	}

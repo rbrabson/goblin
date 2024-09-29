@@ -8,7 +8,7 @@ type sequentialAction struct {
 }
 
 // NewSequentialAction creates an action that returns the list of provided actions in sequence.
-func NewSequentialAction(actions ...Action) Action {
+func NewSequentialAction(actions ...Action) *sequentialAction {
 	action := &sequentialAction{
 		Actions: actions,
 	}

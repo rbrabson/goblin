@@ -11,7 +11,7 @@ type timeoutAction struct {
 
 // NewTimeoutAction creates an Action to run the provided action until it completes execution
 // (`IsDone` returns `true`), or the maximum run time is exceeded, whichever comes first.
-func NewTimeoutAction(action Action, maxRunTime time.Duration) Action {
+func NewTimeoutAction(action Action, maxRunTime time.Duration) *timeoutAction {
 	timeoutAction := &timeoutAction{
 		maxRunTime: maxRunTime,
 	}

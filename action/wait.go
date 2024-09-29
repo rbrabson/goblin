@@ -9,7 +9,7 @@ type waitAction struct {
 }
 
 // NewWaitAction is an action that executes until the provided wait duration has been reached.
-func NewWaitAction(wait time.Duration) Action {
+func NewWaitAction(wait time.Duration) *waitAction {
 	action := &waitAction{
 		wait: wait,
 	}
