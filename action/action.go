@@ -11,8 +11,8 @@ type Action interface {
 	// Execute runs the action
 	Execute()
 
-	// IsDone returns an indication as to whether the action has completed execution.
-	IsDone() bool
+	// IsFinished returns an indication as to whether the action has completed execution.
+	IsFinished() bool
 
 	// AlongWith decorates this action with a set of actions to run parallel to it, ending when the last
 	// action ends. Often more convenient/less-verbose than constructing a new ParallelAction explicitly.
@@ -47,8 +47,8 @@ func (a *ActionBase) Initialize() {}
 // Execute runs the action. This is a no-op for a base Action.
 func (a *ActionBase) Execute() {}
 
-// IsDone always returns true, as the action has no function to perform in a base Action.
-func (a *ActionBase) IsDone() bool { return true }
+// isFinished always returns true, as the action has no function to perform in a base Action.
+func (a *ActionBase) IsFinished() bool { return true }
 
 // AlongWith decorates this action with a set of actions to run parallel to it, ending when the last
 // action ends. Often more convenient/less-verbose than constructing a new ParallelAction explicitly.

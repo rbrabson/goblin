@@ -14,7 +14,7 @@ func main() {
 	var action action.Action
 	action = &Foo{}
 	action.Execute()
-	fmt.Println(action.IsDone())
+	fmt.Println(action.IsFinished())
 }
 
 func (f *Foo) Execute() {

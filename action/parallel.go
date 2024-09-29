@@ -26,20 +26,20 @@ func (a *parallelAction) Initialize() {
 // not completed processing (i.e., the action's `IsDone` method returns `faslse`).
 func (a *parallelAction) Execute() {
 	for _, action := range a.Actions {
-		if !action.IsDone() {
+		if !action.IsFinished() {
 			action.Execute()
 		}
 	}
 }
 
-// IsDone returns an indication as to whether the action has completed execution.
-func (a *parallelAction) IsDone() bool {
-	isDone := true
+// IsFinished returns an indication as to whether the action has completed execution.
+func (a *parallelAction) IsFinished() bool {
+	isFinished := true
 	for _, action := range a.Actions {
-		if !action.IsDone() {
-			isDone = false
+		if !action.IsFinished() {
+			isFinished = false
 			break
 		}
 	}
-	return isDone
+	return isFinished
 }

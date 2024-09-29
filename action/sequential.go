@@ -28,7 +28,7 @@ func (a *sequentialAction) Execute() {
 	// If the current action has completed, move to the next action in the list
 	if a.ActionIndex < len(a.Actions) {
 		action := a.Actions[a.ActionIndex]
-		if action.IsDone() {
+		if action.IsFinished() {
 			a.ActionIndex++
 			if a.ActionIndex < len(a.Actions) {
 				a.Actions[a.ActionIndex].Initialize()
@@ -53,5 +53,5 @@ func (a *sequentialAction) IsDone() bool {
 	}
 	// Executing the last action, so just check to see if it is done executing
 	action := a.Actions[a.ActionIndex]
-	return action.IsDone()
+	return action.IsFinished()
 }

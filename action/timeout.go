@@ -29,11 +29,11 @@ func (a *timeoutAction) Execute() {
 	a.Action.Execute()
 }
 
-// IsDone returns true if the timeout for the action has been reached or if the action has
+// IsFinished returns true if the timeout for the action has been reached or if the action has
 // completed execution, whichever comes first. If neither is true, then it returns `false`.
 func (a *timeoutAction) IsDone() bool {
 	if time.Now().After(a.endTime) {
 		return true
 	}
-	return a.Action.IsDone()
+	return a.Action.IsFinished()
 }
