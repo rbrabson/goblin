@@ -2,7 +2,8 @@ package action
 
 import "time"
 
-// An Action is used to run a piece of code
+// An Action is used to run a code asynchronously. You can repeatedly call the `Execute` method to allow
+// the action to run, and continue doing so until `IsDone` returns `true`.
 type Action interface {
 	// Initialize is used to initialize the action.
 	Initialize()
