@@ -16,10 +16,11 @@ func NewSequentialAction(actions ...Action) *sequentialAction {
 }
 
 // Initialize is used to initialize the action.
-func (a *sequentialAction) Initialize() {
+func (a *sequentialAction) Initialize() Action {
 	if len(a.actions) > 0 {
 		a.actions[0].Initialize()
 	}
+	return a
 }
 
 // Execute runs the current action in the sequence. Once an action in the sequence has completed

@@ -16,10 +16,11 @@ func NewParallelAction(actions ...Action) *parallelAction {
 
 // Initialize is used to initialize the action. This calls the `Initialize` method for each
 // parallel action.
-func (a *parallelAction) Initialize() {
+func (a *parallelAction) Initialize() Action {
 	for _, action := range a.actions {
 		action.Initialize()
 	}
+	return a
 }
 
 // Execute runs the action. This calls the `Execute` method for each parallel action that has

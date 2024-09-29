@@ -22,9 +22,10 @@ func NewTimeoutAction(action Action, maxRunTime time.Duration) *timeoutAction {
 }
 
 // Initialize initializes the action, and starts the timeout for the action.
-func (a *timeoutAction) Initialize() {
+func (a *timeoutAction) Initialize() Action {
 	a.action.Initialize()
 	a.endTime = time.Now().Add(a.maxRunTime)
+	return a
 }
 
 // Execute runs the action.

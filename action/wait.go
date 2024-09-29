@@ -2,6 +2,7 @@ package action
 
 import "time"
 
+// A waitAction executes until the wait delay reached
 type waitAction struct {
 	ActionBase
 	wait    time.Duration
@@ -17,8 +18,9 @@ func NewWaitAction(wait time.Duration) *waitAction {
 }
 
 // Initialize is used to initialize the action.
-func (a *waitAction) Initialize() {
+func (a *waitAction) Initialize() Action {
 	a.endTime = time.Now().Add(a.wait)
+	return a
 }
 
 // Execute runs the action. This is a no-op for a base Action.

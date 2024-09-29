@@ -6,7 +6,7 @@ import "time"
 // the action to run, and continue doing so until `IsDone` returns `true`.
 type Action interface {
 	// Initialize is used to initialize the action.
-	Initialize()
+	Initialize() Action
 
 	// Execute runs the action
 	Execute()
@@ -47,7 +47,9 @@ type ActionBase struct {
 }
 
 // Initialize is used to initialize the action.
-func (a *ActionBase) Initialize() {}
+func (a *ActionBase) Initialize() Action {
+	return a
+}
 
 // Execute runs the action. This is a no-op for a base Action.
 func (a *ActionBase) Execute() {
