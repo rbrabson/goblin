@@ -1,6 +1,7 @@
 package heist
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -19,21 +20,6 @@ const (
 	COMPLETED
 )
 
-// Configuration data for new heists
-type HeistConfig struct {
-	GuildID      string        `json:"_id" bson:"_id"`
-	AlertTime    time.Time     `json:"alert_time" bson:"alert_time"`
-	BailBase     int64         `json:"bail_base" bson:"bail_base"`
-	CrewOutput   string        `json:"crew_output" bson:"crew_output"`
-	DeathTimer   time.Duration `json:"death_timer" bson:"death_timer"`
-	HeistCost    int64         `json:"heist_cost" bson:"heist_cost"`
-	PoliceAlert  time.Duration `json:"police_alert" bson:"police_alert"`
-	SentenceBase time.Duration `json:"sentence_base" bson:"sentence_base"`
-	Theme        string        `json:"theme" bson:"theme"`
-	Targets      string        `json:"targets" bson:"targets"`
-	WaitTime     time.Duration `json:"wait_time" bson:"wait_time"`
-}
-
 // Heist is a heist that is being planned, is in progress, or has completed
 type Heist struct {
 	PlannerID   *string                      `json:"planner_id" bson:"planner_id"`
@@ -44,6 +30,7 @@ type Heist struct {
 	guildID     string                       `json:"-" bson:"-"`
 }
 
+// HeistResult are the results of a heist
 type HeistResult struct {
 	Escaped       int
 	Apprehended   int
@@ -79,4 +66,22 @@ func (state HeistState) String() string {
 	default:
 		return "Unknown"
 	}
+}
+
+// String returns a string representation of the heist
+func (heist *Heist) String() string {
+	out, _ := json.Marshal(heist)
+	return string(out)
+}
+
+// String returns a string representation of the resuilt of a heist
+func (result *HeistResult) String() string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+// String returns a string representation of the resuilt for a single member of a heist
+func (result *HeistMemberResult) String() string {
+	out, _ := json.Marshal(result)
+	return string(out)
 }
