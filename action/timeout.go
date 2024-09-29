@@ -36,8 +36,10 @@ func (a *timeoutAction) Execute() {
 // completed execution, whichever comes first. If neither is true, then it returns `false`.
 func (a *timeoutAction) IsDone() bool {
 	if time.Now().After(a.endTime) {
-		a.action.Interrupt()
-		a.interruptCalled = true
+		if !a.interruptCalled {
+			a.action.Interrupt()
+			a.interruptCalled = true
+		}
 		return true
 	}
 	return a.action.IsFinished()
