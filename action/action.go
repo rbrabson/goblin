@@ -42,20 +42,27 @@ type Action interface {
 
 // Base action implementation. This allows implementers of the Action interface to override those methods
 // that they need to, such as `Initialize`, `Execute` and `Done`, without having to implement the rest.
-type ActionBase struct{}
+type ActionBase struct {
+	isFinished bool
+}
 
 // Initialize is used to initialize the action.
 func (a *ActionBase) Initialize() {}
 
 // Execute runs the action. This is a no-op for a base Action.
-func (a *ActionBase) Execute() {}
+func (a *ActionBase) Execute() {
+	if !a.IsFinished() {
+		a.Execute()
+		a.isFinished = true
+	}
+}
 
 // Interrupt is called if an action is interrupted during its execution
 func (a *ActionBase) Interrupt() {}
 
 // isFinished always returns true, as the action has no function to perform in a base Action.
 func (a *ActionBase) IsFinished() bool {
-	return true
+	return a.isFinished
 }
 
 // AlongWith decorates this action with a set of actions to run parallel to it, ending when the last

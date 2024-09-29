@@ -29,12 +29,14 @@ func (a *timeoutAction) Initialize() {
 
 // Execute runs the action.
 func (a *timeoutAction) Execute() {
-	a.action.Execute()
+	if !a.IsFinished() {
+		a.action.Execute()
+	}
 }
 
 // IsFinished returns true if the timeout for the action has been reached or if the action has
 // completed execution, whichever comes first. If neither is true, then it returns `false`.
-func (a *timeoutAction) IsDone() bool {
+func (a *timeoutAction) IsFinished() bool {
 	if time.Now().After(a.endTime) {
 		if !a.interruptCalled {
 			a.action.Interrupt()

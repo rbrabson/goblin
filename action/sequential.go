@@ -35,13 +35,11 @@ func (a *sequentialAction) Execute() {
 			}
 		}
 	}
-	// Already reached the end of the actions to run in paralle, so this is a no-op
-	if a.actionIndex >= len(a.actions) {
-		return
+	// If the end of the actions has not been reached, execute the current action in the sequence
+	if a.actionIndex < len(a.actions) {
+		action := a.actions[a.actionIndex]
+		action.Execute()
 	}
-	//
-	action := a.actions[a.actionIndex]
-	action.Execute()
 }
 
 // IsDone returns `true` once the last action in the sequence has completed execution.
