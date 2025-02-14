@@ -2,9 +2,9 @@ package bank
 
 import (
 	"sort"
+	"sync"
 	"time"
 
-	"github.com/rbrabson/dgame/guild"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -13,55 +13,96 @@ const (
 	STARTING_BALANCE   = 0
 )
 
-// Account represents the "bank" account for a given user. This keeps track of the
+// An Account represents the "bank" account for a given user. This keeps track of the
 // in-game currency for the given member of a guild (server).
 type Account struct {
-	MemberID  string    `json:"_id" bson:"_id"`
-	Balance   int       `json:"balance" bson:"balance"`
-	CreatedAt time.Time `json:"created_at" bson:"created_at"`
-	guildID   string    `json:"-" bson:"-"`
+	MemberID           string     `json:"_id" bson:"_id"`
+	Balance            uint       `json:"balance" bson:"balance"`
+	CreatedAt          time.Time  `json:"created_at" bson:"created_at"`
+	LifetimeDeposits   uint       `json:"lifetime_deposits" bson:"lifetime_deposits"`
+	LifetimeWithdrawls uint       `json:"lifetime_withdrawls" bson:"lifetime_withdrawls"`
+	guildID            string     `json:"-" bson:"-"`
+	mutex              sync.Mutex `json:"-" bson:"-"`
 }
 
 // NewAccount creates a new bank account for a member in the guild (server).
-func NewAccount(guild guild.Guild, memberID string) *Account {
+func NewAccount(bank *Bank, memberID string) *Account {
 	log.Trace("--> bank.NewAccount")
 	defer log.Trace("<-- bank.NewAccount")
 
-	bank := banks[guild.ID]
 	account := &Account{
 		MemberID:  memberID,
 		Balance:   STARTING_BALANCE,
 		CreatedAt: time.Now(),
-		guildID:   guild.ID,
+		guildID:   bank.GuildID,
 	}
 	bank.Accounts[account.MemberID] = account
 	account.Write()
-	log.WithFields(log.Fields{"guild": guild.ID, "member": memberID}).Info("created new bank account")
+	log.WithFields(log.Fields{"guild": bank.GuildID, "member": memberID}).Info("created new bank account")
 
 	return account
 }
 
 // GetAccount returns a bank account for a member in the guild (server). If one doesnt' exist,
 // then it is created.
-func GetAccount(guild guild.Guild, memberID string) *Account {
+func GetAccount(bank *Bank, memberID string) *Account {
 	log.Trace("--> bank.GetAccount")
 	defer log.Trace("<-- bank.GetAccount")
 
-	bank := banks[guild.ID]
 	account := bank.Accounts[memberID]
 	if account == nil {
-		account = NewAccount(guild, memberID)
+		account = NewAccount(bank, memberID)
 	}
 
 	return account
 }
 
+// Deposit adds the amount to the balance of the account.
+func (account *Account) Deposit(amt uint) error {
+	log.Trace("--> bank.Account.Deposit")
+	defer log.Trace("<-- bank.Account.Deposit")
+
+	account.Balance += amt
+	account.LifetimeDeposits += amt
+	return account.Write()
+}
+
+// SetBalance sets the account's balance to the specified amount. This is typically used
+// by an admin to correct an error in the system.
+func (account *Account) SetBalance(balance uint) error {
+	log.Trace("--> bank.Account.SetBalance")
+	defer log.Trace("<-- bank.Account.SetBalance")
+
+	account.mutex.Lock()
+	account.Balance = balance
+	defer account.mutex.Unlock()
+
+	return account.Write()
+}
+
+// Withdraw deducts the amount from the balance of the account
+func (account *Account) Withdraw(amt uint) error {
+	log.Trace("--> bank.Account.Withdraw")
+	defer log.Trace("<-- bank.Account.Withdraw")
+
+	if amt > account.Balance {
+		log.WithFields(log.Fields{"guild": account.guildID, "member": account.MemberID, "balance": account.Balance, "amount": amt}).Warn("insufficient funds for withdrawl")
+		return ErrInsufficentFunds
+	}
+	account.mutex.Lock()
+	account.Balance -= amt
+	account.LifetimeWithdrawls -= amt
+	account.mutex.Unlock()
+
+	return account.Write()
+}
+
 // Write creates or updates the member data in the database being used by the Discord bot.
 func (account *Account) Write() error {
-	log.Trace("--> bank.Account.write")
+	log.Trace("--> bank.Account.Write")
 	defer log.Trace("<-- bank.Account.Write")
 
-	db.Save(account.guildID, ACCOUNT_COLLECTION, account.MemberID, account)
+	db.Write(account.guildID, ACCOUNT_COLLECTION, account.MemberID, account)
 	log.WithFields(log.Fields{"guild": account.guildID, "id": account.MemberID}).Info("save bank account to the database")
 	return nil
 }

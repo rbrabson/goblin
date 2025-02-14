@@ -43,6 +43,7 @@ RUN chmod -R 777 /configs
 COPY --from=builder /workspace/dgame /
 
 RUN apk add iputils \
+    bash \
     openssh \
     which \
     vim

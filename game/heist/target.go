@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/rbrabson/dgame/guild"
-	"github.com/rbrabson/dgame/utils"
+	"github.com/rbrabson/dgame/mathex"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -53,10 +53,10 @@ func LoadTargets(guild guild.Guild) {
 	defer log.Debug("<-- heist.LoadTargets")
 
 	themeTargets := make(map[string]*Targets)
-	themes := db.ListDocuments(guild.ID, TARGET)
+	themes, _ := db.ListDocuments(guild.ID, TARGET)
 	for _, theme := range themes {
 		var t Targets
-		db.Load(guild.ID, TARGET, theme, &t)
+		db.Read(guild.ID, TARGET, theme, &t)
 		themeTargets[t.ID] = &t
 	}
 
@@ -84,7 +84,7 @@ func (target *Target) Write() {
 	log.Debug("--> heist.Target.Write")
 	defer log.Debug("<-- heist.Target.Write")
 
-	db.Save(target.guildID, TARGET, target.ID, targets)
+	db.Write(target.guildID, TARGET, target.ID, targets)
 	log.WithFields(log.Fields{"guild": target.guildID, "target": target.ID}).Trace("save target")
 }
 
@@ -96,7 +96,7 @@ func vaultUpdater() {
 			for _, targets := range guildTargets {
 				for _, target := range targets.Targets {
 					newVaultAmount := int(float64(target.Vault) * VAULT_RECOVER_PERCENT)
-					newVaultAmount = utils.Min(newVaultAmount, target.VaultMax)
+					newVaultAmount = mathex.Min(newVaultAmount, target.VaultMax)
 					if newVaultAmount != target.Vault {
 						target.Write()
 						log.WithFields(log.Fields{"guild": target.guildID, "target": target.ID, "Old": target.Vault, "New": newVaultAmount, "Max": target.VaultMax}).Debug("update vault")

@@ -5,13 +5,13 @@ import "time"
 // An Action is used to run a code asynchronously. You can repeatedly call the `Execute` method to allow
 // the action to run, and continue doing so until `IsDone` returns `true`.
 type Action interface {
-	// Initialize is used to initialize the action.
+	// Initialize initializes the action.
 	Initialize() Action
 
-	// Execute runs the action
+	// Execute runs the action. This should be called until `IsFinished` returns `true`.
 	Execute()
 
-	// Interrupt is called if an action is interrupted during its execution
+	// Interrupt is called if an action is interrupted during its execution.
 	Interrupt()
 
 	// IsFinished returns an indication as to whether the action has completed execution.
@@ -51,7 +51,7 @@ func (a *ActionBase) Initialize() Action {
 	return a
 }
 
-// Execute runs the action. This is a no-op for a base Action.
+// Execute runs the action.
 func (a *ActionBase) Execute() {
 	if !a.IsFinished() {
 		a.Execute()

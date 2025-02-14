@@ -58,19 +58,19 @@ func NewDatabase() *MongoDB {
 }
 
 // ListDocuments returns the ID of each document in a collection in the database.
-func (m *MongoDB) ListDocuments(dbName string, collectionName string) []string {
+func (m *MongoDB) ListDocuments(dbName string, collectionName string) ([]string, error) {
 	log.Trace("--> MongoDB.ListDocuments")
 	defer log.Trace("<-- MongoDB.ListDocuments")
 
 	database := m.client.Database(dbName)
 	if database == nil {
 		log.WithField("database", dbName).Error("unable to create or access the database")
-		return nil
+		return nil, ErrDbInaccessable
 	}
 	collection := database.Collection(collectionName)
 	if collection == nil {
 		log.WithFields(log.Fields{"database": dbName, "collection": collectionName}).Error("unable to create or access the collection")
-		return nil
+		return nil, ErrCollectionNotAccessable
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
@@ -78,7 +78,7 @@ func (m *MongoDB) ListDocuments(dbName string, collectionName string) []string {
 	cur, err := collection.Find(ctx, bson.D{}, opts)
 	if err != nil {
 		log.WithFields(log.Fields{"database": dbName, "collection": collectionName, "error": err}).Error("unable to search the database")
-		return nil
+		return nil, err
 	}
 	type result struct {
 		ID string `bson:"_id"`
@@ -89,6 +89,7 @@ func (m *MongoDB) ListDocuments(dbName string, collectionName string) []string {
 	if err != nil {
 		log.WithFields(log.Fields{"database": dbName, "collection": collectionName, "error": err}).Error("unable to retrieve the IDs for the collection")
 		log.Errorf("Error getting the IDs for collection %s, error=%s", collectionName, err.Error())
+		return nil, err
 	}
 
 	idList := make([]string, 0, len(results))
@@ -96,23 +97,23 @@ func (m *MongoDB) ListDocuments(dbName string, collectionName string) []string {
 		idList = append(idList, r.ID)
 	}
 
-	return idList
+	return idList, nil
 }
 
-// Load loads a document identified by documentID from the collection into data.
-func (m *MongoDB) Load(dbName string, collectionName string, documentID string, data interface{}) {
-	log.Trace("--> MongoDB.Load")
-	defer log.Trace("<-- MongoDB.Load")
+// Read loads a document identified by documentID from the collection into data.
+func (m *MongoDB) Read(dbName string, collectionName string, documentID string, data interface{}) error {
+	log.Trace("--> MongoDB.Read")
+	defer log.Trace("<-- MongoDB.Read")
 
 	db := m.client.Database(dbName)
 	if db == nil {
 		log.WithFields(log.Fields{"database": dbName, "collection": collectionName}).Error("unable to create or access the database")
-		return
+		return ErrDbInaccessable
 	}
 	collection := db.Collection(collectionName)
 	if collection == nil {
 		log.WithFields(log.Fields{"database": dbName, "collection": collectionName}).Error("unable to create or access the collection")
-		return
+		return ErrDbInaccessable
 	}
 	log.Debug("Collection:", collection.Name())
 
@@ -121,17 +122,20 @@ func (m *MongoDB) Load(dbName string, collectionName string, documentID string, 
 	res := collection.FindOne(ctx, bson.D{{Key: "_id", Value: documentID}})
 	if res == nil {
 		log.WithFields(log.Fields{"database": dbName, "collection": collectionName, "document": documentID}).Error("unable to find the document")
+		return ErrDocumentNotFound
 	}
 	err := res.Decode(data)
 	if err != nil {
 		log.WithFields(log.Fields{"database": dbName, "collection": collectionName, "document": documentID, "error": err}).Error("unable to decode the document")
+		return ErrInvalidDocument
 	}
+	return nil
 }
 
-// Save stores data into a documeent within the specified collection.
-func (m *MongoDB) Save(dbName string, collectionName string, documentID string, data interface{}) {
-	log.Trace("--> MongoDB.Save")
-	defer log.Trace("<-- MongoDB.Save")
+// Write stores data into a documeent within the specified collection.
+func (m *MongoDB) Write(dbName string, collectionName string, documentID string, data interface{}) error {
+	log.Trace("--> MongoDB.Write")
+	defer log.Trace("<-- MongoDB.Write")
 
 	findOptions := options.Find()
 	// Set the limit of the number of record to find
@@ -141,7 +145,7 @@ func (m *MongoDB) Save(dbName string, collectionName string, documentID string, 
 	db := m.client.Database(dbName)
 	if db == nil {
 		log.WithFields(log.Fields{"database": dbName, "collection": collectionName}).Error("unable to create or access the database")
-		return
+		return ErrDbInaccessable
 	}
 	collection := db.Collection(collectionName)
 	if collection == nil {
@@ -149,7 +153,7 @@ func (m *MongoDB) Save(dbName string, collectionName string, documentID string, 
 		defer cancel()
 		if err := db.CreateCollection(ctx, collectionName); err != nil {
 			log.WithFields(log.Fields{"collection": collectionName, "error": err}).Error("unable to create the collection")
-			return
+			return err
 		}
 		collection = db.Collection(collectionName)
 	}
@@ -161,12 +165,14 @@ func (m *MongoDB) Save(dbName string, collectionName string, documentID string, 
 		_, err = collection.ReplaceOne(ctx, bson.D{{Key: "_id", Value: documentID}}, data)
 		if err != nil {
 			log.WithFields(log.Fields{"collection": collectionName, "document": documentID, "error": err}).Error("unable to insert the document the collection")
+			return err
 		}
 	}
+	return nil
 }
 
 // Close closes the mongo database client connection
-func (m *MongoDB) Close() {
+func (m *MongoDB) Close() error {
 	log.Trace("--> MongoDB.Close")
 	defer log.Trace("<-- MongoDB.Close")
 
@@ -174,5 +180,7 @@ func (m *MongoDB) Close() {
 	defer cancel()
 	if err := m.client.Disconnect(ctx); err != nil {
 		log.Error("unable to close the mongo database client")
+		return err
 	}
+	return nil
 }

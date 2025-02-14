@@ -22,21 +22,6 @@ func Init(dbase database.Client) {
 	db = dbase
 }
 
-// New creates a new guild (server) with the given guild ID.
-func New(guildID string) *Guild {
-	log.Trace("--> guild.NewGuild")
-	defer log.Trace("<-- guild.NewGuild")
-
-	guild := &Guild{
-		ID:      guildID,
-		Members: make(map[string]*Member),
-	}
-	guilds[guild.ID] = guild
-	log.WithFields(log.Fields{"guild": guild.ID}).Info("create new guild")
-
-	return guild
-}
-
 // GetGuild returns a guild (server) with the given guild ID. If one is not already
 // known, then it is created.
 func GetGuild(guildID string) *Guild {
@@ -45,8 +30,23 @@ func GetGuild(guildID string) *Guild {
 
 	guild := guilds[guildID]
 	if guild == nil {
-		guild = New(guildID)
+		guild = new(guildID)
 	}
+
+	return guild
+}
+
+// new creates a new guild (server) with the given guild ID.
+func new(guildID string) *Guild {
+	log.Trace("--> guild.new")
+	defer log.Trace("<-- guild.new")
+
+	guild := &Guild{
+		ID:      guildID,
+		Members: make(map[string]*Member),
+	}
+	guilds[guild.ID] = guild
+	log.WithFields(log.Fields{"guild": guild.ID}).Info("create new guild")
 
 	return guild
 }

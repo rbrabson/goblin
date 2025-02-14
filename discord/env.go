@@ -5,9 +5,9 @@ import (
 	"strconv"
 )
 
-// getenvBool returns a boolean to indicate whether the environment variable
+// GetenvBool returns a boolean to indicate whether the environment variable
 // is set to "true"
-func getenvBool(key string) bool {
+func GetenvBool(key string) bool {
 	s := os.Getenv(key)
 	if s == "" {
 		return false

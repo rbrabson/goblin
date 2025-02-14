@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/rbrabson/dgame/discmsg"
+	"github.com/rbrabson/dgame/msg"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -37,7 +37,7 @@ func help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> help")
 	log.Trace("<-- help")
 
-	discmsg.SendEphemeralResponse(s, i, getHelp())
+	msg.SendEphemeralResponse(s, i, getHelp())
 }
 
 // adminHelp sends a help message for administrative commands.
@@ -45,7 +45,7 @@ func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> adminHelp")
 	log.Trace("<-- adminHelp")
 
-	discmsg.SendResponse(s, i, getAdminHelp())
+	msg.SendResponse(s, i, getAdminHelp())
 }
 
 // version shows the version of bot you are running.
@@ -53,7 +53,7 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> version")
 	defer log.Trace("<-- version")
 
-	discmsg.SendEphemeralResponse(s, i, "You are running Heist version "+botVersion+".")
+	msg.SendEphemeralResponse(s, i, "You are running Heist version "+botVersion+".")
 }
 
 // getHelp gets help about commands from all plugins.

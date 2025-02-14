@@ -148,7 +148,7 @@ func (member *Member) Write() {
 	log.Trace("--> heist.Member.Write")
 	defer log.Trace("<-- heist.Member.Write")
 
-	db.Save(member.guildID, MEMBER, member.ID, member)
+	db.Write(member.guildID, MEMBER, member.ID, member)
 	log.WithFields(log.Fields{"guild": member.guildID, "member": member.ID}).Debug("write member to the database")
 }
 

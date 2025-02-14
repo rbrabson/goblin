@@ -3,6 +3,11 @@ package bank
 import (
 	"github.com/rbrabson/dgame/database"
 	"github.com/rbrabson/dgame/guild"
+	log "github.com/sirupsen/logrus"
+)
+
+const (
+	BANK_COLLECTION = "banks"
 )
 
 var (
@@ -17,10 +22,11 @@ var (
 	bankAccountList = make(map[string][]*Account)
 )
 
-// Bank is the repository for all accounts for a given guild (server).
+// A Bank is the repository for all bank accounts for a given guild (server).
 type Bank struct {
-	GuildID  string              `json:"_id" bson:"_id"`
-	Accounts map[string]*Account `json:"-" bson:"-"`
+	GuildID   string              `json:"_id" bson:"_id"`
+	ChannelID string              `json:"channel_id" bson:"channel_id"`
+	Accounts  map[string]*Account `json:"-" bson:"-"`
 }
 
 // Init initializes the banking system with the database used for reading and writing account data
@@ -28,21 +34,43 @@ func Init(database database.Client) {
 	db = database
 }
 
-// New creates a new bank for the specified build
-func New(guild guild.Guild) *Bank {
+// NewBank creates a new bank for the specified build
+func NewBank(guild *guild.Guild) *Bank {
+	log.Trace("--> bank.New")
+	defer log.Trace("<-- bank.New")
+
 	bank := &Bank{
 		GuildID:  guild.ID,
 		Accounts: make(map[string]*Account),
 	}
 	banks[bank.GuildID] = bank
+	log.WithField("guild", bank.GuildID).Info("create new bank")
+
+	bank.Write()
+
 	return bank
 }
 
 // GetBank returns the bank for the specified build. If the bank does not exist, then one is created.
-func GetBank(guild guild.Guild) *Bank {
+func GetBank(guild *guild.Guild) *Bank {
+	log.Trace("--> bank.GetBank")
+	defer log.Trace("<-- bank.GetBank")
+
 	bank := banks[guild.ID]
 	if bank == nil {
-		bank = New(guild)
+		bank = NewBank(guild)
 	}
+
+	log.WithField("guild", bank.GuildID).Trace("return bank")
 	return bank
+}
+
+// Write creates or updates the bank for a guild in the database being used by the Discord bot.
+func (bank *Bank) Write() error {
+	log.Trace("--> bank.Bank.Write")
+	defer log.Trace("<-- bank.Bank.Write")
+
+	db.Write(bank.GuildID, BANK_COLLECTION, bank.GuildID, bank)
+	log.WithField("guild", bank.GuildID).Debug("save bank to the database")
+	return nil
 }

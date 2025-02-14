@@ -13,7 +13,7 @@ const (
 		discordgo.IntentGuildMessages |
 		discordgo.IntentDirectMessages |
 		discordgo.IntentGuildEmojis
-	botVersion = "1.0.0"
+	botVersion = "0.1.0"
 )
 
 // Bot is a Discord bot which is capable of running multiple services, each of which
@@ -34,7 +34,7 @@ func NewBot() *Bot {
 	appID := os.Getenv("DISCORD_APP_ID")
 	token := os.Getenv("DISCORD_BOT_TOKEN")
 	guildID := os.Getenv("DISCORD_GUILD_ID")
-	deleteSlashCommands := getenvBool("DISCORD_DELETE_SLASH_COMMANDS")
+	deleteSlashCommands := GetenvBool("DISCORD_DELETE_SLASH_COMMANDS")
 
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {

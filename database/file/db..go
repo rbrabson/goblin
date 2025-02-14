@@ -27,7 +27,7 @@ func NewDatabase() *FileDB {
 }
 
 // ListDocuments returns the list of files in the sub-directory (collection).
-func (db *FileDB) ListDocuments(database string, collection string) []string {
+func (db *FileDB) ListDocuments(database string, collection string) ([]string, error) {
 	log.Trace("--> FileDB.List")
 	defer log.Trace("<-- FileDB.List")
 
@@ -35,53 +35,58 @@ func (db *FileDB) ListDocuments(database string, collection string) []string {
 	files, err := os.ReadDir(dirName)
 	if err != nil {
 		log.WithFields(log.Fields{"database": database, "collection": collection, "error": err}).Error("failed to get the list of documents")
-		return nil
+		return nil, err
 	}
 	fileNames := make([]string, 0, len(files))
 	for _, file := range files {
 		split := strings.Split(file.Name(), ".json")
 		fileNames = append(fileNames, split[0])
 	}
-	return fileNames
+	return fileNames, nil
 }
 
-// Load loads a file identified by documentID from the subdirectory (collection) into data.
-func (db *FileDB) Load(database string, collection string, documentID string, data interface{}) {
-	log.Trace("--> FileDB.Load")
-	defer log.Trace("<-- FileDB.Load")
+// Read loads a file identified by documentID from the subdirectory (collection) into data.
+func (db *FileDB) Read(database string, collection string, documentID string, data interface{}) error {
+	log.Trace("--> FileDB.Read")
+	defer log.Trace("<-- FileDB.Read")
 
 	filename := fmt.Sprintf("%s/%s/%s/%s.json", db.dir, database, collection, documentID)
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		log.WithFields(log.Fields{"database": database, "collection": collection, "documentID": documentID}).Error("failed to read the document")
-		return
+		return err
 	}
 
 	err = json.Unmarshal(b, data)
 	if err != nil {
 		log.WithFields(log.Fields{"database": database, "collection": collection, "documentID": documentID, "error": err}).Error("failed to unmarshall the document")
+		return err
 	}
+	return nil
 }
 
-// Save stores data into a subdirectory (collection) with the file name documentID.
-func (db *FileDB) Save(database string, collection string, documentID string, data interface{}) {
-	log.Trace("--> FileDB.Save")
-	defer log.Trace("<-- FileDB.Save")
+// Write stores data into a subdirectory (collection) with the file name documentID.
+func (db *FileDB) Write(database string, collection string, documentID string, data interface{}) error {
+	log.Trace("--> FileDB.Write")
+	defer log.Trace("<-- FileDB.Write")
 
 	b, err := json.Marshal(data)
 	if err != nil {
 		log.WithFields(log.Fields{"database": database, "collection": collection, "documentID": documentID, "error": err}).Error("failed to marshall the document")
-		return
+		return err
 	}
 
 	filename := fmt.Sprintf("%s/%s/%s/%s.json", db.dir, database, collection, documentID)
 	err = os.WriteFile(filename, b, 0644)
 	if err != nil {
 		log.WithFields(log.Fields{"database": database, "collection": collection, "documentID": documentID, "error": err}).Error("failed to write the document")
+		return err
 	}
+	return nil
 }
 
 // Close closes the access to the file system
-func (db *FileDB) Close() {
+func (db *FileDB) Close() error {
 	// NO-OP
+	return nil
 }

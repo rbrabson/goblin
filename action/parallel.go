@@ -33,10 +33,6 @@ func (a *parallelAction) Execute() {
 	}
 }
 
-// End is run when an action completes. The action may run to completion or be interrupted, as defined
-// by the provided parameter.
-func (a *parallelAction) End(interrupted bool) {}
-
 // IsFinished returns an indication as to whether the action has completed execution.
 func (a *parallelAction) IsFinished() bool {
 	isFinished := true

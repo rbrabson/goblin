@@ -49,10 +49,10 @@ func LoadThemes(guild *guild.Guild) map[string]*Theme {
 	guildThemes := make(map[string]*Theme)
 	themes[guild.ID] = guildThemes
 
-	themeNames := db.ListDocuments(guild.ID, THEME)
+	themeNames, _ := db.ListDocuments(guild.ID, THEME)
 	for _, themeName := range themeNames {
 		var theme Theme
-		db.Load(guild.ID, THEME, themeName, &theme)
+		db.Read(guild.ID, THEME, themeName, &theme)
 		theme.guildID = guild.ID
 		guildThemes[theme.ID] = &theme
 		log.WithFields(log.Fields{"guild": theme.guildID, "theme": theme.ID}).Debug("load theme from database")
@@ -96,5 +96,5 @@ func (theme *Theme) Write() {
 	log.Trace("--> heist.Theme.Write")
 	defer log.Trace("<-- heist.Theme.Write")
 
-	db.Save(theme.guildID, THEME, theme.ID, theme)
+	db.Write(theme.guildID, THEME, theme.ID, theme)
 }

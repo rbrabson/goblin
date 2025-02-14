@@ -1,14 +1,17 @@
 package bank
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"strings"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/dgame/guild"
+	"github.com/rbrabson/dgame/msg"
+	log "github.com/sirupsen/logrus"
+)
 
 var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"bank":     bank,
-		"account":  account,
-		"balance":  currentBalance,
-		"monthly":  monthlyBalance,
-		"lifetime": lifetimeBalance,
+		"bank": bank,
 	}
 
 	adminCommands = []*discordgo.ApplicationCommand{
@@ -49,25 +52,6 @@ var (
 					},
 				},
 				{
-					Name:        "transfer",
-					Description: "Transfers the account balance from one account to another.",
-					Type:        discordgo.ApplicationCommandOptionSubCommand,
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "from",
-							Description: "The ID of the account to transfer credits from.",
-							Required:    true,
-						},
-						{
-							Type:        discordgo.ApplicationCommandOptionInteger,
-							Name:        "to",
-							Description: "The ID of the account to receive account balance.",
-							Required:    true,
-						},
-					},
-				},
-				{
 					Name:        "channel",
 					Description: "Sets the channel ID where the monthly leaderboard is published at the end of the month.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -83,39 +67,99 @@ var (
 			},
 		},
 	}
-
-	memberCommands = []*discordgo.ApplicationCommand{
-		{
-			Name:        "monthly",
-			Description: "Gets the monthly economy leaderboard.",
-		},
-		{
-			Name:        "lifetime",
-			Description: "Gets the lifetime economy leaderboard.",
-		},
-		{
-			Name:        "balance",
-			Description: "Bank account balance for the member",
-		},
-	}
+	memberCommands = []*discordgo.ApplicationCommand{}
 )
 
 // bank routes the bank commands to the proper handers.
 func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> bank.bank")
+	defer log.Trace("<-- bank.bank")
+
+	options := i.ApplicationCommandData().Options
+	switch options[0].Name {
+	case "account":
+		getAccount(s, i)
+	case "channel":
+		setChannel(s, i)
+	case "set":
+		setBalance(s, i)
+	}
 }
 
-// account returns information about a bank account for the specified member.
-func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func setChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> setLeaderboardChannel")
+	defer log.Trace("<-- setLeaderboardChannel")
+
+	p := msg.GetPrinter(i)
+
+	guild := guild.GetGuild(i.GuildID)
+	bank := GetBank(guild)
+	channelID := i.ApplicationCommandData().Options[0].Options[0].StringValue()
+	bank.ChannelID = channelID
+
+	bank.Write()
+
+	resp := p.Sprintf("Channel ID for the monthly leaderboard set to %s.", bank.ChannelID)
+	msg.SendResponse(s, i, resp)
 }
 
-// currentBalance returns information about a member's bank account to that member.
-func currentBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// setBalance sets the balance of the account for the member of the guild to the specified amount
+func setBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> setBalance")
+	defer log.Trace("<-- setBalance")
+
+	var id string
+	var amount uint
+	options := i.ApplicationCommandData().Options[0].Options
+	for _, option := range options {
+		switch option.Name {
+		case "id":
+			id = strings.TrimSpace(option.StringValue())
+		case "amount":
+			amount = uint(option.IntValue())
+		}
+	}
+
+	p := msg.GetPrinter(i)
+
+	member, err := s.GuildMember(i.GuildID, id)
+	if err != nil {
+		resp := p.Sprintf("An account with ID `%s` is not a member of this server", id)
+		msg.SendEphemeralResponse(s, i, resp)
+		return
+	}
+
+	g := guild.GetGuild(i.GuildID)
+	m := guild.GetMember(g, member.User.ID).SetName(i.Member.DisplayName())
+	bank := GetBank(g)
+	account := GetAccount(bank, id)
+
+	account.SetBalance(amount)
+
+	log.WithFields(log.Fields{
+		"guild":   g.ID,
+		"member":  m.ID,
+		"balance": amount,
+	}).Debug("/bank set")
+
+	account.Write()
+
+	resp := p.Sprintf("Account balance for %s was set to %d", m.Name, account.Balance)
+	msg.SendResponse(s, i, resp)
 }
 
-// monthlyBalance returns the top 10 monthly players in the server's economy.
-func monthlyBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
-}
+// getAccount returns information about a bank getAccount for the specified member.
+func getAccount(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> accountInfo")
+	defer log.Trace("<-- accountInfo")
 
-// monthlyBalance returns the top 10 lifetime players in the server's economy.
-func lifetimeBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := msg.GetPrinter(i)
+
+	g := guild.GetGuild(i.GuildID)
+	m := guild.GetMember(g, i.Member.User.ID).SetName(i.Member.DisplayName())
+	bank := GetBank(g)
+	account := GetAccount(bank, m.ID)
+
+	resp := p.Sprintf("**Name**: %s\n**ID**: %s\n**Balance**: %d\n**Lifetime**: %d", m.Name, m.ID, account.Balance, account.LifetimeDeposits)
+	msg.SendEphemeralResponse(s, i, resp)
 }
