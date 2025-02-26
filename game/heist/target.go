@@ -154,7 +154,7 @@ func vaultUpdater() {
 		for _, target := range getAllTargets(filter) {
 			recoverAmount := int(float64(target.VaultMax) * VAULT_RECOVER_PERCENT)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
-			log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "old": target.Vault, "new": newVaultAmount, "max": target.VaultMax}).Debug("update vault")
+			log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "old": target.Vault, "new": newVaultAmount, "max": target.VaultMax}).Info("vault updater: update vault")
 			target.Vault = newVaultAmount
 			writeTarget(target)
 		}
