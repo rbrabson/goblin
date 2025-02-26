@@ -765,7 +765,7 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistLock.Unlock()
 	if heist == nil {
 		theme := GetTheme(g)
-		msg := fmt.Sprintf("No %s is being planned", theme.Heist)
+		msg := fmt.Sprintf("No %s is being planned; the channel was un-muted", theme.Heist)
 		discmsg.SendEphemeralResponse(s, i, msg)
 		return
 	}
