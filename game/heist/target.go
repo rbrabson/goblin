@@ -157,7 +157,7 @@ func vaultUpdater() {
 				target.Vault = newVaultAmount
 				writeTarget(target)
 			} else {
-				log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "vault": target.Vault}).Debug("vault is full")
+				log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "vault": target.Vault}).Trace("vault is full")
 			}
 		}
 	}
