@@ -6,6 +6,7 @@ import (
 
 	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -66,12 +67,12 @@ func (t *Target) StealFromValut(amount int) {
 	log.WithFields(log.Fields{"guild": t.GuildID, "target": t.Name, "amount": amount, "original": originalVaultAmount, "new": t.Vault}).Debug("steal from vault")
 }
 
-// getAllTargets returns all targets for all guilds
-func getAllTargets() []*Target {
+// getAllTargets returns all targets that match the filter.
+func getAllTargets(filter bson.D) []*Target {
 	log.Trace("--> heist.getAllTargets")
 	defer log.Trace("<-- heist.getAllTargets")
 
-	allTargets, _ := readAllTargets()
+	allTargets, _ := readAllTargets(filter)
 
 	return allTargets
 }
@@ -145,11 +146,12 @@ func newTarget(guild *guild.Guild, theme string, name string, maxCrewSize int, s
 func vaultUpdater() {
 	const timer = time.Duration(1 * time.Minute)
 
+	filter := bson.D{{Key: "$where", Value: "this.vault < this.vault_max"}}
 	// Update the vaults forever
 	for {
 		time.Sleep(timer)
 		log.WithFields(log.Fields{"timer": timer}).Trace("vault updater")
-		for _, target := range getAllTargets() {
+		for _, target := range getAllTargets(filter) {
 			if target.Vault != target.VaultMax {
 				recoverAmount := int(float64(target.VaultMax) * VAULT_RECOVER_PERCENT)
 				newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)

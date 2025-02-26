@@ -81,13 +81,13 @@ func writeMember(member *HeistMember) {
 }
 
 // readAllTargets loads the targets that may be used in heists for all guilds
-func readAllTargets() ([]*Target, error) {
+func readAllTargets(filter bson.D) ([]*Target, error) {
 	log.Trace("--> heist.readAllTargets")
 	defer log.Trace("<-- heist.readAllTargets")
 
 	var targets []*Target
 	sort := bson.D{{Key: "crew_size", Value: 1}}
-	err := db.FindMany(TARGET_COLLECTION, bson.D{}, &targets, sort, 0)
+	err := db.FindMany(TARGET_COLLECTION, filter, &targets, sort, 0)
 	if err != nil {
 		log.WithField("error", err).Error("unable to read targets")
 		return nil, err
