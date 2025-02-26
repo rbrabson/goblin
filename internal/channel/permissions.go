@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/internal/role"
 )
 
 // Mute is used for muting and unmuting a channel on a server
@@ -33,13 +34,10 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 		channel: channel,
 	}
 
-	roles, err := s.GuildRoles(i.GuildID)
-	if err != nil {
-		log.Error("Error getting roles, error:", err)
-	}
-	for _, role := range roles {
-		if role.Name == "@everyone" {
-			c.everyoneID = role.ID
+	guildRoles := role.GetGuildRoles(s, channel.GuildID)
+	for _, guildlRole := range guildRoles {
+		if guildlRole.Name == "@everyone" {
+			c.everyoneID = guildlRole.ID
 		}
 	}
 
@@ -64,9 +62,15 @@ func (c *Mute) MuteChannel() {
 // UnmuteChannel resets the permissions for `@everyone` to what they were before the channel was muted.
 func (c *Mute) UnmuteChannel() {
 	if c.everyonePermissions.ID == "" {
-		c.s.ChannelPermissionDelete(c.i.ChannelID, c.everyoneID)
+		err := c.s.ChannelPermissionDelete(c.i.ChannelID, c.everyoneID)
+		if err != nil {
+			log.Warning("Failed to delete the mute for the channel, error:", err)
+		}
 	} else {
 		allow := int64(discordgo.PermissionSendMessages)
-		c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allow, c.everyonePermissions.Deny)
+		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allow, c.everyonePermissions.Deny)
+		if err != nil {
+			log.Warning("Failed to unmute the channel, error:", err)
+		}
 	}
 }

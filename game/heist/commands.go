@@ -320,6 +320,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	mute := channel.NewChannelMute(s, i)
+	mute.MuteChannel()
 	defer mute.UnmuteChannel()
 
 	err = heistMessage(s, i, heist, guildMember, "start")

@@ -44,10 +44,10 @@ func getAdminRoles(guildID string) []string {
 	return roles.AdminRoles
 }
 
-// getGuildRoles returns the list of roles for a guild.
-func getGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
-	log.Trace("--> role.getGuildRoles")
-	defer log.Trace("<-- role.getGuildRoles")
+// GetGuildRoles returns the list of roles for a guild.
+func GetGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
+	log.Trace("--> role.GetGuildRoles")
+	defer log.Trace("<-- Gole.getGuildRoles")
 
 	guildRoles, err := s.GuildRoles(guildID)
 	if err != nil {
@@ -95,7 +95,7 @@ func IsAdmin(s *discordgo.Session, guildID string, memberID string) bool {
 	log.Trace("--> role.IsAdmin")
 	defer log.Trace("<-- role.IsAdmin")
 
-	guildRoles := getGuildRoles(s, guildID)
+	guildRoles := GetGuildRoles(s, guildID)
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "error": err}).Error("failed to get guild member")
