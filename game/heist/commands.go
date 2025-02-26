@@ -320,8 +320,11 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	waitForHeistToStart(s, i, heist)
 
 	if len(heist.Crew) < 2 {
+		heistMessage(s, i, heist, guildMember, "cancel")
+		p := discmsg.GetPrinter(language.AmericanEnglish)
+		msg := p.Sprintf("The %s was cancelled due to lack of interest.", heist.theme.Heist)
+		s.ChannelMessageSend(i.ChannelID, msg)
 		log.WithFields(log.Fields{"guild": g.GuildID, "heist": heist.theme.Heist}).Info("Heist cancelled due to lack of interest")
-		discmsg.SendResponse(s, i, fmt.Sprintf("The %s was cancelled due to lack of interest.", heist.theme.Heist))
 		return
 	}
 

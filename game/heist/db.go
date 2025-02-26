@@ -129,7 +129,7 @@ func writeTarget(target *Target) {
 	}
 
 	db.UpdateOrInsert(TARGET_COLLECTION, filter, target)
-	log.WithFields(log.Fields{"id": target.ID, "guild": target.GuildID, "target": target.Theme}).Info("create target")
+	log.WithFields(log.Fields{"id": target.ID, "guild": target.GuildID, "target": target.Theme}).Info("create or update target")
 }
 
 // readAllThemes loads all available themes for a guild

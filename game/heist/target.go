@@ -11,7 +11,7 @@ import (
 
 const (
 	VAULT_UPDATE_TIME     = 1 * time.Minute // Update the vault once every minute
-	VAULT_RECOVER_PERCENT = 1.04            // Percentage of valuts total that is recovered every update
+	VAULT_RECOVER_PERCENT = 0.04            // Percentage of valuts total that is recovered every update
 )
 
 // Target is a target of a heist.
@@ -150,9 +150,9 @@ func vaultUpdater() {
 		time.Sleep(timer)
 		log.WithFields(log.Fields{"timer": timer}).Trace("vault updater")
 		for _, target := range getAllTargets() {
-			newVaultAmount := int(float64(target.Vault) * VAULT_RECOVER_PERCENT)
-			newVaultAmount = min(newVaultAmount, target.VaultMax)
-			if newVaultAmount != target.Vault {
+			if target.Vault != target.VaultMax {
+				recoverAmount := int(float64(target.VaultMax) * VAULT_RECOVER_PERCENT)
+				newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
 				log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "old": target.Vault, "new": newVaultAmount, "max": target.VaultMax}).Debug("update vault")
 				target.Vault = newVaultAmount
 				writeTarget(target)
