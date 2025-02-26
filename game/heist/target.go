@@ -6,6 +6,7 @@ import (
 
 	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -15,14 +16,14 @@ const (
 
 // Target is a target of a heist.
 type Target struct {
-	ID       string  `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID  string  `json:"guild_id" bson:"guild_id"`
-	Theme    string  `json:"theme" bson:"theme"`
-	Name     string  `json:"target_id" bson:"target_id"`
-	CrewSize int     `json:"crew" bson:"crew"`
-	Success  float64 `json:"success" bson:"success"`
-	Vault    int     `json:"vault" bson:"vault"`
-	VaultMax int     `json:"vault_max" bson:"vault_max"`
+	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID  string             `json:"guild_id" bson:"guild_id"`
+	Theme    string             `json:"theme" bson:"theme"`
+	Name     string             `json:"target_id" bson:"target_id"`
+	CrewSize int                `json:"crew" bson:"crew"`
+	Success  float64            `json:"success" bson:"success"`
+	Vault    int                `json:"vault" bson:"vault"`
+	VaultMax int                `json:"vault_max" bson:"vault_max"`
 }
 
 // GetTargets returns the list of targets for the server

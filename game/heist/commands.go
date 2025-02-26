@@ -310,6 +310,11 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer heist.End()
 	heist.interaction = i
 
+	// The organizer has to pay a fee to plan the heist.
+	b := bank.GetBank(i.GuildID)
+	account := b.GetAccount(guildMember.MemberID)
+	account.Withdraw(heist.config.HeistCost)
+
 	heistMessage(s, i, heist, guildMember, "plan")
 
 	waitForHeistToStart(s, i, heist)
@@ -336,9 +341,8 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	log.Debug("heist is starting")
 	p := discmsg.GetPrinter(language.AmericanEnglish)
-
-	log.Debug("Heist is starting")
 	msg := p.Sprintf("Get ready! The %s is starting with %d members.", heist.theme.Heist, len(heist.Crew))
 	s.ChannelMessageSend(i.ChannelID, msg)
 
@@ -380,7 +384,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 	theme := GetTheme(guild.GetGuild(i.GuildID))
 
-	log.Debug("Hitting " + res.Target.ID)
+	log.Debug("Hitting " + res.Target.Name)
 	msg := p.Sprintf("The %s has decided to hit **%s**.", theme.Crew, res.Target.Name)
 	s.ChannelMessageSend(i.ChannelID, msg)
 	time.Sleep(3 * time.Second)
@@ -483,9 +487,6 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
-	discmsg.SendEphemeralResponse(s, i, fmt.Sprintf("Joining %s...", heist.theme.Heist))
-
-	heistMessage(s, heist.interaction, heist, guildMember, "join")
 
 	// Withdraw the cost of the heist from the player's account. We know the player already
 	// has the required number of credits as this is verified when adding them to the heist.
@@ -493,8 +494,11 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	account := b.GetAccount(guildMember.MemberID)
 	account.Withdraw(heist.config.HeistCost)
 
-	resp := fmt.Sprintf("You have joined the %s at a cost of %d credits.", heist.theme.Heist, heist.config.HeistCost)
-	discmsg.EditResponse(s, i, resp)
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+	resp := p.Sprintf("You have joined the %s at a cost of %d credits.", heist.theme.Heist, heist.config.HeistCost)
+	discmsg.SendEphemeralResponse(s, i, resp)
+
+	heistMessage(s, heist.interaction, heist, guildMember, "join")
 }
 
 // playerStats shows a player's heist stats
@@ -802,7 +806,7 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	table.SetNoWhiteSpace(true)
 	table.SetHeader([]string{"ID", "Max Crew", theme.Vault, "Max " + theme.Vault, "Success Rate"})
 	for _, target := range targets {
-		data := []string{target.ID, fmt.Sprintf("%d", target.CrewSize), fmt.Sprintf("%d", target.Vault), fmt.Sprintf("%d", target.VaultMax), fmt.Sprintf("%.2f", target.Success)}
+		data := []string{target.Name, fmt.Sprintf("%d", target.CrewSize), fmt.Sprintf("%d", target.Vault), fmt.Sprintf("%d", target.VaultMax), fmt.Sprintf("%.2f", target.Success)}
 		table.Append(data)
 	}
 	table.Render()

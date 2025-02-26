@@ -121,9 +121,15 @@ func writeTarget(target *Target) {
 	log.Trace("--> heist.Target.writeTarget")
 	defer log.Trace("<-- heist.Target.writeTarget")
 
-	filter := bson.D{{Key: "guild_id", Value: target.GuildID}, {Key: "target_id", Value: target.Theme}}
+	var filter bson.D
+	if target.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: target.ID}}
+	} else {
+		filter = bson.D{{Key: "guild_id", Value: target.GuildID}, {Key: "target_id", Value: target.Name}}
+	}
+
 	db.UpdateOrInsert(TARGET_COLLECTION, filter, target)
-	log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Theme}).Info("create target")
+	log.WithFields(log.Fields{"id": target.ID, "guild": target.GuildID, "target": target.Theme}).Info("create target")
 }
 
 // readAllThemes loads all available themes for a guild
@@ -174,4 +180,5 @@ func writeTheme(theme *Theme) {
 		filter = bson.M{"guild_id": theme.GuildID, "name": theme.Name}
 	}
 	db.UpdateOrInsert(THEME_COLLECTION, filter, theme)
+	log.WithFields(log.Fields{"id": theme.ID, "guild": theme.GuildID, "theme": theme.Name}).Debug("write theme to the database")
 }
