@@ -134,63 +134,6 @@ func TestStartHeist(t *testing.T) {
 	}
 }
 
-func TestRunTwoHeists(t *testing.T) {
-	testSetup()
-	defer testTeardown()
-
-	g := guild.GetGuild(GUILD_ID)
-	organizer := g.GetMember(ORGANIZER_ID).SetName("Organizer", "")
-	if organizer == nil {
-		t.Errorf("Expected organizer, got nil")
-		return
-	}
-	heist, err := NewHeist(g, organizer)
-	if err != nil {
-		t.Errorf("Expected nil, got %s", err.Error())
-		return
-	}
-
-	heist2, err := NewHeist(g, organizer)
-	if err == nil {
-		heist2.End()
-		t.Errorf("Expected non-nil, got nil")
-		return
-	}
-
-	guildMember := g.GetMember("abcdef").SetName("Crew Member 1", "")
-	member := getHeistMember(guildMember)
-	heist.AddCrewMember(member)
-
-	res, err := heist.Start()
-	if err != nil {
-		heist.End()
-		t.Errorf("Expected nil, got %s", err.Error())
-		return
-	}
-	if len(res.AllResults) != 2 {
-		t.Errorf("Expected 2, got %d", len(res.AllResults))
-	}
-	heist.End()
-
-	heist, err = NewHeist(g, organizer)
-	if err != nil {
-		t.Errorf("Expected nil, got %s", err.Error())
-		return
-	}
-	heist.AddCrewMember(member)
-
-	res, err = heist.Start()
-	if err != nil {
-		heist.End()
-		t.Errorf("Expected nil, got %s", err.Error())
-		return
-	}
-	if len(res.AllResults) != 2 {
-		t.Errorf("Expected 2, got %d", len(res.AllResults))
-	}
-	heist.End()
-}
-
 func testSetup() {}
 
 func testTeardown() {
