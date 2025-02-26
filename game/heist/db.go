@@ -121,7 +121,7 @@ func writeTarget(target *Target) {
 	log.Trace("--> heist.Target.writeTarget")
 	defer log.Trace("<-- heist.Target.writeTarget")
 
-	filter := bson.M{"guild_id": target.GuildID, "target_id": target.Theme}
+	filter := bson.D{{Key: "guild_id", Value: target.GuildID}, {Key: "target_id", Value: target.Theme}}
 	db.UpdateOrInsert(TARGET_COLLECTION, filter, target)
 	log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Theme}).Info("create target")
 }
@@ -167,6 +167,11 @@ func writeTheme(theme *Theme) {
 	log.Trace("--> heist.writeTheme")
 	defer log.Trace("<-- heist.writeTheme")
 
-	filter := bson.M{"guild_id": theme.GuildID, "theme_id": theme.Name}
+	var filter bson.M
+	if theme.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": theme.ID}
+	} else {
+		filter = bson.M{"guild_id": theme.GuildID, "name": theme.Name}
+	}
 	db.UpdateOrInsert(THEME_COLLECTION, filter, theme)
 }

@@ -43,6 +43,28 @@ func GetTargets(g *guild.Guild, theme string) []*Target {
 	return targets
 }
 
+// StealFromValut removes the given amount from the vault of the target.
+// If the amount is greater than the vault, the vault is set to 0.
+func (t *Target) StealFromValut(amount int) {
+	log.Trace("--> heist.Target.StealFromValut")
+	defer log.Trace("<-- heist.Target.StealFromValut")
+
+	if amount <= 0 {
+		log.WithField("amount", amount).Debug("nothing stolen from the vault")
+		return
+	}
+
+	originalVaultAmount := t.Vault
+
+	t.Vault -= amount
+	if t.Vault < 0 {
+		t.Vault = 0
+	}
+	writeTarget(t)
+
+	log.WithFields(log.Fields{"guild": t.GuildID, "target": t.Name, "amount": amount, "original": originalVaultAmount, "new": t.Vault}).Debug("steal from vault")
+}
+
 // getAllTargets returns all targets for all guilds
 func getAllTargets() []*Target {
 	log.Trace("--> heist.getAllTargets")

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
@@ -20,14 +21,15 @@ var (
 
 // Heist is a heist that is being planned, is in progress, or has completed
 type Heist struct {
-	GuildID   string
-	Organizer *HeistMember
-	Crew      []*HeistMember
-	StartTime time.Time
-	theme     *Theme
-	targets   []*Target
-	config    *Config
-	mutex     sync.Mutex
+	GuildID     string
+	Organizer   *HeistMember
+	Crew        []*HeistMember
+	StartTime   time.Time
+	targets     []*Target
+	theme       *Theme
+	interaction *discordgo.InteractionCreate
+	config      *Config
+	mutex       sync.Mutex
 }
 
 // HeistResult are the results of a heist
@@ -37,6 +39,7 @@ type HeistResult struct {
 	Apprehended []*HeistMemberResult
 	Dead        []*HeistMemberResult
 	Target      *Target
+	TotalStolen int
 	heist       *Heist
 }
 
@@ -308,9 +311,11 @@ func calculateCredits(results *HeistResult) {
 	log.WithFields(log.Fields{"Target": results.Target.ID, "Vault": results.Target.Vault, "Survivors": numSurvived, "Base Credits": baseStolen}).Debug("Looted")
 	for _, heistMemberResult := range results.Escaped {
 		heistMemberResult.StolenCredits = 2 * baseStolen
+		results.TotalStolen += heistMemberResult.StolenCredits
 	}
 	for _, heistMemberResult := range results.Apprehended {
 		heistMemberResult.StolenCredits = baseStolen
+		results.TotalStolen += heistMemberResult.StolenCredits
 	}
 }
 
@@ -324,13 +329,14 @@ func (h *Heist) String() string {
 	)
 }
 
-// string returns a string representation of the HeistMember.
+// String returns a string representation of the HeistMember.
 func (hr *HeistResult) String() string {
-	return fmt.Sprintf("HeistResult{Escaped: %d, Apprehended: %d, Dead: %d, Target: %s}",
+	return fmt.Sprintf("HeistResult{Escaped: %d, Apprehended: %d, Dead: %d, Target: %s, TotalStolen: %d}",
 		len(hr.Escaped),
 		len(hr.Apprehended),
 		len(hr.Dead),
 		hr.Target,
+		hr.TotalStolen,
 	)
 }
 

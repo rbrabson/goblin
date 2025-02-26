@@ -308,6 +308,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	defer heist.End()
+	heist.interaction = i
 
 	heistMessage(s, i, heist, guildMember, "plan")
 
@@ -345,6 +346,8 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistMessage(s, i, heist, guildMember, "start")
 
 	sendHeistResults(s, i, res)
+
+	res.Target.StealFromValut(res.TotalStolen)
 }
 
 // waitForHeistToStart waits until the planning stage for the heist expires.
@@ -482,7 +485,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	discmsg.SendEphemeralResponse(s, i, fmt.Sprintf("Joining %s...", heist.theme.Heist))
 
-	heistMessage(s, i, heist, guildMember, "join")
+	heistMessage(s, heist.interaction, heist, guildMember, "join")
 
 	// Withdraw the cost of the heist from the player's account. We know the player already
 	// has the required number of credits as this is verified when adding them to the heist.
@@ -877,7 +880,7 @@ func setTheme(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	theme := GetTheme(g)
-	config.Theme = theme.ID
+	config.Theme = theme.Name
 	log.Debug("Now using theme ", config.Theme)
 
 	discmsg.SendResponse(s, i, "Theme "+themeName+" is now being used.")
