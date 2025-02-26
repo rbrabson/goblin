@@ -7,7 +7,12 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/rbrabson/goblin/internal/convert"
 	log "github.com/sirupsen/logrus"
+)
+
+const (
+	GUILD_ID = "236523452230533121"
 )
 
 var (
@@ -52,21 +57,46 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// to_dir, err = os.Open(args[1])
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
-	files, err := listFiles(from_dir)
+	fileNames, err := listFiles(from_dir)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fileName := from_dir.Name() + "/" + files[0]
-	b := readFile(fileName)
-	out := asArray(b)
-	x := out[0]["characters"]
-	raceModel := asMap(x)
-	convertRaceModel(raceModel)
+
+	for _, fileName := range fileNames {
+
+		fullFileName := from_dir.Name() + "/" + fileName
+		outDir := from_dir.Name() + "/" + "converted"
+
+		switch fullFileName {
+		case "Heist.economy.json":
+			fmt.Println("economy")
+		case "Heist.heist.json":
+			fmt.Println("heist")
+		case "Heist.mode.json":
+			fmt.Println("mode")
+		case "Heist.payday.json":
+			fmt.Println("payday")
+		case "Heist.race.json":
+			convert.Initialize(GUILD_ID, outDir)
+			fmt.Println("race")
+		case "Heist.reminder.json":
+			fmt.Println("reminder")
+		case "Heist.target.json":
+			fmt.Println("target")
+		case "Heist.theme.json":
+			fmt.Println("theme")
+		default:
+			fmt.Println("Unknown file:", fullFileName)
+		}
+	}
+
+	// fileName := from_dir.Name() + "/" + fileNames[0]
+	// b := readFile(fileName)
+	// out := asArray(b)
+	// x := out[0]["characters"]
+	// raceModel := asMap(x)
+	// convertRaceModel(raceModel)
 }
 
 // listFiles lists the files in a directory
