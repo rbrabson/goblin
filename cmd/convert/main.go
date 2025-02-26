@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -63,14 +62,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	outDir := from_dir.Name() + "/" + "converted"
+	convert.Intialize(GUILD_ID, outDir)
+
 	for _, fileName := range fileNames {
-
 		fullFileName := from_dir.Name() + "/" + fileName
-		outDir := from_dir.Name() + "/" + "converted"
-
-		switch fullFileName {
+		switch fileName {
 		case "Heist.economy.json":
-			fmt.Println("economy")
+			convert.ConvertEconomy(fullFileName)
 		case "Heist.heist.json":
 			fmt.Println("heist")
 		case "Heist.mode.json":
@@ -78,16 +77,13 @@ func main() {
 		case "Heist.payday.json":
 			fmt.Println("payday")
 		case "Heist.race.json":
-			convert.Initialize(GUILD_ID, outDir)
-			fmt.Println("race")
+			convert.ConvertRaces(fullFileName)
 		case "Heist.reminder.json":
 			fmt.Println("reminder")
 		case "Heist.target.json":
 			fmt.Println("target")
 		case "Heist.theme.json":
 			fmt.Println("theme")
-		default:
-			fmt.Println("Unknown file:", fullFileName)
 		}
 	}
 
@@ -106,40 +102,4 @@ func listFiles(dir *os.File) ([]string, error) {
 		return nil, err
 	}
 	return files, nil
-}
-
-// readFile gets the contents of a file
-func readFile(fileName string) []byte {
-	out, err := os.ReadFile(fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return out
-}
-
-// asArray converts a byte slice to an array of interfaces
-func asArray(bytes []byte) []map[string]interface{} {
-	var out []map[string]interface{}
-	json.Unmarshal(bytes, &out)
-	return out
-}
-
-// asMap converts an interface slice to a slice of maps
-func asMap(elements interface{}) []map[string]interface{} {
-	bytes, err := json.Marshal(elements)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var out []map[string]interface{}
-	json.Unmarshal(bytes, &out)
-	return out
-}
-
-func convertRaceModel(raceModel []map[string]interface{}) {
-	for _, race := range raceModel {
-		for k, v := range race {
-			fmt.Println(k, v)
-		}
-	}
 }

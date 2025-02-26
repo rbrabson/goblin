@@ -1,15 +1,20 @@
-package race
+package convert
 
-var (
-	GUILD_ID string
-	OUT_DIR  string
-)
+import "fmt"
 
-func Intialize(guildID string, outputDir string) {
-	GUILD_ID = guildID
-	OUT_DIR = outputDir
+func ConvertRaces(fileName string) {
+	fmt.Printf("convert race, file=%s\n", fileName)
+
+	bytes := readFile(fileName)
+	fileContents := asArray(bytes)
+	for _, fileContent := range fileContents {
+		guildID := asString(fileContent["_id"])
+		if guildID == GUILD_ID {
+			convertRaceModel(fileContent)
+		}
+	}
 }
 
-func Convert(fileName string) {
-
+func convertRaceModel(raceModel map[string]interface{}) {
+	fmt.Println("TODO: convert once we have a new model")
 }
