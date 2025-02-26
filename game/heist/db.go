@@ -180,5 +180,5 @@ func writeTheme(theme *Theme) {
 		filter = bson.M{"guild_id": theme.GuildID, "name": theme.Name}
 	}
 	db.UpdateOrInsert(THEME_COLLECTION, filter, theme)
-	log.WithFields(log.Fields{"id": theme.ID, "guild": theme.GuildID, "theme": theme.Name}).Debug("write theme to the database")
+	log.WithFields(log.Fields{"guild": theme.GuildID, "theme": theme.Name}).Debug("write theme to the database")
 }

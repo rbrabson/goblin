@@ -94,7 +94,7 @@ func getTarget(targets []*Target, crewSize int) *Target {
 	if target == nil {
 		target = targets[len(targets)-1]
 	}
-	log.WithField("Target", target.ID).Debug("Heist Target")
+	log.WithField("Target", target.Name).Debug("Heist Target")
 	return target
 }
 

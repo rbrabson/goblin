@@ -318,6 +318,7 @@ func calculateCredits(results *HeistResult) {
 		heistMemberResult.StolenCredits = baseStolen
 		results.TotalStolen += heistMemberResult.StolenCredits
 	}
+	log.WithFields(log.Fields{"Guild": results.Target.GuildID, "Target": results.Target.Name, "TotalStolen": results.TotalStolen}).Debug("total stolen")
 }
 
 // String returns a string representation of the Heist.

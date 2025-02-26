@@ -187,7 +187,7 @@ func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data
 		log.WithFields(log.Fields{"collection": collectionName, "filter": filter, "error": err, "data": data}).Error("unable to insert or update the document the collection")
 		return err
 	}
-	log.WithFields(log.Fields{"collection": collectionName, "filter": filter, "data": data}).Debug("inserted or updated document in the collection")
+	log.WithFields(log.Fields{"collection": collectionName, "filter": filter, "data": data}).Trace("inserted or updated document in the collection")
 
 	return nil
 }

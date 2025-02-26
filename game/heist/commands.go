@@ -454,11 +454,9 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 		if len(res.Escaped) > 0 && result.StolenCredits != 0 {
 			account := b.GetAccount(result.Player.MemberID)
 			account.Deposit(result.StolenCredits + result.BonusCredits)
-			res.Target.Vault -= result.StolenCredits
 			log.WithFields(log.Fields{"Member": account.MemberID, "Stolen": result.StolenCredits, "Bonus": result.BonusCredits}).Debug("heist Loot")
 		}
 	}
-	res.Target.Vault = max(res.Target.Vault, res.Target.VaultMax*4/100)
 
 	heistLock.Lock()
 	h := currentHeists[i.GuildID]
