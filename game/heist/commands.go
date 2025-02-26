@@ -372,6 +372,7 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 			break
 		}
 		time.Sleep(timeToWait)
+		log.WithFields(log.Fields{"guild": heist.GuildID, "startTiime": heist.StartTime, "until": time.Until(heist.StartTime.Add(heist.config.WaitTime))}).Debug("waiting for the heist to start")
 		heistMessage(s, i, heist, guildMember, "update")
 	}
 }
@@ -667,11 +668,11 @@ func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *H
 	var buttonDisabled bool
 	switch action {
 	case "plan", "join", "leave":
-		until := time.Until(heist.StartTime)
+		until := time.Until(heist.StartTime.Add(heist.config.WaitTime))
 		status = "Starts in " + format.Duration(until)
 		buttonDisabled = false
 	case "update":
-		until := time.Until(heist.StartTime)
+		until := time.Until(heist.StartTime.Add(heist.config.WaitTime))
 		status = "Starts in " + format.Duration(until)
 		buttonDisabled = false
 	case "start":
@@ -693,7 +694,8 @@ func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *H
 	heist.mutex.Unlock()
 
 	caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
-	msg := fmt.Sprintf("A new %s is being planned by %s. You can join the %s for a cost of %d credits at any time prior to the %s starting.",
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+	msg := p.Sprintf("A new %s is being planned by %s. You can join the %s for a cost of %d credits at any time prior to the %s starting.",
 		heist.theme.Heist,
 		member.Name,
 		heist.theme.Heist,

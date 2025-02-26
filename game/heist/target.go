@@ -148,6 +148,7 @@ func vaultUpdater() {
 	// Update the vaults forever
 	for {
 		time.Sleep(timer)
+		log.WithFields(log.Fields{"timer": timer}).Trace("vault updater")
 		for _, target := range getAllTargets() {
 			newVaultAmount := int(float64(target.Vault) * VAULT_RECOVER_PERCENT)
 			newVaultAmount = min(newVaultAmount, target.VaultMax)
@@ -155,6 +156,8 @@ func vaultUpdater() {
 				log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "old": target.Vault, "new": newVaultAmount, "max": target.VaultMax}).Debug("update vault")
 				target.Vault = newVaultAmount
 				writeTarget(target)
+			} else {
+				log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "vault": target.Vault}).Debug("vault is full")
 			}
 		}
 	}
