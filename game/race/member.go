@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Member represents a member of a guild that is assigned a racer
 type Member struct {
 	ID          primitive.ObjectID `json:"_id" bson:"_id"`
 	GuildID     string             `json:"guild_id" bson:"guild_id"`
@@ -19,6 +20,7 @@ type Member struct {
 	BetsWon     int                `json:"bets_won" bson:"bets_won"`
 	BetEarnings int                `json:"bet_earnings" bson:"bet_earnings"`
 	TotalBets   int                `json:"total_bets" bson:"total_bets"`
+	racer       *Racer             `json:"-" bson:"-"`
 }
 
 func GetMember(g *guild.Guild, memberID string) *Member {

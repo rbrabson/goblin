@@ -2,7 +2,8 @@ package race
 
 import "github.com/rbrabson/goblin/guild"
 
-type Character struct {
+// Racer represents a character that may be assigned to a member that partipates in a race
+type Racer struct {
 	ID            string `json:"_id" bson:"_id"`
 	GuildID       string `json:"guild_id" bson:"guild_id"`
 	Theme         string `json:"theme" bson:"theme"`
@@ -10,22 +11,22 @@ type Character struct {
 	MovementSpeed string `json:"movement_speed" bson:"movement_speed"`
 }
 
-// GetCharacters returns the list of chracters that may be assigned to a member during a race.
-func GetCharacters(g *guild.Guild, themeName string) []*Character {
-	characters, err := getCharacters(g, themeName)
+// GetRacers returns the list of chracters that may be assigned to a member during a race.
+func GetRacers(g *guild.Guild, themeName string) []*Racer {
+	characters, err := getRacers(g, themeName)
 	if err != nil {
-		characters = newCharacters(g)
+		characters = newRacers(g)
 	}
 	return characters
 }
 
-func getCharacters(guild *guild.Guild, themeName string) ([]*Character, error) {
+func getRacers(guild *guild.Guild, themeName string) ([]*Racer, error) {
 	// TODO: readCharacters
 	return nil, nil
 }
 
-func newCharacters(g *guild.Guild) []*Character {
-	characters := []*Character{
+func newRacers(g *guild.Guild) []*Racer {
+	characters := []*Racer{
 		{
 			GuildID:       g.GuildID,
 			Theme:         "clash",
