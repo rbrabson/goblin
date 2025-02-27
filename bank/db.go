@@ -3,6 +3,7 @@ package bank
 import (
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -98,7 +99,12 @@ func writeAccount(account *Account) error {
 	log.Trace("--> bank.writeAccount")
 	defer log.Trace("<-- bank.writeAccount")
 
-	filter := bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}
+	var filter bson.D
+	if account.ID != primitive.NilObjectID {
+		filter = bson.D{{"_id", account.ID}}
+	} else {
+		filter = bson.D{{"guild_id", account.GuildID}, {"member_id", account.MemberID}}
+	}
 	err := db.UpdateOrInsert(ACCOUNT_COLLECTION, filter, account)
 	if err != nil {
 		log.WithFields(log.Fields{"account": account, "error": err}).Error("unable to save bank account to the database")
