@@ -78,11 +78,11 @@ func checkAdminRole(adminRoles []string, memberRoles []string) bool {
 
 	for _, memberRole := range memberRoles {
 		if slices.Contains(adminRoles, memberRole) {
-			log.WithFields(log.Fields{"memberRoles": memberRoles, "adminRoles": adminRoles}).Debug("member has admin role")
+			log.WithFields(log.Fields{"memberRoles": memberRoles, "adminRoles": adminRoles}).Trace("member has admin role")
 			return true
 		}
 	}
-	log.WithFields(log.Fields{"memberRoles": memberRoles, "adminRoles": adminRoles}).Debug("member does not have admin role")
+	log.WithFields(log.Fields{"memberRoles": memberRoles, "adminRoles": adminRoles}).Trace("member does not have admin role")
 	return false
 }
 
@@ -101,5 +101,8 @@ func IsAdmin(s *discordgo.Session, guildID string, memberID string) bool {
 	}
 	memberRoles := getMemberRoles(guildRoles, member.Roles)
 	adminRoles := getAdminRoles(guildID)
-	return checkAdminRole(adminRoles, memberRoles)
+	isAdmin := checkAdminRole(adminRoles, memberRoles)
+	log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "isAdmin": isAdmin, "adminRoles": adminRoles, "memberRoles": memberRoles}).Debug("isAdmin")
+
+	return isAdmin
 }

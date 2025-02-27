@@ -81,21 +81,6 @@ func (server *Server) GetAdminRoles() []string {
 	return server.AdminRoles
 }
 
-// CheckAdminRole checks if a member has any admin role in the server.
-func (server *Server) CheckAdminRole(memberRoles []string) bool {
-	log.Trace("--> server.Server.CheckAdminRole")
-	defer log.Trace("<-- server.Server.CheckAdminRole")
-
-	for _, memberRole := range memberRoles {
-		if slices.Contains(server.AdminRoles, memberRole) {
-			log.WithFields(log.Fields{"memberRoles": memberRoles, "adminRoles": server.AdminRoles}).Debug("member has admin role")
-			return true
-		}
-	}
-	log.WithFields(log.Fields{"memberRoles": memberRoles, "adminRoles": server.AdminRoles}).Debug("member does not have admin role")
-	return false
-}
-
 // String returns a string representation of the server.
 func (server *Server) String() string {
 	return fmt.Sprintf("Server{guildID = %s, adminRoles = %v}", server.GuildID, server.AdminRoles)
