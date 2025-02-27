@@ -40,5 +40,8 @@ func writeConfig(config *Config) {
 	} else {
 		filter = bson.M{"guild_id": config.GuildID}
 	}
-	db.UpdateOrInsert(CONFIG_COLLECTION, filter, config)
+	err := db.UpdateOrInsert(CONFIG_COLLECTION, filter, config)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": config.GuildID, "error": err}).Error("failed to write the race configuration to the database")
+	}
 }
