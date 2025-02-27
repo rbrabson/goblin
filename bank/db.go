@@ -79,10 +79,7 @@ func readAccount(bank *Bank, memberID string) *Account {
 	log.Trace("--> bank.readAccount")
 	defer log.Trace("<-- bank.readAccount")
 
-	filter := bson.M{
-		"guild_id":  bank.GuildID,
-		"member_id": memberID,
-	}
+	filter := bson.M{"guild_id": bank.GuildID, "member_id": memberID}
 	var account Account
 	err := db.FindOne(ACCOUNT_COLLECTION, filter, &account)
 	if err != nil {
@@ -101,9 +98,9 @@ func writeAccount(account *Account) error {
 
 	var filter bson.D
 	if account.ID != primitive.NilObjectID {
-		filter = bson.D{{"_id", account.ID}}
+		filter = bson.D{{Key: "_id", Value: account.ID}}
 	} else {
-		filter = bson.D{{"guild_id", account.GuildID}, {"member_id", account.MemberID}}
+		filter = bson.D{{Key: "guild_id", Value: account.GuildID}, {Key: "member_id", Value: account.MemberID}}
 	}
 	err := db.UpdateOrInsert(ACCOUNT_COLLECTION, filter, account)
 	if err != nil {
