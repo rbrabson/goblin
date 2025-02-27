@@ -20,9 +20,9 @@ func ConvertEconomy(fileName string) {
 }
 
 func convertEconomyModel(guildID string, model map[string]interface{}) {
-	convertBank(guildID, model)
-	convertLeaderboard(guildID, model)
-	// convertBankAccounts(guildID, model)
+	// convertBank(guildID, model)
+	// convertLeaderboard(guildID, model)
+	convertBankAccounts(guildID, model)
 }
 
 func convertBank(guildID string, model map[string]interface{}) {
@@ -57,7 +57,16 @@ func convertBankAccount(guildID string, model map[string]interface{}) {
 	lifetimeBalance := asInteger(model["lifetime_balance"])
 	createdAt := asTime(model["created_at"])
 
-	fmt.Printf("guildID=%s, memberID=%s, monthlyBalance=%d, currentBalance=%d, lifetimeBalance=%d, createdAt=%v\n", guildID, memberID, monthlyBalance, currentBalance, lifetimeBalance, createdAt)
+	account := &bank.Account{
+		GuildID:         guildID,
+		MemberID:        memberID,
+		MonthlyBalance:  monthlyBalance,
+		CurrentBalance:  currentBalance,
+		LifetimeBalance: lifetimeBalance,
+		CreatedAt:       createdAt,
+	}
+
+	fmt.Println(account.String())
 }
 
 func convertLeaderboard(guildID string, model map[string]interface{}) {
