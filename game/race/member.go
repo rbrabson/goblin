@@ -11,16 +11,16 @@ type Member struct {
 	ID          primitive.ObjectID `json:"_id" bson:"_id"`
 	GuildID     string             `json:"guild_id" bson:"guild_id"`
 	MemberID    string             `json:"member_id" bson:"member_id"`
-	NumRaces    int                `json:"num_races" bson:"num_races"`
-	Win         int                `json:"win" bson:"win"`
-	Place       int                `json:"place" bson:"place"`
-	Show        int                `json:"show" bson:"show"`
-	Loses       int                `json:"loses" bson:"loses"`
-	Earnings    int                `json:"earnings" bson:"earnings"`
-	BetsPlaced  int                `json:"bets_placed" bson:"bets_placed"`
-	BetsWon     int                `json:"bets_won" bson:"bets_won"`
+	RacesLost   int                `json:"races_lost" bson:"races_lost"`
+	RacesPlaced int                `json:"races_placed" bson:"races_placed"`
+	RacesShowed int                `json:"races_showed" bson:"races_showd"`
+	RacesWon    int                `json:"races_won" bson:"races_won"`
+	TotalRaces  int                `json:"total_races" bson:"total_races"`
 	BetEarnings int                `json:"bet_earnings" bson:"bet_earnings"`
+	BetsMade    int                `json:"bets_made" bson:"bets_made"`
+	BetsWon     int                `json:"bets_won" bson:"bets_won"`
 	TotalBets   int                `json:"total_bets" bson:"total_bets"`
+	Earnings    int                `json:"earnings" bson:"earnings"`
 	racer       *Racer             `json:"-" bson:"-"`
 }
 
@@ -55,16 +55,16 @@ func newMember(guild *guild.Guild, memberID string) *Member {
 	member := &Member{
 		GuildID:     guild.GuildID,
 		MemberID:    memberID,
-		NumRaces:    0,
-		Win:         0,
-		Place:       0,
-		Show:        0,
-		Loses:       0,
-		Earnings:    0,
-		BetsPlaced:  0,
+		RacesWon:    0,
+		RacesPlaced: 0,
+		RacesShowed: 0,
+		RacesLost:   0,
+		TotalRaces:  0,
+		BetsMade:    0,
 		BetsWon:     0,
 		BetEarnings: 0,
 		TotalBets:   0,
+		Earnings:    0,
 	}
 
 	// TODO: writeMember
@@ -74,21 +74,32 @@ func newMember(guild *guild.Guild, memberID string) *Member {
 }
 
 func (m *Member) WinRace() {
+	m.RacesWon++
+	// TODO: writeMember
 }
 
 func (m *Member) PlaceInRace() {
+	m.RacesPlaced++
+	// TODO: writeMember
 
 }
 
 func (m *Member) ShowInRace() {
-
+	m.RacesShowed++
+	// TODO: writeMember
 }
 
 func (m *Member) LoseRace() {
+	m.RacesLost++
+	// TODO: writeMember
 }
 
 func (m *Member) PlaceBet() {
+	m.BetsMade++
+	// TODO: writeMember
 }
 
 func (m *Member) WinBet() {
+	m.BetsWon++
+	// TODO: writeMember
 }
