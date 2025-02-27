@@ -38,12 +38,15 @@ func GetMember(g *guild.Guild, memberID string) *Member {
 
 // getMember gets a member from the database. If the member doesn't exist, then
 // nil is returned.
-func getMember(guild *guild.Guild, memberID string) (*Member, error) {
+func getMember(g *guild.Guild, memberID string) (*Member, error) {
 	log.Trace("--> race.getMember")
 	defer log.Trace("<-- race.getMember")
 
-	// TODO: readMember
-	return nil, nil
+	member := readMember(g, memberID)
+	if member == nil {
+		return nil, ErrMemberNotFound
+	}
+	return member, nil
 }
 
 // newMember returns a new race member for the guild. The member is saved to
@@ -67,39 +70,48 @@ func newMember(guild *guild.Guild, memberID string) *Member {
 		Earnings:    0,
 	}
 
-	// TODO: writeMember
+	writeMember(member)
 	log.WithFields(log.Fields{"guild": guild.GuildID, "member": memberID}).Info("new member")
 
 	return member
 }
 
+// WinRace is called when the race member won a race.
 func (m *Member) WinRace() {
 	m.RacesWon++
-	// TODO: writeMember
+	writeMember(m)
 }
 
+// PlaceInRace is called when the race member places (comes in 2nd) in a race.
 func (m *Member) PlaceInRace() {
 	m.RacesPlaced++
-	// TODO: writeMember
+	writeMember(m)
 
 }
 
+// ShowInRace is called when the race member shows (comes in 3rd) in a race.
 func (m *Member) ShowInRace() {
 	m.RacesShowed++
-	// TODO: writeMember
+	writeMember(m)
 }
 
+// LoseRace is called when the race member fails to win, place or show in a race.
 func (m *Member) LoseRace() {
 	m.RacesLost++
-	// TODO: writeMember
+	writeMember(m)
 }
 
+// PlaceBet is used to place a bet on a member of a race.
 func (m *Member) PlaceBet() {
+	// TODO: need to decrement the bank account for the bet.
 	m.BetsMade++
-	// TODO: writeMember
+	writeMember(m)
 }
 
+// WinBet is used when a member wins a bet on a race.
 func (m *Member) WinBet() {
+	// TODO: need to increment the bank account for the better. Probably need to pass in
+	// the bet amount.
 	m.BetsWon++
-	// TODO: writeMember
+	writeMember(m)
 }
