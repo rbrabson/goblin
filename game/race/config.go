@@ -3,7 +3,6 @@ package race
 import (
 	"time"
 
-	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -28,21 +27,21 @@ type Config struct {
 
 // GetConfig gets the race configuration for the guild. If the configuration does not
 // exist, then a new one is created.
-func GetConfig(g *guild.Guild) *Config {
-	config, err := getConfig(g)
+func GetConfig(guildID string) *Config {
+	config, err := getConfig(guildID)
 	if err != nil {
-		config = newConfig(g)
+		config = newConfig(guildID)
 	}
 	return config
 }
 
 // getConfig reads the race configuration from the database. If the configuration
 // does not exist, then an error is returned.
-func getConfig(g *guild.Guild) (*Config, error) {
+func getConfig(guildID string) (*Config, error) {
 	log.Trace("--> race.getConfig")
 	defer log.Trace("<-- race.getConfig")
 
-	config := readConfig(g)
+	config := readConfig(guildID)
 	if config == nil {
 		return nil, ErrConfigNotFound
 	}
@@ -51,12 +50,12 @@ func getConfig(g *guild.Guild) (*Config, error) {
 
 // newConfig creates a new race configuration for the guild. The configuration is saved to
 // the database.
-func newConfig(guild *guild.Guild) *Config {
+func newConfig(guildID string) *Config {
 	log.Trace("--> race.newConfig")
 	defer log.Trace("<-- race.newConfig")
 
 	config := &Config{
-		GuildID:          guild.GuildID,
+		GuildID:          guildID,
 		Theme:            "clash",
 		BetAmount:        100,
 		Currency:         "credit",
@@ -70,7 +69,7 @@ func newConfig(guild *guild.Guild) *Config {
 	}
 
 	writeConfig(config)
-	log.WithFields(log.Fields{"guild": guild.GuildID}).Info("race configuration created")
+	log.WithFields(log.Fields{"guild": guildID}).Info("race configuration created")
 
 	return config
 }

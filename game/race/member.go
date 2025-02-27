@@ -2,7 +2,6 @@ package race
 
 import (
 	"github.com/rbrabson/goblin/bank"
-	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,24 +25,24 @@ type Member struct {
 }
 
 // GetMember gets a race member. THe member is created if it doesn't exist.
-func GetMember(g *guild.Guild, memberID string) *Member {
+func GetMember(guildID string, memberID string) *Member {
 	log.Trace("--> race.GetMember")
 	defer log.Trace("<-- race.GetMember")
 
-	member, err := getMember(g, memberID)
+	member, err := getMember(guildID, memberID)
 	if err != nil {
-		member = newMember(g, memberID)
+		member = newMember(guildID, memberID)
 	}
 	return member
 }
 
 // getMember gets a member from the database. If the member doesn't exist, then
 // nil is returned.
-func getMember(g *guild.Guild, memberID string) (*Member, error) {
+func getMember(guildID string, memberID string) (*Member, error) {
 	log.Trace("--> race.getMember")
 	defer log.Trace("<-- race.getMember")
 
-	member := readMember(g, memberID)
+	member := readMember(guildID, memberID)
 	if member == nil {
 		return nil, ErrMemberNotFound
 	}
@@ -52,12 +51,12 @@ func getMember(g *guild.Guild, memberID string) (*Member, error) {
 
 // newMember returns a new race member for the guild. The member is saved to
 // the database.
-func newMember(guild *guild.Guild, memberID string) *Member {
+func newMember(guildID string, memberID string) *Member {
 	log.Trace("--> race.newMember")
 	defer log.Trace("<-- race.newMember")
 
 	member := &Member{
-		GuildID:     guild.GuildID,
+		GuildID:     guildID,
 		MemberID:    memberID,
 		RacesWon:    0,
 		RacesPlaced: 0,
@@ -72,7 +71,7 @@ func newMember(guild *guild.Guild, memberID string) *Member {
 	}
 
 	writeMember(member)
-	log.WithFields(log.Fields{"guild": guild.GuildID, "member": memberID}).Info("new member")
+	log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Info("new member")
 
 	return member
 }

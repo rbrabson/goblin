@@ -1,18 +1,26 @@
 package race
 
-import "github.com/rbrabson/goblin/guild"
+import (
+	"github.com/rbrabson/goblin/guild"
+	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // Racer represents a character that may be assigned to a member that partipates in a race
 type Racer struct {
-	ID            string `json:"_id" bson:"_id"`
-	GuildID       string `json:"guild_id" bson:"guild_id"`
-	Theme         string `json:"theme" bson:"theme"`
-	Emoji         string `json:"emoji" bson:"emoji"`
-	MovementSpeed string `json:"movement_speed" bson:"movement_speed"`
+	ID            primitive.ObjectID `json:"_id" bson:"_id"`
+	GuildID       string             `json:"guild_id" bson:"guild_id"`
+	Theme         string             `json:"theme" bson:"theme"`
+	Emoji         string             `json:"emoji" bson:"emoji"`
+	MovementSpeed string             `json:"movement_speed" bson:"movement_speed"`
 }
 
 // GetRacers returns the list of chracters that may be assigned to a member during a race.
 func GetRacers(g *guild.Guild, themeName string) []*Racer {
+	log.Trace("--> race.GetRacers")
+	defer log.Trace("<-- race.GetRacers")
+
 	characters, err := getRacers(g, themeName)
 	if err != nil {
 		characters = newRacers(g)
@@ -20,13 +28,28 @@ func GetRacers(g *guild.Guild, themeName string) []*Racer {
 	return characters
 }
 
+// getRacers reads the list of characters for the theme and guild from the database. If the list
+// does not exist, then an error is returned.
 func getRacers(guild *guild.Guild, themeName string) ([]*Racer, error) {
-	// TODO: readCharacters
-	return nil, nil
+	log.Trace("--> race.getRacers")
+	defer log.Trace("<-- race.getRacers")
+
+	filter := bson.D{{Key: "guild_id", Value: guild.GuildID}, {Key: "theme", Value: themeName}}
+	racer, err := readAllRacers(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return racer, nil
 }
 
+// newRacers creates a new list of characters for the guild. The list is saved to
+// the database.
 func newRacers(g *guild.Guild) []*Racer {
-	characters := []*Racer{
+	log.Trace("--> race.newRacers")
+	defer log.Trace("<-- race.newRacers")
+
+	racers := []*Racer{
 		{
 			GuildID:       g.GuildID,
 			Theme:         "clash",
@@ -239,7 +262,11 @@ func newRacers(g *guild.Guild) []*Racer {
 		},
 	}
 
-	// writeCharacters
+	for _, racer := range racers {
+		writeRacer(racer)
+	}
 
-	return characters
+	log.WithFields(log.Fields{"guild": g.GuildID, "count": len(racers)}).Info("created new racers")
+
+	return racers
 }
