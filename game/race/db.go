@@ -82,8 +82,8 @@ func writeMember(member *Member) {
 
 // readAllRaces loads the racers that may be used in racers that match the filter criteria.
 func readAllRacers(filter bson.D) ([]*Racer, error) {
-	log.Trace("--> heist.readAllTargets")
-	defer log.Trace("<-- heist.readAllTargets")
+	log.Trace("--> race.readAllRacers")
+	defer log.Trace("<-- race.readAllRacers")
 
 	var racers []*Racer
 	sort := bson.D{{Key: "crew_size", Value: 1}}
@@ -100,8 +100,8 @@ func readAllRacers(filter bson.D) ([]*Racer, error) {
 
 // writeRacer creates or updates the target in the database.
 func writeRacer(racer *Racer) {
-	log.Trace("--> heist.Target.writeTarget")
-	defer log.Trace("<-- heist.Target.writeTarget")
+	log.Trace("--> race.Target.writeRacer")
+	defer log.Trace("<-- race.Target.writeRacer")
 
 	var filter bson.D
 	if racer.ID != primitive.NilObjectID {
