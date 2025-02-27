@@ -1,6 +1,10 @@
 package race
 
-import "time"
+import (
+	"time"
+
+	"github.com/rbrabson/goblin/guild"
+)
 
 type Config struct {
 	ID               string        `json:"_id" bson:"_id"`
@@ -17,4 +21,34 @@ type Config struct {
 	WaitToStart      time.Duration `json:"wait_to_start" bson:"wait_to_start"`
 	StartingLine     string        `json:"starting_line" bson:"starting_line"`
 	EndingLine       string        `json:"ending_line" bson:"ending_line"`
+}
+
+func GetConfig(g *guild.Guild) *Config {
+	config, err := getConfig(g)
+	if err != nil {
+		config = newConfig(g)
+	}
+	return config
+}
+
+func getConfig(guild *guild.Guild) (*Config, error) {
+	// TODO: readConfig
+	return nil, nil
+}
+
+func newConfig(guild *guild.Guild) *Config {
+	config := &Config{
+		GuildID:          guild.GuildID,
+		Theme:            "clash",
+		BetAmount:        100,
+		Currency:         "credit",
+		MaxNumRacers:     10,
+		MaxPrizeAmount:   1250,
+		MinNumRacers:     2,
+		MinPriceAmount:   750,
+		WaitBetweenRaces: time.Minute * 5,
+		WaitForBets:      time.Minute * 1,
+		WaitToStart:      time.Second * 30,
+	}
+	return config
 }
