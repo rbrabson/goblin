@@ -5,6 +5,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/guild"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -24,7 +25,12 @@ type Race struct {
 	mutex       sync.Mutex
 }
 
+// GetRace gets the race for the guild. If a race isn't in progress, then a new one
+// is created.
 func GetRace(g *guild.Guild) *Race {
+	log.Trace("--> race.GetRace")
+	defer log.Trace("<-- race.GetRace")
+
 	raceLock.Lock()
 	defer raceLock.Unlock()
 	race := currentRaces[g.GuildID]
@@ -34,7 +40,11 @@ func GetRace(g *guild.Guild) *Race {
 	return race
 }
 
+// newRace creates a new race for the guild.
 func newRace(g *guild.Guild) *Race {
+	log.Trace("--> race.newRace")
+	defer log.Trace("<-- race.newRace")
+
 	config := GetConfig(g)
 	race := &Race{
 		GuildID:     g.GuildID,
@@ -45,6 +55,7 @@ func newRace(g *guild.Guild) *Race {
 		mutex:       sync.Mutex{},
 	}
 	currentRaces[g.GuildID] = race
+	log.WithFields(log.Fields{"guild": g.GuildID}).Info("new race")
 
 	return race
 }
@@ -53,5 +64,7 @@ func newRace(g *guild.Guild) *Race {
 func (r *Race) End() {
 	raceLock.Lock()
 	defer raceLock.Unlock()
+
 	delete(currentRaces, r.GuildID)
+	log.WithFields(log.Fields{"guild": r.GuildID}).Info("end race")
 }
