@@ -95,8 +95,12 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // resetRace resets a hung race.
 func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	discmsg.SendEphemeralResponse(s, i, "reset not implemented")
-	// TODO: implement
+	log.Trace("--> resetRace")
+	defer log.Trace("<-- resetRace")
+
+	ResetRace(i.GuildID)
+	discmsg.SendEphemeralResponse(s, i, "Race has been reset")
+
 }
 
 // startRace starts a race that other members may join.

@@ -67,3 +67,15 @@ func (r *Race) End() {
 	delete(currentRaces, r.GuildID)
 	log.WithFields(log.Fields{"guild": r.GuildID}).Info("end race")
 }
+
+// ResetRace resets a hung race for a given guild.
+func ResetRace(guildID string) {
+	log.Trace("---> race.ResetRace")
+	defer log.Trace("<-- race.ResetRace")
+
+	raceLock.Lock()
+	defer raceLock.Unlock()
+
+	delete(currentRaces, guildID)
+	log.WithFields(log.Fields{"guild": guildID}).Info("reset race")
+}
