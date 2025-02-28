@@ -1,6 +1,8 @@
 package race
 
 import (
+	"math/rand"
+
 	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -269,4 +271,44 @@ func newRacers(g *guild.Guild) []*Racer {
 	log.WithFields(log.Fields{"guild": g.GuildID, "count": len(racers)}).Info("created new racers")
 
 	return racers
+}
+
+// calculateMovement calculates the distance a racer moves on a given turn
+func (r *Racer) calculateMovement(currentTurn int) int {
+	log.Trace("--> calculateMovement")
+	defer log.Trace("<-- calculateMovement")
+
+	switch r.MovementSpeed {
+	case "veryfast":
+		return rand.Intn(8) * 2
+	case "fast":
+		return rand.Intn(5) * 3
+	case "slow":
+		return (rand.Intn(3) + 1) * 3
+	case "steady":
+		return 2 * 3
+	case "abberant":
+		chance := rand.Intn(100)
+		if chance > 90 {
+			return 5 * 3
+		}
+		return rand.Intn(3) * 3
+	case "predator":
+		if currentTurn%2 == 0 {
+			return 0
+		} else {
+			return (rand.Intn(4) + 2) * 3
+		}
+	case "special":
+		fallthrough
+	default:
+		switch currentTurn {
+		case 0:
+			return 14 * 3
+		case 1:
+			return 0
+		default:
+			return rand.Intn(3) * 3
+		}
+	}
 }

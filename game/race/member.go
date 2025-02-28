@@ -20,7 +20,6 @@ type RaceMember struct {
 	BetsMade      int                `json:"bets_made" bson:"bets_made"`
 	BetsWon       int                `json:"bets_won" bson:"bets_won"`
 	TotalEarnings int                `json:"total_earnings" bson:"total_earnings"`
-	racer         *Racer             `json:"-" bson:"-"`
 }
 
 // GetRaceMember gets a race member. THe member is created if it doesn't exist.
