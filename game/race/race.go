@@ -2,6 +2,7 @@ package race
 
 import (
 	"math/rand"
+	"sort"
 	"sync"
 	"time"
 
@@ -34,9 +35,9 @@ type RaceResult struct {
 	Win       *RaceParticipant // First place in the race
 	Place     *RaceParticipant // Second place in the race
 	Show      *RaceParticipant // Third place in the race
-	WinTime   int              // Speed for the winner in the race
-	PlaceTime int              // Speed for the 2nd plalce finisher in the race
-	ShowTime  int              // Speed for the 3rd place finisher in the race
+	WinTime   float64          // Speed for the winner in the race
+	PlaceTime float64          // Speed for the 2nd plalce finisher in the race
+	ShowTime  float64          // Speed for the 3rd place finisher in the race
 }
 
 // RaceLeg is a single leg in a race. This covers the movement for all racers during the given turn.
@@ -137,6 +138,8 @@ func (race *Race) AddBetter(better *RaceBetter) {
 	log.WithFields(log.Fields{"guild": race.GuildID, "better": better.Member.MemberID}).Info("add better to current race")
 }
 
+// RunRace runs a race, calculating the results of each leg of the race and the
+// ultimate winners of the race.
 func (race *Race) RunRace(trackLength int) {
 	log.Trace("--> race.Race.RunRace")
 	defer log.Trace("<-- race.Race.RunRace")
@@ -158,8 +161,8 @@ func (race *Race) RunRace(trackLength int) {
 	race.RaceLegs = append(race.RaceLegs, raceLeg)
 	previousLeg := raceLeg
 
-	turn := 0
 	// Run the race until all racers cross the finish line
+	turn := 0
 	stillRacing := true
 	for stillRacing {
 		turn++
@@ -170,16 +173,35 @@ func (race *Race) RunRace(trackLength int) {
 		}
 
 		// Run the new race leg
+		stillRacing = false
 		for _, previousPosition := range previousLeg.ParticipantPositions {
 			newPosition := Move(previousPosition, turn)
 			newRaceLeg.ParticipantPositions = append(newRaceLeg.ParticipantPositions, newPosition)
 			if !newPosition.Finished {
-				stillRacing = false
+				stillRacing = true
 			}
 		}
 
 		race.RaceLegs = append(race.RaceLegs, raceLeg)
 		previousLeg = raceLeg
+	}
+
+	// sort the participants in the last race leg (previousLeg)
+	sort.Slice(previousLeg.ParticipantPositions, func(i, j int) bool {
+		if previousLeg.ParticipantPositions[i].Speed == previousLeg.ParticipantPositions[j].Speed {
+			return rand.Intn(2) == 0
+		}
+		return previousLeg.ParticipantPositions[i].Speed < previousLeg.ParticipantPositions[j].Speed
+	})
+
+	// Calculate the winners of the race and save in the results
+	race.RaceResult = &RaceResult{
+		Win:       previousLeg.ParticipantPositions[0].RaceParticipant,
+		Place:     previousLeg.ParticipantPositions[1].RaceParticipant,
+		Show:      previousLeg.ParticipantPositions[2].RaceParticipant,
+		WinTime:   previousLeg.ParticipantPositions[0].Speed,
+		PlaceTime: previousLeg.ParticipantPositions[1].Speed,
+		ShowTime:  previousLeg.ParticipantPositions[2].Speed,
 	}
 }
 
