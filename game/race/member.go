@@ -8,20 +8,19 @@ import (
 
 // RaceMember represents a member of a guild that is assigned a racer
 type RaceMember struct {
-	ID          primitive.ObjectID `json:"_id" bson:"_id"`
-	GuildID     string             `json:"guild_id" bson:"guild_id"`
-	MemberID    string             `json:"member_id" bson:"member_id"`
-	RacesLost   int                `json:"races_lost" bson:"races_lost"`
-	RacesPlaced int                `json:"races_placed" bson:"races_placed"`
-	RacesShowed int                `json:"races_showed" bson:"races_showd"`
-	RacesWon    int                `json:"races_won" bson:"races_won"`
-	TotalRaces  int                `json:"total_races" bson:"total_races"`
-	BetEarnings int                `json:"bet_earnings" bson:"bet_earnings"`
-	BetsMade    int                `json:"bets_made" bson:"bets_made"`
-	BetsWon     int                `json:"bets_won" bson:"bets_won"`
-	TotalBets   int                `json:"total_bets" bson:"total_bets"`
-	Earnings    int                `json:"earnings" bson:"earnings"`
-	racer       *Racer             `json:"-" bson:"-"`
+	ID           primitive.ObjectID `json:"_id" bson:"_id"`
+	GuildID      string             `json:"guild_id" bson:"guild_id"`
+	MemberID     string             `json:"member_id" bson:"member_id"`
+	RacesLost    int                `json:"races_lost" bson:"races_lost"`
+	RacesPlaced  int                `json:"races_placed" bson:"races_placed"`
+	RacesShowed  int                `json:"races_showed" bson:"races_showd"`
+	RacesWon     int                `json:"races_won" bson:"races_won"`
+	TotalRaces   int                `json:"total_races" bson:"total_races"`
+	BetsEarnings int                `json:"bets_earnings" bson:"bets_earnings"`
+	BetsMade     int                `json:"bets_made" bson:"bets_made"`
+	BetsWon      int                `json:"bets_won" bson:"bets_won"`
+	Earnings     int                `json:"earnings" bson:"earnings"`
+	racer        *Racer             `json:"-" bson:"-"`
 }
 
 // GetRaceMember gets a race member. THe member is created if it doesn't exist.
@@ -56,18 +55,17 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 	defer log.Trace("<-- race.newRaceMember")
 
 	member := &RaceMember{
-		GuildID:     guildID,
-		MemberID:    memberID,
-		RacesWon:    0,
-		RacesPlaced: 0,
-		RacesShowed: 0,
-		RacesLost:   0,
-		TotalRaces:  0,
-		BetsMade:    0,
-		BetsWon:     0,
-		BetEarnings: 0,
-		TotalBets:   0,
-		Earnings:    0,
+		GuildID:      guildID,
+		MemberID:     memberID,
+		RacesWon:     0,
+		RacesPlaced:  0,
+		RacesShowed:  0,
+		RacesLost:    0,
+		TotalRaces:   0,
+		BetsMade:     0,
+		BetsWon:      0,
+		BetsEarnings: 0,
+		Earnings:     0,
 	}
 
 	writeRaceMember(member)
