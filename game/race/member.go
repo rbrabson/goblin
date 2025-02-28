@@ -42,7 +42,7 @@ func getRaceMember(guildID string, memberID string) (*RaceMember, error) {
 	log.Trace("--> race.getRaceMember")
 	defer log.Trace("<-- race.getRaceMember")
 
-	member := readMember(guildID, memberID)
+	member := readRaceMember(guildID, memberID)
 	if member == nil {
 		return nil, ErrMemberNotFound
 	}
@@ -70,7 +70,7 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 		Earnings:    0,
 	}
 
-	writeMember(member)
+	writeRaceMember(member)
 	log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Info("new member")
 
 	return member
@@ -82,7 +82,7 @@ func (m *RaceMember) WinRace() {
 	log.Trace("<-- race.Member.WinRace")
 
 	m.RacesWon++
-	writeMember(m)
+	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("won race")
 }
@@ -93,7 +93,7 @@ func (m *RaceMember) PlaceInRace() {
 	log.Trace("<-- race.Member.PlaceInRace")
 
 	m.RacesPlaced++
-	writeMember(m)
+	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("placed in race")
 
@@ -105,7 +105,7 @@ func (m *RaceMember) ShowInRace() {
 	log.Trace("<-- race.Member.ShowInRace")
 
 	m.RacesShowed++
-	writeMember(m)
+	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("sbowed in race")
 }
@@ -116,7 +116,7 @@ func (m *RaceMember) LoseRace() {
 	log.Trace("<-- race.Member.LoseRace")
 
 	m.RacesLost++
-	writeMember(m)
+	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lost race")
 }
@@ -134,7 +134,7 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 	}
 
 	m.BetsMade++
-	writeMember(m)
+	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "betAmount": betAmount}).Info("placed bet")
 
@@ -151,7 +151,7 @@ func (m *RaceMember) WinBet(winnings int) {
 	bankAccount.Deposit(winnings)
 
 	m.BetsWon++
-	writeMember(m)
+	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": winnings}).Info("won bet")
 }

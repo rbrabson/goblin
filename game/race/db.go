@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	CONFIG_COLLECTION = "race_configs"
-	MEMBER_COLLECTION = "race_members"
-	RACER_COLLECTION  = "race_racers"
+	RACE_CONFIG_COLLECTION = "race_configs"
+	RACE_MEMBER_COLLECTION = "race_members"
+	RACER_COLLECTION       = "race_racers"
 )
 
 // readConfig loads the race configuration from the database. If it does not exist then
@@ -20,7 +20,7 @@ func readConfig(guildID string) *Config {
 
 	filter := bson.M{"guild_id": guildID}
 	var config Config
-	err := db.FindOne(CONFIG_COLLECTION, filter, &config)
+	err := db.FindOne(RACE_CONFIG_COLLECTION, filter, &config)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "error": err}).Debug("race configuration not found in the database")
 		return nil
@@ -41,7 +41,7 @@ func writeConfig(config *Config) {
 	} else {
 		filter = bson.M{"guild_id": config.GuildID}
 	}
-	err := db.UpdateOrInsert(CONFIG_COLLECTION, filter, config)
+	err := db.UpdateOrInsert(RACE_CONFIG_COLLECTION, filter, config)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": config.GuildID, "error": err}).Error("failed to write the race configuration to the database")
 	}
@@ -49,13 +49,13 @@ func writeConfig(config *Config) {
 
 // readConfig loads the race member from the database. If it does not exist then
 // a `nil` value is returned.
-func readMember(guildID string, memberID string) *RaceMember {
-	log.Trace("--> race.readMember")
-	defer log.Trace("<-- race.readMember")
+func readRaceMember(guildID string, memberID string) *RaceMember {
+	log.Trace("--> race.readRaceMember")
+	defer log.Trace("<-- race.readRaceMember")
 
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	var member RaceMember
-	err := db.FindOne(MEMBER_COLLECTION, filter, &member)
+	err := db.FindOne(RACE_MEMBER_COLLECTION, filter, &member)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "error": err}).Debug("race member not found in the database")
 		return nil
@@ -66,9 +66,9 @@ func readMember(guildID string, memberID string) *RaceMember {
 }
 
 // Write creates or updates the race member in the database
-func writeMember(member *RaceMember) {
-	log.Trace("--> race.writeMember")
-	defer log.Trace("<-- race.writeMember")
+func writeRaceMember(member *RaceMember) {
+	log.Trace("--> race.writeRaceMember")
+	defer log.Trace("<-- race.writeRaceMember")
 
 	var filter bson.M
 	if member.ID != primitive.NilObjectID {
@@ -76,7 +76,7 @@ func writeMember(member *RaceMember) {
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
-	db.UpdateOrInsert(MEMBER_COLLECTION, filter, member)
+	db.UpdateOrInsert(RACE_MEMBER_COLLECTION, filter, member)
 	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID}).Debug("write race member to the database")
 }
 

@@ -84,7 +84,7 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {
 	case "start":
-		prepareRace(s, i)
+		startRace(s, i)
 	case "stats":
 		raceStats(s, i)
 	default:
@@ -99,9 +99,9 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// TODO: implement
 }
 
-// prepareRace starts a race that other members may join.
-func prepareRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	discmsg.SendEphemeralResponse(s, i, "prepare not implemented")
+// startRace starts a race that other members may join.
+func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	discmsg.SendEphemeralResponse(s, i, "start not implemented")
 	// TODO: implement
 }
 
