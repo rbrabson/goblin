@@ -218,3 +218,9 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	discmsg.SendEphemeralResponse(s, i, "resbetet not implemented")
 	// TODO: implement
 }
+
+// waitOnRace waits for racers to join the race, or betters to bet on the race.
+func waitOnRace() {
+	log.Trace("--> race.waitOnRace")
+	defer log.Trace("<-- race.waitOnRace")
+}
