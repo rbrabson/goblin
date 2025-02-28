@@ -22,12 +22,12 @@ func SetDB(database *mongo.MongoDB) {
 	db = database
 }
 
-// getAdminRoles returns the list of admin roles for a given guild.
+// GetAdminRoles returns the list of admin roles for a given guild.
 // If the guild is not found, it returns nil.
 // If there are no admin roles, it returns an empty slice.
-func getAdminRoles(guildID string) []string {
-	log.Trace("--> role.getAdminRoles")
-	defer log.Trace("<-- role.getAdminRoles")
+func GetAdminRoles(guildID string) []string {
+	log.Trace("--> role.GetAdminRoles")
+	defer log.Trace("<-- role.GetAdminRoles")
 
 	filter := bson.M{"guild_id": guildID}
 	server := &Server{}
@@ -55,10 +55,10 @@ func GetGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
 	return guildRoles
 }
 
-// getMemberRoles returns the list of roles names for a member with the given set of role IDs
-func getMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
-	log.Trace("--> role.getMemberRoles")
-	defer log.Trace("<-- role.getMemberRoles")
+// GetMemberRoles returns the list of roles names for a member with the given set of role IDs
+func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
+	log.Trace("--> role.GetMemberRoles")
+	defer log.Trace("<-- role.GetMemberRoles")
 
 	roleNames := make([]string, 0, len(roleIDs))
 	for _, roleID := range roleIDs {
@@ -71,10 +71,10 @@ func getMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
 	return roleNames
 }
 
-// checkAdminRole checks if a member has any admin role in the server.
-func checkAdminRole(adminRoles []string, memberRoles []string) bool {
-	log.Trace("--> role.checkAdminRole")
-	defer log.Trace("<-- role.checkAdminRole")
+// CheckAdminRole checks if a member has any admin role in the server.
+func CheckAdminRole(adminRoles []string, memberRoles []string) bool {
+	log.Trace("--> role.CheckAdminRole")
+	defer log.Trace("<-- role.CheckAdminRole")
 
 	for _, memberRole := range memberRoles {
 		if slices.Contains(adminRoles, memberRole) {
@@ -99,9 +99,9 @@ func IsAdmin(s *discordgo.Session, guildID string, memberID string) bool {
 		log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "error": err}).Error("failed to get guild member")
 		return false
 	}
-	memberRoles := getMemberRoles(guildRoles, member.Roles)
-	adminRoles := getAdminRoles(guildID)
-	isAdmin := checkAdminRole(adminRoles, memberRoles)
+	memberRoles := GetMemberRoles(guildRoles, member.Roles)
+	adminRoles := GetAdminRoles(guildID)
+	isAdmin := CheckAdminRole(adminRoles, memberRoles)
 	log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "isAdmin": isAdmin, "adminRoles": adminRoles, "memberRoles": memberRoles}).Debug("isAdmin")
 
 	return isAdmin
