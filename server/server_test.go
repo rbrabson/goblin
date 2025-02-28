@@ -1,4 +1,4 @@
-package role
+package server
 
 import (
 	"log"
@@ -7,6 +7,8 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
+
+	discrole "github.com/rbrabson/goblin/internal/role"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -16,18 +18,19 @@ func init() {
 		log.Fatal("Error loading .env file")
 	}
 	db = mongo.NewDatabase()
+	discrole.SetDB(db)
 }
 
 func TestGetServer(t *testing.T) {
-	servers := make([]*Server, 0, 1)
+	servers := make([]*discrole.Server, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
+			db.Delete(discrole.SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
 		}
 	}()
 
 	// Create a new server configuration.
-	server := GetServer("12345")
+	server := discrole.GetServer("12345")
 	if server.GuildID != "12345" {
 		t.Errorf("Expected guild ID to be 12345, got %s", server.GuildID)
 		return
@@ -35,22 +38,22 @@ func TestGetServer(t *testing.T) {
 	servers = append(servers, server)
 
 	for i, role := range server.AdminRoles {
-		if !slices.Contains(DEFAULT_ADMIN_ROLES, role) {
-			t.Errorf("Expected role to be %s, got %s", DEFAULT_ADMIN_ROLES[i], role)
+		if !slices.Contains(discrole.DEFAULT_ADMIN_ROLES, role) {
+			t.Errorf("Expected role to be %s, got %s", discrole.DEFAULT_ADMIN_ROLES[i], role)
 		}
 	}
 }
 
 func TestAddAdminRole(t *testing.T) {
-	servers := make([]*Server, 0, 1)
+	servers := make([]*discrole.Server, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
+			db.Delete(discrole.SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
 		}
 	}()
 
 	// Create a new server configuration.
-	server := GetServer("12345")
+	server := discrole.GetServer("12345")
 	if server == nil {
 		t.Errorf("Expected server to be created")
 		return
@@ -58,7 +61,7 @@ func TestAddAdminRole(t *testing.T) {
 	servers = append(servers, server)
 
 	server.AddAdminRole("NewRole")
-	server = GetServer(server.GuildID)
+	server = discrole.GetServer(server.GuildID)
 	if server == nil {
 		t.Errorf("Expected server to be retrieved")
 		return
@@ -70,15 +73,15 @@ func TestAddAdminRole(t *testing.T) {
 }
 
 func TestRemoveAdminRole(t *testing.T) {
-	servers := make([]*Server, 0, 1)
+	servers := make([]*discrole.Server, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
+			db.Delete(discrole.SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
 		}
 	}()
 
 	// Create a new server configuration.
-	server := GetServer("12345")
+	server := discrole.GetServer("12345")
 	if server == nil {
 		t.Errorf("Expected server to be created")
 		return
@@ -86,7 +89,7 @@ func TestRemoveAdminRole(t *testing.T) {
 	servers = append(servers, server)
 
 	server.RemoveAdminRole("NewRole")
-	server = GetServer(server.GuildID)
+	server = discrole.GetServer(server.GuildID)
 	if server == nil {
 		t.Errorf("Expected server to be retrieved")
 		return
@@ -97,15 +100,15 @@ func TestRemoveAdminRole(t *testing.T) {
 }
 
 func TestListAdminRoles(t *testing.T) {
-	servers := make([]*Server, 0, 1)
+	servers := make([]*discrole.Server, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
+			db.Delete(discrole.SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
 		}
 	}()
 
 	// Create a new server configuration.
-	server := GetServer("12345")
+	server := discrole.GetServer("12345")
 	if server == nil {
 		t.Errorf("Expected server to be created")
 		return
@@ -114,8 +117,8 @@ func TestListAdminRoles(t *testing.T) {
 
 	roles := server.GetAdminRoles()
 	for i, role := range roles {
-		if !slices.Contains(DEFAULT_ADMIN_ROLES, role) {
-			t.Errorf("Expected role to not be %s, got %s", DEFAULT_ADMIN_ROLES[i], role)
+		if !slices.Contains(discrole.DEFAULT_ADMIN_ROLES, role) {
+			t.Errorf("Expected role to not be %s, got %s", discrole.DEFAULT_ADMIN_ROLES[i], role)
 		}
 	}
 }
