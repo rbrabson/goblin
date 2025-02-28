@@ -54,17 +54,8 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 	defer log.Trace("<-- race.newRaceMember")
 
 	member := &RaceMember{
-		GuildID:       guildID,
-		MemberID:      memberID,
-		RacesWon:      0,
-		RacesPlaced:   0,
-		RacesShowed:   0,
-		RacesLost:     0,
-		TotalRaces:    0,
-		BetsMade:      0,
-		BetsWon:       0,
-		BetsEarnings:  0,
-		TotalEarnings: 0,
+		GuildID:  guildID,
+		MemberID: memberID,
 	}
 
 	writeRaceMember(member)
