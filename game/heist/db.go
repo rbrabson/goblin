@@ -16,18 +16,18 @@ const (
 
 // readConfig loads the heist configuration from the database. If it does not exist then
 // a `nil` value is returned.
-func readConfig(guild *guild.Guild) *Config {
+func readConfig(guildID string) *Config {
 	log.Trace("--> heist.readConfig")
 	defer log.Trace("<-- heist.readConfig")
 
-	filter := bson.M{"guild_id": guild.GuildID}
+	filter := bson.M{"guild_id": guildID}
 	var config Config
 	err := db.FindOne(CONFIG_COLLECTION, filter, &config)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guild.GuildID, "error": err}).Debug("heist configuration not found in the database")
+		log.WithFields(log.Fields{"guild": guildID, "error": err}).Debug("heist configuration not found in the database")
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": guild.GuildID}).Debug("read heist configuration from the database")
+	log.WithFields(log.Fields{"guild": guildID}).Debug("read heist configuration from the database")
 
 	return &config
 }
@@ -99,19 +99,19 @@ func readAllTargets(filter bson.D) ([]*Target, error) {
 }
 
 // readTargets loads the targets that may be used in heists by the given guild
-func readTargets(guild *guild.Guild, theme string) ([]*Target, error) {
+func readTargets(guildID string, theme string) ([]*Target, error) {
 	log.Debug("--> heist.readTargets")
 	defer log.Debug("<-- heist.readTargets")
 
 	var targets []*Target
-	filter := bson.D{{Key: "guild_id", Value: guild.GuildID}, {Key: "theme", Value: theme}}
+	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: theme}}
 	err := db.FindMany(TARGET_COLLECTION, filter, &targets, bson.D{}, 0)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guild.GuildID, "error": err}).Error("unable to read targets")
+		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read targets")
 		return nil, err
 	}
 
-	log.WithFields(log.Fields{"guild": guild.GuildID, "targets": targets}).Trace("load targets")
+	log.WithFields(log.Fields{"guild": guildID, "targets": targets}).Trace("load targets")
 
 	return targets, nil
 }
@@ -151,19 +151,19 @@ func readAllThemes(guild *guild.Guild) ([]*Theme, error) {
 }
 
 // readTheme loads the requested theme for a guild
-func readTheme(guild *guild.Guild, themeName string) (*Theme, error) {
+func readTheme(guildID string, themeName string) (*Theme, error) {
 	log.Trace("--> heist.readThemes")
 	defer log.Trace("<-- heist.readThemes")
 
 	var theme Theme
-	filter := bson.D{{Key: "guild_id", Value: guild.GuildID}, {Key: "name", Value: themeName}}
+	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "name", Value: themeName}}
 	err := db.FindOne(THEME_COLLECTION, filter, &theme)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guild.GuildID, "themeName": themeName, "error": err}).Error("unable to read themes")
+		log.WithFields(log.Fields{"guild": guildID, "themeName": themeName, "error": err}).Error("unable to read themes")
 		return nil, err
 	}
 
-	log.WithFields(log.Fields{"guild": guild.GuildID, "theme": theme.Name}).Trace("read targets")
+	log.WithFields(log.Fields{"guild": guildID, "theme": theme.Name}).Trace("read targets")
 
 	return &theme, nil
 }

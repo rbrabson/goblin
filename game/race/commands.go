@@ -135,8 +135,7 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := discmsg.GetPrinter(lang)
 
 	// Update the member's name in the guild.
-	g := guild.GetGuild(i.GuildID)
-	guildMember := g.GetMember(i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
+	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
 
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 

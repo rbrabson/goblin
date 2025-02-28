@@ -31,7 +31,7 @@ func TestSetName(t *testing.T) {
 		return
 	}
 
-	member := guild.GetMember("67890").SetName("userName", "displayName")
+	member := GetMember(guild.GuildID, "67890").SetName("userName", "displayName")
 	if member == nil {
 		t.Errorf("GetMember() member not found or created")
 		return
@@ -39,7 +39,7 @@ func TestSetName(t *testing.T) {
 	members = append(members, member)
 
 	member.SetName("userName", "")
-	member = guild.GetMember(member.MemberID)
+	member = GetMember(guild.GuildID, member.MemberID)
 	if member == nil || member.Name != "userName" {
 		t.Errorf("SetName() member name not set")
 		return
@@ -49,7 +49,7 @@ func TestSetName(t *testing.T) {
 	}
 
 	member.SetName("userName", "displayName")
-	member = guild.GetMember(member.MemberID)
+	member = GetMember(guild.GuildID, member.MemberID)
 	if member == nil {
 		t.Errorf("SetName() member not found")
 		return

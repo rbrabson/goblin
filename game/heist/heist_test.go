@@ -30,13 +30,12 @@ func TestNewHeist(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	g := guild.GetGuild(GUILD_ID)
-	organizer := g.GetMember(ORGANIZER_ID)
+	organizer := guild.GetMember(GUILD_ID, ORGANIZER_ID)
 	if organizer == nil {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(g, organizer)
+	heist, err := NewHeist(GUILD_ID, organizer)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -66,13 +65,12 @@ func TestHeistChecks(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	g := guild.GetGuild(GUILD_ID)
-	organizer := g.GetMember(ORGANIZER_ID)
+	organizer := guild.GetMember(GUILD_ID, ORGANIZER_ID)
 	if organizer == nil {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(g, organizer)
+	heist, err := NewHeist(GUILD_ID, organizer)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -84,7 +82,7 @@ func TestHeistChecks(t *testing.T) {
 	}
 	defer heist.End()
 
-	guildMember := g.GetMember("abcdef").SetName("Crew Member 1", "")
+	guildMember := guild.GetMember(GUILD_ID, "abcdef").SetName("Crew Member 1", "")
 	member := getHeistMember(guildMember)
 	err = heistChecks(heist, member)
 	if err != nil {
@@ -103,13 +101,12 @@ func TestStartHeist(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	g := guild.GetGuild(GUILD_ID)
-	organizer := g.GetMember(ORGANIZER_ID).SetName("Organizer", "")
+	organizer := guild.GetMember(GUILD_ID, ORGANIZER_ID).SetName("Organizer", "")
 	if organizer == nil {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(g, organizer)
+	heist, err := NewHeist(GUILD_ID, organizer)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -120,7 +117,7 @@ func TestStartHeist(t *testing.T) {
 	}
 	defer heist.End()
 
-	guildMember := g.GetMember("abcdef").SetName("Crew Member 1", "")
+	guildMember := guild.GetMember(GUILD_ID, "abcdef").SetName("Crew Member 1", "")
 	member := getHeistMember(guildMember)
 	heist.AddCrewMember(member)
 

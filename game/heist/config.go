@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/rbrabson/goblin/guild"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -41,18 +40,18 @@ type Config struct {
 
 // GetConfig retrieves the heist configuration for the specified guild. If
 // the configuration does not exist, nil is returned.
-func GetConfig(guild *guild.Guild) *Config {
-	config := readConfig(guild)
+func GetConfig(guildID string) *Config {
+	config := readConfig(guildID)
 	if config == nil {
-		config = NewConfig(guild)
+		config = NewConfig(guildID)
 	}
 	return config
 }
 
 // NewConfig creates a new default configuration for the specified guild.
-func NewConfig(guild *guild.Guild) *Config {
+func NewConfig(guildID string) *Config {
 	config := &Config{
-		GuildID:      guild.GuildID,
+		GuildID:      guildID,
 		AlertTime:    time.Time{},
 		BailBase:     BAIL_BASE,
 		CrewOutput:   CREW_OUTPUT,

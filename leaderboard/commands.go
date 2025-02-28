@@ -179,8 +179,7 @@ func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title
 	defer log.Trace("<-- sendLeaderboard")
 
 	// Make sure the guild member's name is updated
-	g := guild.GetGuild(i.GuildID)
-	_ = g.GetMember(i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
+	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 	embeds := formatAccounts(p, title, accounts)
@@ -231,9 +230,8 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 	table.SetHeader([]string{"#", "Name", "Balance"})
 
 	// A bit of a hack, but good enough....
-	guild := guild.GetGuild(accounts[0].GuildID)
 	for i, account := range accounts {
-		member := guild.GetMember(account.MemberID)
+		member := guild.GetMember(accounts[0].GuildID, account.MemberID)
 		var balance int
 		switch title {
 		case "Current Leaderboard":

@@ -54,41 +54,41 @@ type HeistMemberResult struct {
 }
 
 // NewHeist creates a new heist if one is not already underway.
-func NewHeist(g *guild.Guild, member *guild.Member) (*Heist, error) {
+func NewHeist(guildID string, member *guild.Member) (*Heist, error) {
 	log.Trace("--> heist.NewHeist")
 	defer log.Trace("<-- heist.NewHeist")
 
 	heistLock.Lock()
 	defer heistLock.Unlock()
 
-	if currentHeists[g.GuildID] != nil {
+	if currentHeists[guildID] != nil {
 		return nil, ErrHeistInProgress
 	}
 
-	theme := GetTheme(g)
+	theme := GetTheme(guildID)
 	organizer := getHeistMember(member)
 	heist := &Heist{
-		GuildID:   g.GuildID,
+		GuildID:   guildID,
 		Organizer: organizer,
 		Crew:      make([]*HeistMember, 0, 10),
 		StartTime: time.Now(),
-		config:    GetConfig(g),
-		targets:   GetTargets(g, theme.Name),
+		config:    GetConfig(guildID),
+		targets:   GetTargets(guildID, theme.Name),
 		theme:     theme,
 		mutex:     sync.Mutex{},
 	}
 
 	err := heistChecks(heist, organizer)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": g.GuildID, "organizer": member.MemberID, "error": err}).Debug("heist checks failed")
+		log.WithFields(log.Fields{"guild": member.GuildID, "organizer": member.MemberID, "error": err}).Debug("heist checks failed")
 		return nil, err
 	}
 
 	organizer.heist = heist
 	heist.Crew = append(heist.Crew, organizer)
-	currentHeists[g.GuildID] = heist
+	currentHeists[guildID] = heist
 
-	log.WithFields(log.Fields{"guild": g.GuildID, "organizer": member.MemberID}).Debug("create heist")
+	log.WithFields(log.Fields{"guild": guildID, "organizer": member.MemberID}).Debug("create heist")
 
 	return heist, nil
 }

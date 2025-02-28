@@ -64,27 +64,27 @@ func GetThemes(g *guild.Guild) []*Theme {
 }
 
 // GetTheme returns the theme for a guild
-func GetTheme(g *guild.Guild) *Theme {
+func GetTheme(guildID string) *Theme {
 	log.Trace("--> heist.GetTheme")
 	defer log.Trace("<-- heist.GetTheme")
 
-	config := GetConfig(g)
-	theme, err := readTheme(g, config.Theme)
+	config := GetConfig(guildID)
+	theme, err := readTheme(guildID, config.Theme)
 	if err == nil && theme != nil {
-		log.WithFields(log.Fields{"guild": g.GuildID, "theme": theme.Name}).Trace("read theme")
+		log.WithFields(log.Fields{"guild": guildID, "theme": theme.Name}).Trace("read theme")
 		return theme
 	}
-	log.WithFields(log.Fields{"guild": g.GuildID, "error": err}).Error("unable to read theme")
+	log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read theme")
 
 	// The theme was found in the DB, so create the default theme and use that
-	theme = getDefaultTheme(g)
+	theme = getDefaultTheme(guildID)
 	writeTheme(theme)
-	log.WithFields(log.Fields{"guild": g.GuildID, "theme": theme.Name}).Debug("created default theme")
+	log.WithFields(log.Fields{"guild": guildID, "theme": theme.Name}).Debug("created default theme")
 
 	return theme
 }
 
-func getDefaultTheme(g *guild.Guild) *Theme {
+func getDefaultTheme(guildID string) *Theme {
 
 	escapedMessages := []*GoodMessage{
 		{
@@ -407,7 +407,7 @@ func getDefaultTheme(g *guild.Guild) *Theme {
 	}
 
 	return &Theme{
-		GuildID:             g.GuildID,
+		GuildID:             guildID,
 		Name:                "clash",
 		EscapedMessages:     escapedMessages,
 		ApprehendedMessages: apprehendedMessages,

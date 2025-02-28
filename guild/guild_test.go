@@ -39,7 +39,7 @@ func TestGetMember(t *testing.T) {
 		return
 	}
 
-	member := guild.GetMember("67890")
+	member := GetMember(guild.GuildID, "67890")
 	if member == nil {
 		t.Errorf("GetMember() member not found or created")
 		return

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,20 +27,20 @@ type Target struct {
 }
 
 // GetTargets returns the list of targets for the server
-func GetTargets(g *guild.Guild, theme string) []*Target {
+func GetTargets(guildID string, theme string) []*Target {
 	log.Trace("--> heist.GetTargets")
 	defer log.Trace("<-- heist.GetTargets")
 
-	targets, _ := readTargets(g, theme)
+	targets, _ := readTargets(guildID, theme)
 	if targets == nil {
-		targets = getDefaultTargets(g)
+		targets = getDefaultTargets(guildID)
 		for _, target := range targets {
 			writeTarget(target)
 		}
 
 	}
 
-	log.WithFields(log.Fields{"guild": g.GuildID, "targets": len(targets)}).Trace("get targets")
+	log.WithFields(log.Fields{"guild": guildID, "targets": len(targets)}).Trace("get targets")
 	return targets
 }
 
@@ -100,38 +99,39 @@ func getTarget(targets []*Target, crewSize int) *Target {
 }
 
 // getDefaultTargets returns the default targets for a server.
-func getDefaultTargets(g *guild.Guild) []*Target {
+func getDefaultTargets(guildID string) []*Target {
 	log.Debug("--> heist.getDefaultTargets")
 	defer log.Debug("<-- heist.getDefaultTargets")
 
 	targets := []*Target{
-		newTarget(g, "clash", "Goblin Forest", 2, 29.3, 16000, 16000),
-		newTarget(g, "clash", "Goblin Outpost", 3, 20.65, 24000, 24000),
-		newTarget(g, "clash", "Rocky Fort", 5, 14.5, 42000, 42000),
-		newTarget(g, "clash", "Goblin Gauntlet", 8, 9.5, 71000, 71000),
-		newTarget(g, "clash", "Gobbotown", 11, 6.75, 101000, 101000),
-		newTarget(g, "clash", "Fort Knobs", 14, 5.2, 133000, 133000),
-		newTarget(g, "clash", "Bouncy Castle", 17, 4.25, 167000, 167000),
-		newTarget(g, "clash", "Gobbo Campus", 21, 3.5, 213000, 213000),
-		newTarget(g, "clash", "Walls Of Steel", 25, 2.91, 263000, 263000),
-		newTarget(g, "clash", "Obsidian Tower", 29, 2.49, 314000, 314000),
-		newTarget(g, "clash", "Queen's Gambit", 34, 2.15, 379000, 379000),
-		newTarget(g, "clash", "Faulty Towers", 39, 1.86, 448000, 448000),
-		newTarget(g, "clash", "Megamansion", 44, 1.64, 512000, 512000),
-		newTarget(g, "clash", "P.e.k.k.a's Playhouse", 49, 1.46, 598000, 598000),
-		newTarget(g, "clash", "Sherbet Towers", 55, 1.31, 688000, 688000),
+		newTarget(guildID, "clash", "Goblin Forest", 2, 29.3, 16000, 16000),
+		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000, 24000),
+		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000, 24000),
+		newTarget(guildID, "clash", "Rocky Fort", 5, 14.5, 42000, 42000),
+		newTarget(guildID, "clash", "Goblin Gauntlet", 8, 9.5, 71000, 71000),
+		newTarget(guildID, "clash", "Gobbotown", 11, 6.75, 101000, 101000),
+		newTarget(guildID, "clash", "Fort Knobs", 14, 5.2, 133000, 133000),
+		newTarget(guildID, "clash", "Bouncy Castle", 17, 4.25, 167000, 167000),
+		newTarget(guildID, "clash", "Gobbo Campus", 21, 3.5, 213000, 213000),
+		newTarget(guildID, "clash", "Walls Of Steel", 25, 2.91, 263000, 263000),
+		newTarget(guildID, "clash", "Obsidian Tower", 29, 2.49, 314000, 314000),
+		newTarget(guildID, "clash", "Queen's Gambit", 34, 2.15, 379000, 379000),
+		newTarget(guildID, "clash", "Faulty Towers", 39, 1.86, 448000, 448000),
+		newTarget(guildID, "clash", "Megamansion", 44, 1.64, 512000, 512000),
+		newTarget(guildID, "clash", "P.e.k.k.a's Playhouse", 49, 1.46, 598000, 598000),
+		newTarget(guildID, "clash", "Sherbet Towers", 55, 1.31, 688000, 688000),
 	}
 
 	return targets
 }
 
 // newTarget creates a new target for a heist
-func newTarget(guild *guild.Guild, theme string, name string, maxCrewSize int, success float64, vaultCurrent int, maxVault int) *Target {
+func newTarget(guildID string, theme string, name string, maxCrewSize int, success float64, vaultCurrent int, maxVault int) *Target {
 	log.Debug("--> heist.newTarget")
 	defer log.Debug("<-- heist.newTarget")
 
 	target := Target{
-		GuildID:  guild.GuildID,
+		GuildID:  guildID,
 		Theme:    theme,
 		Name:     name,
 		CrewSize: maxCrewSize,

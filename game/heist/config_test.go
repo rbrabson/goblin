@@ -27,7 +27,7 @@ func TestGetConfig(t *testing.T) {
 		}
 	}()
 
-	config := GetConfig(guild)
+	config := GetConfig(guild.GuildID)
 	if config == nil {
 		t.Errorf("Expected config, got nil")
 		return

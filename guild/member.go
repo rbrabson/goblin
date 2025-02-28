@@ -15,6 +15,19 @@ type Member struct {
 	Name     string             `json:"name" bson:"name"`
 }
 
+// GetMember returns a member in the guild (server). If one doesnt' exist, then one is created with a blank name.
+func GetMember(guildID string, memberID string) *Member {
+	log.Trace("--> guild.GetMember")
+	defer log.Trace("<-- guild.GetMember")
+
+	return getMember(guildID, memberID)
+}
+
+// String returns a string representation of the Guild.
+func (g *Guild) String() string {
+	return fmt.Sprintf("Guild{GuildID=%s}", g.GuildID)
+}
+
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(userName string, displayName string) *Member {
 	log.Trace("--> guild.Member.SetName")
@@ -36,30 +49,30 @@ func (member *Member) SetName(userName string, displayName string) *Member {
 }
 
 // getMember returns a member in the guild (server). If one doesn't exist, then one is created with a blank name.
-func getMember(g *Guild, memberID string) *Member {
+func getMember(guildID string, memberID string) *Member {
 	log.Trace("--> guild.getMember")
 	defer log.Trace("<-- guild.getMember")
 
-	member := readMember(g, memberID)
+	member := readMember(guildID, memberID)
 
 	if member == nil {
-		member = newMember(g, memberID)
+		member = newMember(guildID, memberID)
 	}
 
 	return member
 }
 
 // newMember creates a new member in the guild (server).
-func newMember(guild *Guild, memberID string) *Member {
+func newMember(guildID string, memberID string) *Member {
 	log.Trace("--> guild.newMember")
 	defer log.Trace("<-- guild.newMember")
 
 	member := &Member{
 		MemberID: memberID,
-		GuildID:  guild.GuildID,
+		GuildID:  guildID,
 	}
 	writeMember(member)
-	log.WithFields(log.Fields{"guild": guild.GuildID, "member": memberID}).Info("created new member")
+	log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Info("created new member")
 
 	return member
 }

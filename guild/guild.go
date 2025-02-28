@@ -1,8 +1,6 @@
 package guild
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,17 +19,4 @@ func GetGuild(guildID string) *Guild {
 	}
 	log.WithFields(log.Fields{"guild": guild.GuildID}).Debug("get guild")
 	return guild
-}
-
-// GetMember returns a member in the guild (server). If one doesnt' exist, then one is created with a blank name.
-func (g *Guild) GetMember(memberID string) *Member {
-	log.Trace("--> guild.GetMember")
-	defer log.Trace("<-- guild.GetMember")
-
-	return getMember(g, memberID)
-}
-
-// String returns a string representation of the Guild.
-func (g *Guild) String() string {
-	return fmt.Sprintf("Guild{GuildID=%s}", g.GuildID)
 }
