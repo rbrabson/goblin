@@ -40,8 +40,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	b := bank.GetBank(i.GuildID)
-	account := b.GetAccount(i.Member.User.ID)
+	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	account.Deposit(payday.Amount)
 
 	paydayAccount.setNextPayday(time.Now().Add(payday.PaydayFrequency))

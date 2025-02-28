@@ -134,7 +134,7 @@ func TestGetCurrentLeaderboard(t *testing.T) {
 	}
 	banks = append(banks, b)
 
-	bankAccount := b.GetAccount("54321")
+	bankAccount := bank.GetAccount(b.GuildID, "54321")
 	if bankAccount == nil {
 		t.Errorf("GetAccount() returned nil")
 		return
@@ -187,9 +187,8 @@ func TestGetMonthlyLeaderboard(t *testing.T) {
 		t.Errorf("NewBank() returned nil")
 		return
 	}
-	banks = append(banks, b)
 
-	bankAccount := b.GetAccount("54321")
+	bankAccount := bank.GetAccount(b.GuildID, "54321")
 	if bankAccount == nil {
 		t.Errorf("GetAccount() returned nil")
 		return
@@ -244,7 +243,7 @@ func TestGetLifetimeLeaderboard(t *testing.T) {
 	}
 	banks = append(banks, b)
 
-	bankAccount := b.GetAccount("54321")
+	bankAccount := bank.GetAccount(b.GuildID, "54321")
 	if bankAccount == nil {
 		t.Errorf("GetAccount() returned nil")
 		return
@@ -299,7 +298,7 @@ func TestGetCurrentRanking(t *testing.T) {
 	}
 	banks = append(banks, b)
 
-	bankAccount := b.GetAccount("54321")
+	bankAccount := bank.GetAccount(b.GuildID, "54321")
 	if bankAccount == nil {
 		t.Errorf("GetAccount() returned nil")
 		return
@@ -349,7 +348,7 @@ func TestGetMonthlyRanking(t *testing.T) {
 	}
 	banks = append(banks, b)
 
-	bankAccount := b.GetAccount("54321")
+	bankAccount := bank.GetAccount(b.GuildID, "54321")
 	if bankAccount == nil {
 		t.Errorf("GetAccount() returned nil")
 		return
@@ -399,7 +398,7 @@ func TestGetLifetimeRanking(t *testing.T) {
 	}
 	banks = append(banks, b)
 
-	bankAccount := b.GetAccount("54321")
+	bankAccount := bank.GetAccount(b.GuildID, "54321")
 	if bankAccount == nil {
 		t.Errorf("GetAccount() returned nil")
 		return

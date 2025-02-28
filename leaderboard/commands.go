@@ -199,14 +199,13 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> leaderboard.rank")
 	defer log.Trace("<-- leaderboard.rank")
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-	b := bank.GetBank(i.GuildID)
-	account := b.GetAccount(i.Member.User.ID)
+	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	lb := getLeaderboard(i.GuildID)
 	currentRank := getCurrentRanking(lb, account)
 	monthlyRank := getMonthlyRanking(lb, account)
 	lifetimeRank := getLifetimeRanking(lb, account)
 
+	p := discmsg.GetPrinter(language.AmericanEnglish)
 	resp := p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank)
 	discmsg.SendEphemeralResponse(s, i, resp)
 }

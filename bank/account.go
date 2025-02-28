@@ -21,6 +21,28 @@ type Account struct {
 	LifetimeBalance int                `json:"lifetime_balance" bson:"lifetime_balance"`
 }
 
+// GetAccount gets the bank account for the given member. If the account doesn't
+// exist, then nil is returned.
+func GetAccount(guildID string, memberID string) *Account {
+	log.Trace("--> bank.Bank.getAccount")
+	defer log.Trace("<-- bank.Bank.getAccount")
+
+	account := readAccount(guildID, memberID)
+	if account == nil {
+		account = newAccount(guildID, memberID)
+	}
+
+	return account
+}
+
+// GetAcconts returns a list of all accounts for the given bank
+func GetAccounts(guildID string, filter interface{}, sortBy interface{}, limit int64) []*Account {
+	log.Trace("--> bank.Bank.GetAccounts")
+	defer log.Trace("<-- bank.Bank.GetAccounts")
+
+	return readAccounts(guildID, filter, sortBy, limit)
+}
+
 // Deposit adds the amount to the balance of the account.
 func (account *Account) Deposit(amt int) error {
 	log.Trace("--> bank.Account.Deposit")
@@ -75,12 +97,13 @@ func (account *Account) SetBalance(balance int) error {
 }
 
 // newAccount creates a new bank account for a member in the guild (server).
-func newAccount(bank *Bank, memberID string) *Account {
+func newAccount(guildID string, memberID string) *Account {
 	log.Trace("--> bank.newAccount")
 	defer log.Trace("<-- bank.newAccount")
 
+	bank := GetBank(guildID)
 	account := &Account{
-		GuildID:        bank.GuildID,
+		GuildID:        guildID,
 		MemberID:       memberID,
 		CurrentBalance: bank.DefaultBalance,
 		CreatedAt:      time.Now(),

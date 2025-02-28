@@ -38,7 +38,7 @@ func TestDeposit(t *testing.T) {
 	}
 	banks = append(banks, bank)
 
-	account := bank.GetAccount("54321")
+	account := GetAccount(bank.GuildID, "54321")
 	if account == nil {
 		t.Error("account is nil")
 		return
@@ -72,7 +72,7 @@ func TestWithdraw(t *testing.T) {
 	}
 	banks = append(banks, bank)
 
-	account := bank.GetAccount("54321")
+	account := GetAccount(bank.GuildID, "54321")
 	if account == nil {
 		t.Error("account is nil")
 		return
@@ -87,9 +87,9 @@ func TestWithdraw(t *testing.T) {
 
 func TestSetBalance(t *testing.T) {
 	bank := GetBank("12345")
-	account := bank.GetAccount("54321")
+	account := GetAccount(bank.GuildID, "54321")
 	account.SetBalance(500)
-	account = bank.GetAccount("54321")
+	account = GetAccount(bank.GuildID, "54321")
 	if account.CurrentBalance != 500 {
 		t.Errorf("Expected balance to be 100, got %d", account.CurrentBalance)
 	}
@@ -97,14 +97,14 @@ func TestSetBalance(t *testing.T) {
 
 func TestResetMonthlyBalances(t *testing.T) {
 	bank := GetBank("12345")
-	account := bank.GetAccount("54321")
+	account := GetAccount(bank.GuildID, "54321")
 	account.CurrentBalance = 500
 	account.MonthlyBalance = 750
 	writeAccount(account)
 
 	ResetMonthlyBalances()
 
-	account = bank.GetAccount("54321")
+	account = GetAccount(bank.GuildID, "54321")
 	if account.MonthlyBalance != 0 {
 		t.Errorf("Expected monthly balance to be 0, got %d", account.MonthlyBalance)
 	}

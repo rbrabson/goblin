@@ -58,32 +58,32 @@ func writeBank(bank *Bank) error {
 }
 
 // Get all the matching accounts for the given bank.
-func readAccounts(bank *Bank, filter interface{}, sortBy interface{}, limit int64) []*Account {
+func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit int64) []*Account {
 	log.Trace("--> bank.readAccounts")
 	defer log.Trace("<-- bank.readAccounts")
 
 	var accounts []*Account
 	err := db.FindMany(ACCOUNT_COLLECTION, filter, &accounts, sortBy, limit)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": bank.GuildID}).Error("unable to read accounts from the database")
+		log.WithFields(log.Fields{"guild": guildID}).Error("unable to read accounts from the database")
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": bank.GuildID, "count": len(accounts)}).Debug("read accounts from the database")
+	log.WithFields(log.Fields{"guild": guildID, "count": len(accounts)}).Debug("read accounts from the database")
 
 	return accounts
 }
 
 // readAccount reads the account from the database and returns the value, if it exists, or returns nil if the
 // account does not exist in the database
-func readAccount(bank *Bank, memberID string) *Account {
+func readAccount(guildID string, memberID string) *Account {
 	log.Trace("--> bank.readAccount")
 	defer log.Trace("<-- bank.readAccount")
 
-	filter := bson.M{"guild_id": bank.GuildID, "member_id": memberID}
+	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	var account Account
 	err := db.FindOne(ACCOUNT_COLLECTION, filter, &account)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": bank.GuildID, "member": memberID}).Debug("account not found in the database")
+		log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Debug("account not found in the database")
 		return nil
 	}
 	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID}).Debug("read account from the database")

@@ -79,12 +79,11 @@ func (lb *Leaderboard) getCurrentLeaderboard() []*bank.Account {
 	log.Trace("--> leaderboard.getCurrentLeaderboard")
 	defer log.Trace("<-- leaderboard.getCurrentLeaderboard")
 
-	b := bank.GetBank(lb.GuildID)
 	filter := bson.D{{Key: "guild_id", Value: lb.GuildID}}
 	sort := bson.D{{Key: "current_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
 
-	accounts := b.GetAccounts(filter, sort, limit)
+	accounts := bank.GetAccounts(lb.GuildID, filter, sort, limit)
 
 	return accounts
 }
@@ -94,12 +93,11 @@ func (lb *Leaderboard) getMonthlyLeaderboard() []*bank.Account {
 	log.Trace("--> leaderboard.getMonthlyLeaderboard")
 	defer log.Trace("<-- leaderboard.getMonthlyLeaderboard")
 
-	b := bank.GetBank(lb.GuildID)
 	filter := bson.D{{Key: "guild_id", Value: lb.GuildID}}
 	sort := bson.D{{Key: "monthly_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
 
-	accounts := b.GetAccounts(filter, sort, limit)
+	accounts := bank.GetAccounts(lb.GuildID, filter, sort, limit)
 
 	return accounts
 }
@@ -109,12 +107,11 @@ func (lb *Leaderboard) getLifetimeLeaderboard() []*bank.Account {
 	log.Trace("--> leaderboard.getLifetimeLeaderboard")
 	defer log.Trace("<-- leaderboard.getLifetimeLeaderboard")
 
-	b := bank.GetBank(lb.GuildID)
 	filter := bson.D{{Key: "guild_id", Value: lb.GuildID}}
 	sort := bson.D{{Key: "lifetime_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
 
-	accounts := b.GetAccounts(filter, sort, limit)
+	accounts := bank.GetAccounts(lb.GuildID, filter, sort, limit)
 
 	return accounts
 }

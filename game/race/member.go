@@ -69,8 +69,7 @@ func (m *RaceMember) WinRace(amount int) {
 	log.Trace("--> race.Member.WinRace")
 	log.Trace("<-- race.Member.WinRace")
 
-	b := bank.GetBank(m.GuildID)
-	bankAccount := b.GetAccount(m.MemberID)
+	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(amount)
 
 	m.RacesWon++
@@ -85,8 +84,7 @@ func (m *RaceMember) PlaceInRace(amount int) {
 	log.Trace("--> race.Member.PlaceInRace")
 	log.Trace("<-- race.Member.PlaceInRace")
 
-	b := bank.GetBank(m.GuildID)
-	bankAccount := b.GetAccount(m.MemberID)
+	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(amount)
 
 	m.RacesPlaced++
@@ -102,8 +100,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 	log.Trace("--> race.Member.ShowInRace")
 	log.Trace("<-- race.Member.ShowInRace")
 
-	b := bank.GetBank(m.GuildID)
-	bankAccount := b.GetAccount(m.MemberID)
+	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(amount)
 
 	m.RacesShowed++
@@ -129,8 +126,7 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 	log.Trace("-->race.Member.PlaceBet")
 	defer log.Trace("<-- race.Member.PlaceBet")
 
-	b := bank.GetBank(m.GuildID)
-	bankAccount := b.GetAccount(m.MemberID)
+	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	err := bankAccount.Withdraw(betAmount)
 	if err != nil {
 		return err
@@ -150,8 +146,7 @@ func (m *RaceMember) WinBet(winnings int) {
 	log.Trace("--> race.Member.WinBet")
 	defer log.Trace("<-- race.Member.WinBet")
 
-	b := bank.GetBank(m.GuildID)
-	bankAccount := b.GetAccount(m.MemberID)
+	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(winnings)
 
 	m.BetsWon++

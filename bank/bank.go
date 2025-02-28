@@ -36,28 +36,6 @@ func GetBank(guildID string) *Bank {
 	return bank
 }
 
-// GetAcconts returns a list of all accounts for the given bank
-func (b *Bank) GetAccounts(filter interface{}, sortBy interface{}, limit int64) []*Account {
-	log.Trace("--> bank.Bank.GetAccounts")
-	defer log.Trace("<-- bank.Bank.GetAccounts")
-
-	return readAccounts(b, filter, sortBy, limit)
-}
-
-// GetAccount gets the bank account for the given member. If the account doesn't
-// exist, then nil is returned.
-func (b *Bank) GetAccount(memberID string) *Account {
-	log.Trace("--> bank.Bank.getAccount")
-	defer log.Trace("<-- bank.Bank.getAccount")
-
-	account := readAccount(b, memberID)
-	if account == nil {
-		account = newAccount(b, memberID)
-	}
-
-	return account
-}
-
 // newBank creates a new bank for the given guild.
 func newBank(guildID string) *Bank {
 	log.Trace("--> bank.newBank")

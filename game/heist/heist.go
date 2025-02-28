@@ -226,8 +226,6 @@ func heistChecks(h *Heist, member *HeistMember) error {
 
 	member.UpdateStatus()
 
-	g := guild.GetGuild(h.GuildID)
-
 	if slices.ContainsFunc(h.Crew, func(m *HeistMember) bool {
 		return m.MemberID == member.MemberID
 	}) {
@@ -235,8 +233,7 @@ func heistChecks(h *Heist, member *HeistMember) error {
 		return ErrAlreadyJoinedHieist
 	}
 
-	b := bank.GetBank(g.GuildID)
-	account := b.GetAccount(member.MemberID)
+	account := bank.GetAccount(h.GuildID, member.MemberID)
 
 	if account.CurrentBalance < h.config.HeistCost {
 		return &ErrNotEnoughCredits{h.config.HeistCost}

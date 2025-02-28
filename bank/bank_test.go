@@ -53,7 +53,7 @@ func TestGetAccounts(t *testing.T) {
 	}
 	banks = append(banks, bank)
 
-	account := bank.GetAccount("67890")
+	account := GetAccount(bank.GuildID, "67890")
 	if account == nil {
 		t.Error("account is nil")
 		return
@@ -65,7 +65,7 @@ func TestGetAccounts(t *testing.T) {
 	sort := bson.M{
 		"member_id": 1,
 	}
-	accounts = bank.GetAccounts(filter, sort, 10)
+	accounts = GetAccounts(bank.GuildID, filter, sort, 10)
 	if len(accounts) == 0 {
 		t.Error("no accounts returned")
 	}

@@ -156,8 +156,7 @@ func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	bank := GetBank(i.GuildID)
-	account := bank.GetAccount(i.Member.User.ID)
+	account := GetAccount(i.GuildID, i.Member.User.ID)
 
 	resp := p.Sprintf("**Current Balance**: %d\n**Monthly Balance**: %d\n**Lifetime Balance**: %d\n**Created**: %s\n",
 		account.CurrentBalance,
@@ -196,8 +195,7 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	g := guild.GetGuild(i.GuildID)
 	m := g.GetMember(member.User.ID).SetName(i.User.Username, i.Member.DisplayName())
-	bank := GetBank(i.GuildID)
-	account := bank.GetAccount(id)
+	account := GetAccount(i.GuildID, id)
 
 	account.SetBalance(amount)
 

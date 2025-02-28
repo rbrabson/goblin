@@ -311,8 +311,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heist.interaction = i
 
 	// The organizer has to pay a fee to plan the heist.
-	b := bank.GetBank(i.GuildID)
-	account := b.GetAccount(guildMember.MemberID)
+	account := bank.GetAccount(i.GuildID, guildMember.MemberID)
 	account.Withdraw(heist.config.HeistCost)
 
 	heistMessage(s, i, heist, guildMember, "plan")
@@ -438,7 +437,6 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 		s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"```")
 	}
 
-	b := bank.GetBank(i.GuildID)
 	// Update the status for each player and then save the information
 	for _, result := range res.AllResults {
 		result.Player.heist = result.heist
@@ -452,7 +450,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 		}
 
 		if len(res.Escaped) > 0 && result.StolenCredits != 0 {
-			account := b.GetAccount(result.Player.MemberID)
+			account := bank.GetAccount(i.GuildID, result.Player.MemberID)
 			account.Deposit(result.StolenCredits + result.BonusCredits)
 			log.WithFields(log.Fields{"Member": account.MemberID, "Stolen": result.StolenCredits, "Bonus": result.BonusCredits}).Debug("heist Loot")
 		}
@@ -492,8 +490,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Withdraw the cost of the heist from the player's account. We know the player already
 	// has the required number of credits as this is verified when adding them to the heist.
-	b := bank.GetBank(i.GuildID)
-	account := b.GetAccount(guildMember.MemberID)
+	account := bank.GetAccount(i.GuildID, guildMember.MemberID)
 	account.Withdraw(heist.config.HeistCost)
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
@@ -514,8 +511,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	player := getHeistMember(guildMember)
 	caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
 
-	b := bank.GetBank(i.GuildID)
-	account := b.GetAccount(guildMember.MemberID)
+	account := bank.GetAccount(i.GuildID, guildMember.MemberID)
 
 	var sentence string
 	if player.Status == APPREHENDED {
@@ -608,8 +604,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	g := guild.GetGuild(i.GuildID)
 	member := g.GetMember(i.Member.User.ID)
 	initiatingHeistMember := getHeistMember(member)
-	b := bank.GetBank(i.GuildID)
-	account := b.GetAccount(member.MemberID)
+	account := bank.GetAccount(i.GuildID, member.MemberID)
 
 	discmsg.SendEphemeralResponse(s, i, "Bailing "+playerID+"...")
 	var heistMember *HeistMember
