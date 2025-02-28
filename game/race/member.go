@@ -6,8 +6,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Member represents a member of a guild that is assigned a racer
-type Member struct {
+// RaceMember represents a member of a guild that is assigned a racer
+type RaceMember struct {
 	ID          primitive.ObjectID `json:"_id" bson:"_id"`
 	GuildID     string             `json:"guild_id" bson:"guild_id"`
 	MemberID    string             `json:"member_id" bson:"member_id"`
@@ -24,23 +24,23 @@ type Member struct {
 	racer       *Racer             `json:"-" bson:"-"`
 }
 
-// GetMember gets a race member. THe member is created if it doesn't exist.
-func GetMember(guildID string, memberID string) *Member {
-	log.Trace("--> race.GetMember")
-	defer log.Trace("<-- race.GetMember")
+// GetRaceMember gets a race member. THe member is created if it doesn't exist.
+func GetRaceMember(guildID string, memberID string) *RaceMember {
+	log.Trace("--> race.GetRaceMember")
+	defer log.Trace("<-- race.GetRaceMember")
 
-	member, err := getMember(guildID, memberID)
+	member, err := getRaceMember(guildID, memberID)
 	if err != nil {
-		member = newMember(guildID, memberID)
+		member = newRaceMember(guildID, memberID)
 	}
 	return member
 }
 
-// getMember gets a member from the database. If the member doesn't exist, then
+// getRaceMember gets a member from the database. If the member doesn't exist, then
 // nil is returned.
-func getMember(guildID string, memberID string) (*Member, error) {
-	log.Trace("--> race.getMember")
-	defer log.Trace("<-- race.getMember")
+func getRaceMember(guildID string, memberID string) (*RaceMember, error) {
+	log.Trace("--> race.getRaceMember")
+	defer log.Trace("<-- race.getRaceMember")
 
 	member := readMember(guildID, memberID)
 	if member == nil {
@@ -49,13 +49,13 @@ func getMember(guildID string, memberID string) (*Member, error) {
 	return member, nil
 }
 
-// newMember returns a new race member for the guild. The member is saved to
+// newRaceMember returns a new race member for the guild. The member is saved to
 // the database.
-func newMember(guildID string, memberID string) *Member {
-	log.Trace("--> race.newMember")
-	defer log.Trace("<-- race.newMember")
+func newRaceMember(guildID string, memberID string) *RaceMember {
+	log.Trace("--> race.newRaceMember")
+	defer log.Trace("<-- race.newRaceMember")
 
-	member := &Member{
+	member := &RaceMember{
 		GuildID:     guildID,
 		MemberID:    memberID,
 		RacesWon:    0,
@@ -77,7 +77,7 @@ func newMember(guildID string, memberID string) *Member {
 }
 
 // WinRace is called when the race member won a race.
-func (m *Member) WinRace() {
+func (m *RaceMember) WinRace() {
 	log.Trace("--> race.Member.WinRace")
 	log.Trace("<-- race.Member.WinRace")
 
@@ -88,7 +88,7 @@ func (m *Member) WinRace() {
 }
 
 // PlaceInRace is called when the race member places (comes in 2nd) in a race.
-func (m *Member) PlaceInRace() {
+func (m *RaceMember) PlaceInRace() {
 	log.Trace("--> race.Member.PlaceInRace")
 	log.Trace("<-- race.Member.PlaceInRace")
 
@@ -100,7 +100,7 @@ func (m *Member) PlaceInRace() {
 }
 
 // ShowInRace is called when the race member shows (comes in 3rd) in a race.
-func (m *Member) ShowInRace() {
+func (m *RaceMember) ShowInRace() {
 	log.Trace("--> race.Member.ShowInRace")
 	log.Trace("<-- race.Member.ShowInRace")
 
@@ -111,7 +111,7 @@ func (m *Member) ShowInRace() {
 }
 
 // LoseRace is called when the race member fails to win, place or show in a race.
-func (m *Member) LoseRace() {
+func (m *RaceMember) LoseRace() {
 	log.Trace("--> race.Member.LoseRace")
 	log.Trace("<-- race.Member.LoseRace")
 
@@ -122,7 +122,7 @@ func (m *Member) LoseRace() {
 }
 
 // PlaceBet is used to place a bet on a member of a race.
-func (m *Member) PlaceBet(betAmount int) error {
+func (m *RaceMember) PlaceBet(betAmount int) error {
 	log.Trace("-->race.Member.PlaceBet")
 	defer log.Trace("<-- race.Member.PlaceBet")
 
@@ -142,7 +142,7 @@ func (m *Member) PlaceBet(betAmount int) error {
 }
 
 // WinBet is used when a member wins a bet on a race.
-func (m *Member) WinBet(winnings int) {
+func (m *RaceMember) WinBet(winnings int) {
 	log.Trace("--> race.Member.WinBet")
 	defer log.Trace("<-- race.Member.WinBet")
 

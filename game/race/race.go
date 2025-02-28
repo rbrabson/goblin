@@ -17,8 +17,8 @@ var (
 // betters on the outcome of the race.
 type Race struct {
 	GuildID     string
-	Racers      []*Member
-	Betters     []*Member
+	Racers      []*RaceMember
+	Betters     []*RaceMember
 	interaction *discordgo.InteractionCreate
 	config      *Config
 	mutex       sync.Mutex
@@ -47,8 +47,8 @@ func newRace(guildID string) *Race {
 	config := GetConfig(guildID)
 	race := &Race{
 		GuildID:     guildID,
-		Racers:      make([]*Member, 0, 10),
-		Betters:     make([]*Member, 0, 10),
+		Racers:      make([]*RaceMember, 0, 10),
+		Betters:     make([]*RaceMember, 0, 10),
 		interaction: nil,
 		config:      config,
 		mutex:       sync.Mutex{},
