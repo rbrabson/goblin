@@ -8,19 +8,19 @@ import (
 
 // RaceMember represents a member of a guild that is assigned a racer
 type RaceMember struct {
-	ID           primitive.ObjectID `json:"_id" bson:"_id"`
-	GuildID      string             `json:"guild_id" bson:"guild_id"`
-	MemberID     string             `json:"member_id" bson:"member_id"`
-	RacesLost    int                `json:"races_lost" bson:"races_lost"`
-	RacesPlaced  int                `json:"races_placed" bson:"races_placed"`
-	RacesShowed  int                `json:"races_showed" bson:"races_showed"`
-	RacesWon     int                `json:"races_won" bson:"races_won"`
-	TotalRaces   int                `json:"total_races" bson:"total_races"`
-	BetsEarnings int                `json:"bets_earnings" bson:"bets_earnings"`
-	BetsMade     int                `json:"bets_made" bson:"bets_made"`
-	BetsWon      int                `json:"bets_won" bson:"bets_won"`
-	Earnings     int                `json:"earnings" bson:"earnings"`
-	racer        *Racer             `json:"-" bson:"-"`
+	ID            primitive.ObjectID `json:"_id" bson:"_id"`
+	GuildID       string             `json:"guild_id" bson:"guild_id"`
+	MemberID      string             `json:"member_id" bson:"member_id"`
+	RacesLost     int                `json:"races_lost" bson:"races_lost"`
+	RacesPlaced   int                `json:"races_placed" bson:"races_placed"`
+	RacesShowed   int                `json:"races_showed" bson:"races_showed"`
+	RacesWon      int                `json:"races_won" bson:"races_won"`
+	TotalRaces    int                `json:"total_races" bson:"total_races"`
+	BetsEarnings  int                `json:"bets_earnings" bson:"bets_earnings"`
+	BetsMade      int                `json:"bets_made" bson:"bets_made"`
+	BetsWon       int                `json:"bets_won" bson:"bets_won"`
+	TotalEarnings int                `json:"total_earnings" bson:"total_earnings"`
+	racer         *Racer             `json:"-" bson:"-"`
 }
 
 // GetRaceMember gets a race member. THe member is created if it doesn't exist.
@@ -55,17 +55,17 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 	defer log.Trace("<-- race.newRaceMember")
 
 	member := &RaceMember{
-		GuildID:      guildID,
-		MemberID:     memberID,
-		RacesWon:     0,
-		RacesPlaced:  0,
-		RacesShowed:  0,
-		RacesLost:    0,
-		TotalRaces:   0,
-		BetsMade:     0,
-		BetsWon:      0,
-		BetsEarnings: 0,
-		Earnings:     0,
+		GuildID:       guildID,
+		MemberID:      memberID,
+		RacesWon:      0,
+		RacesPlaced:   0,
+		RacesShowed:   0,
+		RacesLost:     0,
+		TotalRaces:    0,
+		BetsMade:      0,
+		BetsWon:       0,
+		BetsEarnings:  0,
+		TotalEarnings: 0,
 	}
 
 	writeRaceMember(member)
@@ -75,22 +75,32 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 }
 
 // WinRace is called when the race member won a race.
-func (m *RaceMember) WinRace() {
+func (m *RaceMember) WinRace(amount int) {
 	log.Trace("--> race.Member.WinRace")
 	log.Trace("<-- race.Member.WinRace")
 
+	b := bank.GetBank(m.GuildID)
+	bankAccount := b.GetAccount(m.MemberID)
+	bankAccount.Deposit(amount)
+
 	m.RacesWon++
+	m.TotalEarnings += amount
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("won race")
 }
 
 // PlaceInRace is called when the race member places (comes in 2nd) in a race.
-func (m *RaceMember) PlaceInRace() {
+func (m *RaceMember) PlaceInRace(amount int) {
 	log.Trace("--> race.Member.PlaceInRace")
 	log.Trace("<-- race.Member.PlaceInRace")
 
+	b := bank.GetBank(m.GuildID)
+	bankAccount := b.GetAccount(m.MemberID)
+	bankAccount.Deposit(amount)
+
 	m.RacesPlaced++
+	m.TotalEarnings += amount
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("placed in race")
@@ -98,11 +108,16 @@ func (m *RaceMember) PlaceInRace() {
 }
 
 // ShowInRace is called when the race member shows (comes in 3rd) in a race.
-func (m *RaceMember) ShowInRace() {
+func (m *RaceMember) ShowInRace(amount int) {
 	log.Trace("--> race.Member.ShowInRace")
 	log.Trace("<-- race.Member.ShowInRace")
 
+	b := bank.GetBank(m.GuildID)
+	bankAccount := b.GetAccount(m.MemberID)
+	bankAccount.Deposit(amount)
+
 	m.RacesShowed++
+	m.TotalEarnings += amount
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("sbowed in race")
@@ -132,6 +147,7 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 	}
 
 	m.BetsMade++
+	m.TotalEarnings -= betAmount
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "betAmount": betAmount}).Info("placed bet")
@@ -149,6 +165,8 @@ func (m *RaceMember) WinBet(winnings int) {
 	bankAccount.Deposit(winnings)
 
 	m.BetsWon++
+	m.BetsEarnings += winnings
+	m.TotalEarnings += winnings
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": winnings}).Info("won bet")

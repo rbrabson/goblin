@@ -181,7 +181,7 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "Earnings",
-					Value:  p.Sprintf("%d", raceMember.Earnings),
+					Value:  p.Sprintf("%d", raceMember.TotalEarnings),
 					Inline: true,
 				},
 				{
