@@ -823,8 +823,7 @@ func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> listThemes")
 	defer log.Trace("<-- listThemes")
 
-	g := guild.GetGuild(i.GuildID)
-	themes, err := GetThemeNames(g)
+	themes, err := GetThemeNames(i.GuildID)
 	if err != nil {
 		log.Warning("Unable to get the themes, error:", err)
 	}

@@ -3,7 +3,6 @@ package heist
 import (
 	"fmt"
 
-	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -39,9 +38,9 @@ type BadMessage struct {
 }
 
 // GetThemeNames returns a list of available themes
-func GetThemeNames(g *guild.Guild) ([]string, error) {
+func GetThemeNames(guildID string) ([]string, error) {
 	var fileNames []string
-	themes := GetThemes(g)
+	themes := GetThemes(guildID)
 	for _, theme := range themes {
 		fileNames = append(fileNames, theme.Name)
 	}
@@ -50,16 +49,16 @@ func GetThemeNames(g *guild.Guild) ([]string, error) {
 }
 
 // GetThemes returns all themes for a guild.
-func GetThemes(g *guild.Guild) []*Theme {
+func GetThemes(guildID string) []*Theme {
 	log.Trace("--> heist.GetThemes")
 	defer log.Trace("<-- heist.GetThemes")
 
-	themes, err := readAllThemes(g)
+	themes, err := readAllThemes(guildID)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": g.GuildID, "error": err}).Error("unable to read themes")
+		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read themes")
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": g.GuildID, "themes": len(themes)}).Trace("read all themes")
+	log.WithFields(log.Fields{"guild": guildID, "themes": len(themes)}).Trace("read all themes")
 	return themes
 }
 

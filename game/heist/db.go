@@ -133,19 +133,19 @@ func writeTarget(target *Target) {
 }
 
 // readAllThemes loads all available themes for a guild
-func readAllThemes(guild *guild.Guild) ([]*Theme, error) {
+func readAllThemes(guildID string) ([]*Theme, error) {
 	log.Trace("--> heist.readThemes")
 	defer log.Trace("<-- heist.readThemes")
 
 	var themes []*Theme
-	filter := bson.D{{Key: "guild_id", Value: guild.GuildID}}
+	filter := bson.D{{Key: "guild_id", Value: guildID}}
 	err := db.FindMany(THEME_COLLECTION, filter, &themes, bson.D{}, 0)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guild.GuildID, "error": err}).Error("unable to read themes")
+		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read themes")
 		return nil, err
 	}
 
-	log.WithFields(log.Fields{"guild": guild.GuildID, "themes": len(themes)}).Trace("read targets")
+	log.WithFields(log.Fields{"guild": guildID, "themes": len(themes)}).Trace("read targets")
 
 	return themes, nil
 }
