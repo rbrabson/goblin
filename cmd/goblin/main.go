@@ -10,7 +10,6 @@ import (
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/game/heist"
-	"github.com/rbrabson/goblin/game/race"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/leaderboard"
 	"github.com/rbrabson/goblin/payday"
@@ -62,7 +61,7 @@ func main() {
 	leaderboard.Start()
 	payday.Start()
 	server.Start()
-	race.Start()
+	// race.Start()
 
 	bot := discord.NewBot(BotName, Version, Revision)
 	err = bot.Session.Open()
