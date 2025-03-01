@@ -42,7 +42,7 @@ func setLogLevel() {
 }
 
 func main() {
-	godotenv.Load()
+	godotenv.Load(".env")
 	setLogLevel()
 
 	args := os.Args[1:]
