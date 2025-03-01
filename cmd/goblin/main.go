@@ -48,7 +48,7 @@ func setLogLevel() {
 
 // Main Discord game bot
 func main() {
-	err := godotenv.Load(".env_test")
+	err := godotenv.Load(".env")
 	if err != nil {
 		log.WithField("error", err).Warn("unable to load .env_test file")
 	}
