@@ -13,7 +13,7 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/leaderboard"
 	"github.com/rbrabson/goblin/payday"
-	"github.com/rbrabson/goblin/server"
+	"github.com/rbrabson/goblin/role"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -60,7 +60,7 @@ func main() {
 	guild.Start()
 	leaderboard.Start()
 	payday.Start()
-	server.Start()
+	role.Start()
 	// race.Start()
 
 	bot := discord.NewBot(BotName, Version, Revision)

@@ -1,4 +1,4 @@
-package server
+package role
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	PLUGIN_NAME = "server"
+	PLUGIN_NAME = "role"
 )
 
 var (
