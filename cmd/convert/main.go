@@ -16,7 +16,6 @@ const (
 
 var (
 	from_dir *os.File
-	// to_dir   *os.File
 )
 
 // setLogLevel sets the logging level. If the LOG_LEVEL environment variable isn't set or the value
@@ -47,8 +46,8 @@ func main() {
 	setLogLevel()
 
 	args := os.Args[1:]
-	if len(args) < 2 {
-		fmt.Println("Usage: convert <amount> <from_dir> <to_dir>")
+	if len(args) < 1 {
+		fmt.Println("Usage: convert <from_dir>")
 		os.Exit(1)
 	}
 	var err error
@@ -65,24 +64,25 @@ func main() {
 	outDir := from_dir.Name() + "/" + "converted"
 	convert.Intialize(GUILD_ID, outDir)
 
+	fmt.Println("Starting conversion")
 	for _, fileName := range fileNames {
 		fullFileName := from_dir.Name() + "/" + fileName
 		switch fileName {
-		case "Heist.economy.json":
+		case "heist.economy.json":
 			convert.ConvertEconomy(fullFileName)
-		case "Heist.heist.json":
+		case "heist.heist.json":
 			fmt.Println("heist")
-		case "Heist.mode.json":
+		case "heist.mode.json":
 			fmt.Println("mode")
-		case "Heist.payday.json":
+		case "heist.payday.json":
 			fmt.Println("payday")
-		case "Heist.race.json":
+		case "heist.race.json":
 			convert.ConvertRaces(fullFileName)
-		case "Heist.reminder.json":
+		case "heist.reminder.json":
 			fmt.Println("reminder")
-		case "Heist.target.json":
+		case "heist.target.json":
 			fmt.Println("target")
-		case "Heist.theme.json":
+		case "heist.theme.json":
 			fmt.Println("theme")
 		}
 	}
