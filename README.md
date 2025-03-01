@@ -12,8 +12,8 @@ The goblin bot relies on a set of environment variables to configure it.
 
 ```bash
 # Discord Bot Configuration
-BOT_TOKEN="<bot_token>"
-APP_ID="<bot_application_id>"
+DISCORD_BOT_TOKEN="<bot_token>"
+DISCORD_APP_ID="<bot_application_id>"
 
 # You can use this variable to point at a development server, in which case any
 # changes you have made will only appear on the development server.
@@ -43,6 +43,10 @@ MONGODB_URI="mongodb+srv://$MONGODB_USERID:$MONGODB_PASSWORD@$MONGODB_SERVER/$MO
 # commands, so if you find that Discord is not responding to your bot's command
 # registrations, you have have hit this limit.
 DISCORD_GUILD_ID="<server-id>"
+
+# Logging level for the bot. Options are "debug", "info", "warn", "error", "fatal"
+# Default is "info"
+LOG_LEVEL="info"
 ```
 
 #### Configuring MongoDB for the goblin Bot
