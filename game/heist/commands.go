@@ -305,7 +305,6 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		discmsg.EditResponse(s, i, err.Error())
 		return
 	}
-	defer heist.End()
 	heist.interaction = i
 
 	// The organizer has to pay a fee to plan the heist.
@@ -322,9 +321,13 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		msg := p.Sprintf("The %s was cancelled due to lack of interest.", heist.theme.Heist)
 		s.ChannelMessageSend(i.ChannelID, msg)
 		log.WithFields(log.Fields{"guild": heist.GuildID, "heist": heist.theme.Heist}).Info("Heist cancelled due to lack of interest")
+		heistLock.Lock()
+		defer heistLock.Unlock()
+		delete(currentHeists, heist.GuildID)
 		return
 	}
 
+	defer heist.End()
 	mute := channel.NewChannelMute(s, i)
 	mute.MuteChannel()
 	defer mute.UnmuteChannel()

@@ -24,6 +24,7 @@ type Target struct {
 	Success  float64            `json:"success" bson:"success"`
 	Vault    int                `json:"vault" bson:"vault"`
 	VaultMax int                `json:"vault_max" bson:"vault_max"`
+	IsAtMax  bool               `json:"is_at_max" bson:"is_at_max"`
 }
 
 // GetTargets returns the list of targets for the server
@@ -61,6 +62,8 @@ func (t *Target) StealFromValut(amount int) {
 	if t.Vault < 0 {
 		t.Vault = 0
 	}
+	t.IsAtMax = false
+
 	writeTarget(t)
 
 	log.WithFields(log.Fields{"guild": t.GuildID, "target": t.Name, "amount": amount, "original": originalVaultAmount, "new": t.Vault}).Debug("steal from vault")
@@ -104,29 +107,29 @@ func getDefaultTargets(guildID string) []*Target {
 	defer log.Debug("<-- heist.getDefaultTargets")
 
 	targets := []*Target{
-		newTarget(guildID, "clash", "Goblin Forest", 2, 29.3, 16000, 16000),
-		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000, 24000),
-		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000, 24000),
-		newTarget(guildID, "clash", "Rocky Fort", 5, 14.5, 42000, 42000),
-		newTarget(guildID, "clash", "Goblin Gauntlet", 8, 9.5, 71000, 71000),
-		newTarget(guildID, "clash", "Gobbotown", 11, 6.75, 101000, 101000),
-		newTarget(guildID, "clash", "Fort Knobs", 14, 5.2, 133000, 133000),
-		newTarget(guildID, "clash", "Bouncy Castle", 17, 4.25, 167000, 167000),
-		newTarget(guildID, "clash", "Gobbo Campus", 21, 3.5, 213000, 213000),
-		newTarget(guildID, "clash", "Walls Of Steel", 25, 2.91, 263000, 263000),
-		newTarget(guildID, "clash", "Obsidian Tower", 29, 2.49, 314000, 314000),
-		newTarget(guildID, "clash", "Queen's Gambit", 34, 2.15, 379000, 379000),
-		newTarget(guildID, "clash", "Faulty Towers", 39, 1.86, 448000, 448000),
-		newTarget(guildID, "clash", "Megamansion", 44, 1.64, 512000, 512000),
-		newTarget(guildID, "clash", "P.e.k.k.a's Playhouse", 49, 1.46, 598000, 598000),
-		newTarget(guildID, "clash", "Sherbet Towers", 55, 1.31, 688000, 688000),
+		newTarget(guildID, "clash", "Goblin Forest", 2, 29.3, 16000),
+		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000),
+		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000),
+		newTarget(guildID, "clash", "Rocky Fort", 5, 14.5, 42000),
+		newTarget(guildID, "clash", "Goblin Gauntlet", 8, 9.5, 71000),
+		newTarget(guildID, "clash", "Gobbotown", 11, 6.75, 101000),
+		newTarget(guildID, "clash", "Fort Knobs", 14, 5.2, 133000),
+		newTarget(guildID, "clash", "Bouncy Castle", 17, 4.25, 167000),
+		newTarget(guildID, "clash", "Gobbo Campus", 21, 3.5, 213000),
+		newTarget(guildID, "clash", "Walls Of Steel", 25, 2.91, 263000),
+		newTarget(guildID, "clash", "Obsidian Tower", 29, 2.49, 314000),
+		newTarget(guildID, "clash", "Queen's Gambit", 34, 2.15, 379000),
+		newTarget(guildID, "clash", "Faulty Towers", 39, 1.86, 448000),
+		newTarget(guildID, "clash", "Megamansion", 44, 1.64, 512000),
+		newTarget(guildID, "clash", "P.e.k.k.a's Playhouse", 49, 1.46, 598000),
+		newTarget(guildID, "clash", "Sherbet Towers", 55, 1.31, 688000),
 	}
 
 	return targets
 }
 
 // newTarget creates a new target for a heist
-func newTarget(guildID string, theme string, name string, maxCrewSize int, success float64, vaultCurrent int, maxVault int) *Target {
+func newTarget(guildID string, theme string, name string, maxCrewSize int, success float64, maxVault int) *Target {
 	log.Debug("--> heist.newTarget")
 	defer log.Debug("<-- heist.newTarget")
 
@@ -136,8 +139,9 @@ func newTarget(guildID string, theme string, name string, maxCrewSize int, succe
 		Name:     name,
 		CrewSize: maxCrewSize,
 		Success:  success,
-		Vault:    vaultCurrent,
+		Vault:    maxVault,
 		VaultMax: maxVault,
+		IsAtMax:  true,
 	}
 	return &target
 }
@@ -146,7 +150,7 @@ func newTarget(guildID string, theme string, name string, maxCrewSize int, succe
 func vaultUpdater() {
 	const timer = time.Duration(1 * time.Minute)
 
-	filter := bson.D{{Key: "$where", Value: "this.vault < this.vault_max"}}
+	filter := bson.D{{Key: "is_at_max", Value: false}}
 	// Update the vaults forever
 	for {
 		time.Sleep(timer)
@@ -156,6 +160,9 @@ func vaultUpdater() {
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
 			log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "old": target.Vault, "new": newVaultAmount, "max": target.VaultMax}).Info("vault updater: update vault")
 			target.Vault = newVaultAmount
+			if target.Vault == target.VaultMax {
+				target.IsAtMax = true
+			}
 			writeTarget(target)
 		}
 	}
