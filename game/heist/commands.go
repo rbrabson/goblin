@@ -548,7 +548,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Inline: true,
 				},
 				{
-					Name:   "apprehended",
+					Name:   "Apprehended",
 					Value:  fmt.Sprintf("%d", player.JailCounter),
 					Inline: true,
 				},
