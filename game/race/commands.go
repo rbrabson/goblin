@@ -26,7 +26,7 @@ var (
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"race":       race,
-		"race-admin": admin,
+		"race-admin": raceAdmin,
 	}
 
 	memberCommands = []*discordgo.ApplicationCommand{
@@ -63,8 +63,8 @@ var (
 	}
 )
 
-// admin routes various `race-admin` subcommands to the appropriate handlers.
-func admin(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// raceAdmin routes various `race-raceAdmin` subcommands to the appropriate handlers.
+func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> race.admin")
 	defer log.Trace("<-- race.admin")
 
@@ -110,8 +110,16 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> race.startRace")
 	defer log.Trace("<-- race.startRace")
 
-	discmsg.SendEphemeralResponse(s, i, "start not implemented")
 	// TODO: implement
+	// Create a new race
+	// add the starting person to the race
+	// wait for others to join
+	// if no one joined, cancel the race
+	// run the race
+	// return the results
+	// end the race
+
+	discmsg.SendEphemeralResponse(s, i, "start not implemented")
 }
 
 // joinRace attempts to join a race that is getting ready to start.
@@ -119,8 +127,43 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> race.joinRace")
 	defer log.Trace("<-- race.joinRace")
 
-	discmsg.SendEphemeralResponse(s, i, "join not implemented")
-	// TODO: implement
+	raceLock.Lock()
+	defer raceLock.Unlock()
+	race := currentRaces[i.GuildID]
+	if race == nil {
+		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
+		discmsg.SendEphemeralResponse(s, i, "No race is planned")
+		return
+	}
+
+	// TODO: bury all of this in a raceChecks() function call
+	if len(race.RaceLegs) != 0 {
+		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("race is underway")
+		discmsg.SendEphemeralResponse(s, i, "The race has already started, so you can't join.")
+		return
+	}
+
+	config := GetConfig(i.GuildID)
+	if config.MaxNumRacers == len(race.Racers) {
+		p := discmsg.GetPrinter(language.AmericanEnglish)
+		log.WithFields(log.Fields{"guild_id": i.GuildID, "maxRacers": config.MaxNumRacers}).Warn("max racers already entered")
+		resp := p.Sprintf("You can't join the race, as there are already %d entered into the race.", config.MaxNumRacers)
+		discmsg.SendEphemeralResponse(s, i, resp)
+		return
+	}
+
+	racers := GetRacers(i.GuildID, config.Theme)
+	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
+	raceParticipant := newRaceParticipcant(raceMember, racers)
+	err := race.AddRacer(raceParticipant)
+	if err != nil {
+		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Warn("already a member of the race")
+		discmsg.SendEphemeralResponse(s, i, "You are already a member of the race")
+		return
+	}
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have joined the race")
+
+	discmsg.SendEphemeralResponse(s, i, "You have joined the race")
 }
 
 // raceStats returns a players race stats.

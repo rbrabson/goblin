@@ -116,15 +116,23 @@ func newRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 }
 
 // AddRacer adds a race partipant to the given race.
-func (r *Race) AddRacer(raceParticipant *RaceParticipant) {
+func (r *Race) AddRacer(raceParticipant *RaceParticipant) error {
 	log.Trace("--> race.Race.AddRacer")
 	defer log.Trace("<-- race.Race.AddRacer")
 
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	for _, racer := range r.Racers {
+		if racer.Member.MemberID == raceParticipant.Member.MemberID {
+			return ErrAlreadyJoined
+		}
+	}
+
 	r.Racers = append(r.Racers, raceParticipant)
 	log.WithFields(log.Fields{"guild": r.GuildID, "racer": raceParticipant.Member.MemberID}).Info("add racer to current race")
+
+	return nil
 }
 
 // Adds a better for the given race.
@@ -240,9 +248,9 @@ func ResetRace(guildID string) {
 
 // newRaceParticipant creates a new RaceParticpant for the given member. This is used to
 // track the position of the member in the race.
-func newRaceParitipcant(member *RaceMember, racers []*Racer) *RaceParticipant {
-	log.Trace("--> race.newRaceParticipant")
-	defer log.Trace("<-- race.newRaceParticipant")
+func newRaceParticipcant(member *RaceMember, racers []*Racer) *RaceParticipant {
+	log.Trace("--> race.newRaceParticipcant")
+	defer log.Trace("<-- race.newRaceParticipcant")
 
 	index := rand.Intn(len(racers))
 	participant := &RaceParticipant{

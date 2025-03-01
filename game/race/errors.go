@@ -7,4 +7,5 @@ var (
 	ErrMemberNotFound = errors.New("member not found")
 	ErrRacerNotFound  = errors.New("racer not found")
 	ErrNoRacersFound  = errors.New("no racers found")
+	ErrAlreadyJoined  = errors.New("you have already joined the race")
 )
