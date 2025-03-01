@@ -1,10 +1,10 @@
 package channel
 
 import (
+	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/rbrabson/goblin/internal/role"
 )
 
 // Mute is used for muting and unmuting a channel on a server
@@ -34,7 +34,7 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 		channel: channel,
 	}
 
-	guildRoles := role.GetGuildRoles(s, channel.GuildID)
+	guildRoles := guild.GetGuildRoles(s, channel.GuildID)
 	for _, guildlRole := range guildRoles {
 		if guildlRole.Name == "@everyone" {
 			c.everyoneID = guildlRole.ID

@@ -5,7 +5,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/database/mongo"
-	"github.com/rbrabson/goblin/internal/role"
+	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -66,7 +66,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 	})
 
 	db = mongo.NewDatabase()
-	role.SetDB(db)
+	guild.SetDB(db)
 	for _, plugin := range ListPlugin() {
 		plugin.Initialize(bot, db)
 		log.WithFields(log.Fields{"plugin": plugin.GetName()}).Info("initialized plugin")

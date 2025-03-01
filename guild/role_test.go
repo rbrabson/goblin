@@ -1,4 +1,4 @@
-package role
+package guild
 
 import (
 	"testing"
@@ -67,9 +67,9 @@ func setup() {
 		GuildID:    GUILD_ID,
 		AdminRoles: []string{"Admin", "Admins", "Administrator", "Mod", "Mods", "Moderator"},
 	}
-	db.UpdateOrInsert(SERVER_COLLECTION, bson.M{"guild_id": GUILD_ID}, server)
+	db.UpdateOrInsert(GUILD_COLLECTION, bson.M{"guild_id": GUILD_ID}, server)
 }
 
 func teardown() {
-	db.Delete(SERVER_COLLECTION, bson.M{"guild_id": GUILD_ID})
+	db.Delete(GUILD_COLLECTION, bson.M{"guild_id": GUILD_ID})
 }

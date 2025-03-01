@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
-	discrole "github.com/rbrabson/goblin/internal/role"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 )
@@ -71,7 +71,7 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	if !discrole.IsAdmin(s, i.GuildID, i.Member.User.ID) {
+	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := p.Sprintf("You do not have permission to use this command.")
 		discmsg.SendEphemeralResponse(s, i, resp)
 		return
@@ -113,7 +113,7 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleName := options[0].StringValue()
 
 	// Get the server configuration
-	server := discrole.GetServer(guildID)
+	server := guild.GetGuild(guildID)
 
 	// Add the role to the server configuration
 	server.AddAdminRole(roleName)
@@ -132,7 +132,7 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleName := options[0].StringValue()
 
 	// Get the server configuration
-	server := discrole.GetServer(guildID)
+	server := guild.GetGuild(guildID)
 
 	// Remove the role from the server configuration
 	server.RemoveAdminRole(roleName)
@@ -149,7 +149,7 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
 
 	// Get the server configuration
-	server := discrole.GetServer(guildID)
+	server := guild.GetGuild(guildID)
 
 	// Get the list of admin roles
 	roles := server.GetAdminRoles()

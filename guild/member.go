@@ -23,11 +23,6 @@ func GetMember(guildID string, memberID string) *Member {
 	return getMember(guildID, memberID)
 }
 
-// String returns a string representation of the Guild.
-func (g *Guild) String() string {
-	return fmt.Sprintf("Guild{GuildID=%s}", g.GuildID)
-}
-
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(userName string, displayName string) *Member {
 	log.Trace("--> guild.Member.SetName")

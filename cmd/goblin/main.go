@@ -10,7 +10,6 @@ import (
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/game/heist"
-	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/leaderboard"
 	"github.com/rbrabson/goblin/payday"
 	"github.com/rbrabson/goblin/role"
@@ -57,7 +56,6 @@ func main() {
 	// Start the plugins
 	bank.Start()
 	heist.Start()
-	guild.Start()
 	leaderboard.Start()
 	payday.Start()
 	role.Start()

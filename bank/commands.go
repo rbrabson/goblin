@@ -9,7 +9,6 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/rbrabson/goblin/internal/discmsg"
-	"github.com/rbrabson/goblin/internal/role"
 )
 
 var (
@@ -112,7 +111,7 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	if !role.IsAdmin(s, i.GuildID, i.Member.User.ID) {
+	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := p.Sprintf("You do not have permission to use this command.")
 		discmsg.SendEphemeralResponse(s, i, resp)
 		return

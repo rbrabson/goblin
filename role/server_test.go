@@ -7,8 +7,8 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
+	"github.com/rbrabson/goblin/guild"
 
-	discrole "github.com/rbrabson/goblin/internal/role"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -18,19 +18,19 @@ func init() {
 		log.Fatal("Error loading .env file")
 	}
 	db = mongo.NewDatabase()
-	discrole.SetDB(db)
+	guild.SetDB(db)
 }
 
 func TestGetServer(t *testing.T) {
-	servers := make([]*discrole.Server, 0, 1)
+	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(discrole.SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
+			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
 		}
 	}()
 
 	// Create a new server configuration.
-	server := discrole.GetServer("12345")
+	server := guild.GetGuild("12345")
 	if server.GuildID != "12345" {
 		t.Errorf("Expected guild ID to be 12345, got %s", server.GuildID)
 		return
@@ -38,22 +38,22 @@ func TestGetServer(t *testing.T) {
 	servers = append(servers, server)
 
 	for i, role := range server.AdminRoles {
-		if !slices.Contains(discrole.DEFAULT_ADMIN_ROLES, role) {
-			t.Errorf("Expected role to be %s, got %s", discrole.DEFAULT_ADMIN_ROLES[i], role)
+		if !slices.Contains(guild.DEFAULT_ADMIN_ROLES, role) {
+			t.Errorf("Expected role to be %s, got %s", guild.DEFAULT_ADMIN_ROLES[i], role)
 		}
 	}
 }
 
 func TestAddAdminRole(t *testing.T) {
-	servers := make([]*discrole.Server, 0, 1)
+	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(discrole.SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
+			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
 		}
 	}()
 
 	// Create a new server configuration.
-	server := discrole.GetServer("12345")
+	server := guild.GetGuild("12345")
 	if server == nil {
 		t.Errorf("Expected server to be created")
 		return
@@ -61,7 +61,7 @@ func TestAddAdminRole(t *testing.T) {
 	servers = append(servers, server)
 
 	server.AddAdminRole("NewRole")
-	server = discrole.GetServer(server.GuildID)
+	server = guild.GetGuild(server.GuildID)
 	if server == nil {
 		t.Errorf("Expected server to be retrieved")
 		return
@@ -73,15 +73,15 @@ func TestAddAdminRole(t *testing.T) {
 }
 
 func TestRemoveAdminRole(t *testing.T) {
-	servers := make([]*discrole.Server, 0, 1)
+	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(discrole.SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
+			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
 		}
 	}()
 
 	// Create a new server configuration.
-	server := discrole.GetServer("12345")
+	server := guild.GetGuild("12345")
 	if server == nil {
 		t.Errorf("Expected server to be created")
 		return
@@ -89,7 +89,7 @@ func TestRemoveAdminRole(t *testing.T) {
 	servers = append(servers, server)
 
 	server.RemoveAdminRole("NewRole")
-	server = discrole.GetServer(server.GuildID)
+	server = guild.GetGuild(server.GuildID)
 	if server == nil {
 		t.Errorf("Expected server to be retrieved")
 		return
@@ -100,15 +100,15 @@ func TestRemoveAdminRole(t *testing.T) {
 }
 
 func TestListAdminRoles(t *testing.T) {
-	servers := make([]*discrole.Server, 0, 1)
+	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(discrole.SERVER_COLLECTION, bson.M{"guild_id": server.GuildID})
+			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
 		}
 	}()
 
 	// Create a new server configuration.
-	server := discrole.GetServer("12345")
+	server := guild.GetGuild("12345")
 	if server == nil {
 		t.Errorf("Expected server to be created")
 		return
@@ -117,8 +117,8 @@ func TestListAdminRoles(t *testing.T) {
 
 	roles := server.GetAdminRoles()
 	for i, role := range roles {
-		if !slices.Contains(discrole.DEFAULT_ADMIN_ROLES, role) {
-			t.Errorf("Expected role to not be %s, got %s", discrole.DEFAULT_ADMIN_ROLES[i], role)
+		if !slices.Contains(guild.DEFAULT_ADMIN_ROLES, role) {
+			t.Errorf("Expected role to not be %s, got %s", guild.DEFAULT_ADMIN_ROLES[i], role)
 		}
 	}
 }

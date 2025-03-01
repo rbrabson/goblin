@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	GUILD_COLLECTION  = "guilds"
 	MEMBER_COLLECTION = "guild_members"
 )
 
@@ -45,5 +46,37 @@ func writeMember(member *Member) error {
 	}
 
 	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID, "name": member.Name}).Debug("write guild member to the database")
+	return nil
+}
+
+// readGuild gets the guild from the database and returns the value, if it exists, or returns nil if the
+func readGuild(guildID string) *Guild {
+	log.Trace("--> guild.readGuild")
+	defer log.Trace("<-- guild.readGuild")
+
+	filter := bson.M{"guild_id": guildID}
+	var guild Guild
+	err := db.FindOne(GUILD_COLLECTION, filter, &guild)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID}).Debug("guild not found in the database")
+		return nil
+	}
+	log.WithFields(log.Fields{"guild": guild}).Debug("read guild from the database")
+	return &guild
+}
+
+// writeGuild creates or updates the guild data in the database being used by the Discord bot.
+func writeGuild(guild *Guild) error {
+	log.Trace("--> guild.writeGuild")
+	defer log.Trace("<-- guild.writeGuild")
+
+	filter := bson.M{"guild_id": guild.GuildID}
+	err := db.UpdateOrInsert(GUILD_COLLECTION, filter, guild)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guild.GuildID}).Error("unable to save guild to the database")
+		return err
+	}
+	log.WithFields(log.Fields{"guild": guild.GuildID}).Info("save guild to the database")
+
 	return nil
 }

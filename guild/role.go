@@ -1,4 +1,4 @@
-package role
+package guild
 
 import (
 	"slices"
@@ -7,10 +7,6 @@ import (
 	"github.com/rbrabson/goblin/database/mongo"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
-)
-
-const (
-	SERVER_COLLECTION = "servers"
 )
 
 var (
@@ -30,13 +26,13 @@ func GetAdminRoles(guildID string) []string {
 	defer log.Trace("<-- role.GetAdminRoles")
 
 	filter := bson.M{"guild_id": guildID}
-	server := &Server{}
-	err := db.FindOne(SERVER_COLLECTION, filter, server)
+	server := &Guild{}
+	err := db.FindOne(GUILD_COLLECTION, filter, server)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID}).Debug("server not found in the database")
 	}
 	if server.GuildID == "" {
-		server = newServer(guildID)
+		server = newGuild(guildID)
 	}
 
 	return server.AdminRoles
@@ -90,8 +86,8 @@ func CheckAdminRole(adminRoles []string, memberRoles []string) bool {
 // It returns true if the member has any admin role in the server.
 // It returns false if the member does not have any admin role.
 func IsAdmin(s *discordgo.Session, guildID string, memberID string) bool {
-	log.Trace("--> role.IsAdmin")
-	defer log.Trace("<-- role.IsAdmin")
+	log.Trace("--> guild.IsAdmin")
+	defer log.Trace("<-- guild.IsAdmin")
 
 	guildRoles := GetGuildRoles(s, guildID)
 	member, err := s.GuildMember(guildID, memberID)
