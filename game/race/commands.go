@@ -1,6 +1,8 @@
 package race
 
 import (
+	"strings"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
@@ -118,8 +120,15 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// run the race
 	// return the results
 	// end the race
+	racers := GetRacers(i.GuildID, "clash")
+	sb := strings.Builder{}
+	sb.WriteString("start not implemented, emojis= ")
+	for _, racer := range racers {
+		sb.WriteString(racer.Emoji)
+		sb.WriteString(" ")
+	}
 
-	discmsg.SendEphemeralResponse(s, i, "start not implemented")
+	discmsg.SendEphemeralResponse(s, i, sb.String())
 }
 
 // joinRace attempts to join a race that is getting ready to start.

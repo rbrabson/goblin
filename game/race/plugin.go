@@ -49,14 +49,17 @@ func (plugin *Plugin) GetCommandHandlers() map[string]func(*discordgo.Session, *
 
 // GetComponentHandlers returns the component handlers for the banking system
 func (plugin *Plugin) GetComponentHandlers() map[string]func(*discordgo.Session, *discordgo.InteractionCreate) {
-	handlers := make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
-	for k, v := range commandHandlers {
-		handlers[k] = v
-	}
-	for k, v := range componentHandlers {
-		handlers[k] = v
-	}
-	return handlers
+	return commandHandlers
+
+	// TODO: the stuff below doesn't work
+	// handlers := make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
+	// for k, v := range commandHandlers {
+	// 	handlers[k] = v
+	// }
+	// for k, v := range componentHandlers {
+	// 	handlers[k] = v
+	// }
+	// return handlers
 }
 
 // GetName returns the name of the banking system plugin

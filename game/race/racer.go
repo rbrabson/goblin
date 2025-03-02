@@ -104,7 +104,7 @@ func newRacers(guildID string) []*Racer {
 		{
 			GuildID:       guildID,
 			Theme:         "clash",
-			Emoji:         "<:Archer_Queen:1345546387819069481>",
+			Emoji:         "<:Archer_Queen:1345541909698973756>",
 			MovementSpeed: "fast",
 		},
 		{
@@ -170,7 +170,7 @@ func newRacers(guildID string) []*Racer {
 		{
 			GuildID:       guildID,
 			Theme:         "clash",
-			Emoji:         "<:Balloon:B>",
+			Emoji:         "<:Balloon:1345562955982442548>",
 			MovementSpeed: "abberant",
 		},
 		{
