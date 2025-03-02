@@ -141,14 +141,18 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race.addRaceParticipant(member)
 
 	defer race.End()
-	// TODO: implement
-	// Create a new race
-	// add the starting person to the race
-	// wait for others to join
-	// if no one joined, cancel the race
-	// run the race
-	// return the results
-	// end the race
+
+	waitForMembersToJoin()
+
+	// TODO: verify that there are a minimum number of racers (2, but put in the config if not there)
+	//       if there aren't enough, cancel teh race and exit out
+
+	waitForBetsToBePlaced()
+
+	// TODO: run the race
+
+	// TODO: return the race results to the invoker
+
 	racers := GetRaceAvatars(i.GuildID, "clash")
 	sb := strings.Builder{}
 	sb.WriteString("start not implemented, emojis= ")
@@ -158,6 +162,14 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	discmsg.SendEphemeralResponse(s, i, sb.String())
+}
+
+func waitForMembersToJoin() {
+
+}
+
+func waitForBetsToBePlaced() {
+
 }
 
 // joinRace attempts to join a race that is getting ready to start.
