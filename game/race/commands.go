@@ -122,7 +122,6 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	ResetRace(i.GuildID)
 	discmsg.SendEphemeralResponse(s, i, "Race has been reset")
-
 }
 
 // startRace starts a race that other members may join.
@@ -458,38 +457,40 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config 
 
 	racers := race.Racers
 
-	if len(racers) >= 1 {
-		racer := racers[0]
-		memberName := guild.GetMember(race.GuildID, racer.Member.MemberID).Name
+	results := race.RaceResult
+
+	if results.Win == nil {
+		raceParticipant := results.Win
+		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", racer.Racer.Emoji, racer.Racer.MovementSpeed, racer.Prize),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
 			Inline: true,
 		})
 	}
 
-	if len(racers) >= 2 {
-		racer := racers[1]
-		memberName := guild.GetMember(race.GuildID, racer.Member.MemberID).Name
+	if results.Place == nil {
+		raceParticipant := results.Place
+		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", racer.Racer.Emoji, racer.Racer.MovementSpeed, racer.Prize),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
 			Inline: true,
 		})
 	}
-	if len(racers) >= 3 {
-		racer := racers[2]
-		memberName := guild.GetMember(race.GuildID, racer.Member.MemberID).Name
+	if results.Show == nil {
+		raceParticipant := results.Place
+		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", racer.Racer.Emoji, racer.Racer.MovementSpeed, racer.Prize),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
 			Inline: true,
 		})
 	}
 
-	betWinners := make([]string, 0, 1)
+	betWinners := make([]string, 0, len(race.Betters))
 	for _, bet := range race.Betters {
-		if bet.Racer == racers[0] {
+		if bet.Racer == results.Win {
 			memberName := guild.GetMember(race.GuildID, bet.Member.MemberID).Name
 			betWinners = append(betWinners, memberName)
 		}
