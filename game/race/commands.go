@@ -332,16 +332,6 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have placed a bet")
 }
 
-// waitOnRace waits for racers to join the race, or betters to bet on the race.
-func waitOnRace() {
-	log.Trace("--> race.waitOnRace")
-	defer log.Trace("<-- race.waitOnRace")
-
-	// TODO:
-	// - Wait for race participants to join.
-	// - Somewhere, wait for bets to be placed. probabliy a different function.
-}
-
 // getRacerButtons returns the buttons for the racers, which may be used to
 // bet on the various racers.
 func getRacerButtons(race *Race) []discordgo.ActionsRow {

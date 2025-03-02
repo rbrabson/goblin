@@ -275,6 +275,12 @@ func raceStartChecks(guildID string, memberID string) error {
 	log.Trace("--> race.raceStartChecks")
 	defer log.Trace("<-- race.raceStartChecks")
 
+	log.WithFields(log.Fields{"guild_id": guildID, "member_id": memberID}).Warn("TODO: need to implement race checks")
+
+	// No race is underway
+	// The delay timer between races hasn't gone off
+	// Current member has the funds to pay for this (can move out of here, or into the "joinRace" function, which makes more sense)
+
 	return nil
 }
 
