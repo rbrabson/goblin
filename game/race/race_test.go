@@ -51,8 +51,8 @@ func TestGetRace(t *testing.T) {
 		},
 		Racer: racers[1],
 	}
-	race.AddRacer(racer1)
-	race.AddRacer(racer2)
+	race.addRacer(racer1)
+	race.addRacer(racer2)
 
 	race.RunRace(60)
 

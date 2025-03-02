@@ -110,8 +110,8 @@ func newRace(guildID string) *Race {
 	return race
 }
 
-// GetRaceBetter returns a new better for a race.
-func GetRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
+// getRaceBetter returns a new better for a race.
+func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 	log.Trace("--> race.GetRaceBetter")
 	defer log.Trace("<-- race.GetRaceBetter")
 
@@ -123,35 +123,25 @@ func GetRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 	return raceBetter
 }
 
-// AddRacer adds a race partipant to the given race.
-func (r *Race) AddRacer(raceParticipant *RaceParticipant) error {
-	log.Trace("--> race.Race.AddRacer")
-	defer log.Trace("<-- race.Race.AddRacer")
+// addRacer adds a race partipant to the given race.
+func (r *Race) addRacer(raceParticipant *RaceParticipant) {
+	log.Trace("--> race.Race.addRacer")
+	defer log.Trace("<-- race.Race.addRacer")
 
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	if err := raceJoinChecks(r, raceParticipant); err != nil {
-		return err
-	}
-
 	r.Racers = append(r.Racers, raceParticipant)
 	log.WithFields(log.Fields{"guild": r.GuildID, "racer": raceParticipant.Member.MemberID}).Info("add racer to current race")
-
-	return nil
 }
 
-// Adds a better for the given race.
-func (race *Race) AddBetter(better *RaceBetter) error {
-	log.Trace("--> race.Race.AddBetter")
-	defer log.Trace("<-- race.Race.AddBetter")
+// addBetter adds a better for the given race.
+func (race *Race) addBetter(better *RaceBetter) error {
+	log.Trace("--> race.Race.addBetter")
+	defer log.Trace("<-- race.Race.addBetter")
 
 	race.mutex.Lock()
 	defer race.mutex.Unlock()
-
-	if err := raceBetChecks(race, better); err != nil {
-		return err
-	}
 
 	race.Betters = append(race.Betters, better)
 	log.WithFields(log.Fields{"guild": race.GuildID, "better": better.Member.MemberID}).Info("add better to current race")
@@ -280,8 +270,8 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 	return newPosition
 }
 
-// Check to see if a new racer can join a race.
-func raceJoinChecks(race *Race, racer *RaceParticipant) error {
+// raceJoinChecks checks to see if a racer is able to join the race.
+func raceJoinChecks(race *Race, memberID string) error {
 	log.Trace("--> race.raceChecks")
 	defer log.Trace("<-- race.raceChecks")
 
@@ -301,7 +291,7 @@ func raceJoinChecks(race *Race, racer *RaceParticipant) error {
 	}
 
 	for _, r := range race.Racers {
-		if r.Member.MemberID == racer.Member.MemberID {
+		if r.Member.MemberID == memberID {
 			return ErrAlreadyJoinedRace
 		}
 	}
@@ -309,7 +299,8 @@ func raceJoinChecks(race *Race, racer *RaceParticipant) error {
 	return nil
 }
 
-func raceBetChecks(race *Race, better *RaceBetter) error {
+// raceBetChecks checks to see if a better is able to place a bet on the current race.
+func raceBetChecks(race *Race, memberID string) error {
 	log.Trace("--> race.raceChecks")
 	defer log.Trace("<-- race.raceChecks")
 
@@ -324,7 +315,7 @@ func raceBetChecks(race *Race, better *RaceBetter) error {
 	}
 
 	for _, b := range race.Betters {
-		if b.Member.MemberID == better.Member.MemberID {
+		if b.Member.MemberID == memberID {
 			return ErrAlreadyBetOnRace
 		}
 	}

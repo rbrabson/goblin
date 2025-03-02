@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
@@ -26,7 +28,6 @@ var (
 		"race_bet_eight",
 		"race_bet_nine",
 		"race_bet_ten",
-		"race_bet_eleven",
 	}
 
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -155,6 +156,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	raceLock.Lock()
 	defer raceLock.Unlock()
+
 	race := currentRaces[i.GuildID]
 	if race == nil {
 		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
@@ -162,34 +164,25 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	// TODO: bury all of this in a raceChecks() function call somewhere.
-	if len(race.RaceLegs) != 0 {
-		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("race is underway")
-		discmsg.SendEphemeralResponse(s, i, "The race has already started, so you can't join.")
+	err := raceJoinChecks(race, i.Member.User.ID)
+	if err != nil {
+		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
+		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
 		return
 	}
 
-	config := GetConfig(i.GuildID)
-	if config.MaxNumRacers == len(race.Racers) {
-		p := discmsg.GetPrinter(language.AmericanEnglish)
-		log.WithFields(log.Fields{"guild_id": i.GuildID, "maxRacers": config.MaxNumRacers}).Warn("max racers already entered")
-		resp := p.Sprintf("You can't join the race, as there are already %d entered into the race.", config.MaxNumRacers)
-		discmsg.SendEphemeralResponse(s, i, resp)
-		return
-	}
-
-	racers := GetRacers(i.GuildID, config.Theme)
+	// All is good, add the member to the race
+	racers := GetRacers(i.GuildID, race.config.Theme)
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 	raceParticipant := newRaceParticipcant(raceMember, racers)
-	err := race.AddRacer(raceParticipant)
-	if err != nil {
-		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Warn("already a member of the race")
-		discmsg.SendEphemeralResponse(s, i, "You are already a member of the race")
-		return
-	}
+	race.addRacer(raceParticipant)
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have joined the race")
-
 	discmsg.SendEphemeralResponse(s, i, "You have joined the race")
+
+	err = raceMessage(s, race, "join")
+	if err != nil {
+		log.Error("Unable to update the race message, error:", err)
+	}
 }
 
 // raceStats returns a players race stats.
@@ -283,15 +276,39 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("---> race.betOnRace")
 	defer log.Trace("<--- race.betOnRace")
 
-	// TODO: implement
-	// - Get the current race. Fail if there isn't one.
-	// - Verify the current race is in the betting phase. Fail if it isn't.
-	// - Verify the member has enough credits to bet. Fail if they don't.
-	// - Verify the member hasn't already made a bet. Fail if they have.
-	// - Add the member as a better to the race.
-	// Some or all of this can be in the function that adds the better to the race.
+	raceLock.Lock()
+	defer raceLock.Unlock()
 
-	discmsg.SendEphemeralResponse(s, i, "resbetet not implemented")
+	race := currentRaces[i.GuildID]
+	if race == nil {
+		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
+		discmsg.SendEphemeralResponse(s, i, "No race is planned")
+		return
+	}
+
+	err := raceBetChecks(race, i.Member.User.ID)
+	if err != nil {
+		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
+		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
+		return
+	}
+
+	// Place the bet
+	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
+	err = bankAccount.Withdraw(race.config.BetAmount)
+	if err != nil {
+		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Error("unable to withdraw bet amount")
+		discmsg.SendEphemeralResponse(s, i, "Insufficiient funds to place a bet")
+		return
+	}
+
+	// All is good, so add the better to the race
+	raceParticipant := getRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
+	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
+	better := getRaceBetter(raceMember, raceParticipant)
+	race.addBetter(better)
+
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have placed a bet")
 }
 
 // waitOnRace waits for racers to join the race, or betters to bet on the race.
@@ -345,30 +362,26 @@ func getRacerButtons(race *Race) []discordgo.ActionsRow {
 
 // raceMessage sends the main command used to start and join the race. It also handles the case where
 // the race begins, disabling the buttons to join the race.
-func raceMessage(s *discordgo.Session, i *discordgo.InteractionCreate, action string, config *Config) error {
+func raceMessage(s *discordgo.Session, race *Race, action string) error {
 	log.Trace("--> raceMessage")
 	defer log.Trace("<-- raceMessage")
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	raceLock.Lock()
-	race := currentRaces[i.GuildID]
-	raceLock.Unlock()
-
 	racerNames := make([]string, 0, len(race.Racers))
 	for _, racer := range race.Racers {
-		guildMember := guild.GetMember(i.GuildID, racer.Member.MemberID)
+		guildMember := guild.GetMember(race.interaction.GuildID, racer.Member.MemberID)
 		racerNames = append(racerNames, guildMember.Name)
 	}
 
 	var msg string
 	switch action {
 	case "start", "join", "update":
-		until := time.Until(race.RaceStartTime.Add(config.WaitToStart))
+		until := time.Until(race.RaceStartTime.Add(race.config.WaitToStart))
 		msg = p.Sprintf(":triangular_flag_on_post: A race is starting! Click the button to join the race! :triangular_flag_on_post:\n\t\t\t\t\tThe race will begin in %s!", format.Duration(until))
 	case "betting":
-		until := time.Until(race.RaceStartTime.Add(config.WaitForBets))
-		msg = p.Sprintf(":triangular_flag_on_post: The racers have been set - betting is now open! :triangular_flag_on_post:\n\t\tYou have %s to place a %d credit bet!", format.Duration(until), config.BetAmount)
+		until := time.Until(race.RaceStartTime.Add(race.config.WaitForBets))
+		msg = p.Sprintf(":triangular_flag_on_post: The racers have been set - betting is now open! :triangular_flag_on_post:\n\t\tYou have %s to place a %d credit bet!", format.Duration(until), race.config.BetAmount)
 	case "started":
 		msg = ":checkered_flag: The race is now in progress! :checkered_flag:"
 	case "ended":
@@ -412,7 +425,7 @@ func raceMessage(s *discordgo.Session, i *discordgo.InteractionCreate, action st
 				},
 			}},
 		}
-		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		err = s.InteractionRespond(race.interaction.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Embeds:     embeds,
@@ -430,12 +443,12 @@ func raceMessage(s *discordgo.Session, i *discordgo.InteractionCreate, action st
 				},
 			}},
 		}
-		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		_, err = s.InteractionResponseEdit(race.interaction.Interaction, &discordgo.WebhookEdit{
 			Embeds:     &embeds,
 			Components: &components,
 		})
 	case "update":
-		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		_, err = s.InteractionResponseEdit(race.interaction.Interaction, &discordgo.WebhookEdit{
 			Embeds: &embeds,
 		})
 	case "betting":
@@ -444,12 +457,12 @@ func raceMessage(s *discordgo.Session, i *discordgo.InteractionCreate, action st
 		for _, row := range rows {
 			components = append(components, row)
 		}
-		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		_, err = s.InteractionResponseEdit(race.interaction.Interaction, &discordgo.WebhookEdit{
 			Embeds:     &embeds,
 			Components: &components,
 		})
 	default:
-		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		_, err = s.InteractionResponseEdit(race.interaction.Interaction, &discordgo.WebhookEdit{
 			Embeds:     &embeds,
 			Components: &[]discordgo.MessageComponent{},
 		})
@@ -528,4 +541,38 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config 
 	s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Embeds: embeds,
 	})
+}
+
+// getRacer takes a custom button ID and returns the corresponding racer.
+func getRaceParticipant(race *Race, customID string) *RaceParticipant {
+	log.Trace("--> getRacer")
+	defer log.Trace("<-- getRacer")
+
+	switch customID {
+	case racerButtonNames[0]:
+		return race.Racers[0]
+	case racerButtonNames[1]:
+		return race.Racers[1]
+	case racerButtonNames[2]:
+		return race.Racers[2]
+	case racerButtonNames[3]:
+		return race.Racers[3]
+	case racerButtonNames[4]:
+		return race.Racers[4]
+	case racerButtonNames[5]:
+		return race.Racers[5]
+	case racerButtonNames[6]:
+		return race.Racers[6]
+	case racerButtonNames[7]:
+		return race.Racers[7]
+	case racerButtonNames[8]:
+		return race.Racers[8]
+	case racerButtonNames[9]:
+		return race.Racers[9]
+	case racerButtonNames[10]:
+		return race.Racers[10]
+	}
+
+	log.Errorf("Invalid custom ID: %s", customID)
+	return nil
 }
