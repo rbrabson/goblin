@@ -221,7 +221,7 @@ func (race *Race) RunRace(trackLength int) {
 		race.RaceResult.Win = &RaceParticipantResult{
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
-			Winnings:    int(float64(prize) * 0.75),
+			Winnings:    prize,
 		}
 	}
 	if len(previousLeg.ParticipantPositions) > 1 {
@@ -229,7 +229,7 @@ func (race *Race) RunRace(trackLength int) {
 		race.RaceResult.Place = &RaceParticipantResult{
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
-			Winnings:    int(float64(prize) * 0.50),
+			Winnings:    int(float64(prize) * 0.75),
 		}
 	}
 	if len(previousLeg.ParticipantPositions) > 2 {
@@ -237,7 +237,7 @@ func (race *Race) RunRace(trackLength int) {
 		race.RaceResult.Show = &RaceParticipantResult{
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
-			Winnings:    int(float64(prize) * 0.25),
+			Winnings:    int(float64(prize) * 0.50),
 		}
 	}
 }
