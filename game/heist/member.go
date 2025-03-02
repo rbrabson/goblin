@@ -52,30 +52,30 @@ type HeistMember struct {
 }
 
 // getHeistMember gets a member for heists. If the member does not exist, then nil is returned.
-func getHeistMember(m *guild.Member) *HeistMember {
+func getHeistMember(guildID string, memberID string) *HeistMember {
 	log.Trace("--> heist.GetHeistMember")
 	defer log.Trace("<-- heist.GetHeistMember")
 
-	member := readMember(m)
+	member := readMember(guildID, memberID)
 	if member == nil {
-		member = newHeistMember(m)
+		member = newHeistMember(guildID, memberID)
 	}
+	member.guildMember = guild.GetMember(guildID, memberID)
 
 	return member
 }
 
 // newHeistMember creates a new member for heists. It is called when guild member
 // first plans or joins a heist.
-func newHeistMember(m *guild.Member) *HeistMember {
+func newHeistMember(guildID string, memberID string) *HeistMember {
 	log.Trace("--> heist.NewHeistMember")
 	defer log.Trace("<-- heist.NewHeistMember")
 
 	member := &HeistMember{
-		GuildID:       m.GuildID,
-		MemberID:      m.MemberID,
+		GuildID:       guildID,
+		MemberID:      memberID,
 		CriminalLevel: GREENHORN,
 		Status:        FREE,
-		guildMember:   m,
 	}
 	writeMember(member)
 	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID}).Debug("create heist member")

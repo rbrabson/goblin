@@ -298,8 +298,8 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	discmsg.SendResponse(s, i, "Starting a "+theme.Heist+"...")
 
 	// Create a new heist
-	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
-	heist, err := NewHeist(i.GuildID, guildMember)
+	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
+	heist.Organizer.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	if err != nil {
 		log.WithField("error", err).Error("unable to create the heist")
 		discmsg.EditResponse(s, i, err.Error())
@@ -308,15 +308,15 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heist.interaction = i
 
 	// The organizer has to pay a fee to plan the heist.
-	account := bank.GetAccount(i.GuildID, guildMember.MemberID)
+	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	account.Withdraw(heist.config.HeistCost)
 
-	heistMessage(s, i, heist, guildMember, "plan")
+	heistMessage(s, i, heist, heist.Organizer, "plan")
 
 	waitForHeistToStart(s, i, heist)
 
 	if len(heist.Crew) < 2 {
-		heistMessage(s, i, heist, guildMember, "cancel")
+		heistMessage(s, i, heist, heist.Organizer, "cancel")
 		p := discmsg.GetPrinter(language.AmericanEnglish)
 		msg := p.Sprintf("The %s was cancelled due to lack of interest.", heist.theme.Heist)
 		s.ChannelMessageSend(i.ChannelID, msg)
@@ -332,7 +332,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	mute.MuteChannel()
 	defer mute.UnmuteChannel()
 
-	err = heistMessage(s, i, heist, guildMember, "start")
+	err = heistMessage(s, i, heist, heist.Organizer, "start")
 	if err != nil {
 		log.WithField("error", err).Error("Unable to mark the heist message as started")
 	}
@@ -350,7 +350,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.ChannelMessageSend(i.ChannelID, msg)
 
 	time.Sleep(3 * time.Second)
-	heistMessage(s, i, heist, guildMember, "start")
+	heistMessage(s, i, heist, heist.Organizer, "start")
 
 	sendHeistResults(s, i, res)
 
@@ -361,8 +361,6 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) {
 	log.Trace("--> heist.waitHeist")
 	defer log.Trace("<-- hesit.waitHeist")
-
-	guildMember := heist.Organizer.guildMember
 
 	// Wait for the heist to be ready to start
 	waitTime := heist.StartTime.Add(heist.config.WaitTime)
@@ -376,7 +374,7 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 		}
 		time.Sleep(timeToWait)
 		log.WithFields(log.Fields{"guild": heist.GuildID, "startTiime": heist.StartTime, "until": time.Until(heist.StartTime.Add(heist.config.WaitTime))}).Debug("waiting for the heist to start")
-		heistMessage(s, i, heist, guildMember, "update")
+		heistMessage(s, i, heist, heist.Organizer, "update")
 	}
 }
 
@@ -461,16 +459,13 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	h := currentHeists[i.GuildID]
 	alertTimes[i.GuildID] = time.Now().Add(h.config.PoliceAlert)
 	heistLock.Unlock()
-	guildMember := h.Organizer.guildMember
-	heistMessage(s, i, h, guildMember, "ended")
+	heistMessage(s, i, h, h.Organizer, "ended")
 }
 
 // joinHeist attempts to join a heist that is being planned
 func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> joinHeist")
 	defer log.Trace("<-- joinHeist")
-
-	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
 
 	heist := currentHeists[i.GuildID]
 	if heist == nil {
@@ -479,7 +474,8 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	heistMember := getHeistMember(guildMember)
+	heistMember := getHeistMember(i.GuildID, i.Member.User.ID)
+	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	err := heist.AddCrewMember(heistMember)
 	if err != nil {
 		discmsg.SendEphemeralResponse(s, i, err.Error())
@@ -488,14 +484,14 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Withdraw the cost of the heist from the player's account. We know the player already
 	// has the required number of credits as this is verified when adding them to the heist.
-	account := bank.GetAccount(i.GuildID, guildMember.MemberID)
+	account := bank.GetAccount(i.GuildID, heistMember.MemberID)
 	account.Withdraw(heist.config.HeistCost)
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 	resp := p.Sprintf("You have joined the %s at a cost of %d credits.", heist.theme.Heist, heist.config.HeistCost)
 	discmsg.SendEphemeralResponse(s, i, resp)
 
-	heistMessage(s, heist.interaction, heist, guildMember, "join")
+	heistMessage(s, heist.interaction, heist, heistMember, "join")
 }
 
 // playerStats shows a player's heist stats
@@ -504,11 +500,11 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- playerStats")
 
 	theme := GetTheme(i.GuildID)
-	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID)
-	player := getHeistMember(guildMember)
+	player := getHeistMember(i.GuildID, i.Member.User.ID)
+	player.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
 
-	account := bank.GetAccount(i.GuildID, guildMember.MemberID)
+	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 
 	var sentence string
 	if player.Status == APPREHENDED {
@@ -525,7 +521,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Type:        discordgo.EmbedTypeRich,
-			Title:       guildMember.Name,
+			Title:       player.guildMember.Name,
 			Description: player.CriminalLevel.String(),
 			Fields: []*discordgo.MessageEmbedField{
 				{
@@ -598,14 +594,14 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	member := guild.GetMember(i.GuildID, i.Member.User.ID)
-	initiatingHeistMember := getHeistMember(member)
-	account := bank.GetAccount(i.GuildID, member.MemberID)
+	initiatingHeistMember := getHeistMember(i.GuildID, i.Member.User.ID)
+	initiatingHeistMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
+	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 
 	discmsg.SendEphemeralResponse(s, i, "Bailing "+playerID+"...")
 	var heistMember *HeistMember
 	if playerID != "" {
-		heistMember = getHeistMember(member)
+		heistMember = getHeistMember(i.GuildID, i.Member.User.ID)
 	} else {
 		heistMember = initiatingHeistMember
 	}
@@ -615,7 +611,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if heistMember.MemberID == i.Member.User.ID {
 			msg = "You are not in jail"
 		} else {
-			msg = fmt.Sprintf("%s is not in jail", member.Name)
+			msg = fmt.Sprintf("%s is not in jail", initiatingHeistMember.guildMember.Name)
 		}
 		discmsg.EditResponse(s, i, msg)
 		return
@@ -652,7 +648,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // heistMessage sends the main command used to plan, join and leave a heist. It also handles the case where
 // the heist starts, disabling the buttons to join/leave/cancel the heist.
-func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist, member *guild.Member, action string) error {
+func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist, member *HeistMember, action string) error {
 	log.Trace("--> heistMessage")
 	defer log.Trace("<-- heistMessage")
 
@@ -689,7 +685,7 @@ func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *H
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 	msg := p.Sprintf("A new %s is being planned by %s. You can join the %s for a cost of %d credits at any time prior to the %s starting.",
 		heist.theme.Heist,
-		member.Name,
+		member.guildMember.Name,
 		heist.theme.Heist,
 		heist.config.HeistCost,
 		heist.theme.Heist,
@@ -760,8 +756,7 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	guildMember := heist.Organizer.guildMember
-	heistMessage(s, i, heist, guildMember, "cancel")
+	heistMessage(s, i, heist, heist.Organizer, "cancel")
 
 	discmsg.SendResponse(s, i, fmt.Sprintf("The %s has been reset", heist.theme.Heist))
 }
@@ -813,7 +808,7 @@ func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	memberID := i.ApplicationCommandData().Options[0].Options[0].StringValue()
 	member := guild.GetMember(i.GuildID, memberID)
-	heistMember := getHeistMember(member)
+	heistMember := getHeistMember(i.GuildID, memberID)
 	heistMember.ClearJailAndDeathStatus()
 	discmsg.SendResponse(s, i, fmt.Sprintf("Heist membber \"%s\"'s settings cleared", member.Name))
 }

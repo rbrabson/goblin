@@ -35,7 +35,7 @@ func TestNewHeist(t *testing.T) {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(GUILD_ID, organizer)
+	heist, err := NewHeist(GUILD_ID, ORGANIZER_ID)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -70,7 +70,7 @@ func TestHeistChecks(t *testing.T) {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(GUILD_ID, organizer)
+	heist, err := NewHeist(GUILD_ID, ORGANIZER_ID)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -82,8 +82,8 @@ func TestHeistChecks(t *testing.T) {
 	}
 	defer heist.End()
 
-	guildMember := guild.GetMember(GUILD_ID, "abcdef").SetName("Crew Member 1", "")
-	member := getHeistMember(guildMember)
+	member := getHeistMember(GUILD_ID, "abcdef")
+	member.guildMember.SetName("Crew Member 1", "")
 	err = heistChecks(heist, member)
 	if err != nil {
 		t.Errorf("Got %s", err.Error())
@@ -106,7 +106,7 @@ func TestStartHeist(t *testing.T) {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(GUILD_ID, organizer)
+	heist, err := NewHeist(GUILD_ID, ORGANIZER_ID)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -117,8 +117,8 @@ func TestStartHeist(t *testing.T) {
 	}
 	defer heist.End()
 
-	guildMember := guild.GetMember(GUILD_ID, "abcdef").SetName("Crew Member 1", "")
-	member := getHeistMember(guildMember)
+	member := getHeistMember(GUILD_ID, "abcdef")
+	member.guildMember.SetName("Crew Member 1", "")
 	heist.AddCrewMember(member)
 
 	res, err := heist.Start()
