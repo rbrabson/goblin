@@ -33,6 +33,7 @@ func GetRaceMember(guildID string, memberID string) *RaceMember {
 	if member == nil {
 		member = newRaceMember(guildID, memberID)
 	}
+	member.guildMember = guild.GetMember(guildID, memberID)
 	return member
 }
 
