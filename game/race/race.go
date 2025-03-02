@@ -19,14 +19,15 @@ var (
 // It contains a list of racers who are particpaing in the race as well as
 // betters on the outcome of the race.
 type Race struct {
-	GuildID     string                       // Guild (server) on which the race is taking place
-	Racers      []*RaceParticipant           // The list of participants who are racing
-	Betters     []*RaceBetter                // The list of members who are betting on the outcome of the race
-	RaceLegs    []*RaceLeg                   // The list of legs in the race
-	RaceResult  *RaceResult                  // The results of the race
-	interaction *discordgo.InteractionCreate // Interaction used in sending message updates
-	config      *Config                      // Race configuration (avoids having to read from the database)
-	mutex       sync.Mutex                   // Lock used to synchronize access to the race
+	GuildID       string                       // Guild (server) on which the race is taking place
+	Racers        []*RaceParticipant           // The list of participants who are racing
+	Betters       []*RaceBetter                // The list of members who are betting on the outcome of the race
+	RaceLegs      []*RaceLeg                   // The list of legs in the race
+	RaceResult    *RaceResult                  // The results of the race
+	RaceStartTime time.Time                    // The time at which the race is started
+	interaction   *discordgo.InteractionCreate // Interaction used in sending message updates
+	config        *Config                      // Race configuration (avoids having to read from the database)
+	mutex         sync.Mutex                   // Lock used to synchronize access to the race
 }
 
 // RaceResults is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
@@ -59,6 +60,7 @@ type RaceParticipantPosition struct {
 type RaceParticipant struct {
 	Member *RaceMember // Member who is racing
 	Racer  *Racer      // Racer assigned to the member
+	Prize  int         // Amount earned in the race
 }
 
 // RaceBetter is a member who is betting on the outcome of the race.
@@ -89,12 +91,13 @@ func newRace(guildID string) *Race {
 
 	config := GetConfig(guildID)
 	race := &Race{
-		GuildID:     guildID,
-		Racers:      make([]*RaceParticipant, 0, 10),
-		Betters:     make([]*RaceBetter, 0, 10),
-		interaction: nil,
-		config:      config,
-		mutex:       sync.Mutex{},
+		GuildID:       guildID,
+		Racers:        make([]*RaceParticipant, 0, 10),
+		Betters:       make([]*RaceBetter, 0, 10),
+		RaceStartTime: time.Now(),
+		interaction:   nil,
+		config:        config,
+		mutex:         sync.Mutex{},
 	}
 	currentRaces[guildID] = race
 	log.WithFields(log.Fields{"guild": guildID}).Info("new race")
@@ -149,7 +152,7 @@ func (race *Race) AddBetter(better *RaceBetter) {
 
 // RunRace runs a race, calculating the results of each leg of the race and the
 // ultimate winners of the race.
-func (race *Race) RunRace(trackLength int) {
+func (race *Race) RunRace(trackLength int, config *Config) {
 	log.Trace("--> race.Race.RunRace")
 	defer log.Trace("<-- race.Race.RunRace")
 
@@ -205,18 +208,30 @@ func (race *Race) RunRace(trackLength int) {
 	})
 
 	// Calculate the winners of the race and save in the results
+	prize := rand.Intn(int(config.MaxPrizeAmount-config.MinPrizeAmount)) + config.MinPrizeAmount
+	prize *= len(previousLeg.ParticipantPositions)
+
 	race.RaceResult = &RaceResult{}
 	if len(previousLeg.ParticipantPositions) > 0 {
-		race.RaceResult.Win = previousLeg.ParticipantPositions[0].RaceParticipant
-		race.RaceResult.WinTime = previousLeg.ParticipantPositions[0].Speed
+		racePosition := previousLeg.ParticipantPositions[0]
+		raceParticipant := racePosition.RaceParticipant
+		raceParticipant.Prize = prize
+		race.RaceResult.Win = raceParticipant
+		race.RaceResult.WinTime = racePosition.Speed
 	}
 	if len(previousLeg.ParticipantPositions) > 1 {
-		race.RaceResult.Show = previousLeg.ParticipantPositions[1].RaceParticipant
-		race.RaceResult.ShowTime = previousLeg.ParticipantPositions[1].Speed
+		racePosition := previousLeg.ParticipantPositions[1]
+		raceParticipant := racePosition.RaceParticipant
+		raceParticipant.Prize = int(float64(prize) * 0.75)
+		race.RaceResult.Win = raceParticipant
+		race.RaceResult.WinTime = racePosition.Speed
 	}
 	if len(previousLeg.ParticipantPositions) > 2 {
-		race.RaceResult.Place = previousLeg.ParticipantPositions[2].RaceParticipant
-		race.RaceResult.PlaceTime = previousLeg.ParticipantPositions[2].Speed
+		racePosition := previousLeg.ParticipantPositions[2]
+		raceParticipant := racePosition.RaceParticipant
+		raceParticipant.Prize = int(float64(prize) * 0.5)
+		race.RaceResult.Win = raceParticipant
+		race.RaceResult.WinTime = racePosition.Speed
 	}
 }
 

@@ -1,29 +1,47 @@
 package race
 
 import (
+	"errors"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
+	"github.com/rbrabson/goblin/internal/format"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 )
 
 var (
+	racerButtonNames = []string{
+		"race_bet_one",
+		"race_bet_two",
+		"race_bet_three",
+		"race_bet_four",
+		"race_bet_five",
+		"race_bet_six",
+		"race_bet_seven",
+		"race_bet_eight",
+		"race_bet_nine",
+		"race_bet_ten",
+		"race_bet_eleven",
+	}
+
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"join_race":       joinRace,
-		"race_bet_one":    betOnRace,
-		"race_bet_two":    betOnRace,
-		"race_bet_three":  betOnRace,
-		"race_bet_four":   betOnRace,
-		"race_bet_five":   betOnRace,
-		"race_bet_six":    betOnRace,
-		"race_bet_seven":  betOnRace,
-		"race_bet_eight":  betOnRace,
-		"race_bet_nine":   betOnRace,
-		"race_bet_ten":    betOnRace,
-		"race_bet_eleven": betOnRace,
+		"join_race":          joinRace,
+		racerButtonNames[0]:  betOnRace,
+		racerButtonNames[1]:  betOnRace,
+		racerButtonNames[2]:  betOnRace,
+		racerButtonNames[3]:  betOnRace,
+		racerButtonNames[4]:  betOnRace,
+		racerButtonNames[5]:  betOnRace,
+		racerButtonNames[6]:  betOnRace,
+		racerButtonNames[7]:  betOnRace,
+		racerButtonNames[8]:  betOnRace,
+		racerButtonNames[9]:  betOnRace,
+		racerButtonNames[10]: betOnRace,
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -274,4 +292,228 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func waitOnRace() {
 	log.Trace("--> race.waitOnRace")
 	defer log.Trace("<-- race.waitOnRace")
+}
+
+// getRacerButtons returns the buttons for the racers, which may be used to
+// bet on the various racers.
+func getRacerButtons(race *Race) []discordgo.ActionsRow {
+	log.Trace("--> getRacerButtons")
+	defer log.Trace("<-- getRacerButtons")
+
+	buttonsPerRow := 5
+	rows := make([]discordgo.ActionsRow, 0, len(race.Racers)/buttonsPerRow)
+
+	racersIncludedInButtons := 0
+	for len(race.Racers) > racersIncludedInButtons {
+		racersNotInButtons := len(race.Racers) - racersIncludedInButtons
+		buttonsForNextRow := min(buttonsPerRow, racersNotInButtons)
+		buttons := make([]discordgo.MessageComponent, 0, buttonsForNextRow)
+		for j := 0; j < buttonsForNextRow; j++ {
+			index := j + racersIncludedInButtons
+			guildMember := guild.GetMember(race.GuildID, race.Racers[index].Member.MemberID)
+			button := discordgo.Button{
+				Label:    guildMember.Name,
+				Style:    discordgo.PrimaryButton,
+				CustomID: racerButtonNames[index],
+				Emoji:    nil,
+			}
+			buttons = append(buttons, button)
+		}
+		racersIncludedInButtons += buttonsForNextRow
+
+		row := discordgo.ActionsRow{Components: buttons}
+		rows = append(rows, row)
+		log.WithFields(log.Fields{
+			"numRacers": len(race.Racers),
+			"buttons":   len(buttons),
+			"row":       len(rows),
+		}).Trace("Race Buttons")
+	}
+
+	return rows
+}
+
+// raceMessage sends the main command used to start and join the race. It also handles the case where
+// the race begins, disabling the buttons to join the race.
+func raceMessage(s *discordgo.Session, i *discordgo.InteractionCreate, action string, config *Config) error {
+	log.Trace("--> raceMessage")
+	defer log.Trace("<-- raceMessage")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
+	raceLock.Lock()
+	race := currentRaces[i.GuildID]
+	raceLock.Unlock()
+
+	racerNames := make([]string, 0, len(race.Racers))
+	for _, racer := range race.Racers {
+		guildMember := guild.GetMember(i.GuildID, racer.Member.MemberID)
+		racerNames = append(racerNames, guildMember.Name)
+	}
+
+	var msg string
+	switch action {
+	case "start", "join", "update":
+		until := time.Until(race.RaceStartTime.Add(config.WaitToStart))
+		msg = p.Sprintf(":triangular_flag_on_post: A race is starting! Click the button to join the race! :triangular_flag_on_post:\n\t\t\t\t\tThe race will begin in %s!", format.Duration(until))
+	case "betting":
+		until := time.Until(race.RaceStartTime.Add(config.WaitForBets))
+		msg = p.Sprintf(":triangular_flag_on_post: The racers have been set - betting is now open! :triangular_flag_on_post:\n\t\tYou have %s to place a %d credit bet!", format.Duration(until), config.BetAmount)
+	case "started":
+		msg = ":checkered_flag: The race is now in progress! :checkered_flag:"
+	case "ended":
+		msg = ":checkered_flag: The race has ended - lets find out the results. :checkered_flag:"
+	case "cancelled":
+		msg = "Not enough players entered the race, so it was cancelled."
+	default:
+		errMsg := fmt.Sprintf("Unrecognized action: %s", action)
+		log.Error(errMsg)
+		return errors.New(errMsg)
+	}
+
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Type:  discordgo.EmbedTypeRich,
+			Title: "Race",
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:   msg,
+					Inline: false,
+				},
+				{
+					Name:   p.Sprintf("Racers (%d)", len(race.Racers)),
+					Value:  strings.Join(racerNames, ", "),
+					Inline: false,
+				},
+			},
+		},
+	}
+
+	var err error
+	switch action {
+	case "start":
+		components := []discordgo.MessageComponent{
+			discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Join",
+					Style:    discordgo.SuccessButton,
+					CustomID: "join_race",
+					Emoji:    nil,
+				},
+			}},
+		}
+		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds:     embeds,
+				Components: components,
+			},
+		})
+	case "join":
+		components := []discordgo.MessageComponent{
+			discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Join",
+					Style:    discordgo.SuccessButton,
+					CustomID: "join_race",
+					Emoji:    nil,
+				},
+			}},
+		}
+		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds:     &embeds,
+			Components: &components,
+		})
+	case "update":
+		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &embeds,
+		})
+	case "betting":
+		components := []discordgo.MessageComponent{}
+		rows := getRacerButtons(race)
+		for _, row := range rows {
+			components = append(components, row)
+		}
+		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds:     &embeds,
+			Components: &components,
+		})
+	default:
+		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds:     &embeds,
+			Components: &[]discordgo.MessageComponent{},
+		})
+	}
+
+	return err
+}
+
+// sendRaceResults sends the results of a race to the Discord server
+func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config *Config) {
+	log.Trace("--> sendRaceResults")
+	defer log.Trace("<-- sendRaceResults")
+
+	p := discmsg.GetPrinter(language.English)
+	raceResults := make([]*discordgo.MessageEmbedField, 0, 4)
+
+	racers := race.Racers
+
+	if len(racers) >= 1 {
+		racer := racers[0]
+		memberName := guild.GetMember(race.GuildID, racer.Member.MemberID).Name
+		raceResults = append(raceResults, &discordgo.MessageEmbedField{
+			Name:   p.Sprintf(":first_place: %s", memberName),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", racer.Racer.Emoji, racer.Racer.MovementSpeed, racer.Prize),
+			Inline: true,
+		})
+	}
+
+	if len(racers) >= 2 {
+		racer := racers[1]
+		memberName := guild.GetMember(race.GuildID, racer.Member.MemberID).Name
+		raceResults = append(raceResults, &discordgo.MessageEmbedField{
+			Name:   p.Sprintf(":first_place: %s", memberName),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", racer.Racer.Emoji, racer.Racer.MovementSpeed, racer.Prize),
+			Inline: true,
+		})
+	}
+	if len(racers) >= 3 {
+		racer := racers[2]
+		memberName := guild.GetMember(race.GuildID, racer.Member.MemberID).Name
+		raceResults = append(raceResults, &discordgo.MessageEmbedField{
+			Name:   p.Sprintf(":first_place: %s", memberName),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", racer.Racer.Emoji, racer.Racer.MovementSpeed, racer.Prize),
+			Inline: true,
+		})
+	}
+
+	betWinners := make([]string, 0, 1)
+	for _, bet := range race.Betters {
+		if bet.Racer == racers[0] {
+			memberName := guild.GetMember(race.GuildID, bet.Member.MemberID).Name
+			betWinners = append(betWinners, memberName)
+		}
+	}
+	var winners string
+	if len(betWinners) > 0 {
+		winners = strings.Join(betWinners, "\n")
+	} else {
+		winners = "No one guessed the winner."
+	}
+	betEarnings := config.BetAmount * len(racers)
+	betResults := &discordgo.MessageEmbedField{
+		Name:   p.Sprintf("Bet earnings of %d", betEarnings),
+		Value:  winners,
+		Inline: false,
+	}
+	raceResults = append(raceResults, betResults)
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:  "Race Results",
+			Fields: raceResults,
+		},
+	}
+	s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
+		Embeds: embeds,
+	})
 }

@@ -53,7 +53,8 @@ func TestGetRace(t *testing.T) {
 	race.AddRacer(racer1)
 	race.AddRacer(racer2)
 
-	race.RunRace(60)
+	config := GetConfig("123")
+	race.RunRace(60, config)
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
 	db.Delete(RACE_MEMBER_COLLECTION, filter)
