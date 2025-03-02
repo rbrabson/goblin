@@ -55,6 +55,17 @@ func TestGetRace(t *testing.T) {
 
 	race.RunRace(60)
 
+	result := race.RaceResult
+	if result.Win != nil {
+
+	}
+	if result.Place != nil {
+
+	}
+	if result.Show != nil {
+
+	}
+
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
 	db.Delete(RACE_MEMBER_COLLECTION, filter)
 	filter = bson.M{"guild_id": "123", "member_id": "789"}

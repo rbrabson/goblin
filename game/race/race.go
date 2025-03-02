@@ -99,6 +99,7 @@ func newRace(guildID string) *Race {
 		Racers:        make([]*RaceParticipant, 0, 10),
 		Betters:       make([]*RaceBetter, 0, 10),
 		RaceStartTime: time.Now(),
+		RaceResult:    &RaceResult{},
 		interaction:   nil,
 		config:        config,
 		mutex:         sync.Mutex{},
@@ -213,15 +214,14 @@ func (race *Race) RunRace(trackLength int) {
 
 	// Calculate the winners of the race and save in the results
 	prize := rand.Intn(int(race.config.MaxPrizeAmount-race.config.MinPrizeAmount)) + race.config.MinPrizeAmount
-	prize *= len(previousLeg.ParticipantPositions)
+	prize *= len(race.Racers)
 
-	race.RaceResult = &RaceResult{}
 	if len(previousLeg.ParticipantPositions) > 0 {
 		racePosition := previousLeg.ParticipantPositions[0]
 		race.RaceResult.Win = &RaceParticipantResult{
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
-			Winnings:    prize,
+			Winnings:    int(float64(prize) * 0.75),
 		}
 	}
 	if len(previousLeg.ParticipantPositions) > 1 {
@@ -229,7 +229,7 @@ func (race *Race) RunRace(trackLength int) {
 		race.RaceResult.Place = &RaceParticipantResult{
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
-			Winnings:    int(float64(prize) * 0.75),
+			Winnings:    int(float64(prize) * 0.50),
 		}
 	}
 	if len(previousLeg.ParticipantPositions) > 2 {
@@ -237,7 +237,7 @@ func (race *Race) RunRace(trackLength int) {
 		race.RaceResult.Show = &RaceParticipantResult{
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
-			Winnings:    int(float64(prize) * 0.5),
+			Winnings:    int(float64(prize) * 0.25),
 		}
 	}
 }
