@@ -214,8 +214,6 @@ func (r *Race) End(config *Config) {
 
 	delete(currentRaces, r.GuildID)
 
-	writeConfig(config)
-
 	log.WithFields(log.Fields{"guild": r.GuildID}).Info("end race")
 }
 
