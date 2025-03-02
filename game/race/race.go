@@ -171,7 +171,7 @@ func (race *Race) RunRace(trackLength int) {
 	for _, racer := range race.Racers {
 		participantPosition := &RaceParticipantPosition{
 			RaceParticipant: racer,
-			Position:        100, // TODO: get the current position for the racer
+			Position:        trackLength,
 		}
 		raceLeg.ParticipantPositions = append(raceLeg.ParticipantPositions, participantPosition)
 	}
@@ -204,42 +204,7 @@ func (race *Race) RunRace(trackLength int) {
 		log.WithFields(log.Fields{"guildID": race.GuildID, "turn": turn}).Trace("run race leg")
 	}
 
-	// sort the participants in the last race leg (previousLeg)
-	sort.Slice(previousLeg.ParticipantPositions, func(i, j int) bool {
-		if previousLeg.ParticipantPositions[i].Speed == previousLeg.ParticipantPositions[j].Speed {
-			return rand.Intn(2) == 0
-		}
-		return previousLeg.ParticipantPositions[i].Speed < previousLeg.ParticipantPositions[j].Speed
-	})
-
-	// Calculate the winners of the race and save in the results
-	prize := rand.Intn(int(race.config.MaxPrizeAmount-race.config.MinPrizeAmount)) + race.config.MinPrizeAmount
-	prize *= len(race.Racers)
-
-	if len(previousLeg.ParticipantPositions) > 0 {
-		racePosition := previousLeg.ParticipantPositions[0]
-		race.RaceResult.Win = &RaceParticipantResult{
-			Participant: racePosition.RaceParticipant,
-			RaceTime:    racePosition.Speed,
-			Winnings:    prize,
-		}
-	}
-	if len(previousLeg.ParticipantPositions) > 1 {
-		racePosition := previousLeg.ParticipantPositions[1]
-		race.RaceResult.Place = &RaceParticipantResult{
-			Participant: racePosition.RaceParticipant,
-			RaceTime:    racePosition.Speed,
-			Winnings:    int(float64(prize) * 0.75),
-		}
-	}
-	if len(previousLeg.ParticipantPositions) > 2 {
-		racePosition := previousLeg.ParticipantPositions[1]
-		race.RaceResult.Show = &RaceParticipantResult{
-			Participant: racePosition.RaceParticipant,
-			RaceTime:    racePosition.Speed,
-			Winnings:    int(float64(prize) * 0.50),
-		}
-	}
+	calculateWinnings(race, previousLeg)
 }
 
 // End ends the current race.
@@ -312,4 +277,52 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 	}
 
 	return newPosition
+}
+
+// calculateWinngins calculates the earnings for the racers that wins, places and shows.
+func calculateWinnings(race *Race, lastLeg *RaceLeg) {
+	log.Trace("--> race.calculateWinnings")
+	defer log.Trace("<-- race.calculateWinnings")
+
+	// sort the participants in the final race leg
+	sort.Slice(lastLeg.ParticipantPositions, func(i, j int) bool {
+		if lastLeg.ParticipantPositions[i].Speed == lastLeg.ParticipantPositions[j].Speed {
+			return rand.Intn(2) == 0
+		}
+		return lastLeg.ParticipantPositions[i].Speed < lastLeg.ParticipantPositions[j].Speed
+	})
+
+	// Calculate the winners of the race and save in the results
+	prize := rand.Intn(int(race.config.MaxPrizeAmount-race.config.MinPrizeAmount)) + race.config.MinPrizeAmount
+	prize *= len(race.Racers)
+
+	// Assign the purse for the winner
+	if len(lastLeg.ParticipantPositions) > 0 {
+		racePosition := lastLeg.ParticipantPositions[0]
+		race.RaceResult.Win = &RaceParticipantResult{
+			Participant: racePosition.RaceParticipant,
+			RaceTime:    racePosition.Speed,
+			Winnings:    prize,
+		}
+	}
+
+	// Assign the purse for the second place finisher
+	if len(lastLeg.ParticipantPositions) > 1 {
+		racePosition := lastLeg.ParticipantPositions[1]
+		race.RaceResult.Place = &RaceParticipantResult{
+			Participant: racePosition.RaceParticipant,
+			RaceTime:    racePosition.Speed,
+			Winnings:    int(float64(prize) * 0.75),
+		}
+	}
+
+	// Assign the purse for the third place finisher
+	if len(lastLeg.ParticipantPositions) > 2 {
+		racePosition := lastLeg.ParticipantPositions[1]
+		race.RaceResult.Show = &RaceParticipantResult{
+			Participant: racePosition.RaceParticipant,
+			RaceTime:    racePosition.Speed,
+			Winnings:    int(float64(prize) * 0.50),
+		}
+	}
 }
