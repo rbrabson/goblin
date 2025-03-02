@@ -33,12 +33,15 @@ type Race struct {
 // RaceResults is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
 // well as the speed at which they finished.
 type RaceResult struct {
-	Win       *RaceParticipant // First place in the race
-	Place     *RaceParticipant // Second place in the race
-	Show      *RaceParticipant // Third place in the race
-	WinTime   float64          // Speed for the winner in the race
-	PlaceTime float64          // Speed for the 2nd plalce finisher in the race
-	ShowTime  float64          // Speed for the 3rd place finisher in the race
+	Win   *RaceParticipantResult // First place in the race
+	Place *RaceParticipantResult // Second place in the race
+	Show  *RaceParticipantResult // Third place in the race
+}
+
+type RaceParticipantResult struct {
+	Participant *RaceParticipant // Participant in the race
+	RaceTime    float64          // Time at which the participant finished
+	Winnings    int              // Amount the participant won
 }
 
 // RaceLeg is a single leg in a race. This covers the movement for all racers during the given turn.
@@ -105,10 +108,10 @@ func newRace(guildID string) *Race {
 	return race
 }
 
-// newRaceBetter returns a new better for a race.
-func newRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
-	log.Trace("--> race.newRaceBetter")
-	defer log.Trace("<-- race.newRaceBetter")
+// getRaceBetter returns a new better for a race.
+func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
+	log.Trace("--> race.getRaceBetter")
+	defer log.Trace("<-- race.getRaceBetter")
 
 	raceBetter := &RaceBetter{
 		Member: member,
@@ -214,24 +217,27 @@ func (race *Race) RunRace(trackLength int, config *Config) {
 	race.RaceResult = &RaceResult{}
 	if len(previousLeg.ParticipantPositions) > 0 {
 		racePosition := previousLeg.ParticipantPositions[0]
-		raceParticipant := racePosition.RaceParticipant
-		raceParticipant.Prize = prize
-		race.RaceResult.Win = raceParticipant
-		race.RaceResult.WinTime = racePosition.Speed
+		race.RaceResult.Win = &RaceParticipantResult{
+			Participant: racePosition.RaceParticipant,
+			RaceTime:    racePosition.Speed,
+			Winnings:    prize,
+		}
 	}
 	if len(previousLeg.ParticipantPositions) > 1 {
 		racePosition := previousLeg.ParticipantPositions[1]
-		raceParticipant := racePosition.RaceParticipant
-		raceParticipant.Prize = int(float64(prize) * 0.75)
-		race.RaceResult.Win = raceParticipant
-		race.RaceResult.WinTime = racePosition.Speed
+		race.RaceResult.Place = &RaceParticipantResult{
+			Participant: racePosition.RaceParticipant,
+			RaceTime:    racePosition.Speed,
+			Winnings:    int(float64(prize) * 0.75),
+		}
 	}
 	if len(previousLeg.ParticipantPositions) > 2 {
-		racePosition := previousLeg.ParticipantPositions[2]
-		raceParticipant := racePosition.RaceParticipant
-		raceParticipant.Prize = int(float64(prize) * 0.5)
-		race.RaceResult.Win = raceParticipant
-		race.RaceResult.WinTime = racePosition.Speed
+		racePosition := previousLeg.ParticipantPositions[1]
+		race.RaceResult.Show = &RaceParticipantResult{
+			Participant: racePosition.RaceParticipant,
+			RaceTime:    racePosition.Speed,
+			Winnings:    int(float64(prize) * 0.5),
+		}
 	}
 }
 
