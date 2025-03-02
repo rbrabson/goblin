@@ -141,4 +141,5 @@ func testTeardown() {
 	db.DeleteMany(HEIST_MEMBER_COLLECTION, bson.M{"guild_id": GUILD_ID})
 	db.DeleteMany(TARGET_COLLECTION, bson.M{"guild_id": GUILD_ID})
 	db.DeleteMany(THEME_COLLECTION, bson.M{"guild_id": GUILD_ID})
+	delete(alertTimes, GUILD_ID)
 }
