@@ -93,6 +93,7 @@ func newRace(guildID string) *Race {
 	defer log.Trace("<-- race.newRace")
 
 	config := GetConfig(guildID)
+
 	race := &Race{
 		GuildID:       guildID,
 		Racers:        make([]*RaceParticipant, 0, 10),
@@ -155,7 +156,7 @@ func (race *Race) AddBetter(better *RaceBetter) {
 
 // RunRace runs a race, calculating the results of each leg of the race and the
 // ultimate winners of the race.
-func (race *Race) RunRace(trackLength int, config *Config) {
+func (race *Race) RunRace(trackLength int) {
 	log.Trace("--> race.Race.RunRace")
 	defer log.Trace("<-- race.Race.RunRace")
 
@@ -211,7 +212,7 @@ func (race *Race) RunRace(trackLength int, config *Config) {
 	})
 
 	// Calculate the winners of the race and save in the results
-	prize := rand.Intn(int(config.MaxPrizeAmount-config.MinPrizeAmount)) + config.MinPrizeAmount
+	prize := rand.Intn(int(race.config.MaxPrizeAmount-race.config.MinPrizeAmount)) + race.config.MinPrizeAmount
 	prize *= len(previousLeg.ParticipantPositions)
 
 	race.RaceResult = &RaceResult{}
@@ -242,13 +243,12 @@ func (race *Race) RunRace(trackLength int, config *Config) {
 }
 
 // End ends the current race.
-func (r *Race) End() {
+func (r *Race) End(config *Config) {
 	raceLock.Lock()
 	defer raceLock.Unlock()
 
 	delete(currentRaces, r.GuildID)
 
-	config := GetConfig(r.GuildID)
 	config.LastRaceEnded = time.Now()
 	writeConfig(config)
 
