@@ -21,10 +21,12 @@ import (
 
 // componentHandlers are the buttons that appear on messages sent by this bot.
 var (
+	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"join_heist": joinHeist,
+	}
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"heist":       heist,
 		"heist-admin": heistAdmin,
-		"join_heist":  joinHeist,
 	}
 
 	adminCommands = []*discordgo.ApplicationCommand{
