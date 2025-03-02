@@ -131,10 +131,8 @@ func (r *Race) AddRacer(raceParticipant *RaceParticipant) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	for _, racer := range r.Racers {
-		if racer.Member.MemberID == raceParticipant.Member.MemberID {
-			return ErrAlreadyJoined
-		}
+	if err := raceJoinChecks(r, raceParticipant); err != nil {
+		return err
 	}
 
 	r.Racers = append(r.Racers, raceParticipant)
@@ -144,15 +142,21 @@ func (r *Race) AddRacer(raceParticipant *RaceParticipant) error {
 }
 
 // Adds a better for the given race.
-func (race *Race) AddBetter(better *RaceBetter) {
+func (race *Race) AddBetter(better *RaceBetter) error {
 	log.Trace("--> race.Race.AddBetter")
 	defer log.Trace("<-- race.Race.AddBetter")
 
 	race.mutex.Lock()
 	defer race.mutex.Unlock()
 
+	if err := raceBetChecks(race, better); err != nil {
+		return err
+	}
+
 	race.Betters = append(race.Betters, better)
 	log.WithFields(log.Fields{"guild": race.GuildID, "better": better.Member.MemberID}).Info("add better to current race")
+
+	return nil
 }
 
 // RunRace runs a race, calculating the results of each leg of the race and the
@@ -274,6 +278,58 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 	}
 
 	return newPosition
+}
+
+// Check to see if a new racer can join a race.
+func raceJoinChecks(race *Race, racer *RaceParticipant) error {
+	log.Trace("--> race.raceChecks")
+	defer log.Trace("<-- race.raceChecks")
+
+	if time.Now().After(race.RaceStartTime.Add(race.config.WaitForBets)) {
+		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("race has started")
+		return ErrRaceHasStarted
+	}
+
+	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart)) {
+		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("betting has opened")
+		return ErrBettingHasOpened
+	}
+
+	if race.config.MaxNumRacers == len(race.Racers) {
+		log.WithFields(log.Fields{"guild_id": race.GuildID, "maxRacers": race.config.MaxNumRacers}).Warn("max racers already entered")
+		return ErrRaceFull{MaxNumRacersAllowed: race.config.MaxNumRacers}
+	}
+
+	for _, r := range race.Racers {
+		if r.Member.MemberID == racer.Member.MemberID {
+			return ErrAlreadyJoinedRace
+		}
+	}
+
+	return nil
+}
+
+func raceBetChecks(race *Race, better *RaceBetter) error {
+	log.Trace("--> race.raceChecks")
+	defer log.Trace("<-- race.raceChecks")
+
+	if time.Now().Before(race.RaceStartTime.Add(race.config.WaitToStart)) {
+		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("betting has opened")
+		return ErrBettingNotOpened
+	}
+
+	if time.Now().After(race.RaceStartTime.Add(race.config.WaitForBets)) {
+		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("race has started")
+		return ErrRaceHasStarted
+	}
+
+	for _, b := range race.Betters {
+		if b.Member.MemberID == better.Member.MemberID {
+			return ErrAlreadyBetOnRace
+		}
+	}
+
+	return nil
 }
 
 // calculateWinngins calculates the earnings for the racers that wins, places and shows.
