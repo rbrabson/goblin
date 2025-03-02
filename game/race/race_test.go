@@ -21,6 +21,7 @@ func TestGetRace(t *testing.T) {
 	race := GetRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
+		return
 	}
 	savedRace := currentRaces["123"]
 	if savedRace == nil {
