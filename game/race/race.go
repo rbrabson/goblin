@@ -230,22 +230,6 @@ func ResetRace(guildID string) {
 	log.WithFields(log.Fields{"guild": guildID}).Info("reset race")
 }
 
-// newRaceParticipant creates a new RaceParticpant for the given member. This is used to
-// track the position of the member in the race.
-func newRaceParticipcant(member *RaceMember, racers []*RaceAvatar) *RaceParticipant {
-	log.Trace("--> race.newRaceParticipcant")
-	defer log.Trace("<-- race.newRaceParticipcant")
-
-	index := rand.Intn(len(racers))
-	participant := &RaceParticipant{
-		Member: member,
-		Racer:  racers[index],
-	}
-	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID, "racer": participant.Racer.Emoji}).Debug("new race particiapnt")
-
-	return participant
-}
-
 // getRaceAvatar returns a  random race avatar to be used by a race participant.
 func getRaceAvatar(race *Race) *RaceAvatar {
 	log.Trace("--> race.getRaceAvatar")
