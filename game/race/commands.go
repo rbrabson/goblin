@@ -162,7 +162,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	// TODO: bury all of this in a raceChecks() function call
+	// TODO: bury all of this in a raceChecks() function call somewhere.
 	if len(race.RaceLegs) != 0 {
 		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("race is underway")
 		discmsg.SendEphemeralResponse(s, i, "The race has already started, so you can't join.")
@@ -283,14 +283,25 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("---> race.betOnRace")
 	defer log.Trace("<--- race.betOnRace")
 
-	discmsg.SendEphemeralResponse(s, i, "resbetet not implemented")
 	// TODO: implement
+	// - Get the current race. Fail if there isn't one.
+	// - Verify the current race is in the betting phase. Fail if it isn't.
+	// - Verify the member has enough credits to bet. Fail if they don't.
+	// - Verify the member hasn't already made a bet. Fail if they have.
+	// - Add the member as a better to the race.
+	// Some or all of this can be in the function that adds the better to the race.
+
+	discmsg.SendEphemeralResponse(s, i, "resbetet not implemented")
 }
 
 // waitOnRace waits for racers to join the race, or betters to bet on the race.
 func waitOnRace() {
 	log.Trace("--> race.waitOnRace")
 	defer log.Trace("<-- race.waitOnRace")
+
+	// TODO:
+	// - Wait for race participants to join.
+	// - Somewhere, wait for bets to be placed. probabliy a different function.
 }
 
 // getRacerButtons returns the buttons for the racers, which may be used to
