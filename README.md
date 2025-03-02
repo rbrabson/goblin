@@ -4,7 +4,7 @@ A work-in-progress to learn more about Discord bots and MongoDB, using the Go pr
 
 ## Changelog
 
-[a link](https://github.com/rbrabson/goblin/CHANGELOG.md)
+See the [changelog](CHANGELOG.md) for details.
 
 ## Running the goblin Bot
 
