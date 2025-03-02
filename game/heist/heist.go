@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	alertTimes    = make(map[string]time.Time)
 	currentHeists = make(map[string]*Heist)
 	heistLock     = sync.Mutex{}
 )
@@ -210,11 +211,10 @@ func (h *Heist) End() {
 	log.Trace("--> heist.Heist.End")
 	defer log.Trace("<-- heist.Heist.End")
 
-	h.config.SetAlertTime()
-
 	heistLock.Lock()
 	defer heistLock.Unlock()
 	delete(currentHeists, h.GuildID)
+	alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
 
 	log.WithFields(log.Fields{"guild": h.GuildID}).Debug("heist ended")
 }
@@ -239,8 +239,9 @@ func heistChecks(h *Heist, member *HeistMember) error {
 		return &ErrNotEnoughCredits{h.config.HeistCost}
 	}
 
-	if h.config.AlertTime.After(time.Now()) {
-		remainingTime := time.Until(h.config.AlertTime)
+	alertTime := alertTimes[h.GuildID]
+	if alertTime.After(time.Now()) {
+		remainingTime := time.Until(alertTime)
 		return &ErrPoliceOnAlert{h.theme.Police, remainingTime}
 	}
 

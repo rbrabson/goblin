@@ -27,7 +27,6 @@ type Config struct {
 	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID      string             `json:"guild_id" bson:"guild_id"`
 	Theme        string             `json:"theme" bson:"theme"`
-	AlertTime    time.Time          `json:"alert_time" bson:"alert_time"`
 	BailBase     int                `json:"bail_base" bson:"bail_base"`
 	CrewOutput   string             `json:"crew_output" bson:"crew_output"`
 	DeathTimer   time.Duration      `json:"death_timer" bson:"death_timer"`
@@ -52,7 +51,6 @@ func GetConfig(guildID string) *Config {
 func NewConfig(guildID string) *Config {
 	config := &Config{
 		GuildID:      guildID,
-		AlertTime:    time.Time{},
 		BailBase:     BAIL_BASE,
 		CrewOutput:   CREW_OUTPUT,
 		DeathTimer:   DEATH_TIMER,
@@ -66,12 +64,6 @@ func NewConfig(guildID string) *Config {
 	writeConfig(config)
 
 	return config
-}
-
-// SetAlertTime sets the alert time to the current time plus the police alert
-func (c *Config) SetAlertTime() {
-	c.AlertTime = time.Now().Add(c.PoliceAlert)
-	writeConfig(c)
 }
 
 // String returns a string representation of the heist configuration

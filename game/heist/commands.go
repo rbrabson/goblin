@@ -459,12 +459,10 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 
 	heistLock.Lock()
 	h := currentHeists[i.GuildID]
+	alertTimes[i.GuildID] = time.Now().Add(h.config.PoliceAlert)
 	heistLock.Unlock()
 	guildMember := h.Organizer.guildMember
 	heistMessage(s, i, h, guildMember, "ended")
-
-	// Update the heist status information
-	h.config.AlertTime = time.Now().Add(h.config.PoliceAlert)
 }
 
 // joinHeist attempts to join a heist that is being planned

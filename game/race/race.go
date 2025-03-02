@@ -30,6 +30,19 @@ type Race struct {
 	mutex         sync.Mutex                   // Lock used to synchronize access to the race
 }
 
+// RaceParticpant is a member who is racing. This includes the member and the racer assigned to them.
+type RaceParticipant struct {
+	Member *RaceMember // Member who is racing
+	Racer  *Racer      // Racer assigned to the member
+	Prize  int         // Amount earned in the race
+}
+
+// RaceBetter is a member who is betting on the outcome of the race.
+type RaceBetter struct {
+	Member *RaceMember      // Member who is betting on the outcome of the the race
+	Racer  *RaceParticipant // Racer on which the member is betting
+}
+
 // RaceResults is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
 // well as the speed at which they finished.
 type RaceResult struct {
@@ -57,19 +70,6 @@ type RaceParticipantPosition struct {
 	Speed           float64          // Speed at which the member moved during the leg of the race
 	Turn            int              // Turn in which the member is racing
 	Finished        bool             // The member has crossed the finish line
-}
-
-// RaceParticpant is a member who is racing. This includes the member and the racer assigned to them.
-type RaceParticipant struct {
-	Member *RaceMember // Member who is racing
-	Racer  *Racer      // Racer assigned to the member
-	Prize  int         // Amount earned in the race
-}
-
-// RaceBetter is a member who is betting on the outcome of the race.
-type RaceBetter struct {
-	Member *RaceMember      // Member who is betting on the outcome of the the race
-	Racer  *RaceParticipant // Racer on which the member is betting
 }
 
 // GetRace gets the race for the guild. If a race isn't in progress, then a new one is created.
