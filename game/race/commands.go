@@ -31,18 +31,17 @@ var (
 	}
 
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"join_race":          joinRace,
-		racerButtonNames[0]:  betOnRace,
-		racerButtonNames[1]:  betOnRace,
-		racerButtonNames[2]:  betOnRace,
-		racerButtonNames[3]:  betOnRace,
-		racerButtonNames[4]:  betOnRace,
-		racerButtonNames[5]:  betOnRace,
-		racerButtonNames[6]:  betOnRace,
-		racerButtonNames[7]:  betOnRace,
-		racerButtonNames[8]:  betOnRace,
-		racerButtonNames[9]:  betOnRace,
-		racerButtonNames[10]: betOnRace,
+		"join_race":         joinRace,
+		racerButtonNames[0]: betOnRace,
+		racerButtonNames[1]: betOnRace,
+		racerButtonNames[2]: betOnRace,
+		racerButtonNames[3]: betOnRace,
+		racerButtonNames[4]: betOnRace,
+		racerButtonNames[5]: betOnRace,
+		racerButtonNames[6]: betOnRace,
+		racerButtonNames[7]: betOnRace,
+		racerButtonNames[8]: betOnRace,
+		racerButtonNames[9]: betOnRace,
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
