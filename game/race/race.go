@@ -24,7 +24,7 @@ type Race struct {
 	Betters       []*RaceBetter                // The list of members who are betting on the outcome of the race
 	RaceLegs      []*RaceLeg                   // The list of legs in the race
 	RaceResult    *RaceResult                  // The results of the race
-	RaceStartTime time.Time                    // The time at which the race is started
+	RaceStartTime time.Time                    // The time at which the race is started (first created)
 	interaction   *discordgo.InteractionCreate // Interaction used in sending message updates
 	config        *Config                      // Race configuration (avoids having to read from the database)
 	mutex         sync.Mutex                   // Lock used to synchronize access to the race
