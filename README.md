@@ -2,6 +2,10 @@
 
 A work-in-progress to learn more about Discord bots and MongoDB, using the Go programming language.
 
+## Changelog
+
+[a link](https://github.com/rbrabson/goblin/CHANGELOG.md)
+
 ## Running the goblin Bot
 
 ### Configuring the goblin Bot
