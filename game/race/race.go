@@ -110,10 +110,10 @@ func newRace(guildID string) *Race {
 	return race
 }
 
-// getRaceBetter returns a new better for a race.
-func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
-	log.Trace("--> race.getRaceBetter")
-	defer log.Trace("<-- race.getRaceBetter")
+// GetRaceBetter returns a new better for a race.
+func GetRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
+	log.Trace("--> race.GetRaceBetter")
+	defer log.Trace("<-- race.GetRaceBetter")
 
 	raceBetter := &RaceBetter{
 		Member: member,
@@ -214,7 +214,6 @@ func (r *Race) End(config *Config) {
 
 	delete(currentRaces, r.GuildID)
 
-	config.LastRaceEnded = time.Now()
 	writeConfig(config)
 
 	log.WithFields(log.Fields{"guild": r.GuildID}).Info("end race")

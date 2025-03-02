@@ -13,7 +13,6 @@ type Config struct {
 	GuildID          string             `json:"guild_id" bson:"guild_id"`
 	BetAmount        int                `json:"bet_amount" bson:"bet_amount"`
 	Currency         string             `json:"currency" bson:"currency"`
-	LastRaceEnded    time.Time          `json:"last_race_ended" bson:"last_race_ended"`
 	MaxNumRacers     int                `json:"max_num_racers" bson:"max_num_racers"`
 	MaxPrizeAmount   int                `json:"max_prize_amount" bson:"max_prize_amount"`
 	MinNumRacers     int                `json:"min_num_racers" bson:"min_num_racers"`
@@ -60,7 +59,6 @@ func newConfig(guildID string) *Config {
 		Theme:            "clash",
 		BetAmount:        100,
 		Currency:         "credit",
-		LastRaceEnded:    time.Time{},
 		StartingLine:     "🏁",
 		MaxNumRacers:     10,
 		MaxPrizeAmount:   1250,
