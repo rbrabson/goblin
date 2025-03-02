@@ -49,7 +49,7 @@ func (plugin *Plugin) GetCommandHandlers() map[string]func(*discordgo.Session, *
 
 // GetComponentHandlers returns the component handlers for the banking system
 func (plugin *Plugin) GetComponentHandlers() map[string]func(*discordgo.Session, *discordgo.InteractionCreate) {
-	return componentHandlers
+	return nil
 }
 
 // GetName returns the name of the banking system plugin
