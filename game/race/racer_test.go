@@ -20,13 +20,13 @@ func init() {
 }
 
 func TestGetRacers(t *testing.T) {
-	racers := GetRacers("123", "clash")
+	racers := GetRaceAvatars("123", "clash")
 	if len(racers) == 0 {
 		t.Error("expected racers to be created")
 		return
 	}
 
-	racers = GetRacers("123", "clash")
+	racers = GetRaceAvatars("123", "clash")
 	if (len(racers)) == 0 {
 		t.Error("expected racers to be found")
 	}
@@ -40,7 +40,7 @@ func TestGetRacers(t *testing.T) {
 }
 
 func TestCalculateMovement(t *testing.T) {
-	racers := GetRacers("123", "clash")
+	racers := GetRaceAvatars("123", "clash")
 	if len(racers) == 0 {
 		t.Error("expected racers to be created")
 		return

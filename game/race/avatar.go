@@ -8,8 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Racer represents a character that may be assigned to a member that partipates in a race
-type Racer struct {
+// RaceAvatar represents a character that may be assigned to a member that partipates in a race
+type RaceAvatar struct {
 	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID       string             `json:"guild_id" bson:"guild_id"`
 	Theme         string             `json:"theme" bson:"theme"`
@@ -17,23 +17,23 @@ type Racer struct {
 	MovementSpeed string             `json:"movement_speed" bson:"movement_speed"`
 }
 
-// GetRacers returns the list of chracters that may be assigned to a member during a race.
-func GetRacers(guildID string, themeName string) []*Racer {
-	log.Trace("--> race.GetRacers")
-	defer log.Trace("<-- race.GetRacers")
+// GetRaceAvatars returns the list of chracters that may be assigned to a member during a race.
+func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
+	log.Trace("--> race.GetRaceAvatars")
+	defer log.Trace("<-- race.GetRaceAvatars")
 
-	characters, err := getRacers(guildID, themeName)
+	characters, err := getRaceAvatars(guildID, themeName)
 	if err != nil {
-		characters = newRacers(guildID)
+		characters = newRaceAvatars(guildID)
 	}
 	return characters
 }
 
-// getRacers reads the list of characters for the theme and guild from the database. If the list
+// getRaceAvatars reads the list of characters for the theme and guild from the database. If the list
 // does not exist, then an error is returned.
-func getRacers(guildID string, themeName string) ([]*Racer, error) {
-	log.Trace("--> race.getRacers")
-	defer log.Trace("<-- race.getRacers")
+func getRaceAvatars(guildID string, themeName string) ([]*RaceAvatar, error) {
+	log.Trace("--> race.getRaceAvatars")
+	defer log.Trace("<-- race.getRaceAvatars")
 
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
 	racer, err := readAllRacers(filter)
@@ -46,13 +46,13 @@ func getRacers(guildID string, themeName string) ([]*Racer, error) {
 	return racer, nil
 }
 
-// newRacers creates a new list of characters for the guild. The list is saved to
+// newRaceAvatars creates a new list of characters for the guild. The list is saved to
 // the database.
-func newRacers(guildID string) []*Racer {
-	log.Trace("--> race.newRacers")
-	defer log.Trace("<-- race.newRacers")
+func newRaceAvatars(guildID string) []*RaceAvatar {
+	log.Trace("--> race.newRaceAvatars")
+	defer log.Trace("<-- race.newRaceAvatars")
 
-	racers := []*Racer{
+	racers := []*RaceAvatar{
 		{
 			GuildID:       guildID,
 			Theme:         "clash",
@@ -490,7 +490,7 @@ func newRacers(guildID string) []*Racer {
 }
 
 // calculateMovement calculates the distance a racer moves on a given turn
-func (r *Racer) calculateMovement(currentTurn int) int {
+func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 	log.Trace("--> calculateMovement")
 	defer log.Trace("<-- calculateMovement")
 

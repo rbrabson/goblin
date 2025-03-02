@@ -129,6 +129,18 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> race.startRace")
 	defer log.Trace("<-- race.startRace")
 
+	err := raceStartChecks(i.GuildID, i.Member.User.ID)
+	if err != nil {
+		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
+		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
+		return
+	}
+
+	race := GetRace(i.GuildID)
+	member := GetRaceMember(i.GuildID, i.Member.User.ID)
+	race.addRaceParticipant(member)
+
+	defer race.End()
 	// TODO: implement
 	// Create a new race
 	// add the starting person to the race
@@ -137,7 +149,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// run the race
 	// return the results
 	// end the race
-	racers := GetRacers(i.GuildID, "clash")
+	racers := GetRaceAvatars(i.GuildID, "clash")
 	sb := strings.Builder{}
 	sb.WriteString("start not implemented, emojis= ")
 	for _, racer := range racers {
@@ -171,10 +183,8 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// All is good, add the member to the race
-	racers := GetRacers(i.GuildID, race.config.Theme)
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
-	raceParticipant := newRaceParticipcant(raceMember, racers)
-	race.addRacer(raceParticipant)
+	race.addRaceParticipant(raceMember)
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have joined the race")
 	discmsg.SendEphemeralResponse(s, i, "You have joined the race")
 
@@ -302,7 +312,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// All is good, so add the better to the race
-	raceParticipant := getRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
+	raceParticipant := getCurrentRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 	better := getRaceBetter(raceMember, raceParticipant)
 	race.addBetter(better)
@@ -543,7 +553,7 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config 
 }
 
 // getRacer takes a custom button ID and returns the corresponding racer.
-func getRaceParticipant(race *Race, customID string) *RaceParticipant {
+func getCurrentRaceParticipant(race *Race, customID string) *RaceParticipant {
 	log.Trace("--> getRacer")
 	defer log.Trace("<-- getRacer")
 
