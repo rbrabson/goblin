@@ -296,17 +296,17 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> heist.planHeist")
 	defer log.Trace("<-- heist.planHeist")
 
-	theme := GetTheme(i.GuildID)
-	discmsg.SendResponse(s, i, "Starting a "+theme.Heist+"...")
-
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
-	heist.Organizer.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	if err != nil {
 		log.WithField("error", err).Error("unable to create the heist")
-		discmsg.EditResponse(s, i, err.Error())
+		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
+
+	theme := GetTheme(i.GuildID)
+	discmsg.SendResponse(s, i, "Starting a "+theme.Heist+"...")
+	heist.Organizer.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	heist.interaction = i
 
 	// The organizer has to pay a fee to plan the heist.
