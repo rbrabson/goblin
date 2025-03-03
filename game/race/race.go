@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	currentRaces = make(map[string]*Race)
-	raceLock     = sync.Mutex{}
+	lastRaceTimes = make(map[string]*time.Time)
+	currentRaces  = make(map[string]*Race)
+	raceLock      = sync.Mutex{}
 )
 
 // Race represents a race that is currently in progress.
@@ -213,6 +214,8 @@ func (race *Race) RunRace(trackLength int) {
 func (r *Race) End() {
 	raceLock.Lock()
 	delete(currentRaces, r.GuildID)
+	now := time.Now()
+	lastRaceTimes[r.GuildID] = &now
 	defer raceLock.Unlock()
 
 	if r.RaceResult != nil {
@@ -294,7 +297,6 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 		newPosition.Speed += float64(previousPosition.Position) / float64(movement)
 	}
 
-	log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID, "position": newPosition.Position, "speed": newPosition.Speed}).Trace("moved racer")
 	return newPosition
 }
 
@@ -305,18 +307,18 @@ func raceStartChecks(guildID string, memberID string) error {
 
 	log.WithFields(log.Fields{"guild_id": guildID, "member_id": memberID}).Warn("TODO: need to implement race checks")
 
-	// TODO: include something like this
-	// timeSinceLastRace := time.Since(server.LastRaceEnded)
-	// if timeSinceLastRace < server.Config.WaitBetweenRaces {
-	// 	timeUntilRaceCanStart := server.Config.WaitBetweenRaces - timeSinceLastRace
-	// 	msg.SendEphemeralResponse(s, i, p.Sprintf("The racers are resting. Try again in %s!", format.Duration(timeUntilRaceCanStart)))
-	// 	server.mutex.Unlock()
-	// 	return
-	// }
+	config := GetConfig(guildID)
+	raceLock.Lock()
+	defer raceLock.Unlock()
 
-	// No race is underway
-	// The delay timer between races hasn't gone off
-	// Current member has the funds to pay for this (can move out of here, or into the "joinRace" function, which makes more sense)
+	lastRaceTime := lastRaceTimes[guildID]
+	if lastRaceTime != nil {
+		timeSinceLastRace := time.Since(*lastRaceTime)
+		if time.Since(*lastRaceTime) < config.WaitBetweenRaces {
+			timeUntilRaceCanStart := config.WaitBetweenRaces - timeSinceLastRace
+			return ErrRacersAreResting{timeUntilRaceCanStart}
+		}
+	}
 
 	return nil
 }
@@ -360,7 +362,7 @@ func raceBetChecks(race *Race, memberID string) error {
 		return ErrBettingNotOpened
 	}
 
-	if time.Now().After(race.RaceStartTime.Add(race.config.WaitForBets)) {
+	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
 		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("race has started")
 		return ErrRaceHasStarted
 	}

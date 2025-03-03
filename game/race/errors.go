@@ -2,8 +2,10 @@ package race
 
 import (
 	"errors"
+	"time"
 
 	"github.com/rbrabson/goblin/internal/discmsg"
+	"github.com/rbrabson/goblin/internal/format"
 	"golang.org/x/text/language"
 )
 
@@ -28,4 +30,15 @@ type ErrRaceFull struct {
 func (e ErrRaceFull) Error() string {
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 	return p.Sprintf("you can't join the race, as there are already %d entered into the race", e.MaxNumRacersAllowed)
+}
+
+// The racers are resting, so the user should try again in a certain amount of time.
+type ErrRacersAreResting struct {
+	waitTime time.Duration
+}
+
+// Error returns the error message for ErrRacersAreResting.
+func (e ErrRacersAreResting) Error() string {
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+	return p.Sprintf("The racers are resting. Try again in %s!", format.Duration(e.waitTime))
 }

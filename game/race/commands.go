@@ -157,7 +157,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceMessage(s, race, "started")
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
 
-	race.RunRace(len(race.config.Track))
+	race.RunRace(len([]rune(race.config.Track)))
 	sendRace(s, race)
 
 	raceMessage(s, race, "ended")
@@ -531,6 +531,7 @@ func sendRace(s *discordgo.Session, race *Race) {
 		return
 	}
 
+	log.Error("preparing to send race legs")
 	for _, raceLeg := range race.RaceLegs {
 		time.Sleep(2 * time.Second)
 		track = getCurrentTrack(raceLeg, race.config)
@@ -605,7 +606,7 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 
 	betWinners := make([]string, 0, len(race.Betters))
 	for _, bet := range race.Betters {
-		if bet.Racer == results.Win.Participant {
+		if bet.Winnings > 0 {
 			memberName := bet.Member.guildMember.Name
 			betWinners = append(betWinners, memberName)
 		}
