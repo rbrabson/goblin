@@ -1,10 +1,15 @@
 package race
 
 import (
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var (
+	track = strings.Repeat("•   ", 20)
 )
 
 // Config represents the configuration for the race game.
@@ -22,6 +27,7 @@ type Config struct {
 	WaitForBets      time.Duration      `json:"wait_for_bets" bson:"wait_for_bets"`
 	WaitToStart      time.Duration      `json:"wait_to_start" bson:"wait_to_start"`
 	StartingLine     string             `json:"starting_line" bson:"starting_line"`
+	Track            string             `json:"track" bson:"track"`
 	EndingLine       string             `json:"ending_line" bson:"ending_line"`
 }
 
@@ -59,13 +65,15 @@ func newConfig(guildID string) *Config {
 		Theme:            "clash",
 		BetAmount:        100,
 		Currency:         "credit",
-		StartingLine:     "🏁",
+		StartingLine:     ":checkered_flag:",
+		EndingLine:       "<:gems:312346463453708289>",
+		Track:            track,
 		MaxNumRacers:     10,
 		MaxPrizeAmount:   1250,
 		MinNumRacers:     2,
 		MinPrizeAmount:   750,
-		WaitBetweenRaces: time.Minute * 5,
-		WaitForBets:      time.Minute * 1,
+		WaitBetweenRaces: time.Second * 60,
+		WaitForBets:      time.Second * 30,
 		WaitToStart:      time.Second * 30,
 	}
 

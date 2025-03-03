@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0-alpha1
+
+Add the `race` game to the server. Races allow members to enter races, where they are assigned virtual racers to participate in the race. Racers who come in first, second or third earn prizes, with the prize amount increasing with the larger number of racers entering the race.
+
+Members can also bet on the outcome of the race. If the racer on whom the racer bets wins the race, then their bet pays out winnings. The amount of winnings earned by picking the race winner increases with the number of members who enter the race.
+
 ## 1.0.0-alpha1
 
 Initial Globlin bot, which is a rewrite of the older Heists bot.

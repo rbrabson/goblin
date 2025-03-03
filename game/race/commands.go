@@ -11,8 +11,8 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
+	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
@@ -131,44 +131,80 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := raceStartChecks(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
-		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
+		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
 
 	race := GetRace(i.GuildID)
+	race.interaction = i
 	member := GetRaceMember(i.GuildID, i.Member.User.ID)
 	race.addRaceParticipant(member)
-
 	defer race.End()
 
-	waitForMembersToJoin()
+	raceMessage(s, race, "start")
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("race started")
+	waitForMembersToJoin(s, race)
 
-	// TODO: verify that there are a minimum number of racers (2, but put in the config if not there)
-	//       if there aren't enough, cancel teh race and exit out
-
-	waitForBetsToBePlaced()
-
-	// TODO: run the race
-
-	// TODO: return the race results to the invoker
-
-	racers := GetRaceAvatars(i.GuildID, "clash")
-	sb := strings.Builder{}
-	sb.WriteString("start not implemented, emojis= ")
-	for _, racer := range racers {
-		sb.WriteString(racer.Emoji)
-		sb.WriteString(" ")
+	if len(race.Racers) < race.config.MinNumRacers {
+		raceMessage(s, race, "cancelled")
+		return
 	}
 
-	discmsg.SendEphemeralResponse(s, i, sb.String())
+	raceMessage(s, race, "betting")
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "racers": len(race.Racers)}).Info("waiting for bets")
+	waitForBetsToBePlaced(s, race)
+
+	raceMessage(s, race, "started")
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
+
+	race.RunRace(len([]rune(race.config.Track)))
+	sendRace(s, race)
+
+	raceMessage(s, race, "ended")
+	log.WithFields(log.Fields{"guild_id": i.GuildID}).Info("race ended")
+
+	sendRaceResults(s, i.ChannelID, race)
 }
 
-func waitForMembersToJoin() {
+// waitForMembersToJoin waits until members join the race before proceeding
+// to taking bets
+func waitForMembersToJoin(s *discordgo.Session, race *Race) {
+	log.Trace("--> waitForMembersToJoin")
+	defer log.Trace("<-- waitForMembersToJoin")
 
+	startTime := time.Now().Add(race.config.WaitToStart)
+	for time.Now().Before(startTime) {
+		maximumWait := time.Until(startTime)
+		timeToWait := min(maximumWait, 5*time.Second)
+		if timeToWait < 0 {
+			break
+		}
+		time.Sleep(timeToWait)
+		err := raceMessage(s, race, "update")
+		if err != nil {
+			log.Error("Unable to update the time for the race message, error:", err)
+		}
+	}
 }
 
-func waitForBetsToBePlaced() {
+// waitForBetsToBePlaced waits until bets are placed before starting the race.
+func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
+	log.Trace("--> waitForBetsToBePlaced")
+	defer log.Trace("<-- waitForBetsToBePlaced")
+
+	betEndTime := time.Now().Add(race.config.WaitForBets)
+	for time.Now().Before(betEndTime) {
+		maximumWait := time.Until(betEndTime)
+		timeToWait := min(maximumWait, 5*time.Second)
+		if timeToWait < 0 {
+			break
+		}
+		time.Sleep(timeToWait)
+		err := raceMessage(s, race, "betting")
+		if err != nil {
+			log.Error("Unable to update the time for the race message, error:", err)
+		}
+	}
 
 }
 
@@ -189,8 +225,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := raceJoinChecks(race, i.Member.User.ID)
 	if err != nil {
-		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
-		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
+		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
 
@@ -309,8 +344,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := raceBetChecks(race, i.Member.User.ID)
 	if err != nil {
-		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
-		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
+		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
 
@@ -318,7 +352,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	err = bankAccount.Withdraw(race.config.BetAmount)
 	if err != nil {
-		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Error("unable to withdraw bet amount")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "MemerID": i.Member.User.ID}).Error("unable to withdraw bet amount")
 		discmsg.SendEphemeralResponse(s, i, "Insufficiient funds to place a bet")
 		return
 	}
@@ -328,8 +362,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 	better := getRaceBetter(raceMember, raceParticipant)
 	race.addBetter(better)
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+	betMessage := p.Sprintf("You have placed a %d credit bet on %s", race.config.BetAmount, raceParticipant.Member.guildMember.Name)
+	discmsg.SendEphemeralResponse(s, i, betMessage)
 
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have placed a bet")
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "racer": raceParticipant.Member.guildMember.Name}).Info("you have placed a bet")
 }
 
 // getRacerButtons returns the buttons for the racers, which may be used to
@@ -348,9 +385,8 @@ func getRacerButtons(race *Race) []discordgo.ActionsRow {
 		buttons := make([]discordgo.MessageComponent, 0, buttonsForNextRow)
 		for j := 0; j < buttonsForNextRow; j++ {
 			index := j + racersIncludedInButtons
-			guildMember := guild.GetMember(race.GuildID, race.Racers[index].Member.MemberID)
 			button := discordgo.Button{
-				Label:    guildMember.Name,
+				Label:    race.Racers[index].Member.guildMember.Name,
 				Style:    discordgo.PrimaryButton,
 				CustomID: racerButtonNames[index],
 				Emoji:    nil,
@@ -381,8 +417,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 
 	racerNames := make([]string, 0, len(race.Racers))
 	for _, racer := range race.Racers {
-		guildMember := guild.GetMember(race.interaction.GuildID, racer.Member.MemberID)
-		racerNames = append(racerNames, guildMember.Name)
+		racerNames = append(racerNames, racer.Member.guildMember.Name)
 	}
 
 	var msg string
@@ -391,7 +426,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 		until := time.Until(race.RaceStartTime.Add(race.config.WaitToStart))
 		msg = p.Sprintf(":triangular_flag_on_post: A race is starting! Click the button to join the race! :triangular_flag_on_post:\n\t\t\t\t\tThe race will begin in %s!", format.Duration(until))
 	case "betting":
-		until := time.Until(race.RaceStartTime.Add(race.config.WaitForBets))
+		until := time.Until(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets))
 		msg = p.Sprintf(":triangular_flag_on_post: The racers have been set - betting is now open! :triangular_flag_on_post:\n\t\tYou have %s to place a %d credit bet!", format.Duration(until), race.config.BetAmount)
 	case "started":
 		msg = ":checkered_flag: The race is now in progress! :checkered_flag:"
@@ -482,8 +517,54 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 	return err
 }
 
+// Send the race so the guild members can watch it play out
+func sendRace(s *discordgo.Session, race *Race) {
+	log.Trace("--> sendRace")
+	defer log.Trace("<-- sendRace")
+
+	channelID := race.interaction.ChannelID
+	// Send the initial track
+	track := getCurrentTrack(race.RaceLegs[0], race.config)
+	message, err := s.ChannelMessageSend(channelID, fmt.Sprintf("%s\n", track))
+	if err != nil {
+		log.Error("Failed to send message at the start of the race, error:", err)
+		return
+	}
+
+	log.Error("preparing to send race legs")
+	for _, raceLeg := range race.RaceLegs {
+		time.Sleep(2 * time.Second)
+		track = getCurrentTrack(raceLeg, race.config)
+		_, err = s.ChannelMessageEdit(channelID, message.ID, fmt.Sprintf("%s\n", track))
+		if err != nil {
+			log.Error("Failed to update race message, error:", err)
+		}
+	}
+}
+
+// getCurrentTrack returns the current position of all racers on the track
+func getCurrentTrack(raceLeg *RaceLeg, config *Config) string {
+	log.Trace("--> getCurrentTrack")
+	defer log.Trace("<-- getCurrentTrack")
+
+	var track strings.Builder
+	for _, pos := range raceLeg.ParticipantPositions {
+		name := pos.RaceParticipant.Member.guildMember.Name
+		racer := pos.RaceParticipant.Racer
+
+		position := max(0, pos.Position)
+
+		start, end := unicode.SplitString(config.Track, position)
+		currentTrackLine := start + racer.Emoji + end
+
+		line := fmt.Sprintf("%s **%s %s** [%s]\n", config.EndingLine, currentTrackLine, config.StartingLine, name)
+		track.WriteString(line)
+	}
+	return track.String()
+}
+
 // sendRaceResults sends the results of a race to the Discord server
-func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config *Config) {
+func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 	log.Trace("--> sendRaceResults")
 	defer log.Trace("<-- sendRaceResults")
 
@@ -494,39 +575,39 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config 
 
 	results := race.RaceResult
 
-	if results.Win == nil {
+	if results.Win != nil {
 		raceParticipant := results.Win.Participant
-		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
+		memberName := raceParticipant.Member.guildMember.Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, results.Win.RaceTime, results.Win.Winnings),
 			Inline: true,
 		})
 	}
 
-	if results.Place == nil {
+	if results.Place != nil {
 		raceParticipant := results.Place.Participant
-		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
+		memberName := raceParticipant.Member.guildMember.Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
-			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
+			Name:   p.Sprintf(":second_place: %s", memberName),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, results.Place.RaceTime, results.Place.Winnings),
 			Inline: true,
 		})
 	}
-	if results.Show == nil {
+	if results.Show != nil {
 		raceParticipant := results.Place.Participant
-		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
+		memberName := raceParticipant.Member.guildMember.Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
-			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
+			Name:   p.Sprintf(":third_place: %s", memberName),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, results.Show.RaceTime, results.Show.Winnings),
 			Inline: true,
 		})
 	}
 
 	betWinners := make([]string, 0, len(race.Betters))
 	for _, bet := range race.Betters {
-		if bet.Racer == results.Win.Participant {
-			memberName := guild.GetMember(race.GuildID, bet.Member.MemberID).Name
+		if bet.Winnings > 0 {
+			memberName := bet.Member.guildMember.Name
 			betWinners = append(betWinners, memberName)
 		}
 	}
@@ -536,7 +617,7 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config 
 	} else {
 		winners = "No one guessed the winner."
 	}
-	betEarnings := config.BetAmount * len(racers)
+	betEarnings := race.config.BetAmount * len(racers)
 	betResults := &discordgo.MessageEmbedField{
 		Name:   p.Sprintf("Bet earnings of %d", betEarnings),
 		Value:  winners,

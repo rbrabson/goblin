@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/bank"
 	log "github.com/sirupsen/logrus"
 )
 
 var (
-	currentRaces = make(map[string]*Race)
-	raceLock     = sync.Mutex{}
+	lastRaceTimes = make(map[string]*time.Time)
+	currentRaces  = make(map[string]*Race)
+	raceLock      = sync.Mutex{}
 )
 
 // Race represents a race that is currently in progress.
@@ -35,13 +37,13 @@ type Race struct {
 type RaceParticipant struct {
 	Member *RaceMember // Member who is racing
 	Racer  *RaceAvatar // Racer assigned to the member
-	Prize  int         // Amount earned in the race
 }
 
 // RaceBetter is a member who is betting on the outcome of the race.
 type RaceBetter struct {
-	Member *RaceMember      // Member who is betting on the outcome of the the race
-	Racer  *RaceParticipant // Racer on which the member is betting
+	Member   *RaceMember      // Member who is betting on the outcome of the the race
+	Racer    *RaceParticipant // Racer on which the member is betting
+	Winnings int              // Amount won by the better
 }
 
 // RaceResults is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
@@ -151,7 +153,7 @@ func (race *Race) addBetter(better *RaceBetter) error {
 	defer race.mutex.Unlock()
 
 	race.Betters = append(race.Betters, better)
-	log.WithFields(log.Fields{"guild": race.GuildID, "better": better.Member.MemberID}).Info("add better to current race")
+	log.WithFields(log.Fields{"guild": race.GuildID, "better": better.Member.MemberID}).Debug("add better to current race")
 
 	return nil
 }
@@ -202,7 +204,7 @@ func (race *Race) RunRace(trackLength int) {
 
 		race.RaceLegs = append(race.RaceLegs, newRaceLeg)
 		previousLeg = newRaceLeg
-		log.WithFields(log.Fields{"guildID": race.GuildID, "turn": turn}).Trace("run race leg")
+		log.WithFields(log.Fields{"guildID": race.GuildID, "turn": turn}).Trace("completed race leg")
 	}
 
 	calculateWinnings(race, previousLeg)
@@ -211,9 +213,36 @@ func (race *Race) RunRace(trackLength int) {
 // End ends the current race.
 func (r *Race) End() {
 	raceLock.Lock()
+	delete(currentRaces, r.GuildID)
+	now := time.Now()
+	lastRaceTimes[r.GuildID] = &now
 	defer raceLock.Unlock()
 
-	delete(currentRaces, r.GuildID)
+	if r.RaceResult != nil {
+		if r.RaceResult.Win != nil {
+			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Win.Participant.Member.MemberID)
+			bankAccount.Deposit(r.RaceResult.Win.Winnings)
+			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Win.Participant.Member.MemberID, "winnings": r.RaceResult.Win.Winnings}).Debug("deposit race winnings")
+		}
+		if r.RaceResult.Place != nil {
+			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Place.Participant.Member.MemberID)
+			bankAccount.Deposit(r.RaceResult.Win.Winnings)
+			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Place.Participant.Member.MemberID, "winnings": r.RaceResult.Place.Winnings}).Debug("deposit race winnings")
+		}
+		if r.RaceResult.Show != nil {
+			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Show.Participant.Member.MemberID)
+			bankAccount.Deposit(r.RaceResult.Win.Winnings)
+			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Show.Participant.Member.MemberID, "winnings": r.RaceResult.Show.Winnings}).Debug("deposit race winnings")
+		}
+
+		for _, better := range r.Betters {
+			if better.Winnings != 0 {
+				bankAccount := bank.GetAccount(r.GuildID, better.Member.MemberID)
+				bankAccount.Deposit(better.Winnings)
+				log.WithFields(log.Fields{"guild": r.GuildID, "member": better.Member.MemberID, "winnings": better.Winnings}).Debug("desposit bet winnings")
+			}
+		}
+	}
 
 	log.WithFields(log.Fields{"guild": r.GuildID}).Info("end race")
 }
@@ -251,6 +280,7 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 			Finished:        true,
 			Speed:           previousPosition.Speed,
 		}
+		log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID}).Trace("racer already finished")
 		return newPosition
 	}
 
@@ -277,9 +307,18 @@ func raceStartChecks(guildID string, memberID string) error {
 
 	log.WithFields(log.Fields{"guild_id": guildID, "member_id": memberID}).Warn("TODO: need to implement race checks")
 
-	// No race is underway
-	// The delay timer between races hasn't gone off
-	// Current member has the funds to pay for this (can move out of here, or into the "joinRace" function, which makes more sense)
+	config := GetConfig(guildID)
+	raceLock.Lock()
+	defer raceLock.Unlock()
+
+	lastRaceTime := lastRaceTimes[guildID]
+	if lastRaceTime != nil {
+		timeSinceLastRace := time.Since(*lastRaceTime)
+		if time.Since(*lastRaceTime) < config.WaitBetweenRaces {
+			timeUntilRaceCanStart := config.WaitBetweenRaces - timeSinceLastRace
+			return ErrRacersAreResting{timeUntilRaceCanStart}
+		}
+	}
 
 	return nil
 }
@@ -323,7 +362,7 @@ func raceBetChecks(race *Race, memberID string) error {
 		return ErrBettingNotOpened
 	}
 
-	if time.Now().After(race.RaceStartTime.Add(race.config.WaitForBets)) {
+	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
 		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("race has started")
 		return ErrRaceHasStarted
 	}
@@ -381,6 +420,17 @@ func calculateWinnings(race *Race, lastLeg *RaceLeg) {
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
 			Winnings:    int(float64(prize) * 0.50),
+		}
+	}
+
+	// Pay the winning bets
+	if race.RaceResult.Win != nil {
+		winner := race.RaceResult.Win.Participant
+		winningBet := race.config.BetAmount * len(race.Racers)
+		for _, better := range race.Betters {
+			if better.Racer == winner {
+				better.Winnings = winningBet
+			}
 		}
 	}
 }
