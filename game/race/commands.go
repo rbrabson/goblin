@@ -383,9 +383,8 @@ func getRacerButtons(race *Race) []discordgo.ActionsRow {
 		buttons := make([]discordgo.MessageComponent, 0, buttonsForNextRow)
 		for j := 0; j < buttonsForNextRow; j++ {
 			index := j + racersIncludedInButtons
-			guildMember := guild.GetMember(race.GuildID, race.Racers[index].Member.MemberID)
 			button := discordgo.Button{
-				Label:    guildMember.Name,
+				Label:    race.Racers[index].Member.guildMember.Name,
 				Style:    discordgo.PrimaryButton,
 				CustomID: racerButtonNames[index],
 				Emoji:    nil,
@@ -416,10 +415,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 
 	racerNames := make([]string, 0, len(race.Racers))
 	for _, racer := range race.Racers {
-		guildID := race.interaction.GuildID
-		memberID := racer.Member.MemberID
-		guildMember := guild.GetMember(guildID, memberID)
-		racerNames = append(racerNames, guildMember.Name)
+		racerNames = append(racerNames, racer.Member.guildMember.Name)
 	}
 
 	var msg string
@@ -531,31 +527,31 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 
 	results := race.RaceResult
 
-	if results.Win == nil {
+	if results.Win != nil {
 		raceParticipant := results.Win.Participant
-		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
+		memberName := raceParticipant.Member.guildMember.Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, results.Win.RaceTime, results.Win.Winnings),
 			Inline: true,
 		})
 	}
 
-	if results.Place == nil {
+	if results.Place != nil {
 		raceParticipant := results.Place.Participant
-		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
+		memberName := raceParticipant.Member.guildMember.Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
-			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
+			Name:   p.Sprintf(":second_place: %s", memberName),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, results.Place.RaceTime, results.Place.Winnings),
 			Inline: true,
 		})
 	}
-	if results.Show == nil {
+	if results.Show != nil {
 		raceParticipant := results.Place.Participant
-		memberName := guild.GetMember(race.GuildID, raceParticipant.Member.MemberID).Name
+		memberName := raceParticipant.Member.guildMember.Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
-			Name:   p.Sprintf(":first_place: %s", memberName),
-			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, raceParticipant.Racer.MovementSpeed, raceParticipant.Prize),
+			Name:   p.Sprintf(":third_place: %s", memberName),
+			Value:  p.Sprintf("%s\n%.2fs\nPrize: %d", raceParticipant.Racer.Emoji, results.Show.RaceTime, results.Show.Winnings),
 			Inline: true,
 		})
 	}
@@ -563,7 +559,7 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 	betWinners := make([]string, 0, len(race.Betters))
 	for _, bet := range race.Betters {
 		if bet.Racer == results.Win.Participant {
-			memberName := guild.GetMember(race.GuildID, bet.Member.MemberID).Name
+			memberName := bet.Member.guildMember.Name
 			betWinners = append(betWinners, memberName)
 		}
 	}
