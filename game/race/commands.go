@@ -137,23 +137,24 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	race := GetRace(i.GuildID)
+	race.interaction = i
 	member := GetRaceMember(i.GuildID, i.Member.User.ID)
 	race.addRaceParticipant(member)
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("race started")
-
 	defer race.End()
 
+	raceMessage(s, race, "start")
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("race started")
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
-		discmsg.SendResponse(s, i, "The race was cancelled as not enough members joined")
+		raceMessage(s, race, "The race was cancelled as not enough members joined")
 		return
 	}
 
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "racers": len(race.Racers)}).Info("waiting for bets")
 	waitForBetsToBePlaced(s, race)
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
 
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
 	race.RunRace(len(race.config.Track))
 
 	sendRaceResults(s, i.ChannelID, race)
@@ -410,7 +411,9 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 
 	racerNames := make([]string, 0, len(race.Racers))
 	for _, racer := range race.Racers {
-		guildMember := guild.GetMember(race.interaction.GuildID, racer.Member.MemberID)
+		guildID := race.interaction.GuildID
+		memberID := racer.Member.MemberID
+		guildMember := guild.GetMember(guildID, memberID)
 		racerNames = append(racerNames, guildMember.Name)
 	}
 

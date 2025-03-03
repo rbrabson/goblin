@@ -277,6 +277,15 @@ func raceStartChecks(guildID string, memberID string) error {
 
 	log.WithFields(log.Fields{"guild_id": guildID, "member_id": memberID}).Warn("TODO: need to implement race checks")
 
+	// TODO: include something like this
+	// timeSinceLastRace := time.Since(server.LastRaceEnded)
+	// if timeSinceLastRace < server.Config.WaitBetweenRaces {
+	// 	timeUntilRaceCanStart := server.Config.WaitBetweenRaces - timeSinceLastRace
+	// 	msg.SendEphemeralResponse(s, i, p.Sprintf("The racers are resting. Try again in %s!", format.Duration(timeUntilRaceCanStart)))
+	// 	server.mutex.Unlock()
+	// 	return
+	// }
+
 	// No race is underway
 	// The delay timer between races hasn't gone off
 	// Current member has the funds to pay for this (can move out of here, or into the "joinRace" function, which makes more sense)
