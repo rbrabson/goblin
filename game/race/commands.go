@@ -12,7 +12,6 @@ import (
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
@@ -131,8 +130,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := raceStartChecks(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
-		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
+		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
 
@@ -224,8 +222,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := raceJoinChecks(race, i.Member.User.ID)
 	if err != nil {
-		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
-		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
+		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
 
@@ -344,8 +341,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := raceBetChecks(race, i.Member.User.ID)
 	if err != nil {
-		caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
-		discmsg.SendEphemeralResponse(s, i, caser.String(err.Error()))
+		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
 
