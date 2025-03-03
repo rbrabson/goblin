@@ -151,7 +151,7 @@ func (race *Race) addBetter(better *RaceBetter) error {
 	defer race.mutex.Unlock()
 
 	race.Betters = append(race.Betters, better)
-	log.WithFields(log.Fields{"guild": race.GuildID, "better": better.Member.MemberID}).Info("add better to current race")
+	log.WithFields(log.Fields{"guild": race.GuildID, "better": better.Member.MemberID}).Debug("add better to current race")
 
 	return nil
 }
@@ -251,7 +251,7 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 			Finished:        true,
 			Speed:           previousPosition.Speed,
 		}
-		log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID}).Debug("racer already finished")
+		log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID}).Trace("racer already finished")
 		return newPosition
 	}
 
@@ -268,7 +268,7 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 		newPosition.Speed += float64(previousPosition.Position) / float64(movement)
 	}
 
-	log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID, "position": newPosition.Position, "speed": newPosition.Speed}).Debug("moved racer")
+	log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID, "position": newPosition.Position, "speed": newPosition.Speed}).Trace("moved racer")
 	return newPosition
 }
 

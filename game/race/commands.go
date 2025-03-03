@@ -423,7 +423,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 		until := time.Until(race.RaceStartTime.Add(race.config.WaitToStart))
 		msg = p.Sprintf(":triangular_flag_on_post: A race is starting! Click the button to join the race! :triangular_flag_on_post:\n\t\t\t\t\tThe race will begin in %s!", format.Duration(until))
 	case "betting":
-		until := time.Until(race.RaceStartTime.Add(race.config.WaitForBets))
+		until := time.Until(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets))
 		msg = p.Sprintf(":triangular_flag_on_post: The racers have been set - betting is now open! :triangular_flag_on_post:\n\t\tYou have %s to place a %d credit bet!", format.Duration(until), race.config.BetAmount)
 	case "started":
 		msg = ":checkered_flag: The race is now in progress! :checkered_flag:"
