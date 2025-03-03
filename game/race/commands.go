@@ -139,20 +139,26 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race := GetRace(i.GuildID)
 	member := GetRaceMember(i.GuildID, i.Member.User.ID)
 	race.addRaceParticipant(member)
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("race started")
 
 	defer race.End()
 
 	waitForMembersToJoin()
 
-	// TODO: verify that there are a minimum number of racers (2, but put in the config if not there)
-	//       if there aren't enough, cancel teh race and exit out
+	if len(race.Racers) < race.config.MinNumRacers {
+		discmsg.SendResponse(s, i, "The race was cancelled as not enough members joined")
+		return
+	}
 
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "racers": len(race.Racers)}).Info("waiting for bets")
 	waitForBetsToBePlaced()
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
 
-	// TODO: run the race
+	race.RunRace(len(race.config.Track))
 
 	// TODO: return the race results to the invoker
 
+	// TODO: delete the following....
 	racers := GetRaceAvatars(i.GuildID, "clash")
 	sb := strings.Builder{}
 	sb.WriteString("start not implemented, emojis= ")
@@ -160,7 +166,6 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sb.WriteString(racer.Emoji)
 		sb.WriteString(" ")
 	}
-
 	discmsg.SendEphemeralResponse(s, i, sb.String())
 }
 
