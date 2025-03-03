@@ -530,17 +530,13 @@ func sendRace(s *discordgo.Session, race *Race) {
 		log.Error("Failed to send message at the start of the race, error:", err)
 		return
 	}
-	messageID := message.ID
-
-	time.Sleep(1 * time.Second)
 
 	for _, raceLeg := range race.RaceLegs {
 		time.Sleep(2 * time.Second)
 		track = getCurrentTrack(raceLeg, race.config)
-		_, err = s.ChannelMessageEdit(channelID, messageID, fmt.Sprintf("%s\n", track))
+		_, err = s.ChannelMessageEdit(channelID, message.ID, fmt.Sprintf("%s\n", track))
 		if err != nil {
 			log.Error("Failed to update race message, error:", err)
-			continue
 		}
 	}
 }
