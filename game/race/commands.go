@@ -143,7 +143,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	defer race.End()
 
-	waitForMembersToJoin()
+	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
 		discmsg.SendResponse(s, i, "The race was cancelled as not enough members joined")
@@ -151,29 +151,53 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "racers": len(race.Racers)}).Info("waiting for bets")
-	waitForBetsToBePlaced()
+	waitForBetsToBePlaced(s, race)
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
 
 	race.RunRace(len(race.config.Track))
 
-	// TODO: return the race results to the invoker
+	sendRaceResults(s, i.ChannelID, race)
+}
 
-	// TODO: delete the following....
-	racers := GetRaceAvatars(i.GuildID, "clash")
-	sb := strings.Builder{}
-	sb.WriteString("start not implemented, emojis= ")
-	for _, racer := range racers {
-		sb.WriteString(racer.Emoji)
-		sb.WriteString(" ")
+// waitForMembersToJoin waits until members join the race before proceeding
+// to taking bets
+func waitForMembersToJoin(s *discordgo.Session, race *Race) {
+	log.Trace("--> waitForMembersToJoin")
+	defer log.Trace("<-- waitForMembersToJoin")
+
+	startTime := time.Now().Add(race.config.WaitToStart)
+	for time.Now().Before(startTime) {
+		maximumWait := time.Until(startTime)
+		timeToWait := min(maximumWait, 5*time.Second)
+		if timeToWait < 0 {
+			break
+		}
+		time.Sleep(timeToWait)
+		err := raceMessage(s, race, "update")
+		if err != nil {
+			log.Error("Unable to update the time for the race message, error:", err)
+		}
 	}
-	discmsg.SendEphemeralResponse(s, i, sb.String())
 }
 
-func waitForMembersToJoin() {
+// waitForBetsToBePlaced waits until bets are placed before starting the race.
+func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
+	log.Trace("--> waitForBetsToBePlaced")
+	defer log.Trace("<-- waitForBetsToBePlaced")
 
-}
-
-func waitForBetsToBePlaced() {
+	betEndTime := time.Now().Add(race.config.WaitForBets)
+	for time.Now().Before(betEndTime) {
+		maximumWait := time.Until(betEndTime)
+		timeToWait := min(maximumWait, 5*time.Second)
+		if timeToWait < 0 {
+			break
+		}
+		time.Sleep(timeToWait)
+		err := raceMessage(s, race, "betting")
+		if err != nil {
+			log.Error("Unable to update the time for the race message, error:", err)
+		}
+	}
 
 }
 
@@ -488,7 +512,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 }
 
 // sendRaceResults sends the results of a race to the Discord server
-func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config *Config) {
+func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 	log.Trace("--> sendRaceResults")
 	defer log.Trace("<-- sendRaceResults")
 
@@ -541,7 +565,7 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race, config 
 	} else {
 		winners = "No one guessed the winner."
 	}
-	betEarnings := config.BetAmount * len(racers)
+	betEarnings := race.config.BetAmount * len(racers)
 	betResults := &discordgo.MessageEmbedField{
 		Name:   p.Sprintf("Bet earnings of %d", betEarnings),
 		Value:  winners,
