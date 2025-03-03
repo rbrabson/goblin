@@ -147,15 +147,20 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
-		raceMessage(s, race, "The race was cancelled as not enough members joined")
+		raceMessage(s, race, "cancelled")
 		return
 	}
 
+	raceMessage(s, race, "betting")
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "racers": len(race.Racers)}).Info("waiting for bets")
 	waitForBetsToBePlaced(s, race)
 
+	raceMessage(s, race, "started")
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
 	race.RunRace(len(race.config.Track))
+
+	raceMessage(s, race, "ended")
+	log.WithFields(log.Fields{"guild_id": i.GuildID}).Info("race ended")
 
 	sendRaceResults(s, i.ChannelID, race)
 }
