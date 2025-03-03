@@ -11,6 +11,7 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
+	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 )
@@ -155,7 +156,9 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	raceMessage(s, race, "started")
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
+
 	race.RunRace(len(race.config.Track))
+	sendRace(s, race)
 
 	raceMessage(s, race, "ended")
 	log.WithFields(log.Fields{"guild_id": i.GuildID}).Info("race ended")
@@ -512,6 +515,55 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 	}
 
 	return err
+}
+
+// Send the race so the guild members can watch it play out
+func sendRace(s *discordgo.Session, race *Race) {
+	log.Trace("--> sendRace")
+	defer log.Trace("<-- sendRace")
+
+	channelID := race.interaction.ChannelID
+	// Send the initial track
+	track := getCurrentTrack(race.RaceLegs[0], race.config)
+	message, err := s.ChannelMessageSend(channelID, fmt.Sprintf("%s\n", track))
+	if err != nil {
+		log.Error("Failed to send message at the start of the race, error:", err)
+		return
+	}
+	messageID := message.ID
+
+	time.Sleep(1 * time.Second)
+
+	for _, raceLeg := range race.RaceLegs {
+		time.Sleep(2 * time.Second)
+		track = getCurrentTrack(raceLeg, race.config)
+		_, err = s.ChannelMessageEdit(channelID, messageID, fmt.Sprintf("%s\n", track))
+		if err != nil {
+			log.Error("Failed to update race message, error:", err)
+			continue
+		}
+	}
+}
+
+// getCurrentTrack returns the current position of all racers on the track
+func getCurrentTrack(raceLeg *RaceLeg, config *Config) string {
+	log.Trace("--> getCurrentTrack")
+	defer log.Trace("<-- getCurrentTrack")
+
+	var track strings.Builder
+	for _, pos := range raceLeg.ParticipantPositions {
+		name := pos.RaceParticipant.Member.guildMember.Name
+		racer := pos.RaceParticipant.Racer
+
+		position := max(0, pos.Position)
+
+		start, end := unicode.SplitString(config.Track, position)
+		currentTrackLine := start + racer.Emoji + end
+
+		line := fmt.Sprintf("%s **%s %s** [%s]\n", config.EndingLine, currentTrackLine, config.StartingLine, name)
+		track.WriteString(line)
+	}
+	return track.String()
 }
 
 // sendRaceResults sends the results of a race to the Discord server
