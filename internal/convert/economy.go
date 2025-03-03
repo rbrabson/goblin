@@ -20,7 +20,7 @@ func ConvertEconomy(fileName string) {
 		guildID := asString(fileContent["_id"])
 		if guildID == GUILD_ID {
 			convertBankAccountModel(guildID, fileContent)
-			convertGuildMemberModel(guildID, fileContent)
+			// convertGuildMemberModel(guildID, fileContent)
 		}
 	}
 }
@@ -91,7 +91,7 @@ func convertBankAccounts(guildID string, model map[string]interface{}) []*bank.A
 
 func convertBankAccount(guildID string, model map[string]interface{}) *bank.Account {
 	memberID := asString(model["_id"])
-	monthlyBalance := asInteger(model["monthly_balance"])
+	// monthlyBalance := asInteger(model["monthly_balance"])
 	currentBalance := asInteger(model["current_balance"])
 	lifetimeBalance := asInteger(model["lifetime_balance"])
 	createdAt := asTime(model["created_at"])
@@ -99,7 +99,7 @@ func convertBankAccount(guildID string, model map[string]interface{}) *bank.Acco
 	account := &bank.Account{
 		GuildID:         guildID,
 		MemberID:        memberID,
-		MonthlyBalance:  monthlyBalance,
+		MonthlyBalance:  0,
 		CurrentBalance:  currentBalance,
 		LifetimeBalance: lifetimeBalance,
 		CreatedAt:       createdAt,
