@@ -7,6 +7,7 @@ import (
 
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/database/mongo"
+	"github.com/rbrabson/goblin/guild"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/rbrabson/goblin/leaderboard"
@@ -19,6 +20,22 @@ func ConvertEconomy(fileName string) {
 		guildID := asString(fileContent["_id"])
 		if guildID == GUILD_ID {
 			convertBankAccountModel(guildID, fileContent)
+			convertGuildMemberModel(guildID, fileContent)
+		}
+	}
+}
+
+func convertGuildMemberModel(guildID string, model map[string]interface{}) {
+	db := mongo.NewDatabase()
+
+	members := convertGuildMembers(guildID, model)
+	for _, member := range members {
+		filter := bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
+		err := db.UpdateOrInsert(guild.MEMBER_COLLECTION, filter, member)
+		if err != nil {
+			fmt.Printf("error inserting guild member: %v\n", err)
+		} else {
+			fmt.Printf("inserted guild member: %v\n", member)
 		}
 	}
 }
@@ -88,6 +105,27 @@ func convertBankAccount(guildID string, model map[string]interface{}) *bank.Acco
 		CreatedAt:       createdAt,
 	}
 	return account
+}
+
+func convertGuildMembers(guildID string, model map[string]interface{}) []*guild.Member {
+	members := make([]*guild.Member, 0)
+	accounts := asMap(model["accounts"])
+	for _, account := range accounts {
+		members = append(members, convertGuildMember(guildID, asMap(account)))
+	}
+	return members
+}
+
+func convertGuildMember(guildID string, model map[string]interface{}) *guild.Member {
+	memberID := asString(model["_id"])
+	name := asString(model["name"])
+
+	guild := &guild.Member{
+		GuildID:  guildID,
+		MemberID: memberID,
+		Name:     name,
+	}
+	return guild
 }
 
 func convertLeaderboard(guildID string, model map[string]interface{}) {
