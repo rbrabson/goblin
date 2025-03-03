@@ -349,7 +349,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	err = bankAccount.Withdraw(race.config.BetAmount)
 	if err != nil {
-		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Error("unable to withdraw bet amount")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "MemerID": i.Member.User.ID}).Error("unable to withdraw bet amount")
 		discmsg.SendEphemeralResponse(s, i, "Insufficiient funds to place a bet")
 		return
 	}
@@ -359,8 +359,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 	better := getRaceBetter(raceMember, raceParticipant)
 	race.addBetter(better)
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+	betMessage := p.Sprintf("You have placed a %d credit bet on %s", race.config.BetAmount, raceParticipant.Member.guildMember.Name)
+	discmsg.SendEphemeralResponse(s, i, betMessage)
 
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have placed a bet")
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "racer": raceParticipant.Member.guildMember.Name}).Info("you have placed a bet")
 }
 
 // getRacerButtons returns the buttons for the racers, which may be used to

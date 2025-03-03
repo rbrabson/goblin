@@ -202,7 +202,7 @@ func (race *Race) RunRace(trackLength int) {
 
 		race.RaceLegs = append(race.RaceLegs, newRaceLeg)
 		previousLeg = newRaceLeg
-		log.WithFields(log.Fields{"guildID": race.GuildID, "turn": turn}).Trace("run race leg")
+		log.WithFields(log.Fields{"guildID": race.GuildID, "turn": turn}).Debug("completed race leg")
 	}
 
 	calculateWinnings(race, previousLeg)
@@ -251,6 +251,7 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 			Finished:        true,
 			Speed:           previousPosition.Speed,
 		}
+		log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID}).Debug("racer already finished")
 		return newPosition
 	}
 
@@ -267,6 +268,7 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 		newPosition.Speed += float64(previousPosition.Position) / float64(movement)
 	}
 
+	log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID, "position": newPosition.Position, "speed": newPosition.Speed}).Debug("moved racer")
 	return newPosition
 }
 
