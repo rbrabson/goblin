@@ -203,7 +203,7 @@ func (race *Race) RunRace(trackLength int) {
 
 		race.RaceLegs = append(race.RaceLegs, newRaceLeg)
 		previousLeg = newRaceLeg
-		log.WithFields(log.Fields{"guildID": race.GuildID, "turn": turn}).Debug("completed race leg")
+		log.WithFields(log.Fields{"guildID": race.GuildID, "turn": turn}).Trace("completed race leg")
 	}
 
 	calculateWinnings(race, previousLeg)
