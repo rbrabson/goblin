@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/bank"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -35,13 +36,13 @@ type Race struct {
 type RaceParticipant struct {
 	Member *RaceMember // Member who is racing
 	Racer  *RaceAvatar // Racer assigned to the member
-	Prize  int         // Amount earned in the race
 }
 
 // RaceBetter is a member who is betting on the outcome of the race.
 type RaceBetter struct {
-	Member *RaceMember      // Member who is betting on the outcome of the the race
-	Racer  *RaceParticipant // Racer on which the member is betting
+	Member   *RaceMember      // Member who is betting on the outcome of the the race
+	Racer    *RaceParticipant // Racer on which the member is betting
+	Winnings int              // Amount won by the better
 }
 
 // RaceResults is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
@@ -211,9 +212,34 @@ func (race *Race) RunRace(trackLength int) {
 // End ends the current race.
 func (r *Race) End() {
 	raceLock.Lock()
+	delete(currentRaces, r.GuildID)
 	defer raceLock.Unlock()
 
-	delete(currentRaces, r.GuildID)
+	if r.RaceResult != nil {
+		if r.RaceResult.Win != nil {
+			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Win.Participant.Member.MemberID)
+			bankAccount.Deposit(r.RaceResult.Win.Winnings)
+			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Win.Participant.Member.MemberID, "winnings": r.RaceResult.Win.Winnings}).Debug("deposit race winnings")
+		}
+		if r.RaceResult.Place != nil {
+			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Place.Participant.Member.MemberID)
+			bankAccount.Deposit(r.RaceResult.Win.Winnings)
+			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Place.Participant.Member.MemberID, "winnings": r.RaceResult.Place.Winnings}).Debug("deposit race winnings")
+		}
+		if r.RaceResult.Show != nil {
+			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Show.Participant.Member.MemberID)
+			bankAccount.Deposit(r.RaceResult.Win.Winnings)
+			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Show.Participant.Member.MemberID, "winnings": r.RaceResult.Show.Winnings}).Debug("deposit race winnings")
+		}
+
+		for _, better := range r.Betters {
+			if better.Winnings != 0 {
+				bankAccount := bank.GetAccount(r.GuildID, better.Member.MemberID)
+				bankAccount.Deposit(better.Winnings)
+				log.WithFields(log.Fields{"guild": r.GuildID, "member": better.Member.MemberID, "winnings": better.Winnings}).Debug("desposit bet winnings")
+			}
+		}
+	}
 
 	log.WithFields(log.Fields{"guild": r.GuildID}).Info("end race")
 }
@@ -392,6 +418,17 @@ func calculateWinnings(race *Race, lastLeg *RaceLeg) {
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
 			Winnings:    int(float64(prize) * 0.50),
+		}
+	}
+
+	// Pay the winning bets
+	if race.RaceResult.Win != nil {
+		winner := race.RaceResult.Win.Participant
+		winningBet := race.config.BetAmount * len(race.Racers)
+		for _, better := range race.Betters {
+			if better.Racer == winner {
+				better.Winnings = winningBet
+			}
 		}
 	}
 }
