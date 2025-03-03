@@ -21,13 +21,14 @@ func TestGetRace(t *testing.T) {
 	race := GetRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
+		return
 	}
 	savedRace := currentRaces["123"]
 	if savedRace == nil {
 		t.Error("expected race to be found")
 	}
 
-	racers := GetRacers("123", "clash")
+	racers := GetRaceAvatars("123", "clash")
 	if len(racers) < 2 {
 		for i, racer := range racers {
 			t.Error("racer: ", i, " ", racer)
@@ -35,25 +36,29 @@ func TestGetRace(t *testing.T) {
 		t.Error("expected at least 2 racers")
 	}
 
-	racer1 := &RaceParticipant{
-		Member: &RaceMember{
-			GuildID:  "123",
-			MemberID: "456",
-		},
-		Racer: racers[0],
+	member1 := &RaceMember{
+		GuildID:  "123",
+		MemberID: "456",
 	}
-
-	racer2 := &RaceParticipant{
-		Member: &RaceMember{
-			GuildID:  "123",
-			MemberID: "789",
-		},
-		Racer: racers[1],
+	member2 := &RaceMember{
+		GuildID:  "123",
+		MemberID: "789",
 	}
-	race.AddRacer(racer1)
-	race.AddRacer(racer2)
+	race.addRaceParticipant(member1)
+	race.addRaceParticipant(member2)
 
 	race.RunRace(60)
+
+	result := race.RaceResult
+	if result.Win != nil {
+
+	}
+	if result.Place != nil {
+
+	}
+	if result.Show != nil {
+
+	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
 	db.Delete(RACE_MEMBER_COLLECTION, filter)

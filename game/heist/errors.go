@@ -12,7 +12,7 @@ import (
 
 var (
 	ErrConfigNotFound      = errors.New("configuration file not found")
-	ErrHeistInProgress     = errors.New("heist already in progress")
+	ErrHeistInProgress     = errors.New("heist is already in progress")
 	ErrAlreadyJoinedHieist = errors.New("you have already joined the heist")
 	ErrNoHeist             = errors.New("heist not found")
 	ErrNotAllowed          = errors.New("user is not allowed to perform command")

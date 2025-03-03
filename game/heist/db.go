@@ -1,7 +1,6 @@
 package heist
 
 import (
-	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -48,18 +47,17 @@ func writeConfig(config *Config) {
 
 // readMember loads the heist member from the database. If it does not exist then
 // a `nil` value is returned.
-func readMember(m *guild.Member) *HeistMember {
+func readMember(guildID string, memberID string) *HeistMember {
 	log.Trace("--> heist.readMember")
 	defer log.Trace("<-- heist.readMember")
 
 	var heistMember HeistMember
-	filter := bson.M{"guild_id": m.GuildID, "member_id": m.MemberID}
+	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	err := db.FindOne(HEIST_MEMBER_COLLECTION, filter, &heistMember)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Debug("heist member not found in the database")
+		log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Debug("heist member not found in the database")
 		return nil
 	}
-	heistMember.guildMember = m
 	log.WithFields(log.Fields{"guild": heistMember.GuildID, "member": heistMember.MemberID}).Debug("read heist member from the database")
 
 	return &heistMember

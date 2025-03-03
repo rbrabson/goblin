@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/database/mongo"
+	"github.com/rbrabson/goblin/guild"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -17,6 +18,7 @@ func init() {
 	}
 	db = mongo.NewDatabase()
 	bank.SetDB(db)
+	guild.SetDB(db)
 }
 
 func TestGetRaceMember(t *testing.T) {

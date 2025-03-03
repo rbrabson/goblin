@@ -81,11 +81,11 @@ func writeRaceMember(member *RaceMember) {
 }
 
 // readAllRaces loads the racers that may be used in racers that match the filter criteria.
-func readAllRacers(filter bson.D) ([]*Racer, error) {
+func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 	log.Trace("--> race.readAllRacers")
 	defer log.Trace("<-- race.readAllRacers")
 
-	var racers []*Racer
+	var racers []*RaceAvatar
 	sort := bson.D{{Key: "crew_size", Value: 1}}
 	err := db.FindMany(RACER_COLLECTION, filter, &racers, sort, 0)
 	if err != nil || len(racers) == 0 {
@@ -102,7 +102,7 @@ func readAllRacers(filter bson.D) ([]*Racer, error) {
 }
 
 // writeRacer creates or updates the target in the database.
-func writeRacer(racer *Racer) {
+func writeRacer(racer *RaceAvatar) {
 	log.Trace("--> race.Target.writeRacer")
 	defer log.Trace("<-- race.Target.writeRacer")
 

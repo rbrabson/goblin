@@ -10,11 +10,11 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
-	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 )
 
 var (
+	alertTimes    = make(map[string]time.Time)
 	currentHeists = make(map[string]*Heist)
 	heistLock     = sync.Mutex{}
 )
@@ -54,7 +54,7 @@ type HeistMemberResult struct {
 }
 
 // NewHeist creates a new heist if one is not already underway.
-func NewHeist(guildID string, member *guild.Member) (*Heist, error) {
+func NewHeist(guildID string, memberID string) (*Heist, error) {
 	log.Trace("--> heist.NewHeist")
 	defer log.Trace("<-- heist.NewHeist")
 
@@ -66,7 +66,7 @@ func NewHeist(guildID string, member *guild.Member) (*Heist, error) {
 	}
 
 	theme := GetTheme(guildID)
-	organizer := getHeistMember(member)
+	organizer := getHeistMember(guildID, memberID)
 	heist := &Heist{
 		GuildID:   guildID,
 		Organizer: organizer,
@@ -80,7 +80,7 @@ func NewHeist(guildID string, member *guild.Member) (*Heist, error) {
 
 	err := heistChecks(heist, organizer)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": member.GuildID, "organizer": member.MemberID, "error": err}).Debug("heist checks failed")
+		log.WithFields(log.Fields{"guild": guildID, "organizer": memberID, "error": err}).Debug("heist checks failed")
 		return nil, err
 	}
 
@@ -88,7 +88,7 @@ func NewHeist(guildID string, member *guild.Member) (*Heist, error) {
 	heist.Crew = append(heist.Crew, organizer)
 	currentHeists[guildID] = heist
 
-	log.WithFields(log.Fields{"guild": guildID, "organizer": member.MemberID}).Debug("create heist")
+	log.WithFields(log.Fields{"guild": guildID, "organizer": memberID}).Debug("create heist")
 
 	return heist, nil
 }
@@ -156,7 +156,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 				log.WithFields(log.Fields{"guild": h.GuildID, "goodResults": len(goodResults), "badResults": len(badResults)}).Trace("reset good result messages")
 			}
 
-			heistMember := getHeistMember(guildMember)
+			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
 			result := &HeistMemberResult{
 				Player:       heistMember,
 				Status:       FREE,
@@ -178,7 +178,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 				log.WithFields(log.Fields{"guild": h.GuildID, "goodResults": len(goodResults), "badResults": len(badResults)}).Trace("reset bad result messages")
 			}
 
-			heistMember := getHeistMember(guildMember)
+			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
 			result := &HeistMemberResult{
 				Player:       heistMember,
 				Status:       string(badResult.Result),
@@ -210,11 +210,10 @@ func (h *Heist) End() {
 	log.Trace("--> heist.Heist.End")
 	defer log.Trace("<-- heist.Heist.End")
 
-	h.config.SetAlertTime()
-
 	heistLock.Lock()
 	defer heistLock.Unlock()
 	delete(currentHeists, h.GuildID)
+	alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
 
 	log.WithFields(log.Fields{"guild": h.GuildID}).Debug("heist ended")
 }
@@ -239,8 +238,9 @@ func heistChecks(h *Heist, member *HeistMember) error {
 		return &ErrNotEnoughCredits{h.config.HeistCost}
 	}
 
-	if h.config.AlertTime.After(time.Now()) {
-		remainingTime := time.Until(h.config.AlertTime)
+	alertTime := alertTimes[h.GuildID]
+	if alertTime.After(time.Now()) {
+		remainingTime := time.Until(alertTime)
 		return &ErrPoliceOnAlert{h.theme.Police, remainingTime}
 	}
 

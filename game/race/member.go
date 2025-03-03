@@ -2,6 +2,7 @@ package race
 
 import (
 	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,6 +21,7 @@ type RaceMember struct {
 	BetsMade      int                `json:"bets_made" bson:"bets_made"`
 	BetsWon       int                `json:"bets_won" bson:"bets_won"`
 	TotalEarnings int                `json:"total_earnings" bson:"total_earnings"`
+	guildMember   *guild.Member      `json:"-" bson:"-"`
 }
 
 // GetRaceMember gets a race member. THe member is created if it doesn't exist.
@@ -27,24 +29,12 @@ func GetRaceMember(guildID string, memberID string) *RaceMember {
 	log.Trace("--> race.GetRaceMember")
 	defer log.Trace("<-- race.GetRaceMember")
 
-	member, err := getRaceMember(guildID, memberID)
-	if err != nil {
-		member = newRaceMember(guildID, memberID)
-	}
-	return member
-}
-
-// getRaceMember gets a member from the database. If the member doesn't exist, then
-// nil is returned.
-func getRaceMember(guildID string, memberID string) (*RaceMember, error) {
-	log.Trace("--> race.getRaceMember")
-	defer log.Trace("<-- race.getRaceMember")
-
 	member := readRaceMember(guildID, memberID)
 	if member == nil {
-		return nil, ErrMemberNotFound
+		member = newRaceMember(guildID, memberID)
 	}
-	return member, nil
+	member.guildMember = guild.GetMember(guildID, memberID)
+	return member
 }
 
 // newRaceMember returns a new race member for the guild. The member is saved to
