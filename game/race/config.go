@@ -72,7 +72,7 @@ func newConfig(guildID string) *Config {
 		MaxPrizeAmount:   1250,
 		MinNumRacers:     2,
 		MinPrizeAmount:   750,
-		WaitBetweenRaces: time.Second * 45,
+		WaitBetweenRaces: time.Second * 60,
 		WaitForBets:      time.Second * 30,
 		WaitToStart:      time.Second * 30,
 	}
