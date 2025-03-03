@@ -318,6 +318,7 @@ func raceStartChecks(guildID string, memberID string) error {
 			timeUntilRaceCanStart := config.WaitBetweenRaces - timeSinceLastRace
 			return ErrRacersAreResting{timeUntilRaceCanStart}
 		}
+		delete(lastRaceTimes, guildID)
 	}
 
 	return nil
