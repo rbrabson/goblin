@@ -1,6 +1,11 @@
 package shop
 
-func readAllPurchasableItems(guildID string) ([]Purchasable, error) {
+const (
+	SHOP_ITEM_COLLECTION = "shop_items"
+	PURCHASE_COLLECTION  = "shop_purchases"
+)
+
+func readAllShopItems(guildID string) ([]*ShopItem, error) {
 	return nil, nil
 }
 

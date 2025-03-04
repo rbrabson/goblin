@@ -14,31 +14,22 @@ const (
 	DENIED    = "denied"
 )
 
-// Purchasable is an interface that represents an item that can be purchased from the shop.
-type Purchasable interface {
-	GetID() primitive.ObjectID
-	GetName() string
-	GetPrice() int
-	GetDescription() string
-	Buy(string, string) (*Purchase, error)
-}
-
 // Purchase is a purchase made from the shop.
 type Purchase struct {
-	ID          primitive.ObjectID `json:"_id" bson:"_id"`
-	GuildID     string             `json:"guildID" bson:"guildID"`
-	MemberID    string             `json:"memberID" bson:"memberID"`
-	Purchasable Purchasable        `json:"purchasable" bson:"purchasable"`
-	Status      string             `json:"status" bson:"status"`
-	Date        time.Time          `json:"date" bson:"date"`
+	ID       primitive.ObjectID `json:"_id" bson:"_id"`
+	GuildID  string             `json:"guildID" bson:"guildID"`
+	MemberID string             `json:"memberID" bson:"memberID"`
+	Item     *ShopItem          `json:"item" bson:"item"`
+	Status   string             `json:"status" bson:"status"`
+	Date     time.Time          `json:"date" bson:"date"`
 }
 
 // GetAllPurchasableItems returns all items that may be purchased in the shop.
-func GetAllPurchasableItems(guildID string) []Purchasable {
+func GetAllPurchasableItems(guildID string) []*ShopItem {
 	log.Trace("--> shop.GetAllPurchasableItems")
 	defer log.Trace("<-- shop.GetAllPurchasableItems")
 
-	shopItems, err := readAllPurchasableItems(guildID)
+	shopItems, err := readAllShopItems(guildID)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read purchasable items from the database")
 		return nil
@@ -61,13 +52,13 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 }
 
 // NewPurchase creates a new Purchase with the given guild ID, member ID, and Purchasable.
-func NewPurchase(guildID, memberID string, purchasable Purchasable) (*Purchase, error) {
+func NewPurchase(guildID, memberID string, item *ShopItem) (*Purchase, error) {
 	purchase := &Purchase{
-		GuildID:     guildID,
-		MemberID:    memberID,
-		Purchasable: purchasable,
-		Status:      PENDING,
-		Date:        time.Now(),
+		GuildID:  guildID,
+		MemberID: memberID,
+		Item:     item,
+		Status:   PENDING,
+		Date:     time.Now(),
 	}
 
 	return purchase, nil
