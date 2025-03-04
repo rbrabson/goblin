@@ -54,9 +54,9 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 // MuteChannel sets the channel so that `@everyone`	 can't send messages to the channel.
 func (c *Mute) MuteChannel() {
 	mute := int64(discordgo.PermissionSendMessages)
-	allowFlagsNoSend := c.everyonePermissions.Allow ^ mute
-	denyFlagsNoSend := c.everyonePermissions.Deny & mute
-	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allowFlagsNoSend, denyFlagsNoSend)
+	// allowFlagsNoSend := c.everyonePermissions.Allow ^ mute
+	// denyFlagsNoSend := c.everyonePermissions.Deny & mute
+	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, c.everyonePermissions.Allow, mute)
 	if err != nil {
 		log.Warning("failed to mute the channel, error:", err)
 	} else {
