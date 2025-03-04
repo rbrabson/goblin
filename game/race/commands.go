@@ -231,6 +231,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// All is good, add the member to the race
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
+	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	race.addRaceParticipant(raceMember)
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have joined the race")
 	discmsg.SendEphemeralResponse(s, i, "You have joined the race")
@@ -360,6 +361,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// All is good, so add the better to the race
 	raceParticipant := getCurrentRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
+	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	better := getRaceBetter(raceMember, raceParticipant)
 	race.addBetter(better)
 	p := discmsg.GetPrinter(language.AmericanEnglish)
