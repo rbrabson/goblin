@@ -15,7 +15,7 @@ const (
 	BAIL_BASE           = 250
 	CREW_OUTPUT         = "None"
 	DEATH_TIMER         = time.Duration(45 * time.Second)
-	HEIST_COST          = 1500
+	HEIST_COST          = 1000
 	POLICE_ALERT        = time.Duration(60 * time.Second)
 	SENTENCE_BASE       = time.Duration(45 * time.Second)
 	WAIT_TIME           = time.Duration(60 * time.Second)
