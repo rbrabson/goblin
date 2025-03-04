@@ -595,7 +595,7 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 		})
 	}
 	if results.Show != nil {
-		raceParticipant := results.Place.Participant
+		raceParticipant := results.Show.Participant
 		memberName := raceParticipant.Member.guildMember.Name
 		raceResults = append(raceResults, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf(":third_place: %s", memberName),
