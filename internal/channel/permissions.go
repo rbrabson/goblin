@@ -53,22 +53,26 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 
 // MuteChannel sets the channel so that `@everyone`	 can't send messages to the channel.
 func (c *Mute) MuteChannel() {
-	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionSendMessages)
+	mute := int64(discordgo.PermissionSendMessages)
+	allowFlagsNoSend := c.everyonePermissions.Allow ^ mute
+	denyFlagsNoSend := c.everyonePermissions.Deny & mute
+	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allowFlagsNoSend, denyFlagsNoSend)
 	if err != nil {
-		log.Warning("Failed to mute the channel, error:", err)
+		log.Warning("failed to mute the channel, error:", err)
+	} else {
+		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Info("muted the channel")
 	}
 }
 
 // UnmuteChannel resets the permissions for `@everyone` to what they were before the channel was muted.
 func (c *Mute) UnmuteChannel() {
 	if c.everyonePermissions.ID != "" {
-		allow := int64(discordgo.PermissionSendMessages)
-		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allow, c.everyonePermissions.Deny)
+		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, c.everyonePermissions.Allow, c.everyonePermissions.Deny)
 		if err != nil {
-			log.Warning("Failed to unmute the channel, error:", err)
+			log.Warning("failed to unmute the channel, error:", err)
 			return
 		}
-		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Info("reset the mute permissions for the channel")
+		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Info("reset the channel permissions")
 	} else {
 		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Error("permissions unknown; not possible to un-mute the channel")
 	}
