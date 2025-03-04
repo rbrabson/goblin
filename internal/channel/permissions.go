@@ -61,15 +61,7 @@ func (c *Mute) MuteChannel() {
 
 // UnmuteChannel resets the permissions for `@everyone` to what they were before the channel was muted.
 func (c *Mute) UnmuteChannel() {
-	if c.everyonePermissions.ID == "" {
-		log.Error("*** everyonePermisisons.ID == \"\"")
-		err := c.s.ChannelPermissionDelete(c.i.ChannelID, c.everyoneID)
-		if err != nil {
-			log.Warning("Failed to delete the mute for the channel, error:", err)
-			return
-		}
-		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Info("deleted the mute permissions for the channel")
-	} else {
+	if c.everyonePermissions.ID != "" {
 		log.Error("*** everyonePermisisons.ID != \"\"")
 		allow := int64(discordgo.PermissionSendMessages)
 		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allow, c.everyonePermissions.Deny)
@@ -78,5 +70,7 @@ func (c *Mute) UnmuteChannel() {
 			return
 		}
 		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Info("reset the mute permissions for the channel")
+	} else {
+		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Error("permissions unknown; not possible to un-mute the channel")
 	}
 }

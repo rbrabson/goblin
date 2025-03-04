@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0-alpha1
+## 1.1.2-alpha1
 
 Add the `race` game to the server. Races allow members to enter races, where they are assigned virtual racers to participate in the race. Racers who come in first, second or third earn prizes, with the prize amount increasing with the larger number of racers entering the race.
 
