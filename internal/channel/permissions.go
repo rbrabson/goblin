@@ -62,7 +62,6 @@ func (c *Mute) MuteChannel() {
 // UnmuteChannel resets the permissions for `@everyone` to what they were before the channel was muted.
 func (c *Mute) UnmuteChannel() {
 	if c.everyonePermissions.ID != "" {
-		log.Error("*** everyonePermisisons.ID != \"\"")
 		allow := int64(discordgo.PermissionSendMessages)
 		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allow, c.everyonePermissions.Deny)
 		if err != nil {

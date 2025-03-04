@@ -375,7 +375,7 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 			break
 		}
 		time.Sleep(timeToWait)
-		log.WithFields(log.Fields{"guild": heist.GuildID, "startTiime": heist.StartTime, "until": time.Until(heist.StartTime.Add(heist.config.WaitTime))}).Debug("waiting for the heist to start")
+		log.WithFields(log.Fields{"guild": heist.GuildID, "startTiime": heist.StartTime, "until": time.Until(heist.StartTime.Add(heist.config.WaitTime))}).Trace("waiting for the heist to start")
 		heistMessage(s, i, heist, heist.Organizer, "update")
 	}
 }
