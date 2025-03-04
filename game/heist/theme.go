@@ -103,12 +103,12 @@ func getDefaultTheme(guildID string) *Theme {
 			Result:      ESCAPED,
 		},
 		{
-			Message:     "%s used Iron Fist " + emoji.BarbarianKing + ">. +25 " + emoji.Gold,
+			Message:     "%s used Iron Fist " + emoji.BarbarianKing + ". +25 " + emoji.Gold,
 			BonusAmount: 25,
 			Result:      ESCAPED,
 		},
 		{
-			Message:     "%s took out a corner builder hut " + emoji.BuilderHut + ". +50 " + emoji.Gold + ">.",
+			Message:     "%s took out a corner builder hut " + emoji.BuilderHut + ". +50 " + emoji.Gold + ".",
 			BonusAmount: 50,
 			Result:      ESCAPED,
 		},
