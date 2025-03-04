@@ -416,7 +416,7 @@ func calculateWinnings(race *Race, lastLeg *RaceLeg) {
 
 	// Assign the purse for the third place finisher
 	if len(lastLeg.ParticipantPositions) > 2 {
-		racePosition := lastLeg.ParticipantPositions[1]
+		racePosition := lastLeg.ParticipantPositions[2]
 		race.RaceResult.Show = &RaceParticipantResult{
 			Participant: racePosition.RaceParticipant,
 			RaceTime:    racePosition.Speed,
