@@ -62,7 +62,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 	bot.Session.Identify.Intents = botIntents
 
 	bot.Session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		log.Info("Bot is up!")
+		log.WithFields(log.Fields{"bot": BotName, "version": Version, "revision": Revision}).Info("Bot is up!")
 	})
 
 	db = mongo.NewDatabase()
