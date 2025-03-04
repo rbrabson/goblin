@@ -25,7 +25,7 @@ const (
 	ElectroDragon     = "<:Electro_Dragon:1346563374586265710>"
 	ElectroTitan      = "<:Electro_Titan:1346563407645507646>"
 	FlameFlinger      = "<:Flame_Flinger:1346563435814719651>"
-	FreeaeSpell       = "<:Freeze_Spell:1346563459072131162>"
+	FreezeSpell       = "<:Freeze_Spell:1346563459072131162>"
 	Giant             = "<:Giant:1346563485735059597>"
 	Goblin            = "<:Goblin:1346563510733373490>"
 	Golem             = "<:Golem:1346563552684671017>"
@@ -85,9 +85,19 @@ const (
 
 // Resources
 const (
-	Gems           = "<:Gems:1346582782276665406>"
-	Gold           = "<:Gold:1346583263598219297>"
 	CapitalGold    = "<:Capital_Gold:1346576818211393629>"
 	DarkElixer     = "<:Dark_Elixer:1346583810434928771>"
 	DarkElixerRune = "<:Dark_Elixer_Rune:1346579999980916848>"
+	Gems           = "<:Gems:1346582782276665406>"
+	Gold           = "<:Gold:1346583263598219297>"
+)
+
+// Other emojis
+const (
+	SharkHi      = "<:Shark_Hi:1346592211638292591>"
+	Sleeping     = ":zzz:"
+	StarEmpty    = "<:Star_Empty:1346596266343268382>"
+	StarFishBarb = "<:StarFishBarb:1346593781771796511>"
+	StarNew      = "<:Star_New:1346596815364948069>"
+	Toombstone   = "<:Toombstone:1346597374054633554>"
 )
