@@ -9,7 +9,7 @@ import (
 const (
 	RACE_CONFIG_COLLECTION = "race_configs"
 	RACE_MEMBER_COLLECTION = "race_members"
-	RACER_COLLECTION       = "race_racers"
+	RACER_COLLECTION       = "race_avatars"
 )
 
 // readConfig loads the race configuration from the database. If it does not exist then
