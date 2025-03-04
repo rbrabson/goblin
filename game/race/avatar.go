@@ -528,3 +528,8 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 		}
 	}
 }
+
+// String returns a string representation of the race avatar.
+func (r *RaceAvatar) String() string {
+	return r.Emoji
+}
