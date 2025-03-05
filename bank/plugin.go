@@ -68,7 +68,7 @@ func (plugin *Plugin) GetHelp() []string {
 
 	commandPrefix := memberCommands[0].Name
 	for _, command := range memberCommands[0].Options {
-		commandDescription := fmt.Sprintf("- `/%s %s`:  %s\n", commandPrefix, command.Name, command.Description)
+		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
@@ -84,7 +84,7 @@ func (plugin *Plugin) GetAdminHelp() []string {
 
 	commandPrefix := adminCommands[0].Name
 	for _, command := range adminCommands[0].Options {
-		commandDescription := fmt.Sprintf("- `/%s %s`:  %s\n", commandPrefix, command.Name, command.Description)
+		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)

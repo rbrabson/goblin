@@ -35,11 +35,12 @@ func GetMemberHelp() []string {
 	help := make([]string, 0, 1)
 
 	for _, command := range memberCommands {
-		commandDescription := fmt.Sprintf("- **/%s**:  %s\n", command.Name, command.Description)
+		commandDescription := fmt.Sprintf("- `/%s`: %s\n", command.Name, command.Description)
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
-	help = append([]string{"**Payday**\n"}, help...)
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
+	help = append([]string{title}, help...)
 
 	return help
 }
@@ -81,11 +82,11 @@ func (plugin *Plugin) GetHelp() []string {
 	help := make([]string, 0, 1)
 
 	for _, command := range memberCommands {
-		commandDescription := fmt.Sprintf("- **/%s**: %s\n", command.Name, command.Description)
+		commandDescription := fmt.Sprintf("- `/%s`: %s\n", command.Name, command.Description)
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
-	title := fmt.Sprintf("**%s**\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
 	help = append([]string{title}, help...)
 
 	return help

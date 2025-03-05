@@ -67,11 +67,11 @@ func (plugin *Plugin) GetAdminHelp() []string {
 
 	commandPrefix := adminCommands[0].Name
 	for _, command := range adminCommands[0].Options {
-		commandDescription := fmt.Sprintf("- **/%s %s**:  %s\n", commandPrefix, command.Name, command.Description)
+		commandDescription := fmt.Sprintf("- `/%s %s`:  %s\n", commandPrefix, command.Name, command.Description)
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
-	title := fmt.Sprintf("**%s**\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
 	help = append([]string{title}, help...)
 
 	return help
