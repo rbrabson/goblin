@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	lastRaceTimes = make(map[string]*time.Time)
+	lastRaceTimes = make(map[string]time.Time)
 	currentRaces  = make(map[string]*Race)
 	raceLock      = sync.Mutex{}
 )
@@ -80,14 +80,11 @@ func GetRace(guildID string) *Race {
 	log.Trace("--> race.GetRace")
 	defer log.Trace("<-- race.GetRace")
 
-	raceLock.Lock()
-	defer raceLock.Unlock()
-
 	race := currentRaces[guildID]
 	if race == nil {
 		race = newRace(guildID)
 	}
-	race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
+
 	return race
 }
 
@@ -108,6 +105,8 @@ func newRace(guildID string) *Race {
 		config:        config,
 		mutex:         sync.Mutex{},
 	}
+	race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
+
 	currentRaces[guildID] = race
 	log.WithFields(log.Fields{"guild": guildID}).Info("new race")
 
@@ -212,11 +211,14 @@ func (race *Race) RunRace(trackLength int) {
 
 // End ends the current race.
 func (r *Race) End() {
+	log.Trace("--> race.Race.End")
+	defer log.Trace("<-- race.Race.End")
+
 	raceLock.Lock()
-	delete(currentRaces, r.GuildID)
-	now := time.Now()
-	lastRaceTimes[r.GuildID] = &now
 	defer raceLock.Unlock()
+
+	delete(currentRaces, r.GuildID)
+	lastRaceTimes[r.GuildID] = time.Now()
 
 	if r.RaceResult != nil {
 		if r.RaceResult.Win != nil {
@@ -252,10 +254,8 @@ func ResetRace(guildID string) {
 	log.Trace("---> race.ResetRace")
 	defer log.Trace("<-- race.ResetRace")
 
-	raceLock.Lock()
-	defer raceLock.Unlock()
-
 	delete(currentRaces, guildID)
+	delete(lastRaceTimes, guildID)
 	log.WithFields(log.Fields{"guild": guildID}).Info("reset race")
 }
 
@@ -308,18 +308,14 @@ func raceStartChecks(guildID string, memberID string) error {
 	log.WithFields(log.Fields{"guild_id": guildID, "member_id": memberID}).Warn("TODO: need to implement race checks")
 
 	config := GetConfig(guildID)
-	raceLock.Lock()
-	defer raceLock.Unlock()
 
 	lastRaceTime := lastRaceTimes[guildID]
-	if lastRaceTime != nil {
-		timeSinceLastRace := time.Since(*lastRaceTime)
-		if time.Since(*lastRaceTime) < config.WaitBetweenRaces {
-			timeUntilRaceCanStart := config.WaitBetweenRaces - timeSinceLastRace
-			return ErrRacersAreResting{timeUntilRaceCanStart}
-		}
-		delete(lastRaceTimes, guildID)
+	if time.Since(lastRaceTime) < config.WaitBetweenRaces {
+		timeSinceLastRace := time.Since(lastRaceTime)
+		timeUntilRaceCanStart := config.WaitBetweenRaces - timeSinceLastRace
+		return ErrRacersAreResting{timeUntilRaceCanStart}
 	}
+	delete(lastRaceTimes, guildID)
 
 	return nil
 }

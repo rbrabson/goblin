@@ -687,7 +687,7 @@ func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *H
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 	msg := p.Sprintf("A new %s is being planned by %s. You can join the %s for a cost of %d credits at any time prior to the %s starting.",
 		heist.theme.Heist,
-		member.guildMember.Name,
+		heist.Organizer.guildMember.Name,
 		heist.theme.Heist,
 		heist.config.HeistCost,
 		heist.theme.Heist,
