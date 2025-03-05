@@ -120,6 +120,9 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> race.resetRace")
 	defer log.Trace("<-- race.resetRace")
 
+	raceLock.Lock()
+	defer raceLock.Unlock()
+
 	ResetRace(i.GuildID)
 	discmsg.SendEphemeralResponse(s, i, "Race has been reset")
 }
@@ -129,14 +132,17 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> race.startRace")
 	defer log.Trace("<-- race.startRace")
 
+	raceLock.Lock()
 	err := raceStartChecks(i.GuildID, i.Member.User.ID)
 	if err != nil {
 		discmsg.SendEphemeralResponse(s, i, err.Error())
+		raceLock.Unlock()
 		return
 	}
-
 	race := GetRace(i.GuildID)
 	race.interaction = i
+	raceLock.Unlock()
+
 	member := GetRaceMember(i.GuildID, i.Member.User.ID)
 	race.addRaceParticipant(member)
 	defer race.End()

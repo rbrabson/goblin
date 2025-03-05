@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.4-alpha1
+
+The foolowing bugs were addressed:
+
+- The heist organizer's name was being incorrectly set to the last member who joined the heist.
+
+- Multiple races could be started at the same time. This led to some weird cases where multiple races were being run at the same time, with their displays being intertwined.
+
 ## 1.1.3-alpha1
 
 Save the emojis in the bot and use them, instead of relying on server-base emojis for output.
