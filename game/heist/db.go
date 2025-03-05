@@ -98,8 +98,8 @@ func readAllTargets(filter bson.D) ([]*Target, error) {
 
 // readTargets loads the targets that may be used in heists by the given guild
 func readTargets(guildID string, theme string) ([]*Target, error) {
-	log.Debug("--> heist.readTargets")
-	defer log.Debug("<-- heist.readTargets")
+	log.Trace("--> heist.readTargets")
+	defer log.Trace("<-- heist.readTargets")
 
 	var targets []*Target
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: theme}}
