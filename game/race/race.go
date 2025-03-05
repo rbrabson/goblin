@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/rbrabson/goblin/bank"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -238,9 +237,9 @@ func (r *Race) End() {
 		log.WithFields(log.Fields{"guild": r.GuildID, "betters": len(r.Betters)}).Info("processing race bets")
 		for _, better := range r.Betters {
 			if better.Winnings != 0 {
-				bankAccount := bank.GetAccount(r.GuildID, better.Member.MemberID)
-				bankAccount.Deposit(better.Winnings)
-				log.WithFields(log.Fields{"guild": r.GuildID, "member": better.Member.MemberID, "winnings": better.Winnings}).Debug("desposit bet winnings")
+				better.Member.WinBet(better.Winnings)
+			} else {
+				better.Member.LoseBet()
 			}
 		}
 	}
