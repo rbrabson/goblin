@@ -309,10 +309,17 @@ func raceStartChecks(guildID string, memberID string) error {
 
 	config := GetConfig(guildID)
 
+	race := currentRaces[guildID]
+	if race != nil {
+		log.WithFields(log.Fields{"guild_id": guildID}).Debug("race already in progress")
+		return ErrRaceAlreadyInProgress
+	}
+
 	lastRaceTime := lastRaceTimes[guildID]
 	if time.Since(lastRaceTime) < config.WaitBetweenRaces {
 		timeSinceLastRace := time.Since(lastRaceTime)
 		timeUntilRaceCanStart := config.WaitBetweenRaces - timeSinceLastRace
+		log.WithFields(log.Fields{"guild_id": guildID, "timeUntilRaceCanStart": timeUntilRaceCanStart}).Debug("racers are resting")
 		return ErrRacersAreResting{timeUntilRaceCanStart}
 	}
 	delete(lastRaceTimes, guildID)
