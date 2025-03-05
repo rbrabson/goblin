@@ -2,6 +2,7 @@ package guild
 
 import (
 	"fmt"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -34,6 +35,8 @@ func (member *Member) SetName(userName string, displayName string) *Member {
 	} else {
 		name = userName
 	}
+	name = strings.Trim(name, "#!")
+
 	if member.Name != name {
 		member.Name = name
 		writeMember(member)
