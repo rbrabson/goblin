@@ -129,6 +129,22 @@ func (r *Race) addRaceParticipant(member *RaceMember) *RaceParticipant {
 	return participant
 }
 
+// getRaceParticipant returns a racer for a given race. If the member isn't in the race, then
+// nil is returned.
+func (r *Race) getRaceParticipant(memberID string) *RaceParticipant {
+	log.Trace("--> race.Race.getRaceParticipant")
+	defer log.Trace("<-- race.Race.getRaceParticipant")
+
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	for _, racer := range r.Racers {
+		if racer.Member.MemberID == memberID {
+			return racer
+		}
+	}
+	return nil
+}
+
 // getRaceBetter returns a new better for a race.
 func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 	log.Trace("--> race.GetRaceBetter")

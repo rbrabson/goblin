@@ -1,6 +1,8 @@
 package race
 
 import (
+	"fmt"
+
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
@@ -26,8 +28,8 @@ type RaceMember struct {
 
 // GetRaceMember gets a race member. THe member is created if it doesn't exist.
 func GetRaceMember(guildID string, memberID string) *RaceMember {
-	log.Trace("--> race.GetRaceMember")
-	defer log.Trace("<-- race.GetRaceMember")
+	log.Error("--> race.GetRaceMember")
+	defer log.Error("<-- race.GetRaceMember")
 
 	member := readRaceMember(guildID, memberID)
 	if member == nil {
@@ -84,7 +86,7 @@ func (m *RaceMember) PlaceInRace(amount int) {
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("placed in race")
-
+	log.Error(m)
 }
 
 // ShowInRace is called when the race member shows (comes in 3rd) in a race.
@@ -101,6 +103,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("sbowed in race")
+	log.Error(m)
 }
 
 // LoseRace is called when the race member fails to win, place or show in a race.
@@ -113,6 +116,7 @@ func (m *RaceMember) LoseRace() {
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lost race")
+	log.Error(m)
 }
 
 // PlaceBet is used to place a bet on a member of a race.
@@ -130,6 +134,7 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 	m.TotalEarnings -= betAmount
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "betAmount": betAmount}).Info("placed bet")
+	log.Error(m)
 
 	return nil
 }
@@ -142,13 +147,13 @@ func (m *RaceMember) WinBet(winnings int) {
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(winnings)
 
-	m.BetsMade++
 	m.BetsWon++
 	m.BetsEarnings += winnings
 	m.TotalEarnings += winnings
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": winnings}).Info("win bet")
+	log.Error(m)
 }
 
 // WinBet is used when a member wins a bet on a race.
@@ -156,8 +161,13 @@ func (m *RaceMember) LoseBet() {
 	log.Trace("--> race.Member.LoseBet")
 	defer log.Trace("<-- race.Member.LoseBet")
 
-	m.BetsMade++
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lose bet")
+	log.Error(m)
+}
+
+func (m *RaceMember) String() string {
+	return fmt.Sprintf("RaceMember{GuildID: %s, MemberID: %s, RacesLost: %d, RacesPlaced: %d, RacesShowed: %d, RacesWon: %d, TotalRaces: %d, BetsEarnings: %d, BetsMade: %d, BetsWon: %d, TotalEarnings: %d}",
+		m.GuildID, m.MemberID, m.RacesLost, m.RacesPlaced, m.RacesShowed, m.RacesWon, m.TotalRaces, m.BetsEarnings, m.BetsMade, m.BetsWon, m.TotalEarnings)
 }

@@ -355,8 +355,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Try to place the bet
+	raceMember := race.getRaceParticipant(i.Member.User.ID).Member
+	if raceMember == nil {
+		raceMember = GetRaceMember(i.GuildID, i.Member.User.ID)
+	}
 	raceParticipant := getCurrentRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
-	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 	err = raceMember.PlaceBet(race.config.BetAmount)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID}).Error("unable to withdraw bet amount")
