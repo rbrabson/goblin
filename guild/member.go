@@ -35,7 +35,7 @@ func (member *Member) SetName(userName string, displayName string) *Member {
 	} else {
 		name = userName
 	}
-	name = strings.Trim(name, "#!")
+	name = strings.TrimLeft(name, "# ")
 
 	if member.Name != name {
 		member.Name = name
