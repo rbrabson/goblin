@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
@@ -211,7 +210,6 @@ func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
 			log.Error("Unable to update the time for the race message, error:", err)
 		}
 	}
-
 }
 
 // joinRace attempts to join a race that is getting ready to start.
@@ -349,24 +347,24 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	// Check to see if the member can place a bet
 	err := raceBetChecks(race, i.Member.User.ID)
 	if err != nil {
 		discmsg.SendEphemeralResponse(s, i, err.Error())
 		return
 	}
 
-	// Place the bet
-	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
-	err = bankAccount.Withdraw(race.config.BetAmount)
+	// Try to place the bet
+	raceParticipant := getCurrentRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
+	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
+	err = raceMember.PlaceBet(race.config.BetAmount)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "MemerID": i.Member.User.ID}).Error("unable to withdraw bet amount")
-		discmsg.SendEphemeralResponse(s, i, "Insufficiient funds to place a bet")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID}).Error("unable to withdraw bet amount")
+		discmsg.SendEphemeralResponse(s, i, "Insufficiient funds in your bank account to place a bet")
 		return
 	}
 
-	// All is good, so add the better to the race
-	raceParticipant := getCurrentRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
-	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
+	// Add to the list of betters
 	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	better := getRaceBetter(raceMember, raceParticipant)
 	race.addBetter(better)
@@ -539,7 +537,7 @@ func sendRace(s *discordgo.Session, race *Race) {
 		return
 	}
 
-	log.Error("preparing to send race legs")
+	log.Debug("preparing to send race legs")
 	for _, raceLeg := range race.RaceLegs {
 		time.Sleep(2 * time.Second)
 		track = getCurrentTrack(raceLeg, race.config)
