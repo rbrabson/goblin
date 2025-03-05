@@ -56,7 +56,7 @@ func (c *Mute) MuteChannel() {
 	mute := int64(discordgo.PermissionSendMessages)
 	allowFlagsNoSend := c.everyonePermissions.Allow & mute
 	denyFlagsNoSend := c.everyonePermissions.Deny ^ mute
-	log.WithFields(log.Fields{"guildID": c.i.GuildID, "allow": allowFlagsNoSend, "deny": denyFlagsNoSend, "mute": mute}).Debug("muting the channel")
+	log.WithFields(log.Fields{"guildID": c.i.GuildID, "currentAllow": c.everyonePermissions.Allow, "currentDeny": c.everyonePermissions.Deny, "allow": allowFlagsNoSend, "deny": denyFlagsNoSend, "mute": mute}).Debug("muting the channel")
 	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allowFlagsNoSend, denyFlagsNoSend)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID, "error": err}).Warning("failed to mute the channel")
