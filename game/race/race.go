@@ -122,6 +122,7 @@ func (r *Race) addRaceParticipant(member *RaceMember) *RaceParticipant {
 		Member: member,
 		Racer:  getRaceAvatar(r),
 	}
+	member.TotalRaces++
 	r.mutex.Lock()
 	r.Racers = append(r.Racers, participant)
 	defer r.mutex.Unlock()
