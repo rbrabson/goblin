@@ -64,9 +64,10 @@ func (m *RaceMember) WinRace(amount int) {
 
 	m.RacesWon++
 	m.TotalEarnings += amount
+	m.TotalRaces++
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("won race")
+	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("won race")
 }
 
 // PlaceInRace is called when the race member places (comes in 2nd) in a race.
@@ -79,9 +80,10 @@ func (m *RaceMember) PlaceInRace(amount int) {
 
 	m.RacesPlaced++
 	m.TotalEarnings += amount
+	m.TotalRaces++
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("placed in race")
+	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("placed in race")
 
 }
 
@@ -95,9 +97,10 @@ func (m *RaceMember) ShowInRace(amount int) {
 
 	m.RacesShowed++
 	m.TotalEarnings += amount
+	m.TotalRaces++
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("sbowed in race")
+	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("sbowed in race")
 }
 
 // LoseRace is called when the race member fails to win, place or show in a race.
@@ -124,7 +127,6 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 
 	m.BetsMade++
 	m.TotalEarnings -= betAmount
-	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "betAmount": betAmount}).Info("placed bet")
 
@@ -139,10 +141,22 @@ func (m *RaceMember) WinBet(winnings int) {
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(winnings)
 
+	m.BetsMade++
 	m.BetsWon++
 	m.BetsEarnings += winnings
 	m.TotalEarnings += winnings
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": winnings}).Info("won bet")
+	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": winnings}).Info("win bet")
+}
+
+// WinBet is used when a member wins a bet on a race.
+func (m *RaceMember) LoseBet() {
+	log.Trace("--> race.Member.LoseBet")
+	defer log.Trace("<-- race.Member.LoseBet")
+
+	m.BetsMade++
+	writeRaceMember(m)
+
+	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lose bet")
 }
