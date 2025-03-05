@@ -20,7 +20,7 @@ type Mute struct {
 func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute {
 	channel, err := s.Channel(i.ChannelID)
 	if err != nil {
-		log.Error("Error getting channel, error:", err)
+		log.WithFields(log.Fields{"guildID": i.GuildID, "error": err}).Error("Error getting channel, error")
 		return nil
 	}
 	if channel == nil {
@@ -56,12 +56,12 @@ func (c *Mute) MuteChannel() {
 	mute := int64(discordgo.PermissionSendMessages)
 	allowFlagsNoSend := c.everyonePermissions.Allow & mute
 	denyFlagsNoSend := c.everyonePermissions.Deny ^ mute
-	log.WithFields(log.Fields{"allow": allowFlagsNoSend, "deny": denyFlagsNoSend, "mute": mute}).Error("muting the channel")
+	log.WithFields(log.Fields{"guildID": c.i.GuildID, "allow": allowFlagsNoSend, "deny": denyFlagsNoSend, "mute": mute}).Debug("muting the channel")
 	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allowFlagsNoSend, denyFlagsNoSend)
 	if err != nil {
-		log.Warning("failed to mute the channel, error:", err)
+		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID, "error": err}).Warning("failed to mute the channel")
 	} else {
-		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Info("muted the channel")
+		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID}).Debug("muted the channel")
 	}
 }
 
@@ -70,11 +70,11 @@ func (c *Mute) UnmuteChannel() {
 	if c.everyonePermissions.ID != "" {
 		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, c.everyonePermissions.Allow, c.everyonePermissions.Deny)
 		if err != nil {
-			log.Warning("failed to unmute the channel, error:", err)
+			log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID, "error": err}).Warning("failed to unmute the channel")
 			return
 		}
-		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Info("reset the channel permissions")
+		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID}).Debug("reset the channel permissions")
 	} else {
-		log.WithFields(log.Fields{"channelID": c.i.ChannelID}).Error("permissions unknown; not possible to un-mute the channel")
+		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID}).Error("permissions unknown; not possible to un-mute the channel")
 	}
 }
