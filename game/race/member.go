@@ -106,6 +106,7 @@ func (m *RaceMember) LoseRace() {
 	log.Trace("<-- race.Member.LoseRace")
 
 	m.RacesLost++
+	m.TotalRaces++
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lost race")

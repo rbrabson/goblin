@@ -221,22 +221,21 @@ func (r *Race) End() {
 	lastRaceTimes[r.GuildID] = time.Now()
 
 	if r.RaceResult != nil {
-		if r.RaceResult.Win != nil {
-			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Win.Participant.Member.MemberID)
-			bankAccount.Deposit(r.RaceResult.Win.Winnings)
-			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Win.Participant.Member.MemberID, "winnings": r.RaceResult.Win.Winnings}).Debug("deposit race winnings")
-		}
-		if r.RaceResult.Place != nil {
-			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Place.Participant.Member.MemberID)
-			bankAccount.Deposit(r.RaceResult.Win.Winnings)
-			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Place.Participant.Member.MemberID, "winnings": r.RaceResult.Place.Winnings}).Debug("deposit race winnings")
-		}
-		if r.RaceResult.Show != nil {
-			bankAccount := bank.GetAccount(r.GuildID, r.RaceResult.Show.Participant.Member.MemberID)
-			bankAccount.Deposit(r.RaceResult.Win.Winnings)
-			log.WithFields(log.Fields{"guild": r.GuildID, "member": r.RaceResult.Show.Participant.Member.MemberID, "winnings": r.RaceResult.Show.Winnings}).Debug("deposit race winnings")
+		log.WithFields(log.Fields{"guild": r.GuildID, "racers": len(r.Racers)}).Info("processing race results")
+		for _, racer := range r.Racers {
+			switch {
+			case r.RaceResult.Win != nil && racer.Member.MemberID == r.RaceResult.Win.Participant.Member.MemberID:
+				racer.Member.WinRace(r.RaceResult.Win.Winnings)
+			case r.RaceResult.Place != nil && racer.Member.MemberID == r.RaceResult.Place.Participant.Member.MemberID:
+				racer.Member.PlaceInRace(r.RaceResult.Place.Winnings)
+			case r.RaceResult.Show != nil && racer.Member.MemberID == r.RaceResult.Show.Participant.Member.MemberID:
+				racer.Member.PlaceInRace(r.RaceResult.Show.Winnings)
+			default:
+				racer.Member.LoseRace()
+			}
 		}
 
+		log.WithFields(log.Fields{"guild": r.GuildID, "betters": len(r.Betters)}).Info("processing race bets")
 		for _, better := range r.Betters {
 			if better.Winnings != 0 {
 				bankAccount := bank.GetAccount(r.GuildID, better.Member.MemberID)
