@@ -896,7 +896,24 @@ func configSentence(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> configSentence")
 	defer log.Trace("<-- configSentence")
 
+	options := i.ApplicationCommandData().Options[0]
+	if options == nil {
+		discmsg.SendEphemeralResponse(s, i, "No sentence time provided (option missing)")
+		return
+	}
+	options = options.Options[0]
+	if options == nil {
+		discmsg.SendEphemeralResponse(s, i, "No sentence time provided (2nd level option missing)")
+		return
+	}
+
 	config := GetConfig(i.GuildID)
+	if i.ApplicationCommandData().Options[0].Options[0].IntValue() == 0 {
+		config.SentenceBase = 0
+		discmsg.SendResponse(s, i, "Sentence disabled")
+		writeConfig(config)
+		return
+	}
 	sentence := i.ApplicationCommandData().Options[0].Options[0].IntValue()
 	config.SentenceBase = time.Duration(sentence * int64(time.Second))
 
