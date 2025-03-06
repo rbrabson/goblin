@@ -20,7 +20,7 @@ func ConvertEconomy(fileName string) {
 		guildID := asString(fileContent["_id"])
 		if guildID == GUILD_ID {
 			convertBankAccountModel(guildID, fileContent)
-			// convertGuildMemberModel(guildID, fileContent)
+			convertGuildMemberModel(guildID, fileContent)
 		}
 	}
 }
