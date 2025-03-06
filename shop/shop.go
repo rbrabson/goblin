@@ -3,10 +3,15 @@ package shop
 import (
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Shop struct{}
+// The shop for a guild. The shop contains all items available for purchase.
+type Shop struct {
+	GuildID string      // Guild (server) for the shop
+	Items   []*ShopItem // All items available in the shop
+}
 
 type ShopItem struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
@@ -17,29 +22,138 @@ type ShopItem struct {
 	Price       int                `json:"price" bson:"price"`
 }
 
-// GetShopItem returns the shop item with the given guild ID, name, and type.
-func GetShopItem(guildID string, name string, itemType string) *ShopItem {
-	// TODO: read from the DB, using "guildID, name, type as the keys"
-	return nil
+// GetShop returns the shop for the guild.
+func GetShop(guildID string) *Shop {
+	log.Trace("--> shop.GetShop")
+	defer log.Trace("<-- shop.GetShop")
+
+	var err error
+
+	shop := &Shop{
+		GuildID: guildID,
+	}
+
+	shop.Items, err = readAllShopItems(guildID)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read shop items from the database")
+		shop.Items = make([]*ShopItem, 0)
+	}
+
+	return shop
 }
 
-// GetAllShopItems returns all the shop items for the given guild ID.
-func GetAllShopItems(guildID string) []*ShopItem {
-	// TODO: read from the DB, using "guildID" as the key
-	return nil
+// GetShopItem returns the shop item with the given guild ID, name, and type. If the item does
+// not exist, nil is returned.
+func GetShopItem(guildID string, name string, itemType string) *ShopItem {
+	log.Trace("--> shop.GetShopItem")
+	defer log.Trace("<-- shop.GetShopItem")
+
+	item, err := readShopIem(guildID, name, itemType)
+	if err != nil || item == nil {
+		log.WithFields(log.Fields{"guild": guildID, "name": name, "type": itemType, "error": err}).Error("unable to read shop item from the database")
+		return nil
+	}
+
+	return item
 }
 
 // NewShopItem creates a new ShopItem with the given guild ID, name, description, type, and price.
 func NewShopItem(guildID string, name string, description string, itemType string, price int) *ShopItem {
-	// TODO: write to the DB, but verify it is a unique item (or simply update it if it already exists)
-	//       the DB key should be guidID, name, and type.
-	return &ShopItem{
+	log.Trace("--> shop.NewShopItem")
+	defer log.Trace("<-- shop.NewShopItem")
+
+	item := &ShopItem{
 		GuildID:     guildID,
 		Name:        name,
 		Description: description,
 		Type:        itemType,
 		Price:       price,
 	}
+
+	err := writeShopItem(item)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID, "name": name, "type": itemType, "error": err}).Error("unable to write shop item to the database")
+		return nil
+	}
+
+	log.WithFields(log.Fields{"guild": guildID, "name": name, "type": itemType}).Info("new shop item created")
+	return item
+}
+
+// GetShopItems finds an item in the shop. If the item does not exist then nil is returned.
+func (s *Shop) GetShopItem(name string, itemType string) *ShopItem {
+	log.Trace("--> shop.GetShopItem")
+	defer log.Trace("<-- shop.GetShopItem")
+
+	for _, item := range s.Items {
+		if item.Name == name && item.Type == itemType {
+			return item
+		}
+	}
+
+	return nil
+}
+
+// AddShopItem adds a new item to the shop. If the item already exists, an error is returned.
+func (s *Shop) AddShopItem(name string, description string, itemType string, price int) (*ShopItem, error) {
+	log.Trace("--> shop.AddShopItem")
+	defer log.Trace("<-- shop.AddShopItem")
+
+	item := s.GetShopItem(name, itemType)
+	if item != nil {
+		return nil, fmt.Errorf("item already exists")
+	}
+
+	item = NewShopItem(s.GuildID, name, description, itemType, price)
+	if item == nil {
+		log.WithFields(log.Fields{"guild": s.GuildID, "name": name, "type": itemType}).Error("unable to write shop item to the database")
+		return nil, fmt.Errorf("unable to add item")
+	}
+
+	log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Info("shop item added")
+	return item, nil
+}
+
+// RemoveShopItem removes an item from the shop. If the item does not exist, an error is returned.
+func (s *Shop) RemoveShopItem(name string, itemType string) error {
+	log.Trace("--> shop.RemoveShopItem")
+	defer log.Trace("<-- shop.RemoveShopItem")
+
+	item := s.GetShopItem(name, itemType)
+	if item == nil {
+		return fmt.Errorf("item not found")
+	}
+	err := deleteShopItem(item)
+	if err != nil {
+		return fmt.Errorf("unable to remove item")
+	}
+
+	log.WithFields(log.Fields{"guild": s.GuildID, "name": name, "type": itemType}).Info("shop item removed")
+	return nil
+}
+
+// UpdateShopItem updates the shop item with the given name and type. If the item does not exist, an error is returned.
+func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int) error {
+	log.Trace("--> shop.ShopItem.UpdateShopItem")
+	defer log.Trace("<-- shop.ShopItem.UpdateShopItem")
+
+	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price {
+		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Warn("no change to the shop item")
+		return fmt.Errorf("no change to the shop item")
+	}
+
+	item.Description = description
+	item.Type = itemType
+	item.Price = price
+	item.Name = name
+
+	err := writeShopItem(item)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type, "error": err}).Error("unable to update shop item to the database")
+		return fmt.Errorf("unable to add item")
+	}
+	log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Info("shop item updated")
+	return nil
 }
 
 // String returns a string representation of the Role.
