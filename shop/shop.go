@@ -2,6 +2,7 @@ package shop
 
 import (
 	"fmt"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,6 +21,8 @@ type ShopItem struct {
 	Description string             `json:"description" bson:"description"`
 	Type        string             `json:"type" bson:"type"`
 	Price       int                `json:"price" bson:"price"`
+	Duration    time.Duration      `json:"duration,omitempty" bson:"duration,omitempty"`
+	Renewable   bool               `json:"renewable,omitempty" bson:"renewable,omitempty"`
 }
 
 // GetShop returns the shop for the guild.
@@ -58,7 +61,7 @@ func GetShopItem(guildID string, name string, itemType string) *ShopItem {
 }
 
 // NewShopItem creates a new ShopItem with the given guild ID, name, description, type, and price.
-func NewShopItem(guildID string, name string, description string, itemType string, price int) *ShopItem {
+func NewShopItem(guildID string, name string, description string, itemType string, price int, duration time.Duration, renewable bool) *ShopItem {
 	log.Trace("--> shop.NewShopItem")
 	defer log.Trace("<-- shop.NewShopItem")
 
@@ -68,6 +71,8 @@ func NewShopItem(guildID string, name string, description string, itemType strin
 		Description: description,
 		Type:        itemType,
 		Price:       price,
+		Duration:    duration,
+		Renewable:   renewable,
 	}
 
 	err := writeShopItem(item)
@@ -95,7 +100,7 @@ func (s *Shop) GetShopItem(name string, itemType string) *ShopItem {
 }
 
 // AddShopItem adds a new item to the shop. If the item already exists, an error is returned.
-func (s *Shop) AddShopItem(name string, description string, itemType string, price int) (*ShopItem, error) {
+func (s *Shop) AddShopItem(name string, description string, itemType string, price int, duration time.Duration, renewable bool) (*ShopItem, error) {
 	log.Trace("--> shop.AddShopItem")
 	defer log.Trace("<-- shop.AddShopItem")
 
@@ -104,7 +109,7 @@ func (s *Shop) AddShopItem(name string, description string, itemType string, pri
 		return nil, fmt.Errorf("item already exists")
 	}
 
-	item = NewShopItem(s.GuildID, name, description, itemType, price)
+	item = NewShopItem(s.GuildID, name, description, itemType, price, duration, renewable)
 	if item == nil {
 		log.WithFields(log.Fields{"guild": s.GuildID, "name": name, "type": itemType}).Error("unable to write shop item to the database")
 		return nil, fmt.Errorf("unable to add item")
@@ -133,19 +138,21 @@ func (s *Shop) RemoveShopItem(name string, itemType string) error {
 }
 
 // UpdateShopItem updates the shop item with the given name and type. If the item does not exist, an error is returned.
-func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int) error {
+func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int, duration time.Duration, renewable bool) error {
 	log.Trace("--> shop.ShopItem.UpdateShopItem")
 	defer log.Trace("<-- shop.ShopItem.UpdateShopItem")
 
-	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price {
+	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price && duration == item.Duration && renewable == item.Renewable {
 		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Warn("no change to the shop item")
 		return fmt.Errorf("no change to the shop item")
 	}
 
+	item.Name = name
 	item.Description = description
 	item.Type = itemType
 	item.Price = price
-	item.Name = name
+	item.Duration = duration
+	item.Renewable = renewable
 
 	err := writeShopItem(item)
 	if err != nil {

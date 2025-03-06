@@ -1,6 +1,7 @@
 package shop
 
 import (
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -53,13 +54,26 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 
 // NewPurchase creates a new Purchase with the given guild ID, member ID, and Purchasable.
 func NewPurchase(guildID, memberID string, item *ShopItem) (*Purchase, error) {
-	purchase := &Purchase{
+
+	purchase, _ := readPurchase(guildID, memberID, item.Name)
+	if purchase != nil {
+		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Error("already purchases the item")
+		return nil, fmt.Errorf("purchase already exists for item %s", item.Name)
+	}
+
+	purchase = &Purchase{
 		GuildID:  guildID,
 		MemberID: memberID,
 		Item:     item,
 		Status:   PENDING,
 		Date:     time.Now(),
 	}
+	err := writePurchase(purchase)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to write purchase to the database")
+		return nil, fmt.Errorf("unable to write purchase to the database: %w", err)
+	}
+	log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Info("creating new purchase")
 
 	return purchase, nil
 }

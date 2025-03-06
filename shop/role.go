@@ -1,5 +1,7 @@
 package shop
 
+import "time"
+
 const (
 	ROLE_TYPE = "role"
 )
@@ -8,8 +10,8 @@ const (
 type Role ShopItem
 
 // NewRole returns a new role that can be purchased in the shop
-func NewRole(guildID string, name string, price int, description string) *ShopItem {
-	return NewShopItem(guildID, name, description, ROLE_TYPE, price)
+func NewRole(guildID string, name string, price int, description string, duration time.Duration, renewable bool) *ShopItem {
+	return NewShopItem(guildID, name, description, ROLE_TYPE, price, duration, renewable)
 }
 
 func (r *Role) Buy(guildID, memberID string) (*Purchase, error) {

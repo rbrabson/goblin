@@ -25,6 +25,10 @@ func readAllPurchases(guildID string, memberID string) ([]*Purchase, error) {
 	return nil, nil
 }
 
+func readPurchase(guildID string, memberID string, itemName string) (*Purchase, error) {
+	return nil, nil
+}
+
 func writePurchase(purchase *Purchase) error {
 	return nil
 }
