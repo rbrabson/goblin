@@ -61,10 +61,10 @@ func GetShopItem(guildID string, name string, itemType string) *ShopItem {
 }
 
 // NewShopItem creates a new ShopItem with the given guild ID, name, description, type, and price.
-func NewShopItem(guildID string, name string, description string, itemType string, price int) *ShopItem {
+func NewShopItem(guildID string, name string, description string, itemType string, price int, duration time.Duration, autoRenewable bool) *ShopItem {
 	// TODO: write to the DB, but verify it is a unique item (or simply update it if it already exists)
 	//       the DB key should be guidID, name, and type.
-	return &ShopItem{
+	item := &ShopItem{
 		GuildID:       guildID,
 		Name:          name,
 		Description:   description,
@@ -137,11 +137,11 @@ func (s *Shop) RemoveShopItem(name string, itemType string) error {
 }
 
 // UpdateShopItem updates the shop item with the given name and type. If the item does not exist, an error is returned.
-func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int, duration time.Duration, renewable bool) error {
+func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int, duration time.Duration, autoRenewable bool) error {
 	log.Trace("--> shop.ShopItem.UpdateShopItem")
 	defer log.Trace("<-- shop.ShopItem.UpdateShopItem")
 
-	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price && duration == item.Duration && renewable == item.Renewable {
+	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price && duration == item.Duration && autoRenewable == item.AutoRenewable {
 		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Warn("no change to the shop item")
 		return fmt.Errorf("no change to the shop item")
 	}
@@ -151,7 +151,7 @@ func (item *ShopItem) UpdateShopItem(name string, description string, itemType s
 	item.Type = itemType
 	item.Price = price
 	item.Duration = duration
-	item.Renewable = renewable
+	item.AutoRenewable = autoRenewable
 
 	err := writeShopItem(item)
 	if err != nil {
