@@ -9,20 +9,22 @@ import (
 )
 
 const (
-	PURCHASED = "purchased"
-	PENDING   = "pending"
 	APPROVED  = "approved"
 	DENIED    = "denied"
+	PENDING   = "pending"
+	PURCHASED = "purchased"
 )
 
 // Purchase is a purchase made from the shop.
 type Purchase struct {
-	ID       primitive.ObjectID `json:"_id" bson:"_id"`
-	GuildID  string             `json:"guildID" bson:"guildID"`
-	MemberID string             `json:"memberID" bson:"memberID"`
-	Item     *ShopItem          `json:"item" bson:"item"`
-	Status   string             `json:"status" bson:"status"`
-	Date     time.Time          `json:"date" bson:"date"`
+	ID          primitive.ObjectID `json:"_id" bson:"_id"`
+	GuildID     string             `json:"guildID" bson:"guildID"`
+	MemberID    string             `json:"memberID" bson:"memberID"`
+	Item        *ShopItem          `json:"item" bson:"item"`
+	Status      string             `json:"status" bson:"status"`
+	PurchasedOn time.Time          `json:"purchased_on" bson:"purchased_on"`
+	ExpiresOn   time.Time          `json:"expires_on" bson:"expires_on"`
+	AutoRenew   bool               `json:"autoRenew" bson:"autoRenew"`
 }
 
 // GetAllPurchasableItems returns all items that may be purchased in the shop.
@@ -52,21 +54,17 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 	return purchases
 }
 
-// NewPurchase creates a new Purchase with the given guild ID, member ID, and Purchasable.
+// NewPurchase creates a new Purchase with the given guild ID, member ID, and a purchasable
+// shop item.
 func NewPurchase(guildID, memberID string, item *ShopItem) (*Purchase, error) {
-
-	purchase, _ := readPurchase(guildID, memberID, item.Name)
-	if purchase != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Error("already purchases the item")
-		return nil, fmt.Errorf("purchase already exists for item %s", item.Name)
-	}
-
-	purchase = &Purchase{
-		GuildID:  guildID,
-		MemberID: memberID,
-		Item:     item,
-		Status:   PENDING,
-		Date:     time.Now(),
+	purchase := &Purchase{
+		GuildID:     guildID,
+		MemberID:    memberID,
+		Item:        item,
+		Status:      PENDING,
+		PurchasedOn: time.Now(),
+		ExpiresOn:   time.Now(),
+		AutoRenew:   false,
 	}
 	err := writePurchase(purchase)
 	if err != nil {
