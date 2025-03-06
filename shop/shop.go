@@ -36,7 +36,7 @@ func GetShop(guildID string) *Shop {
 		GuildID: guildID,
 	}
 
-	shop.Items, err = readAllShopItems(guildID)
+	shop.Items, err = readShopItems(guildID)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read shop items from the database")
 		shop.Items = make([]*ShopItem, 0)
@@ -51,7 +51,7 @@ func GetShopItem(guildID string, name string, itemType string) *ShopItem {
 	log.Trace("--> shop.GetShopItem")
 	defer log.Trace("<-- shop.GetShopItem")
 
-	item, err := readShopIem(guildID, name, itemType)
+	item, err := readShopItem(guildID, name, itemType)
 	if err != nil || item == nil {
 		log.WithFields(log.Fields{"guild": guildID, "name": name, "type": itemType, "error": err}).Error("unable to read shop item from the database")
 		return nil

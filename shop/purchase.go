@@ -32,7 +32,7 @@ func GetAllPurchasableItems(guildID string) []*ShopItem {
 	log.Trace("--> shop.GetAllPurchasableItems")
 	defer log.Trace("<-- shop.GetAllPurchasableItems")
 
-	shopItems, err := readAllShopItems(guildID)
+	shopItems, err := readShopItems(guildID)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read purchasable items from the database")
 		return nil
@@ -45,7 +45,7 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 	log.Trace("--> shop.GetAllPurchases")
 	defer log.Trace("<-- shop.GetAllPurchases")
 
-	purchases, err := readAllPurchases(guildID, memberID)
+	purchases, err := readPurchases(guildID, memberID)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "error": err}).Error("unable to read purchases from the database")
 		return nil
