@@ -608,36 +608,42 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	initiatingHeistMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 
-	discmsg.SendEphemeralResponse(s, i, "Bailing "+playerID+"...")
 	var heistMember *HeistMember
 	if playerID != "" {
-		heistMember = getHeistMember(i.GuildID, i.Member.User.ID)
+		heistMember = getHeistMember(i.GuildID, playerID)
+		discmsg.SendEphemeralResponse(s, i, "Bailing "+heistMember.guildMember.Name+"...")
 	} else {
 		heistMember = initiatingHeistMember
+		discmsg.SendEphemeralResponse(s, i, "Bailing youself...")
 	}
 
-	if heistMember.Status != APPREHENDED && heistMember.Status != OOB {
+	if heistMember.Status != APPREHENDED {
 		var msg string
 		if heistMember.MemberID == i.Member.User.ID {
 			msg = "You are not in jail"
 		} else {
-			msg = fmt.Sprintf("%s is not in jail", initiatingHeistMember.guildMember.Name)
+			msg = fmt.Sprintf("%s is not in jail", heistMember.guildMember.Name)
 		}
 		discmsg.EditResponse(s, i, msg)
 		return
 	}
-	if heistMember.Status == APPREHENDED && heistMember.RemainingJailTime() <= 0 {
-		discmsg.EditResponse(s, i, "You have already served your sentence.")
+
+	if heistMember.RemainingJailTime() <= 0 {
+		if heistMember.MemberID == i.Member.User.ID {
+			discmsg.EditResponse(s, i, "You have already served your sentence.")
+		} else {
+			discmsg.EditResponse(s, i, fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name))
+		}
 		heistMember.ClearJailAndDeathStatus()
 		return
 	}
-	if account.CurrentBalance < heistMember.BailCost {
+
+	err := account.Withdraw(heistMember.BailCost)
+	if err != nil {
 		msg := fmt.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost)
 		discmsg.EditResponse(s, i, msg)
 		return
 	}
-
-	account.Withdraw(heistMember.BailCost)
 	heistMember.Status = OOB
 
 	var msg string
