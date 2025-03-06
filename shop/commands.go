@@ -2,6 +2,7 @@ package shop
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/internal/discmsg"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -206,6 +207,7 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- shop.shopAdmin")
 
 	log.WithFields(log.Fields{"guildID": i.Member.GuildID, "memberID": i.Member.User.ID}).Warn("TODO: shop-admin not implemented")
+	discmsg.SendEphemeralResponse(s, i, "This command is not yet implemented.")
 }
 
 // shop routes the shop commands to the proper handers.
@@ -214,4 +216,5 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- shop.shop")
 
 	log.WithFields(log.Fields{"guildID": i.Member.GuildID, "memberID": i.Member.User.ID}).Warn("TODO: shop not implemented")
+	discmsg.SendEphemeralResponse(s, i, "This command is not yet implemented.")
 }
