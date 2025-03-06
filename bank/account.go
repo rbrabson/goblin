@@ -75,6 +75,23 @@ func (account *Account) Withdraw(amt int) error {
 	return err
 }
 
+// WithdrawFromCurrentOnly deducts the amount from the current balance of the account. This
+// is useful for transactions that should not affect the monthly or lifetime balance.
+func (account *Account) WithdrawFromCurrentOnly(amount int) error {
+	log.Trace("--> bank.Account.WithdrawFromCurrentOnly")
+	defer log.Trace("<-- bank.Account.WithdrawFromCurrentOnly")
+
+	if amount > account.CurrentBalance {
+		log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amount}).Warn("insufficient funds for withdrawal")
+		return ErrInsufficentFunds
+	}
+	account.CurrentBalance -= amount
+
+	err := writeAccount(account)
+	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amount}).Info("withdraw from account")
+	return err
+}
+
 // SetBalance sets the account's balance to the specified amount. This is typically used
 // by an admin to correct an error in the system.
 func (account *Account) SetBalance(balance int) error {
