@@ -33,8 +33,8 @@ DISCORD_DEFAULT_THEME="clash"
 
 # Heist DB configuration
 MONGODB_USERID="<userid>"
-MONGODB_PASSWORD="<password>>"
-MONGODB_SERVER="<server_host_name>>"
+MONGODB_PASSWORD="<password>"
+MONGODB_SERVER="<server_host_name>"
 MONGODB_DATABASE="database"
 
 # Heist DB URI
