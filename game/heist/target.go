@@ -146,6 +146,21 @@ func newTarget(guildID string, theme string, name string, maxCrewSize int, succe
 	return &target
 }
 
+// Resets all vaults in a guild to the maximum amount.
+func ResetVaultsToMaximumValue(guildID string) {
+	log.Trace("--> heist.ResetVaultsToMaximumValue")
+	defer log.Trace("<-- heist.ResetVaultsToMaximumValue")
+
+	filter := bson.D{{Key: "guild_id", Value: guildID}}
+	targets := getAllTargets(filter)
+	for _, target := range targets {
+		target.Vault = target.VaultMax
+		target.IsAtMax = true
+		writeTarget(target)
+		log.WithFields(log.Fields{"guild": guildID, "target": target.Name, "vault": target.Vault}).Info("reset vault to maximum")
+	}
+}
+
 // vaultUpdater updates the vault balance for any target whose vault is not at the maximum value
 func vaultUpdater() {
 	const timer = time.Duration(1 * time.Minute)
