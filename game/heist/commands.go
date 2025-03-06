@@ -16,6 +16,7 @@ import (
 	"github.com/rbrabson/goblin/internal/channel"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
+	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -300,7 +301,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
 		log.WithField("error", err).Error("unable to create the heist")
-		discmsg.SendEphemeralResponse(s, i, err.Error())
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
 
@@ -342,7 +343,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	res, err := heist.Start()
 	if err != nil {
 		log.WithField("error", err).Error("unable to start the heist")
-		discmsg.SendEphemeralResponse(s, i, err.Error())
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
 
@@ -480,7 +481,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	err := heist.AddCrewMember(heistMember)
 	if err != nil {
-		discmsg.SendEphemeralResponse(s, i, err.Error())
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
 

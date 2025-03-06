@@ -134,7 +134,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceLock.Lock()
 	err := raceStartChecks(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		discmsg.SendEphemeralResponse(s, i, err.Error())
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		raceLock.Unlock()
 		return
 	}
@@ -229,7 +229,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := raceJoinChecks(race, i.Member.User.ID)
 	if err != nil {
-		discmsg.SendEphemeralResponse(s, i, err.Error())
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
 
@@ -350,7 +350,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Check to see if the member can place a bet
 	err := raceBetChecks(race, i.Member.User.ID)
 	if err != nil {
-		discmsg.SendEphemeralResponse(s, i, err.Error())
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
 
