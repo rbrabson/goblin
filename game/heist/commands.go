@@ -168,6 +168,11 @@ var (
 					Description: "Resets a new heist that is hung.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
+				{
+					Name:        "vault-reset",
+					Description: "Resets the vaults to their maximum value.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+				},
 			},
 		},
 	}
@@ -255,6 +260,8 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		config(s, i)
 	case "reset":
 		resetHeist(s, i)
+	case "vault-reset":
+		resetVaults(s, i)
 	case "theme":
 		theme(s, i)
 	}
@@ -762,6 +769,15 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistMessage(s, i, heist, heist.Organizer, "cancel")
 
 	discmsg.SendResponse(s, i, fmt.Sprintf("The %s has been reset", heist.theme.Heist))
+}
+
+// resetVaults sets the vaults within the guild to their maximum value.
+func resetVaults(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> resetVaults")
+	defer log.Trace("<-- resetVaults")
+
+	ResetVaultsToMaximumValue(i.GuildID)
+	discmsg.SendResponse(s, i, "Vaults have been reset to their maximum value")
 }
 
 // listTargets displays a list of available heist targets.
