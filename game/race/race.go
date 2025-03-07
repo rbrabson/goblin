@@ -245,7 +245,7 @@ func (r *Race) End() {
 			case r.RaceResult.Place != nil && racer.Member.MemberID == r.RaceResult.Place.Participant.Member.MemberID:
 				racer.Member.PlaceInRace(r.RaceResult.Place.Winnings)
 			case r.RaceResult.Show != nil && racer.Member.MemberID == r.RaceResult.Show.Participant.Member.MemberID:
-				racer.Member.PlaceInRace(r.RaceResult.Show.Winnings)
+				racer.Member.ShowInRace(r.RaceResult.Show.Winnings)
 			default:
 				racer.Member.LoseRace()
 			}
