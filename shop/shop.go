@@ -15,14 +15,14 @@ type Shop struct {
 }
 
 type ShopItem struct {
-	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID     string             `json:"guildID" bson:"guildID"`
-	Name        string             `json:"name" bson:"name"`
-	Description string             `json:"description" bson:"description"`
-	Type        string             `json:"type" bson:"type"`
-	Price       int                `json:"price" bson:"price"`
-	Duration    time.Duration      `json:"duration,omitempty" bson:"duration,omitempty"`
-	Renewable   bool               `json:"renewable,omitempty" bson:"renewable,omitempty"`
+	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID       string             `json:"guildID" bson:"guildID"`
+	Name          string             `json:"name" bson:"name"`
+	Description   string             `json:"description" bson:"description"`
+	Type          string             `json:"type" bson:"type"`
+	Price         int                `json:"price" bson:"price"`
+	Duration      time.Duration      `json:"duration,omitempty" bson:"duration,omitempty"`
+	AutoRenewable bool               `json:"auto_renewable,omitempty" bson:"auto_renewable,omitempty"`
 }
 
 // GetShop returns the shop for the guild.
@@ -36,7 +36,7 @@ func GetShop(guildID string) *Shop {
 		GuildID: guildID,
 	}
 
-	shop.Items, err = readAllShopItems(guildID)
+	shop.Items, err = readShopItems(guildID)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read shop items from the database")
 		shop.Items = make([]*ShopItem, 0)
@@ -51,7 +51,7 @@ func GetShopItem(guildID string, name string, itemType string) *ShopItem {
 	log.Trace("--> shop.GetShopItem")
 	defer log.Trace("<-- shop.GetShopItem")
 
-	item, err := readShopIem(guildID, name, itemType)
+	item, err := readShopItem(guildID, name, itemType)
 	if err != nil || item == nil {
 		log.WithFields(log.Fields{"guild": guildID, "name": name, "type": itemType, "error": err}).Error("unable to read shop item from the database")
 		return nil
@@ -61,18 +61,17 @@ func GetShopItem(guildID string, name string, itemType string) *ShopItem {
 }
 
 // NewShopItem creates a new ShopItem with the given guild ID, name, description, type, and price.
-func NewShopItem(guildID string, name string, description string, itemType string, price int, duration time.Duration, renewable bool) *ShopItem {
-	log.Trace("--> shop.NewShopItem")
-	defer log.Trace("<-- shop.NewShopItem")
-
+func NewShopItem(guildID string, name string, description string, itemType string, price int, duration time.Duration, autoRenewable bool) *ShopItem {
+	// TODO: write to the DB, but verify it is a unique item (or simply update it if it already exists)
+	//       the DB key should be guidID, name, and type.
 	item := &ShopItem{
-		GuildID:     guildID,
-		Name:        name,
-		Description: description,
-		Type:        itemType,
-		Price:       price,
-		Duration:    duration,
-		Renewable:   renewable,
+		GuildID:       guildID,
+		Name:          name,
+		Description:   description,
+		Type:          itemType,
+		Price:         price,
+		Duration:      time.Duration(0),
+		AutoRenewable: false,
 	}
 
 	err := writeShopItem(item)
@@ -137,12 +136,27 @@ func (s *Shop) RemoveShopItem(name string, itemType string) error {
 	return nil
 }
 
+// Purchase purchases the shop item for the given member. If the purchase is successful, a Purchase
+// object is returned. If the purchase fails, an error is returned.
+func (item *ShopItem) Purchase(memberID string, renew bool) (*Purchase, error) {
+	log.Trace("--> shop.ShopItem.Purchase")
+	defer log.Trace("<-- shop.ShopItem.Purchase")
+
+	purchase, err := NewPurchase(item.GuildID, memberID, item, renew)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": item.GuildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to create purchase")
+		return nil, fmt.Errorf("unable to purchase the item")
+	}
+
+	return purchase, nil
+}
+
 // UpdateShopItem updates the shop item with the given name and type. If the item does not exist, an error is returned.
-func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int, duration time.Duration, renewable bool) error {
+func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int, duration time.Duration, autoRenewable bool) error {
 	log.Trace("--> shop.ShopItem.UpdateShopItem")
 	defer log.Trace("<-- shop.ShopItem.UpdateShopItem")
 
-	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price && duration == item.Duration && renewable == item.Renewable {
+	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price && duration == item.Duration && autoRenewable == item.AutoRenewable {
 		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Warn("no change to the shop item")
 		return fmt.Errorf("no change to the shop item")
 	}
@@ -152,7 +166,7 @@ func (item *ShopItem) UpdateShopItem(name string, description string, itemType s
 	item.Type = itemType
 	item.Price = price
 	item.Duration = duration
-	item.Renewable = renewable
+	item.AutoRenewable = autoRenewable
 
 	err := writeShopItem(item)
 	if err != nil {

@@ -72,6 +72,11 @@ func CheckAdminRole(adminRoles []string, memberRoles []string) bool {
 	log.Trace("--> role.CheckAdminRole")
 	defer log.Trace("<-- role.CheckAdminRole")
 
+	if len(adminRoles) == 0 {
+		log.WithFields(log.Fields{"adminRoles": adminRoles}).Trace("not using admin roles")
+		return true
+	}
+
 	for _, memberRole := range memberRoles {
 		if slices.Contains(adminRoles, memberRole) {
 			log.WithFields(log.Fields{"memberRoles": memberRoles, "adminRoles": adminRoles}).Trace("member has admin role")

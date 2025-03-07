@@ -14,7 +14,7 @@ func NewRole(guildID string, name string, price int, description string, duratio
 	return NewShopItem(guildID, name, description, ROLE_TYPE, price, duration, renewable)
 }
 
-func (r *Role) Buy(guildID, memberID string) (*Purchase, error) {
+func (r *Role) Buy(guildID, memberID string, autoRenew bool) (*Purchase, error) {
 	// TODO: verify the member has sufficient funds, and withdraw them from
 	//       their bank account.
 	// TODO: verify the user hasn't already bought the same exact item
@@ -22,5 +22,5 @@ func (r *Role) Buy(guildID, memberID string) (*Purchase, error) {
 	//       have it.
 	// TODO: assign the role to the user in the guild.
 	item := ShopItem(*r)
-	return NewPurchase(guildID, memberID, &item)
+	return NewPurchase(guildID, memberID, &item, autoRenew)
 }
