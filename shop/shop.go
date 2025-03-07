@@ -136,6 +136,21 @@ func (s *Shop) RemoveShopItem(name string, itemType string) error {
 	return nil
 }
 
+// Purchase purchases the shop item for the given member. If the purchase is successful, a Purchase
+// object is returned. If the purchase fails, an error is returned.
+func (item *ShopItem) Purchase(memberID string, renew bool) (*Purchase, error) {
+	log.Trace("--> shop.ShopItem.Purchase")
+	defer log.Trace("<-- shop.ShopItem.Purchase")
+
+	purchase, err := NewPurchase(item.GuildID, memberID, item, renew)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": item.GuildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to create purchase")
+		return nil, fmt.Errorf("unable to purchase the item")
+	}
+
+	return purchase, nil
+}
+
 // UpdateShopItem updates the shop item with the given name and type. If the item does not exist, an error is returned.
 func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int, duration time.Duration, autoRenewable bool) error {
 	log.Trace("--> shop.ShopItem.UpdateShopItem")

@@ -56,15 +56,15 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 
 // NewPurchase creates a new Purchase with the given guild ID, member ID, and a purchasable
 // shop item.
-func NewPurchase(guildID, memberID string, item *ShopItem) (*Purchase, error) {
+func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
 	purchase := &Purchase{
 		GuildID:     guildID,
 		MemberID:    memberID,
 		Item:        item,
 		Status:      PENDING,
 		PurchasedOn: time.Now(),
-		ExpiresOn:   time.Now(),
-		AutoRenew:   false,
+		ExpiresOn:   time.Now().Add(item.Duration),
+		AutoRenew:   renew,
 	}
 	err := writePurchase(purchase)
 	if err != nil {
