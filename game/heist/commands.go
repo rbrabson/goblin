@@ -307,7 +307,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		log.WithField("error", err).Error("unable to create the heist")
+		log.WithField("error", err).Warn("unable to create the heist")
 		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
