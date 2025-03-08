@@ -586,7 +586,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.Error("Unable to send the player stats to Discord, error:", err)
+		log.WithField("error", err).Error("unable to send the player stats to Discord")
 	}
 }
 
@@ -871,7 +871,7 @@ func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.Error("Unable to send list of themes to the user, error:", err)
+		log.WithField("error", err).Error("Unable to send list of themes to the user for `list themes`")
 	}
 }
 
@@ -1059,6 +1059,6 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.Error("Unable to send a response, error:", err)
+		log.WithField("error", err).Error("unable to send a response for `config info`")
 	}
 }

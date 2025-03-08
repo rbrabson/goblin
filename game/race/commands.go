@@ -187,7 +187,7 @@ func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 		time.Sleep(timeToWait)
 		err := raceMessage(s, race, "update")
 		if err != nil {
-			log.Error("Unable to update the time for the race message, error:", err)
+			log.WithField("error", err).Error("Unable to update the time for the race message")
 		}
 	}
 }
@@ -207,7 +207,7 @@ func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
 		time.Sleep(timeToWait)
 		err := raceMessage(s, race, "betting")
 		if err != nil {
-			log.Error("Unable to update the time for the race message, error:", err)
+			log.WithField("error", err).Error("unable to update the time for the race message")
 		}
 	}
 }
@@ -242,7 +242,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err = raceMessage(s, race, "join")
 	if err != nil {
-		log.Error("Unable to update the race message, error:", err)
+		log.WithField("error", err).Error("Unable to update the race message")
 	}
 }
 
@@ -328,7 +328,7 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.Error("Unable to send the player stats to Discord, error:", err)
+		log.WithField("error", err).Error("Unable to send the player stats to Discord")
 	}
 }
 
@@ -539,7 +539,7 @@ func sendRace(s *discordgo.Session, race *Race) {
 	track := getCurrentTrack(race.RaceLegs[0], race.config)
 	message, err := s.ChannelMessageSend(channelID, fmt.Sprintf("%s\n", track))
 	if err != nil {
-		log.Error("Failed to send message at the start of the race, error:", err)
+		log.WithField("error", err).Error("failed to send message at the start of the race")
 		return
 	}
 
@@ -549,7 +549,7 @@ func sendRace(s *discordgo.Session, race *Race) {
 		track = getCurrentTrack(raceLeg, race.config)
 		_, err = s.ChannelMessageEdit(channelID, message.ID, fmt.Sprintf("%s\n", track))
 		if err != nil {
-			log.Error("Failed to update race message, error:", err)
+			log.WithField("error", err).Error("Failed to update race message")
 		}
 	}
 }
@@ -677,6 +677,6 @@ func getCurrentRaceParticipant(race *Race, customID string) *RaceParticipant {
 		return race.Racers[10]
 	}
 
-	log.Errorf("Invalid custom ID: %s", customID)
+	log.WithField("customID", customID).Errorf("Invalid custom ID")
 	return nil
 }

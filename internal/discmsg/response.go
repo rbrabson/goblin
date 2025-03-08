@@ -17,7 +17,7 @@ func EditResponse(s *discordgo.Session, i *discordgo.InteractionCreate, msg stri
 	})
 
 	if err != nil {
-		log.Error("Unable to send a response, error:", err)
+		log.WithField("error", err).Error("Unable to edit the response")
 	}
 }
 
@@ -47,7 +47,7 @@ func SendNonEphemeralResponse(s *discordgo.Session, i *discordgo.InteractionCrea
 		},
 	})
 	if err != nil {
-		log.Error("Unable to send a response, error:", err)
+		log.WithField("error", err).Error("Unable to send a response")
 	}
 }
 
@@ -65,6 +65,6 @@ func SendEphemeralResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 	})
 
 	if err != nil {
-		log.Error("Unable to send a response, error:", err)
+		log.WithField("error", err).Error("Unable to send an ephemeral response")
 	}
 }

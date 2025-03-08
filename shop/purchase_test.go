@@ -45,7 +45,7 @@ func TestGetAllPurchases(t *testing.T) {
 		return
 	}
 	purchases = append(purchases, purchase)
-	log.Errorf("purchases: %v", purchases)
+	log.WithField("purchases", purchases).Debug("purchases")
 
 	item2 := testShop.GetShopItem("test_item_2", "role")
 	purchase, err = NewPurchase(GUILD_ID, MEMBER_ID, item2, false)
@@ -54,7 +54,7 @@ func TestGetAllPurchases(t *testing.T) {
 		return
 	}
 	purchases = append(purchases, purchase)
-	log.Errorf("purchases: %v", purchases)
+	log.WithField("purchases", purchases).Error("purchases")
 
 	locPurchases := GetAllPurchases(GUILD_ID, MEMBER_ID)
 	log.Infof("Purchases from DB: %v", locPurchases)
