@@ -27,19 +27,6 @@ type Purchase struct {
 	AutoRenew   bool               `json:"autoRenew,omitempty" bson:"autoRenew,omitempty"`
 }
 
-// GetAllPurchasableItems returns all items that may be purchased in the shop.
-func GetAllPurchasableItems(guildID string) []*ShopItem {
-	log.Trace("--> shop.GetAllPurchasableItems")
-	defer log.Trace("<-- shop.GetAllPurchasableItems")
-
-	shopItems, err := readShopItems(guildID)
-	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read purchasable items from the database")
-		return nil
-	}
-	return shopItems
-}
-
 // GetAllRoles returns all the purchases made by a member in the guild.
 func GetAllPurchases(guildID string, memberID string) []*Purchase {
 	log.Trace("--> shop.GetAllPurchases")
@@ -52,6 +39,19 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 	}
 
 	return purchases
+}
+
+// GetPurchase returns the purchase made by a member in the guild for the given item name.
+// If the purchase does not exist, nil is returned.
+func GetPurchase(guildID string, memberID string, itemName string, itemType string) *Purchase {
+	log.Trace("--> shop.GetPurchase")
+	defer log.Trace("<-- shop.GetPurchase")
+	purchase, err := readPurchase(guildID, memberID, itemName, itemType)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": itemName, "error": err}).Error("unable to read purchase from the database")
+		return nil
+	}
+	return purchase
 }
 
 // NewPurchase creates a new Purchase with the given guild ID, member ID, and a purchasable

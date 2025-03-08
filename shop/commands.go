@@ -484,7 +484,7 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	item, err := readShopItem(i.GuildID, roleName, "role")
+	r, err := GetRole(i.GuildID, roleName)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("Failed to read role from shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found in the shop.", roleName))
@@ -492,7 +492,7 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Purchase the role
-	_, err = item.Purchase(i.Member.User.ID, roleRenew)
+	_, err = r.Purchase(i.Member.User.ID, roleRenew)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to purchase role \"%s\"", roleName))

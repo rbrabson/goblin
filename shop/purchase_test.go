@@ -22,16 +22,6 @@ func init() {
 	testShop = GetShop(GUILD_ID)
 }
 
-func TestGetAllPurchsableItems(t *testing.T) {
-	setup(t)
-	defer teardown()
-
-	items := GetAllPurchasableItems(GUILD_ID)
-	if len(items) != 3 {
-		t.Errorf("GetAllPurchasableItems failed to return all items, expected 2, got %d", len(items))
-	}
-}
-
 func TestNewPurchase(t *testing.T) {
 	setup(t)
 	defer teardown()
