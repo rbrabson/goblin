@@ -36,6 +36,49 @@ func TestGetShopItem(t *testing.T) {
 	if item == nil {
 		t.Error("GetShopItem failed to returned n existing item")
 	}
+
+	item = testShop.GetShopItem("test_item_1", "role")
+	if item == nil {
+		t.Error("GetShopItem failed to returned n existing item")
+	}
+}
+
+func TestRemoveShopItem(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	item := testShop.GetShopItem("test_item_1", "role")
+	if item == nil {
+		t.Error("GetShopItem failed to returned n existing item")
+	}
+
+	err := testShop.RemoveShopItem(item.Name, item.Type)
+	if err != nil {
+		t.Error("failed to remove shop item, error:")
+	}
+}
+
+func TestUpdateShopItem(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	item := testShop.GetShopItem("test_item_1", "role")
+	if item == nil {
+		t.Error("GetShopItem failed to returned n existing item")
+	}
+
+	err := item.UpdateShopItem("test_item_1", "description of test Item 1", "role", 200, 0, false)
+	if err != nil {
+		t.Error("failed to update shop item, error:")
+	}
+
+	item = testShop.GetShopItem("test_item_1", "role")
+	if item == nil {
+		t.Error("GetShopItem failed to returned n existing item")
+	}
+	if item.Price != 200 {
+		t.Error("failed to update shop item price")
+	}
 }
 
 func setup(t *testing.T) {
