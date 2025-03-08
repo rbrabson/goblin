@@ -111,16 +111,16 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 	log.Trace("--> shop.readPurchases")
 	defer log.Trace("<-- shop.readPurchases")
 
-	filter := bson.M{"guildID": guildID, "member_id": memberID, "name": itemName, "type": itemType}
-	var item *Purchase
+	filter := bson.D{{"guild_id", guildID}, {"member_id", memberID}, {"name", itemName}, {"type", itemType}}
+	var item Purchase
 	err := db.FindOne(PURCHASE_COLLECTION, filter, &item)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member_id": memberID, "name": itemName, "type": itemType}).Error("unable to read purchase from the database")
+		log.WithFields(log.Fields{"filter": filter}).Error("unable to read purchase from the database")
 		return nil, err
 	}
 	log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "name": itemName, "type": itemType}).Debug("read shop item from the database")
 
-	return item, nil
+	return &item, nil
 }
 
 // writePurchases writes the purchase to the database.

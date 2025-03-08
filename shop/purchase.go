@@ -80,6 +80,27 @@ func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchas
 	return purchase, nil
 }
 
+// Update updates the purchase with the given autoRenew value.
+func (p *Purchase) Update(autoRenew bool) error {
+	log.Trace("--> shop.Purchase.Update")
+	defer log.Trace("<-- shop.Purchase.Update")
+
+	if p.AutoRenew == autoRenew {
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase already has the same autoRenew value")
+		return fmt.Errorf("purchase already has the same autoRenew value")
+	}
+
+	p.AutoRenew = autoRenew
+	err := writePurchase(p)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to update purchase in the database")
+		return fmt.Errorf("unable to update purchase in the database: %w", err)
+	}
+	log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("updating purchase")
+
+	return nil
+}
+
 // String returns a string representation of the purchase.
 func (p *Purchase) String() string {
 	return fmt.Sprintf("Purchase{GuildID: %s, MemberID: %s, Item: %v, Status: %s, PurchasedOn: %s, ExpiresOn: %s, AutoRenew: %t}",
