@@ -111,7 +111,7 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 	log.Trace("--> shop.readPurchases")
 	defer log.Trace("<-- shop.readPurchases")
 
-	filter := bson.D{{"guild_id", guildID}, {"member_id", memberID}, {"name", itemName}, {"type", itemType}}
+	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}, {Key: "name", Value: itemName}, {Key: "type", Value: itemType}}
 	var item Purchase
 	err := db.FindOne(PURCHASE_COLLECTION, filter, &item)
 	if err != nil {
