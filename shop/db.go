@@ -16,7 +16,7 @@ func readShopItems(guildID string) ([]*ShopItem, error) {
 	log.Trace("--> shop.readShopItems")
 	defer log.Trace("<-- shop.readShopItems")
 
-	filter := bson.M{"guildID": guildID}
+	filter := bson.M{"guild_id": guildID}
 	sortBy := bson.M{"name": 1}
 	var items []*ShopItem
 	err := db.FindMany(SHOP_ITEM_COLLECTION, filter, &items, sortBy, 0)
@@ -34,11 +34,11 @@ func readShopItem(guildID string, name string, itemType string) (*ShopItem, erro
 	log.Trace("--> shop.readShopItem")
 	defer log.Trace("<-- shop.readShopItem")
 
-	filter := bson.M{"guildID": guildID, "name": name, "type": itemType}
+	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "name", Value: name}, {Key: "type", Value: itemType}}
 	var item *ShopItem
 	err := db.FindOne(SHOP_ITEM_COLLECTION, filter, &item)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID}).Error("unable to read shop item from the database")
+		log.WithFields(log.Fields{"filter": filter, "error": err}).Error("unable to read shop item from the database")
 		return nil, err
 	}
 	log.WithFields(log.Fields{"guild": guildID, "name": item.Name, "type": item.Type}).Debug("read shop item from the database")
@@ -62,7 +62,7 @@ func writeShopItem(item *ShopItem) error {
 		log.WithFields(log.Fields{"item": item, "error": err}).Error("unable to save shop item to the database")
 		return err
 	}
-	log.WithFields(log.Fields{"item": item}).Debug("write the shop item to the database")
+	log.WithFields(log.Fields{"item": item, "filter": filter}).Debug("write the shop item to the database")
 
 	return nil
 }
@@ -76,14 +76,14 @@ func deleteShopItem(item *ShopItem) error {
 	if item.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: item.ID}}
 	} else {
-		filter = bson.D{{Key: "guild_id", Value: item.GuildID}, {Key: "item.name", Value: item.Name}, {Key: "item.type", Value: item.Type}}
+		filter = bson.D{{Key: "guild_id", Value: item.GuildID}, {Key: "name", Value: item.Name}, {Key: "type", Value: item.Type}}
 	}
 	err := db.Delete(SHOP_ITEM_COLLECTION, filter)
 	if err != nil {
 		log.WithFields(log.Fields{"item": item, "error": err}).Error("unable to delete shop item from the database")
 		return err
 	}
-	log.WithFields(log.Fields{"item": item}).Debug("delete the shop item from the database")
+	log.WithFields(log.Fields{"item": item, "filter": filter}).Debug("delete the shop item from the database")
 
 	return nil
 }
@@ -140,6 +140,27 @@ func writePurchase(item *Purchase) error {
 		return err
 	}
 	log.WithFields(log.Fields{"item": item}).Debug("write purchase to the database")
+
+	return nil
+}
+
+// deletePurchase deletes the purchase from the database.
+func deletePurchase(purchase *Purchase) error {
+	log.Trace("--> shop.deletePurchase")
+	defer log.Trace("<-- shop.deletePurchase")
+
+	var filter bson.D
+	if purchase.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: purchase.ID}}
+	} else {
+		filter = bson.D{{Key: "guild_id", Value: purchase.GuildID}, {Key: "member_id", Value: purchase.MemberID}, {Key: "item.name", Value: purchase.Item.Name}, {Key: "item.type", Value: purchase.Item.Type}}
+	}
+	err := db.Delete(SHOP_ITEM_COLLECTION, filter)
+	if err != nil {
+		log.WithFields(log.Fields{"purchase": purchase, "error": err}).Error("unable to delete purchasefrom the database")
+		return err
+	}
+	log.WithFields(log.Fields{"purchase": purchase}).Debug("delete the purchasefrom the database")
 
 	return nil
 }

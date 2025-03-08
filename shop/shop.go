@@ -16,7 +16,7 @@ type Shop struct {
 
 type ShopItem struct {
 	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID       string             `json:"guildID" bson:"guildID"`
+	GuildID       string             `json:"guild_id" bson:"guild_id"`
 	Name          string             `json:"name" bson:"name"`
 	Description   string             `json:"description" bson:"description"`
 	Type          string             `json:"type" bson:"type"`
@@ -53,7 +53,6 @@ func GetShopItem(guildID string, name string, itemType string) *ShopItem {
 
 	item, err := readShopItem(guildID, name, itemType)
 	if err != nil || item == nil {
-		log.WithFields(log.Fields{"guild": guildID, "name": name, "type": itemType, "error": err}).Error("unable to read shop item from the database")
 		return nil
 	}
 
@@ -113,6 +112,7 @@ func (s *Shop) AddShopItem(name string, description string, itemType string, pri
 		log.WithFields(log.Fields{"guild": s.GuildID, "name": name, "type": itemType}).Error("unable to write shop item to the database")
 		return nil, fmt.Errorf("unable to add item")
 	}
+	s.Items = append(s.Items, item)
 
 	log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Info("shop item added")
 	return item, nil
