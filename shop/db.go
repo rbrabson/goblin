@@ -134,7 +134,7 @@ func writePurchase(item *Purchase) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "item.name", Value: item.Item.Name}, {Key: "item.type", Value: item.Item.Type}}
 	}
-	err := db.UpdateOrInsert(SHOP_ITEM_COLLECTION, filter, item)
+	err := db.UpdateOrInsert(PURCHASE_COLLECTION, filter, item)
 	if err != nil {
 		log.WithFields(log.Fields{"item": item, "error": err}).Error("unable to write purchase to the database")
 		return err

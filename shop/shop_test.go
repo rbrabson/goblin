@@ -75,6 +75,7 @@ func TestUpdateShopItem(t *testing.T) {
 	item = testShop.GetShopItem("test_item_1", "role")
 	if item == nil {
 		t.Error("GetShopItem failed to returned n existing item")
+		return
 	}
 	if item.Price != 200 {
 		t.Error("failed to update shop item price")
