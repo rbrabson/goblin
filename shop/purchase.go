@@ -20,7 +20,7 @@ type Purchase struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID     string             `json:"guild_id" bson:"guild_id"`
 	MemberID    string             `json:"member_id" bson:"member_id"`
-	Item        *ShopItem          `json:"item" bson:"item"`
+	Item        *ShopItem          `json:"item" bson:"item,inline"`
 	Status      string             `json:"status" bson:"status"`
 	PurchasedOn time.Time          `json:"purchased_on" bson:"purchased_on"`
 	ExpiresOn   time.Time          `json:"expires_on,omitempty" bson:"expires_on,omitempty"`
