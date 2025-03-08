@@ -30,7 +30,7 @@ func init() {
 
 func TestGetShopItem(t *testing.T) {
 	setup(t)
-	defer teardown(t)
+	defer teardown()
 
 	item := GetShopItem(GUILD_ID, "test_item_1", "role")
 	if item == nil {
@@ -45,7 +45,7 @@ func TestGetShopItem(t *testing.T) {
 
 func TestRemoveShopItem(t *testing.T) {
 	setup(t)
-	defer teardown(t)
+	defer teardown()
 
 	item := testShop.GetShopItem("test_item_1", "role")
 	if item == nil {
@@ -61,7 +61,7 @@ func TestRemoveShopItem(t *testing.T) {
 
 func TestUpdateShopItem(t *testing.T) {
 	setup(t)
-	defer teardown(t)
+	defer teardown()
 
 	item := testShop.GetShopItem("test_item_1", "role")
 	if item == nil {
@@ -102,7 +102,7 @@ func setup(t *testing.T) {
 	}
 }
 
-func teardown(t *testing.T) {
+func teardown() {
 	log.Infof("teardown: deleting %d items", len(testShop.Items))
 	for _, item := range testShop.Items {
 		err := deleteShopItem(item)

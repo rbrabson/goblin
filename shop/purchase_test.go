@@ -24,7 +24,7 @@ func init() {
 
 func TestGetAllPurchsableItems(t *testing.T) {
 	setup(t)
-	defer teardown(t)
+	defer teardown()
 
 	items := GetAllPurchasableItems(GUILD_ID)
 	if len(items) != 3 {
@@ -34,7 +34,7 @@ func TestGetAllPurchsableItems(t *testing.T) {
 
 func TestNewPurchase(t *testing.T) {
 	setup(t)
-	defer teardown(t)
+	defer teardown()
 
 	item := testShop.GetShopItem("test_item_1", "role")
 	purchase, err := NewPurchase(GUILD_ID, MEMBER_ID, item, false)
@@ -46,7 +46,7 @@ func TestNewPurchase(t *testing.T) {
 
 func TestGetAllPurchases(t *testing.T) {
 	setup(t)
-	defer teardown(t)
+	defer teardown()
 
 	item1 := testShop.GetShopItem("test_item_1", "role")
 	purchase, err := NewPurchase(GUILD_ID, MEMBER_ID, item1, false)
