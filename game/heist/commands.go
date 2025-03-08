@@ -307,7 +307,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		log.WithField("error", err).Warn("unable to create the heist")
+		log.WithError(err).Warn("unable to create the heist")
 		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
@@ -344,12 +344,12 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err = heistMessage(s, i, heist, heist.Organizer, "start")
 	if err != nil {
-		log.WithField("error", err).Error("Unable to mark the heist message as started")
+		log.WithError(err).Error("Unable to mark the heist message as started")
 	}
 
 	res, err := heist.Start()
 	if err != nil {
-		log.WithField("error", err).Error("unable to start the heist")
+		log.WithError(err).Error("unable to start the heist")
 		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
@@ -586,7 +586,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.WithField("error", err).Error("unable to send the player stats to Discord")
+		log.WithError(err).Error("unable to send the player stats to Discord")
 	}
 }
 
@@ -871,7 +871,7 @@ func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.WithField("error", err).Error("Unable to send list of themes to the user for `list themes`")
+		log.WithError(err).Error("Unable to send list of themes to the user for `list themes`")
 	}
 }
 
@@ -1059,6 +1059,6 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.WithField("error", err).Error("unable to send a response for `config info`")
+		log.WithError(err).Error("unable to send a response for `config info`")
 	}
 }

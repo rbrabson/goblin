@@ -89,7 +89,7 @@ func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 	sort := bson.D{{Key: "crew_size", Value: 1}}
 	err := db.FindMany(RACER_COLLECTION, filter, &racers, sort, 0)
 	if err != nil || len(racers) == 0 {
-		log.WithField("error", err).Warn("unable to read racers")
+		log.WithError(err).Warn("unable to read racers")
 		if err != nil {
 			return nil, err
 		}

@@ -185,7 +185,7 @@ func sendhMonthlyLeaderboard(lb *Leaderboard) error {
 			Embeds: embeds,
 		})
 		if err != nil {
-			log.WithField("error", err).Error("unable to send montly leaderboard")
+			log.WithError(err).Error("unable to send montly leaderboard")
 			return err
 		}
 	} else {

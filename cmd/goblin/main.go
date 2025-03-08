@@ -50,7 +50,7 @@ func setLogLevel() {
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.WithField("error", err).Warn("unable to load .env_test file")
+		log.WithError(err).Warn("unable to load .env_test file")
 	}
 	setLogLevel()
 
@@ -65,7 +65,7 @@ func main() {
 	bot := discord.NewBot(BotName, Version, Revision)
 	err = bot.Session.Open()
 	if err != nil {
-		log.WithField("error", err).Fatal("unable to create Discord bot")
+		log.WithError(err).Fatal("unable to create Discord bot")
 	}
 	defer bot.Session.Close()
 
