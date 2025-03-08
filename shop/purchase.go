@@ -17,14 +17,14 @@ const (
 
 // Purchase is a purchase made from the shop.
 type Purchase struct {
-	ID          primitive.ObjectID `json:"_id" bson:"_id"`
-	GuildID     string             `json:"guildID" bson:"guildID"`
-	MemberID    string             `json:"memberID" bson:"memberID"`
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID     string             `json:"guild_id" bson:"guild_id"`
+	MemberID    string             `json:"member_id" bson:"member_id"`
 	Item        *ShopItem          `json:"item" bson:"item"`
 	Status      string             `json:"status" bson:"status"`
 	PurchasedOn time.Time          `json:"purchased_on" bson:"purchased_on"`
-	ExpiresOn   time.Time          `json:"expires_on" bson:"expires_on"`
-	AutoRenew   bool               `json:"autoRenew" bson:"autoRenew"`
+	ExpiresOn   time.Time          `json:"expires_on,omitempty" bson:"expires_on,omitempty"`
+	AutoRenew   bool               `json:"autoRenew,omitempty" bson:"autoRenew,omitempty"`
 }
 
 // GetAllPurchasableItems returns all items that may be purchased in the shop.
@@ -61,10 +61,14 @@ func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchas
 		GuildID:     guildID,
 		MemberID:    memberID,
 		Item:        item,
-		Status:      PENDING,
+		Status:      PURCHASED,
 		PurchasedOn: time.Now(),
-		ExpiresOn:   time.Now().Add(item.Duration),
-		AutoRenew:   renew,
+	}
+	if item.AutoRenewable {
+		purchase.AutoRenew = renew
+	}
+	if item.Duration != 0 {
+		purchase.ExpiresOn = time.Now().Add(item.Duration)
 	}
 	err := writePurchase(purchase)
 	if err != nil {
@@ -74,4 +78,18 @@ func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchas
 	log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Info("creating new purchase")
 
 	return purchase, nil
+}
+
+// String returns a string representation of the purchase.
+func (p *Purchase) String() string {
+	return fmt.Sprintf("Purchase{GuildID: %s, MemberID: %s, Item.Name: %s, Item.Type: %s, Status: %s, PurchasedOn: %s, ExpiresOn: %s, AutoRenew: %t}",
+		p.Item.GuildID,
+		p.MemberID,
+		p.Item.Name,
+		p.Item.Type,
+		p.Status,
+		p.PurchasedOn.Format(time.RFC3339),
+		p.ExpiresOn.Format(time.RFC3339),
+		p.AutoRenew,
+	)
 }

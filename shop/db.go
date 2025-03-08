@@ -93,7 +93,7 @@ func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 	log.Trace("--> shop.readPurchases")
 	defer log.Trace("<-- shop.readPurchases")
 
-	filter := bson.M{"guildID": guildID, "member_id": memberID}
+	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	sortBy := bson.M{"item.name": 1}
 	var items []*Purchase
 	err := db.FindMany(PURCHASE_COLLECTION, filter, &items, sortBy, 0)
@@ -111,7 +111,7 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 	log.Trace("--> shop.readPurchases")
 	defer log.Trace("<-- shop.readPurchases")
 
-	filter := bson.M{"guildID": guildID, "member_id": memberID, "item.name": itemName, "item.type": itemType}
+	filter := bson.M{"guildID": guildID, "member_id": memberID, "name": itemName, "type": itemType}
 	var item *Purchase
 	err := db.FindOne(PURCHASE_COLLECTION, filter, &item)
 	if err != nil {
@@ -129,10 +129,10 @@ func writePurchase(item *Purchase) error {
 	defer log.Trace("<-- shop.writeShopItem")
 
 	var filter bson.D
-	if item.ID != primitive.NilObjectID {
-		filter = bson.D{{Key: "_id", Value: item.ID}}
+	if item.Item.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: item.Item.ID}}
 	} else {
-		filter = bson.D{{Key: "guild_id", Value: item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "item.name", Value: item.Item.Name}, {Key: "item.type", Value: item.Item.Type}}
+		filter = bson.D{{Key: "guild_id", Value: item.Item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "item.name", Value: item.Item.Name}, {Key: "item.type", Value: item.Item.Type}}
 	}
 	err := db.UpdateOrInsert(PURCHASE_COLLECTION, filter, item)
 	if err != nil {
@@ -150,17 +150,17 @@ func deletePurchase(purchase *Purchase) error {
 	defer log.Trace("<-- shop.deletePurchase")
 
 	var filter bson.D
-	if purchase.ID != primitive.NilObjectID {
-		filter = bson.D{{Key: "_id", Value: purchase.ID}}
+	if purchase.Item.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: purchase.Item.ID}}
 	} else {
-		filter = bson.D{{Key: "guild_id", Value: purchase.GuildID}, {Key: "member_id", Value: purchase.MemberID}, {Key: "item.name", Value: purchase.Item.Name}, {Key: "item.type", Value: purchase.Item.Type}}
+		filter = bson.D{{Key: "guild_id", Value: purchase.Item.GuildID}, {Key: "member_id", Value: purchase.MemberID}, {Key: "item.name", Value: purchase.Item.Name}, {Key: "item.type", Value: purchase.Item.Type}}
 	}
 	err := db.Delete(SHOP_ITEM_COLLECTION, filter)
 	if err != nil {
 		log.WithFields(log.Fields{"purchase": purchase, "error": err}).Error("unable to delete purchasefrom the database")
 		return err
 	}
-	log.WithFields(log.Fields{"purchase": purchase}).Debug("delete the purchasefrom the database")
+	log.WithFields(log.Fields{"purchase": purchase}).Debug("delete the purchase from the database")
 
 	return nil
 }
