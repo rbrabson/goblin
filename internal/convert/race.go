@@ -16,5 +16,5 @@ func ConvertRaces(fileName string) {
 }
 
 func convertRaceModel(raceModel map[string]interface{}) {
-	fmt.Println("TODO: convert once we have a new model")
+	fmt.Println("convert once we have a new model")
 }

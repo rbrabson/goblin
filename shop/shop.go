@@ -65,8 +65,9 @@ func GetShopItem(guildID string, name string, itemType string) *ShopItem {
 
 // NewShopItem creates a new ShopItem with the given guild ID, name, description, type, and price.
 func NewShopItem(guildID string, name string, description string, itemType string, price int, duration time.Duration, autoRenewable bool) *ShopItem {
-	// TODO: write to the DB, but verify it is a unique item (or simply update it if it already exists)
-	//       the DB key should be guidID, name, and type.
+	log.Trace("--> shop.NewShopItem")
+	defer log.Trace("<-- shop.NewShopItem")
+
 	item := &ShopItem{
 		GuildID:       guildID,
 		Name:          name,
