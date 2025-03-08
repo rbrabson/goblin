@@ -50,6 +50,7 @@ func TestRemoveShopItem(t *testing.T) {
 	item := testShop.GetShopItem("test_item_1", "role")
 	if item == nil {
 		t.Error("GetShopItem failed to returned n existing item")
+		return
 	}
 
 	err := testShop.RemoveShopItem(item.Name, item.Type)
