@@ -179,5 +179,5 @@ func (item *ShopItem) UpdateShopItem(name string, description string, itemType s
 
 // String returns a string representation of the Role.
 func (item *ShopItem) String() string {
-	return fmt.Sprintf("ID: %s, Role: %s Price: %d Description: %s", item.ID.Hex(), item.Name, item.Price, item.Description)
+	return fmt.Sprintf("ShopItem{ID: %s, Role: %s Price: %d Description: %s}", item.ID.Hex(), item.Name, item.Price, item.Description)
 }

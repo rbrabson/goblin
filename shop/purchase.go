@@ -82,11 +82,10 @@ func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchas
 
 // String returns a string representation of the purchase.
 func (p *Purchase) String() string {
-	return fmt.Sprintf("Purchase{GuildID: %s, MemberID: %s, Item.Name: %s, Item.Type: %s, Status: %s, PurchasedOn: %s, ExpiresOn: %s, AutoRenew: %t}",
+	return fmt.Sprintf("Purchase{GuildID: %s, MemberID: %s, Item: %v, Status: %s, PurchasedOn: %s, ExpiresOn: %s, AutoRenew: %t}",
 		p.Item.GuildID,
 		p.MemberID,
-		p.Item.Name,
-		p.Item.Type,
+		p.Item,
 		p.Status,
 		p.PurchasedOn.Format(time.RFC3339),
 		p.ExpiresOn.Format(time.RFC3339),

@@ -67,6 +67,7 @@ func TestGetAllPurchases(t *testing.T) {
 	log.Errorf("purchases: %v", purchases)
 
 	locPurchases := GetAllPurchases(GUILD_ID, MEMBER_ID)
+	log.Infof("Purchases from DB: %v", locPurchases)
 	if len(locPurchases) != 2 {
 		t.Errorf("GetAllPurchases failed to return all purchases, expected 2, got %d", len(locPurchases))
 		t.Errorf("purchases: %v", locPurchases)
