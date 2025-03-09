@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/olekukonko/tablewriter"
 	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	log "github.com/sirupsen/logrus"
@@ -81,6 +82,11 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> leaderboard.leaderboard")
 	defer log.Trace("<-- leaderboard.leaderboard")
 
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
+
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
@@ -101,6 +107,11 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> leaderboard.leaderboard")
 	defer log.Trace("<-- leaderboard.leaderboard")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
 
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {

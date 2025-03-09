@@ -12,6 +12,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/channel"
 	"github.com/rbrabson/goblin/internal/discmsg"
@@ -244,6 +245,11 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> heist.heistAmin")
 	defer log.Trace("<-- heist.heistAdmin")
 
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
+
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
@@ -271,6 +277,11 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> heist")
 	defer log.Trace("<-- heist")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
 
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {

@@ -18,6 +18,7 @@ const (
 var (
 	plugin *Plugin
 	db     *mongo.MongoDB
+	status discord.PluginStatus = discord.RUNNING
 )
 
 // Plugin is the plugin for the heist game
@@ -27,6 +28,25 @@ type Plugin struct{}
 func Start() {
 	plugin = &Plugin{}
 	discord.RegisterPlugin(plugin)
+}
+
+// Stop stops the heist game. This is called when the bot is shutting down.
+func (plugin *Plugin) Stop() {
+	status = discord.STOPPING
+}
+
+// Status returns the status of the heist game.	This is used to determine
+// if the plugin is running or not.
+func (plugin *Plugin) Status() discord.PluginStatus {
+	if status == discord.STOPPING {
+		heistLock.Lock()
+		if len(currentHeists) == 0 {
+			status = discord.STOPPED
+		}
+		heistLock.Unlock()
+	}
+
+	return status
 }
 
 // Initialize saves the Discord bot to be used by the banking system

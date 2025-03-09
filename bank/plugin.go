@@ -18,6 +18,7 @@ const (
 var (
 	plugin *Plugin
 	db     *mongo.MongoDB
+	status discord.PluginStatus = discord.RUNNING
 )
 
 // Plugin is the plugin for the banking system used by the bot
@@ -32,6 +33,17 @@ func Start() {
 // Initialize saves the Discord bot to be used by the banking system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
+}
+
+// Stop stops the banking system. This is called when the bot is shutting down.
+func (plugin *Plugin) Stop() {
+	status = discord.STOPPED
+}
+
+// Status returns the status of the banking system.	This is used to determine
+// if the plugin is running or not.
+func (plugin *Plugin) Status() discord.PluginStatus {
+	return status
 }
 
 // SetDB sets the database for testing purposes

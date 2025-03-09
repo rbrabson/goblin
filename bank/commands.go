@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
@@ -109,6 +110,11 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> bank.bankAdmin")
 	defer log.Trace("<-- bank.bankAdmin")
 
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
+
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
@@ -138,6 +144,11 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> bank.bank")
 	defer log.Trace("<-- bank.bank")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
 
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {

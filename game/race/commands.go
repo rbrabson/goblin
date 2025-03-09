@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
@@ -87,6 +88,11 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> race.admin")
 	defer log.Trace("<-- race.admin")
 
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
+
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {
 	case "reset":
@@ -101,6 +107,11 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> race.race")
 	defer log.Trace("<-- race.race")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
 
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {

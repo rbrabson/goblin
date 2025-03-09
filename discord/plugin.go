@@ -12,6 +12,14 @@ var (
 	mutex   sync.Mutex
 )
 
+type PluginStatus int
+
+const (
+	RUNNING PluginStatus = iota
+	STOPPING
+	STOPPED
+)
+
 // Plugin defines the game that is registered to run on the system
 type Plugin interface {
 	Initialize(bot *Bot, db *mongo.MongoDB)
@@ -21,6 +29,8 @@ type Plugin interface {
 	GetHelp() []string
 	GetName() string
 	GetAdminHelp() []string
+	Stop()
+	Status() PluginStatus
 }
 
 // ListPlugin returns the list of plugins that have been registered for use within the bot
@@ -34,4 +44,18 @@ func RegisterPlugin(plugin Plugin) {
 	defer mutex.Unlock()
 
 	plugins = append(plugins, plugin)
+}
+
+// Gets the string representation of the plugin status.
+func (s PluginStatus) String() string {
+	switch s {
+	case RUNNING:
+		return "Running"
+	case STOPPING:
+		return "Stopping"
+	case STOPPED:
+		return "Stopped"
+	default:
+		return "Unknown"
+	}
 }

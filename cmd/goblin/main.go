@@ -59,8 +59,8 @@ func main() {
 	heist.Start()
 	leaderboard.Start()
 	payday.Start()
-	role.Start()
 	race.Start()
+	role.Start()
 
 	bot := discord.NewBot(BotName, Version, Revision)
 	err = bot.Session.Open()
