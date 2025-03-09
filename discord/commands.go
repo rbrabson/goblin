@@ -17,6 +17,9 @@ var (
 		"adminhelp": adminHelp,
 		"version":   version,
 	}
+	serverCommandHandler = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"server-admin": serverAdmin,
+	}
 
 	helpCommands = []*discordgo.ApplicationCommand{
 		{
@@ -31,6 +34,34 @@ var (
 		{
 			Name:        "version",
 			Description: "Returns the version of heist running on the server.",
+		},
+	}
+
+	serverCommands = []*discordgo.ApplicationCommand{
+		{
+			Name:        "server-admin",
+			Description: "Commands used to interact with the server itself.",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "shutdown",
+					Description: "Prepares the server to be shutdown.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+				},
+
+				{
+					Name:        "status",
+					Description: "Returns the status of the server.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionString,
+							Name:        "value",
+							Description: "The the name of the bank for the server.",
+							Required:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 )
@@ -103,4 +134,43 @@ func getAdminHelp() string {
 	}
 
 	return sb.String()
+}
+
+// serverAdmin handles server admin commands.
+func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> serverAdmin")
+	defer log.Trace("<-- serverAdmin")
+
+	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
+		p := discmsg.GetPrinter(language.AmericanEnglish)
+		resp := p.Sprintf("You do not have permission to use this command.")
+		discmsg.SendEphemeralResponse(s, i, resp)
+		return
+	}
+
+	subCommand := i.ApplicationCommandData().Options[0]
+	switch subCommand.Name {
+	case "shutdown":
+		serverShutdown(s, i)
+	case "status":
+		serverStatus(s, i)
+	default:
+		log.WithFields(log.Fields{"subCommand": subCommand}).Error("unknown subcommand")
+	}
+}
+
+// serverShutdown prepares the server to be serverShutdown.
+func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> shutdown")
+	defer log.Trace("<-- shutdown")
+
+	discmsg.SendEphemeralResponse(s, i, "TODO: not implemented yet.")
+}
+
+// serverStatus returns the status of the server.
+func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> status")
+	defer log.Trace("<-- status")
+
+	discmsg.SendEphemeralResponse(s, i, "TODO: not implemented yet.")
 }

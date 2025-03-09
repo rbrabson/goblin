@@ -81,6 +81,10 @@ func NewBot(botName string, version string, revision string) *Bot {
 	for key, value := range helpCommandHandler {
 		commandHandlers[key] = value
 	}
+	commands = append(commands, serverCommands...)
+	for key, value := range serverCommandHandler {
+		commandHandlers[key] = value
+	}
 
 	// Add commands and handlers for each plugin
 	for _, plugin := range ListPlugin() {
