@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -164,7 +165,11 @@ func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> shutdown")
 	defer log.Trace("<-- shutdown")
 
-	discmsg.SendEphemeralResponse(s, i, "TODO: not implemented yet.")
+	for _, plugin := range ListPlugin() {
+		plugin.Stop()
+	}
+
+	discmsg.SendResponse(s, i, "Stopping all bot services.")
 }
 
 // serverStatus returns the status of the server.
@@ -172,5 +177,11 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> status")
 	defer log.Trace("<-- status")
 
-	discmsg.SendEphemeralResponse(s, i, "TODO: not implemented yet.")
+	sb := strings.Builder{}
+	for _, plugin := range ListPlugin() {
+		pluginStatus := fmt.Sprintf("`%s`: %v\n", plugin.GetName(), plugin.Status())
+		sb.WriteString(pluginStatus)
+	}
+
+	discmsg.SendEphemeralResponse(s, i, sb.String())
 }

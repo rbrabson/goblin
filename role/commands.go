@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	log "github.com/sirupsen/logrus"
@@ -68,6 +69,11 @@ var (
 func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> server.guildAdmin")
 	defer log.Trace("<-- server.guildAdmin")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 

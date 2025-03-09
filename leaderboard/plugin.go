@@ -19,6 +19,7 @@ var (
 	plugin *Plugin
 	bot    *discord.Bot
 	db     *mongo.MongoDB
+	status discord.PluginStatus = discord.RUNNING
 )
 
 // Plugin is the plugin for the leaderboard
@@ -30,11 +31,20 @@ func Start() {
 	discord.RegisterPlugin(plugin)
 }
 
-// Initialize saves the Discord bot to be used by the banking system
+// Initialize saves the Discord bot to be used by the leaderboard.
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
-	bot = b
 	db = d
-	go sendMonthlyLeaderboard()
+}
+
+// Stop stops the leaderboard. This is called when the bot is shutting down.
+func (plugin *Plugin) Stop() {
+	status = discord.STOPPED
+}
+
+// Status returns the status of the leaderboard.	This is used to determine
+// if the plugin is running or not.
+func (plugin *Plugin) Status() discord.PluginStatus {
+	return status
 }
 
 // GetCommands returns the commands for the banking system

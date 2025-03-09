@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	log "github.com/sirupsen/logrus"
@@ -212,6 +213,11 @@ var (
 func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> shop.shopAdmin")
 	defer log.Trace("<-- shop.shopAdmin")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
@@ -426,6 +432,11 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> shop.shop")
 	defer log.Trace("<-- shop.shop")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
