@@ -32,7 +32,7 @@ func Start() {
 
 // Stop stops the heist game. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
-	// TODO: lots to do here...
+	status = discord.STOPPED
 }
 
 // Status returns the status of the heist game.	This is used to determine

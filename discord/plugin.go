@@ -47,8 +47,8 @@ func RegisterPlugin(plugin Plugin) {
 }
 
 // Gets the string representation of the plugin status.
-func (s *PluginStatus) String() string {
-	switch *s {
+func (s PluginStatus) String() string {
+	switch s {
 	case RUNNING:
 		return "Running"
 	case STOPPING:

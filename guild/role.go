@@ -45,7 +45,7 @@ func GetGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
 
 	guildRoles, err := s.GuildRoles(guildID)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": guildID, "error": err}).Error("failed to get guild roles")
+		log.WithFields(log.Fields{"guildID": guildID, "error": err, "guildRoles": guildRoles}).Error("failed to get guild roles")
 		return nil
 	}
 	return guildRoles

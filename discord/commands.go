@@ -1,7 +1,6 @@
 package discord
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
+	"github.com/rbrabson/goblin/internal/unicode"
 )
 
 var (
@@ -53,14 +53,6 @@ var (
 					Name:        "status",
 					Description: "Returns the status of the server.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "value",
-							Description: "The the name of the bank for the server.",
-							Required:    true,
-						},
-					},
 				},
 			},
 		},
@@ -177,11 +169,35 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> status")
 	defer log.Trace("<-- status")
 
-	sb := strings.Builder{}
-	for _, plugin := range ListPlugin() {
-		pluginStatus := fmt.Sprintf("`%s`: %v\n", plugin.GetName(), plugin.Status())
-		sb.WriteString(pluginStatus)
+	plugins := ListPlugin()
+	pluginStatus := make([]*discordgo.MessageEmbedField, 0, len(plugins))
+
+	for _, plugin := range plugins {
+		pluginStatus = append(pluginStatus, &discordgo.MessageEmbedField{
+			Name:   unicode.FirstToUpper(plugin.GetName()),
+			Value:  plugin.Status().String(),
+			Inline: true,
+		})
 	}
 
-	discmsg.SendEphemeralResponse(s, i, sb.String())
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:  "Plugin Status",
+			Fields: pluginStatus,
+		},
+	}
+
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: embeds,
+			Flags:  discordgo.MessageFlagsEphemeral,
+		},
+	})
+
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("failed to send server status")
+		return
+	}
+	log.WithFields(log.Fields{"embeds": embeds}).Debug("send server status")
 }
