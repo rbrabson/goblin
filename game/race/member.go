@@ -110,7 +110,6 @@ func (m *RaceMember) LoseRace() {
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lost race")
-	log.Error(m)
 }
 
 // PlaceBet is used to place a bet on a member of a race.

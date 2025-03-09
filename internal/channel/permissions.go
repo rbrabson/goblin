@@ -24,7 +24,7 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 		return nil
 	}
 	if channel == nil {
-		log.Error("Channel is nil")
+		log.Error("channel is nil")
 		return nil
 	}
 

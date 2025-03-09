@@ -50,7 +50,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {
-		log.WithField("error", err).Fatal("failed to create the bot")
+		log.WithError(err).Fatal("failed to create the bot")
 	}
 
 	bot := &Bot{
@@ -144,7 +144,7 @@ func (bot *Bot) DeleteCommands() {
 	log.Debug("deleting old bot commands")
 	_, err := bot.Session.ApplicationCommandBulkOverwrite(bot.appID, bot.guildID, nil)
 	if err != nil {
-		log.WithField("error", err).Fatal("failed to delete old commands")
+		log.WithError(err).Fatal("failed to delete old commands")
 	}
 	log.Debug("old bot commands deleted")
 }

@@ -44,14 +44,14 @@ func NewDatabase() *MongoDB {
 	m.clientOpts = options.Client().ApplyURI(m.uri)
 	m.Client, err = mongo.Connect(ctx, m.clientOpts)
 	if err != nil {
-		log.WithField("error", err).Fatal("unable to connect to the MongoDB database")
+		log.WithError(err).Fatal("unable to connect to the MongoDB database")
 		return nil
 	}
 
 	// Check the connection
 	err = m.Client.Ping(ctx, nil)
 	if err != nil {
-		log.WithField("error", err).Fatal("unable to ping the MongoDB database")
+		log.WithError(err).Fatal("unable to ping the MongoDB database")
 		err = nil
 	}
 
@@ -300,7 +300,7 @@ func (m *MongoDB) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 	if err := m.Client.Disconnect(ctx); err != nil {
-		log.WithField("error", err).Error("unable to close the mongo database client")
+		log.WithError(err).Error("unable to close the mongo database client")
 		return err
 	}
 	return nil

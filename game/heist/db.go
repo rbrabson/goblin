@@ -87,7 +87,7 @@ func readAllTargets(filter bson.D) ([]*Target, error) {
 	sort := bson.D{{Key: "crew_size", Value: 1}}
 	err := db.FindMany(TARGET_COLLECTION, filter, &targets, sort, 0)
 	if err != nil {
-		log.WithField("error", err).Error("unable to read targets")
+		log.WithError(err).Error("unable to read targets")
 		return nil, err
 	}
 

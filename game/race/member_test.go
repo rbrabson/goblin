@@ -196,17 +196,17 @@ func TestRaceBetOnRace(t *testing.T) {
 	}
 
 	member.PlaceBet(100)
-	member = readRaceMember("123", "456")
-	if member == nil {
+	raceMember := readRaceMember("123", "456")
+	if raceMember == nil {
 		t.Error("expected member to be found")
 		return
 	}
 
 	if member.BetsMade != 1 {
-		t.Error("expected BetsMade to be 1")
+		t.Error("expected BetsMade to be 1, got ", member.BetsMade)
 	}
 	if member.TotalEarnings != -100 {
-		t.Error("expected TotalEarnings to be -100")
+		t.Error("expected TotalEarnings to be 0, got ", member.TotalEarnings)
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}

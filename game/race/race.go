@@ -320,8 +320,6 @@ func raceStartChecks(guildID string, memberID string) error {
 	log.Trace("--> race.raceStartChecks")
 	defer log.Trace("<-- race.raceStartChecks")
 
-	log.WithFields(log.Fields{"guild_id": guildID, "member_id": memberID}).Warn("TODO: need to implement race checks")
-
 	config := GetConfig(guildID)
 
 	race := currentRaces[guildID]
