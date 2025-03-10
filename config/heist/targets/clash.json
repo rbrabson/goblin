@@ -1,0 +1,92 @@
+[
+    {
+        "name": "Goblin Forest",
+        "crew_size": 2,
+        "success": 29.3,
+        "vault_max": 16000
+    },
+    {
+        "name": "Goblin Outpost",
+        "crew_size": 3,
+        "success": 20.65,
+        "vault_max": 24000
+    },
+    {
+        "name": "Rocky Fort",
+        "crew_size": 5,
+        "success": 14.5,
+        "vault_max": 42000
+    },
+    {
+        "name": "Goblin Gauntlet",
+        "crew_size": 8,
+        "success": 9.5,
+        "vault_max": 71000
+    },
+    {
+        "name": "Gobbotown",
+        "crew_size": 11,
+        "success": 6.75,
+        "vault_max": 101000
+    },
+    {
+        "name": "Fort Knobs",
+        "crew_size": 14,
+        "success": 5.2,
+        "vault_max": 133000
+    },
+    {
+        "name": "Bouncy Castle",
+        "crew_size": 17,
+        "success": 4.25,
+        "vault_max": 167000
+    },
+    {
+        "name": "Gobbo Campus",
+        "crew_size": 21,
+        "success": 3.5,
+        "vault_max": 213000
+    },
+    {
+        "name": "Walls Of Steel",
+        "crew_size": 25,
+        "success": 2.91,
+        "vault_max": 263000
+    },
+    {
+        "name": "Obsidian Tower",
+        "crew_size": 29,
+        "success": 2.49,
+        "vault_max": 314000
+    },
+    {
+        "name": "Queen's Gambit",
+        "crew_size": 34,
+        "success": 2.15,
+        "vault_max": 379000
+    },
+    {
+        "name": "Faulty Towers",
+        "crew_size": 39,
+        "success": 1.86,
+        "vault_max": 448000
+    },
+    {
+        "name": "Megamansion",
+        "crew_size": 44,
+        "success": 1.64,
+        "vault_max": 512000
+    },
+    {
+        "name": "P.e.k.k.a's Playhouse",
+        "crew_size": 49,
+        "success": 1.46,
+        "vault_max": 598000
+    },
+    {
+        "name": "Sherbet Towers",
+        "crew_size": 55,
+        "success": 1.31,
+        "vault_max": 688000
+    }
+]

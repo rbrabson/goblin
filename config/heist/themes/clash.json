@@ -1,0 +1,348 @@
+{
+    "heist": "raid",
+    "jail": "resting",
+    "oob": "running on gems",
+    "police": "Enemy CC Troops",
+    "sentence": "nap",
+    "vault": "village",
+    "apprehended_messages": [
+      {
+        "message": "%s stepped onto a spring trap.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s forgot to bring heals to their GoHo attack <:Golem:1346563552684671017> <:Hog_Rider:1346563786408071239>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s used their builder potions while not upgrading anything.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s dropped rage on healers too late <:Rage_Spell:1346564340257656832> <:Healer:1346563687137280081>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s forgot to bring heroes to the raid.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s forgot to bring CC troops to the raid.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s lost connection!",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s brought jump spells to a LaLo attack. <:Jump_Spell:1346563977831776370> <:Lava_Hound:1346564007368200273> <:Balloon:1346562966543269888>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s fell out of a balloon <:Balloon:1346562966543269888>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s tried using a cold air balloon <:Balloon:1346562966543269888>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s got stuck in the clouds.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s stayed behind to finish taking out a wall.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s was paralyzed by a Hidden Tesla.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s dropped a freeze spell on themself <:Freeze_Spell:1346563459072131162>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s attempted to teach the Hog Rider to ride Sheep instead <:Hog_Rider:1346563786408071239>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s forgot to attack <:StarFishBarb:1346593781771796511>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s managed to get 0 stars <:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s decided to upgrade all their barracks at the same time.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s decided to upgrade all their spell factories at the same time.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s decided to heal the grass <:Healing_Spell:1346563716740808847>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s dropped their spells instead of troops and rage quit.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s decided to chase around a butterfly <:PEKKA:1346564223203016856>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s got lost in a Miner tunnel <:Miner:1346564114243391528>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s left Grand Warden in air mode <:Grand_Warden:1346563596058103962>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s left Grand Warden in ground mode <:Grand_Warden:1346563596058103962>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s spent all their gold on an empty Wall Wrecker <:Wall_Wrecker:1346565296365895711>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s spent all their gold on a Battle Blimp with a hole in it <:Battle_Blimp:1346563046927237231>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s was taken out by a Sneaky Archer <:Sneaky_Archer:1346564629815492699>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s was knocked into next week by a Boxer Giant <:Boxer_Giant:1346563200392499311>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s was blown off the map by an Air Sweeper.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s used GoWiPe it was super ineffective <:Golem:1346563552684671017> <:Wizard:1346565389743816704> <:PEKKA:1346564223203016856>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s attempted to clone the Dark Elixir Storage <:Clone_Spell:1346563249734418525> <:Dark_Elixer:1346583810434928771>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s brought their farming army to the war <:Barbarian:1346563008968654963> <:Sneaky_Archer:1346564629815492699>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s fell asleep under a builder hut :zzz: <:Builder_Hut:1346578230836199455>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s got paralyzed by an Electro Dragon <:Electro_Dragon:1346563374586265710>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s donated wallbreakers for defending CC <:Wall_Breaker:1346565268087771217>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s's dragons took a stroll around the perimeter of the base <:Dragon:1346563296584794122> <:Electro_Dragon:1346563374586265710>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s forgot to use the King's ability <:Barbarian_King:1346562986810146826>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s forgot to use the Queen's ability <:Archer_Queen:1346562884720922707>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s forgot to the use the Warden's ability <:Grand_Warden:1346563596058103962>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s's wallbreakers went to the wrong wall <:Wall_Breaker:1346565268087771217>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s's night witches ran into a mega mine <:Night_Witch:1346564187924725902>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s used a Book of Building to save the ten seconds needed to finish a level one gold mine.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s used a Book of Heroes to finish the level two Barbarian King upgrade <:Barbarian_King:1346562986810146826>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s spent gems on wall rings to get level two walls!",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s got a 49%% 0 Star. <:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s got a 99%% 1 Star in the deciding attack. <:Star_New:1346596815364948069><:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382>.",
+        "result": "Apprehended"
+      }
+    ],
+    "bail": "heal",
+    "crew": "clan",
+    "died_messages": [
+      {
+        "message": "%s forgot funnel and was singled out by an archer tower. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s walked into double giant bombs. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s was burnt to a crisp by a single target Inferno Tower. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s got killed by the CC troops. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s accidentally drank a poison spell <:Poison_Spell:1346564302341017643>. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s tried to take out the Giga Tesla alone. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s was eaten by a dragon <:Dragon:1346563296584794122>. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s wasn't healed by the healers <:Healer:1346563687137280081>. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s pinged the discord mods for help with their attack. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s was tripled by an engineer. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s was banned by spAnser. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      }
+    ],
+    "escaped_messages": [
+      {
+        "message": "%s brought a few healers to keep themself alive <:Healer:1346563687137280081>, +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s brought a rage spell to the raid <:Rage_Spell:1346564340257656832>, +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s remembered to request CC troops before attacking. +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s used Royal Cloak <:Archer_Queen:1346562884720922707>. +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s used Iron Fist <:Barbarian_King:1346562986810146826>. +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s took out a corner builder hut <:Builder_Hut:1346578230836199455>. +50 <:Gold:1346583263598219297>.",
+        "bonus_amount": 50,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s boosted the training barracks <:Gems:1346582782276665406>. +50 <:Gold:1346583263598219297>",
+        "bonus_amount": 50,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s lured defending CC troops. +50 <:Gold:1346583263598219297>",
+        "bonus_amount": 50,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s built a funnel correctly. +100 <:Gold:1346583263598219297>",
+        "bonus_amount": 100,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s used a power potion on the clan. +100 <:Gold:1346583263598219297>",
+        "bonus_amount": 100,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s dropped a heal on a known Giant Bomb location <:Healing_Spell:1346563716740808847>. +100 <:Gold:1346583263598219297>",
+        "bonus_amount": 100,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s successfully scouted the top base. +100 <:Gold:1346583263598219297>",
+        "bonus_amount": 100,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s managed to take out the Town Hall. +150 <:Gold:1346583263598219297>",
+        "bonus_amount": 150,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s got every last drop of Dark Elixir <:Dark_Elixer:1346583810434928771>. +250 <:Gold:1346583263598219297>",
+        "bonus_amount": 250,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s three starred a base with barch <:Barbarian:1346563008968654963> <:Sneaky_Archer:1346564629815492699>. +250 <:Gold:1346583263598219297>",
+        "bonus_amount": 250,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s cast Eternal Tome <:Grand_Warden:1346563596058103962>. +250 <:Gold:1346583263598219297>",
+        "bonus_amount": 250,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s HOG RIIIIIIIIDDEEEER <:Hog_Rider:1346563786408071239>. +500 <:Gold:1346583263598219297>",
+        "bonus_amount": 500,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s scored a six pack <:Shark_Hi:1346592211638292591>. +1,000 <:Gold:1346583263598219297>",
+        "bonus_amount": 1000,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s 3 starred the top base in War without use of Heroes. +1,500 <:Gold:1346583263598219297>",
+        "bonus_amount": 1500,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s found a gem box <:Gems:1346582782276665406>. +2,500 <:Gold:1346583263598219297>",
+        "bonus_amount": 2500,
+        "result": "Escaped"
+      }
+    ]
+  }
