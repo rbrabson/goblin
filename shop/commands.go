@@ -8,6 +8,7 @@ import (
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
+	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 )
@@ -86,8 +87,13 @@ var (
 					},
 				},
 				{
-					Name:        "list",
+					Name:        "purchases",
 					Description: "Lists the items in the shop that may be purchased.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+				},
+				{
+					Name:        "list",
+					Description: "Lists the items in the shop.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
 			},
@@ -160,12 +166,12 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleName := role.Options[0].StringValue()
 	roleCost := int(role.Options[1].IntValue())
 	// None of the following are configurable at the present
-	roleDesc := roleName
+	roleDesc := roleName + " role"
 	roleDuration := time.Duration(0)
 	roleRenewable := false
 
 	shop := GetShop(i.GuildID)
-	_, err := shop.AddShopItem(roleName, roleDesc, SHOP, roleCost, roleDuration, roleRenewable)
+	_, err := shop.AddShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("Failed to add role to shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to add role \"%s\" to the shop: %s", roleName, err))
@@ -207,7 +213,7 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleName := role.Options[0].StringValue()
 
 	shop := GetShop(i.GuildID)
-	err := shop.RemoveShopItem(roleName, SHOP)
+	err := shop.RemoveShopItem(roleName, ROLE)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("Failed to remove role from shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to remove role \"%s\" from the shop: %s", roleName, err))
@@ -258,7 +264,7 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		roleRenewable = role.Options[4].BoolValue()
 	}
 
-	item, err := readShopItem(i.GuildID, roleName, SHOP)
+	item, err := readShopItem(i.GuildID, roleName, ROLE)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("Failed to read role from shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found in the shop.", roleName))
@@ -271,7 +277,7 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = item.UpdateShopItem(roleName, roleDesc, SHOP, roleCost, roleDuration, roleRenewable)
+	err = item.UpdateShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("Failed to update role in shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to update role \"%s\" in the shop: %s", roleName, err))
@@ -295,12 +301,12 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sb := strings.Builder{}
 	for _, item := range items {
 		sb.WriteString(p.Sprintf("`%s`", item.Name))
-		sb.WriteString(p.Sprintf(", %s,", item.Type))
-		sb.WriteString(p.Sprintf(" (%s)", item.Description))
-		sb.WriteString(p.Sprintf(" $%d", item.Price))
+		sb.WriteString(p.Sprintf(", Type: %s,", unicode.FirstToUpper(item.Type)))
+		sb.WriteString(p.Sprintf(" Description: %s,", item.Description))
+		sb.WriteString(p.Sprintf(" Cost: %d", item.Price))
 		if item.Duration != 0 {
-			sb.WriteString(p.Sprintf(", %s", item.Duration))
-			sb.WriteString(p.Sprintf(", %t", item.AutoRenewable))
+			sb.WriteString(p.Sprintf(", Duration: %s", item.Duration))
+			sb.WriteString(p.Sprintf(", Auto-Rewable: %t", item.AutoRenewable))
 		}
 		sb.WriteString("\n")
 	}
@@ -327,8 +333,10 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		buyFromShop(s, i)
 	case "update":
 		updatePurchaseFromShop(s, i)
-	case "list":
+	case "purchases":
 		listPurchasesFromShop(s, i)
+	case "list":
+		listShopItems(s, i)
 	default:
 		msg := p.Sprint("Command \"\\shop\\%s\" is not recognized.", options[0].Name)
 		discmsg.SendEphemeralResponse(s, i, msg)
@@ -367,14 +375,14 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// None of the following are configurable at the present
 	roleRenew := false
 
-	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, SHOP)
+	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
 	if purchase != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have already purchased role \"%s\".", roleName))
 		return
 	}
 
-	shopItem := GetShopItem(i.GuildID, roleName, SHOP)
+	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
 	if shopItem == nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("Failed to read role from shop")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found in the shop.", roleName))
@@ -424,7 +432,7 @@ func updateRolePurchaseFromShop(s *discordgo.Session, i *discordgo.InteractionCr
 	roleName := role.Options[0].StringValue()
 	roleRenew := role.Options[1].BoolValue()
 
-	purchase, err := readPurchase(i.GuildID, i.Member.User.ID, roleName, SHOP)
+	purchase, err := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "error": err}).Error("Failed to read purchase from shop")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Purchase for role \"%s\" not found.", roleName))
@@ -458,7 +466,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	purchases, err := readPurchases(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("failed to read purchases from shop")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("Failed to read purchases from shop")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to read purchases from the shop: %s", err))
 		return
 	}
