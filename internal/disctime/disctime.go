@@ -3,6 +3,7 @@ package disctime
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -71,8 +72,46 @@ func ParseDuration(t string) (time.Duration, error) {
 }
 
 // FormatDuration returns duration formatted for inclusion in Discord messages.
-func FormatDuration(dur time.Duration) string {
-	remaining := dur.Round(time.Second)
+func FormatDuration(duration time.Duration) string {
+	currentYear, currentMonth, currentDay := time.Now().Date()
+	futureYear, futureMonth, futureDay := time.Now().Add(duration).Date()
+	elapsedYear := futureYear - currentYear
+	elapsedMonth := futureMonth - currentMonth
+	elapsedDay := futureDay - currentDay
+
+	sb := strings.Builder{}
+	if elapsedYear > 0 {
+		if elapsedYear == 1 {
+			sb.WriteString("1 year")
+		} else {
+			sb.WriteString(fmt.Sprintf("%d years", elapsedYear))
+		}
+	}
+	if elapsedMonth > 0 {
+		if sb.Len() > 0 {
+			sb.WriteString(", ")
+		}
+		if elapsedMonth == 1 {
+			sb.WriteString("1 month")
+		} else {
+			sb.WriteString(fmt.Sprintf("%d months", elapsedMonth))
+		}
+	}
+	if elapsedDay > 0 {
+		if sb.Len() > 0 {
+			sb.WriteString(", ")
+		}
+		if elapsedDay == 1 {
+			sb.WriteString("1 day")
+		} else {
+			sb.WriteString(fmt.Sprintf("%d days", elapsedDay))
+		}
+	}
+	if sb.Len() > 0 {
+		return sb.String()
+	}
+
+	remaining := duration.Round(time.Second)
 	months := remaining / (time.Hour * 24 * 30)
 	remaining -= months * (time.Hour * 24 * 30)
 	days := remaining / (time.Hour * 24)
