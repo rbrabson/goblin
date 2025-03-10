@@ -2,7 +2,6 @@ package disctime
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -36,39 +35,27 @@ func ParseDuration(t string) (time.Duration, error) {
 		return 0, nil
 	}
 
-	// Convert years to a duration
-	if runes[len(runes)-1] == 'y' || runes[len(runes)-1] == 'Y' {
-		years, err := strconv.Atoi(t[:len(t)-1])
-		if err != nil {
-			return 0, err
+	var year, month, day int
+	pieces := strings.Split(t, " ")
+	for _, piece := range pieces {
+		runes := []rune(piece)
+		if piece == "" {
+			continue
 		}
-		y, m, d := time.Now().Date()
-		futureDate := time.Date(y+years, m, d, 0, 0, 0, 0, time.UTC)
-		duration := time.Until(futureDate)
-		return duration, nil
-	}
-
-	// Convert months to a duration
-	if runes[len(runes)-1] == 'm' || runes[len(runes)-1] == 'M' {
-		months, err := strconv.Atoi(t[:len(t)-1])
-		if err != nil {
-			return 0, err
+		switch runes[len(runes)-1] {
+		case 'y', 'Y':
+			year++
+		case 'm', 'M':
+			month++
+		case 'd', 'D':
+			day++
+		default:
+			return 0, fmt.Errorf("invalid duration: %s", t)
 		}
-		y, m, d := time.Now().Date()
-		futureDate := time.Date(y, m+time.Month(months), d, 0, 0, 0, 0, time.UTC)
-		duration := time.Until(futureDate)
-		return duration, nil
 	}
 
-	// Convert days to a duration
-	if runes[len(runes)-1] == 'd' || runes[len(runes)-1] == 'D' {
-		days, _ := strconv.Atoi(t[:len(t)-1])
-		duration := time.Duration(days) * 24 * time.Hour
-		return duration, nil
-	}
-
-	// Parse as a normal time duration
-	return time.ParseDuration(t)
+	future := time.Now().AddDate(year, month, day)
+	return time.Until(future), nil
 }
 
 // FormatDuration returns duration formatted for inclusion in Discord messages.

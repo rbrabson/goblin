@@ -195,9 +195,8 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "description":
 			roleDesc = option.StringValue()
 		case "duration":
-			var err error
-			roleDuration := option.StringValue()
-			_, err = disctime.ParseDuration(roleDuration)
+			roleDuration = strings.ToUpper(option.StringValue())
+			_, err := disctime.ParseDuration(roleDuration)
 			if err != nil {
 				log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": option.StringValue()}).Errorf("Failed to parse role duration: %s", err)
 				discmsg.SendEphemeralResponse(s, i, p.Sprintf("Invalid duration: %s", err.Error()))
