@@ -2,7 +2,6 @@ package shop
 
 import (
 	"fmt"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -25,7 +24,7 @@ type ShopItem struct {
 	Description   string             `json:"description" bson:"description"`
 	Type          string             `json:"type" bson:"type"`
 	Price         int                `json:"price" bson:"price"`
-	Duration      time.Duration      `json:"duration,omitempty" bson:"duration,omitempty"`
+	Duration      string             `json:"duration,omitempty" bson:"duration,omitempty"`
 	AutoRenewable bool               `json:"auto_renewable,omitempty" bson:"auto_renewable,omitempty"`
 }
 
@@ -64,7 +63,7 @@ func GetShopItem(guildID string, name string, itemType string) *ShopItem {
 }
 
 // NewShopItem creates a new ShopItem with the given guild ID, name, description, type, and price.
-func NewShopItem(guildID string, name string, description string, itemType string, price int, duration time.Duration, autoRenewable bool) *ShopItem {
+func NewShopItem(guildID string, name string, description string, itemType string, price int, duration string, autoRenewable bool) *ShopItem {
 	log.Trace("--> shop.NewShopItem")
 	defer log.Trace("<-- shop.NewShopItem")
 
@@ -103,7 +102,7 @@ func (s *Shop) GetShopItem(name string, itemType string) *ShopItem {
 }
 
 // AddShopItem adds a new item to the shop. If the item already exists, an error is returned.
-func (s *Shop) AddShopItem(name string, description string, itemType string, price int, duration time.Duration, renewable bool) (*ShopItem, error) {
+func (s *Shop) AddShopItem(name string, description string, itemType string, price int, duration string, renewable bool) (*ShopItem, error) {
 	log.Trace("--> shop.AddShopItem")
 	defer log.Trace("<-- shop.AddShopItem")
 
@@ -157,7 +156,7 @@ func (item *ShopItem) Purchase(memberID string, renew bool) (*Purchase, error) {
 }
 
 // UpdateShopItem updates the shop item with the given name and type. If the item does not exist, an error is returned.
-func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int, duration time.Duration, autoRenewable bool) error {
+func (item *ShopItem) UpdateShopItem(name string, description string, itemType string, price int, duration string, autoRenewable bool) error {
 	log.Trace("--> shop.ShopItem.UpdateShopItem")
 	defer log.Trace("<-- shop.ShopItem.UpdateShopItem")
 

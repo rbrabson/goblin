@@ -68,7 +68,7 @@ func TestUpdateShopItem(t *testing.T) {
 		t.Error("GetShopItem failed to returned n existing item")
 	}
 
-	err := item.UpdateShopItem("test_item_1", "description of test Item 1", "role", 200, 0, false)
+	err := item.UpdateShopItem("test_item_1", "description of test Item 1", "role", 200, "", false)
 	if err != nil {
 		t.Error("failed to update shop item, error:")
 	}
@@ -88,15 +88,15 @@ func setup(t *testing.T) {
 
 	testShop = GetShop(GUILD_ID)
 
-	_, err = testShop.AddShopItem("test_item_1", "description of test Item 1", "role", 100, 0, false)
+	_, err = testShop.AddShopItem("test_item_1", "description of test Item 1", "role", 100, "", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = testShop.AddShopItem("test_item_2", "description of test_item_2", "role", 100, 0, false)
+	_, err = testShop.AddShopItem("test_item_2", "description of test_item_2", "role", 100, "", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = testShop.AddShopItem("test_item_3", "description of test_item_3", "role", 100, 0, false)
+	_, err = testShop.AddShopItem("test_item_3", "description of test_item_3", "role", 100, "", false)
 	if err != nil {
 		t.Fatal(err)
 	}

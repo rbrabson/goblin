@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rbrabson/goblin/internal/disctime"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -67,8 +68,9 @@ func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchas
 	if item.AutoRenewable {
 		purchase.AutoRenew = renew
 	}
-	if item.Duration != 0 {
-		purchase.ExpiresOn = time.Now().Add(item.Duration)
+	if item.Duration != "" {
+		duration, _ := disctime.ParseDuration(item.Duration)
+		purchase.ExpiresOn = time.Now().Add(duration)
 	}
 	err := writePurchase(purchase)
 	if err != nil {

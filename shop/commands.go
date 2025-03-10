@@ -182,7 +182,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var roleName string
 	var roleCost int
 	var roleDesc string
-	var roleDuration time.Duration
+	var roleDuration string
 	var roleRenewable bool
 	options := i.ApplicationCommandData().Options
 	for _, option := range options[0].Options[0].Options {
@@ -196,7 +196,8 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			roleDesc = option.StringValue()
 		case "duration":
 			var err error
-			roleDuration, err = disctime.ParseDuration(option.StringValue())
+			roleDuration := option.StringValue()
+			_, err = disctime.ParseDuration(roleDuration)
 			if err != nil {
 				log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": option.StringValue()}).Errorf("Failed to parse role duration: %s", err)
 				discmsg.SendEphemeralResponse(s, i, p.Sprintf("Invalid duration: %s", err.Error()))
@@ -295,9 +296,15 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleName := role.Options[0].StringValue()
 	roleDesc := role.Options[1].StringValue()
 	roleCost := int(role.Options[2].IntValue())
-	var roleDuration time.Duration
+	var roleDuration string
 	if len(role.Options) > 3 {
-		roleDuration = time.Duration(role.Options[3].IntValue())
+		roleDuration = role.Options[3].StringValue()
+		_, err := disctime.ParseDuration(roleDuration)
+		if err != nil {
+			log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": roleDuration}).Errorf("Failed to parse role duration: %s", err)
+			discmsg.SendEphemeralResponse(s, i, p.Sprintf("invalid duration: %s", err.Error()))
+			return
+		}
 	}
 	var roleRenewable bool
 	if len(role.Options) > 4 {
@@ -344,8 +351,9 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sb.WriteString(p.Sprintf(", Type: %s,", unicode.FirstToUpper(item.Type)))
 		sb.WriteString(p.Sprintf(" Description: %s,", item.Description))
 		sb.WriteString(p.Sprintf(" Cost: %d", item.Price))
-		if item.Duration != 0 {
-			sb.WriteString(p.Sprintf(", Duration: %s", disctime.FormatDuration(item.Duration)))
+		if item.Duration != "" {
+			duration, _ := disctime.ParseDuration(item.Duration)
+			sb.WriteString(p.Sprintf(", Duration: %s", disctime.FormatDuration(duration)))
 			sb.WriteString(p.Sprintf(", Auto-Rewable: %t", item.AutoRenewable))
 		}
 		sb.WriteString("\n")
@@ -520,12 +528,12 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 	sb := strings.Builder{}
 	for _, purchase := range purchases {
 		sb.WriteString(p.Sprintf("`%s`", purchase.Item.Name))
-		sb.WriteString(p.Sprintf(", %s,", purchase.Item.Type))
-		sb.WriteString(p.Sprintf(" (%s)", purchase.Item.Description))
-		sb.WriteString(p.Sprintf(" $%d", purchase.Item.Price))
-		if purchase.Item.Duration != 0 {
-			sb.WriteString(p.Sprintf(", %s", purchase.Item.Duration))
-			sb.WriteString(p.Sprintf(", %t", purchase.AutoRenew))
+		sb.WriteString(p.Sprintf(", Type: %s,", purchase.Item.Type))
+		sb.WriteString(p.Sprintf(" Description: %s", purchase.Item.Description))
+		sb.WriteString(p.Sprintf(", Price: %d", purchase.Item.Price))
+		if purchase.ExpiresOn.Equal(time.Time{}) {
+			sb.WriteString(p.Sprintf(", Expires On: %s", purchase.ExpiresOn))
+			sb.WriteString(p.Sprintf(", Auto-Renew: %t", purchase.AutoRenew))
 		}
 		sb.WriteString("\n")
 	}
