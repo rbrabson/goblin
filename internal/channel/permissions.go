@@ -67,7 +67,7 @@ func (c *Mute) MuteChannel() {
 
 // UnmuteChannel resets the permissions for `@everyone` to what they were before the channel was muted.
 func (c *Mute) UnmuteChannel() {
-	if c.everyonePermissions.ID != "" {
+	if c.everyoneID != "" {
 		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, c.everyonePermissions.Allow, c.everyonePermissions.Deny)
 		if err != nil {
 			log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID, "error": err}).Warning("failed to unmute the channel")
