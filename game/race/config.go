@@ -1,6 +1,9 @@
 package race
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -34,24 +37,41 @@ type Config struct {
 // GetConfig gets the race configuration for the guild. If the configuration does not
 // exist, then a new one is created.
 func GetConfig(guildID string) *Config {
-	config, err := getConfig(guildID)
-	if err != nil {
-		config = newConfig(guildID)
+	config := readConfig(guildID)
+	if config == nil {
+		return getConfig(guildID)
 	}
 	return config
 }
 
-// getConfig reads the race configuration from the database. If the configuration
-// does not exist, then an error is returned.
-func getConfig(guildID string) (*Config, error) {
+// getConfig gets a new configuration for the guild. If the oconfiguration cannot be
+// read from the configuration file or decdoded, then a default configuration is
+// returned.
+func getConfig(guildID string) *Config {
 	log.Trace("--> race.getConfig")
 	defer log.Trace("<-- race.getConfig")
 
-	config := readConfig(guildID)
-	if config == nil {
-		return nil, ErrConfigNotFound
+	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
+	configDir := os.Getenv("DISCORD_CONFIG_DIR")
+	configFileName := filepath.Join(configDir, "race", "config", configTheme+".json")
+	bytes, err := os.ReadFile(configFileName)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to read default race config")
+		return newConfig(guildID)
 	}
-	return config, nil
+
+	config := &Config{}
+	err = json.Unmarshal(bytes, config)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to unmarshal default race config")
+		return newConfig(guildID)
+	}
+	config.GuildID = guildID
+
+	writeConfig(config)
+	log.WithField("guild", config.GuildID).Info("create new race config")
+
+	return config
 }
 
 // newConfig creates a new race configuration for the guild. The configuration is saved to

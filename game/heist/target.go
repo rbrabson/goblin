@@ -1,7 +1,10 @@
 package heist
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -34,7 +37,7 @@ func GetTargets(guildID string, theme string) []*Target {
 
 	targets, _ := readTargets(guildID, theme)
 	if targets == nil {
-		targets = getDefaultTargets(guildID)
+		targets = newDefaultTargets(guildID)
 		for _, target := range targets {
 			writeTarget(target)
 		}
@@ -99,6 +102,39 @@ func getTarget(targets []*Target, crewSize int) *Target {
 	}
 	log.WithField("Target", target.Name).Debug("Heist Target")
 	return target
+}
+
+// newDefaultTargets returns the default targets for a server.
+// If the file is not found or cannot be decoded, the default targets are used.
+func newDefaultTargets(guildID string) []*Target {
+	log.Debug("--> heist.newDefaultTargets")
+	defer log.Debug("<-- heist.newDefaultTargets")
+
+	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
+	configDir := os.Getenv("DISCORD_CONFIG_DIR")
+	configFileName := filepath.Join(configDir, "heist", "targets", configTheme+".json")
+	bytes, err := os.ReadFile(configFileName)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to read default targets")
+		return getDefaultTargets(guildID)
+	}
+
+	var targets []*Target
+	err = json.Unmarshal(bytes, &targets)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to unmarshal default targets")
+		return getDefaultTargets(guildID)
+	}
+	for _, target := range targets {
+		target.GuildID = guildID
+		target.Theme = configTheme
+		target.Vault = target.VaultMax
+		target.IsAtMax = true
+	}
+
+	log.WithField("guild", guildID).Info("create new targets")
+
+	return targets
 }
 
 // getDefaultTargets returns the default targets for a server.
