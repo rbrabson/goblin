@@ -213,7 +213,7 @@ func sendMonthlyLeaderboard() {
 	for {
 		nextMonth := disctime.NextMonth(lastSeason)
 		time.Sleep(time.Until(nextMonth))
-		lastSeason = nextMonth
+		lastSeason = disctime.CurrentMonth(time.Now())
 
 		leaderboards := getLeaderboards()
 		for _, lb := range leaderboards {

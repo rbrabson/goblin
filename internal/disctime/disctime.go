@@ -12,7 +12,7 @@ func CurrentMonth(t time.Time) time.Time {
 // PreviousMonth returns the previous year and month
 func PreviousMonth(t time.Time) time.Time {
 	y, m, _ := t.Date()
-	month := time.Date(y, m+1, 1, 0, 0, 0, 0, time.UTC)
+	month := time.Date(y, m-1, 1, 0, 0, 0, 0, time.UTC)
 	return month
 }
 
