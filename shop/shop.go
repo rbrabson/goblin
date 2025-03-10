@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	ROLE = "role"
+	SHOP = "shop"
 )
 
 // The shop for a guild. The shop contains all items available for purchase.

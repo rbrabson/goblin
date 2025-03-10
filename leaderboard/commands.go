@@ -52,30 +52,6 @@ var (
 			Name:        "lb",
 			Description: "Commands used to retrieve leaderboards on this server.",
 			Options: []*discordgo.ApplicationCommandOption{
-				// {
-				// 	Name:        "type",
-				// 	Description: "Type of leaderboard to return",
-				// 	Type:        discordgo.ApplicationCommandOptionInteger,
-				// 	Choices: []*discordgo.ApplicationCommandOptionChoice{
-				// 		{
-				// 			Name:  "monthly",
-				// 			Value: 1,
-				// 		},
-				// 		{
-				// 			Name:  "current",
-				// 			Value: 2,
-				// 		},
-				// 		{
-				// 			Name:  "lifetime",
-				// 			Value: 3,
-				// 		},
-				// 		{
-				// 			Name:  "rank",
-				// 			Value: 4,
-				// 		},
-				// 	},
-				// 	Required: true,
-				// },
 				{
 					Name:        "current",
 					Description: "Gets the current economy leaderboard.",

@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	PLUGIN_NAME = "bank"
+	PLUGIN_NAME = "shop"
 )
 
 var (
