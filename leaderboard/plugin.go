@@ -29,6 +29,7 @@ type Plugin struct{}
 func Start() {
 	plugin = &Plugin{}
 	discord.RegisterPlugin(plugin)
+	go sendMonthlyLeaderboard()
 }
 
 // Initialize saves the Discord bot to be used by the leaderboard.
