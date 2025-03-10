@@ -205,7 +205,7 @@ func sendMonthlyLeaderboard() {
 	lastSeason := time.Now()
 	leaderboards := getLeaderboards()
 	for _, lb := range leaderboards {
-		if lb.LastSeason.After(lastSeason) {
+		if lb.LastSeason.Before(lastSeason) {
 			lastSeason = lb.LastSeason
 		}
 	}
