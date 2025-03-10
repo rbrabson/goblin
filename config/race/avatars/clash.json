@@ -1,609 +1,142 @@
 [
     {
-        "movement_speed": "veryfast",
         "emoji": "<:Minion:1346564146463768636>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Miner:1346564114243391528>",
-        "guild_id": "236523452230533121",
         "movement_speed": "veryfast"
     },
     {
         "movement_speed": "veryfast",
-        "emoji": "<:Goblin:1346563510733373490>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
+        "emoji": "<:Miner:1346564114243391528>"
     },
     {
-        "theme": "clash",
-        "emoji": "<:Beta_Minion:1346563119044100096>",
-        "guild_id": "236523452230533121",
+        "emoji": "<:Goblin:1346563510733373490>",
         "movement_speed": "veryfast"
     },
     {
-        "theme": "clash",
-        "emoji": "<:Wall_Breaker:1346565268087771217>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "fast"
-    },
-    {
-        "emoji": "<:Valkrie:1346565227755602103>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "fast",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Sneaky_Archer:1346564629815492699>",
-        "movement_speed": "fast",
-        "guild_id": "236523452230533121"
-    },
-    {
-        "emoji": "<:Hog_Rider:1346563786408071239>",
-        "guild_id": "236523452230533121",
-        "theme": "clash",
-        "movement_speed": "fast"
-    },
-    {
-        "movement_speed": "fast",
-        "guild_id": "236523452230533121",
-        "theme": "clash",
-        "emoji": "<:Archer_Queen:1346562884720922707>"
-    },
-    {
-        "movement_speed": "fast",
-        "emoji": "<:Archer:1346562917713186856>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "steady",
-        "emoji": "<:Barbarian:1346563008968654963>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "steady",
-        "emoji": "<:Cannon_Cart:1346563222085570751>",
-        "theme": "clash",
-        "guild_id": "236523452230533121"
-    },
-    {
-        "movement_speed": "steady",
-        "guild_id": "236523452230533121",
-        "emoji": "<:Healer:1346563687137280081>",
-        "theme": "clash"
-    },
-    {
-        "emoji": "<:Wizard:1346565389743816704>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "steady",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "steady",
-        "emoji": "<:Barbarian_King:1346562986810146826>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "steady",
-        "emoji": "<:Grand_Warden:1346563596058103962>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "steady",
-        "emoji": "<:Battle_Machine:1346563090732286054>",
-        "guild_id": "236523452230533121"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "abberant",
-        "emoji": "<:Bomber:1346563138186776616>",
-        "guild_id": "236523452230533121"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Drop_Ship:1346563323390590977>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "abberant"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "abberant",
-        "emoji": "<:Balloon:1346562966543269888>",
-        "guild_id": "236523452230533121"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Electro_Dragon:1346563374586265710>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "predator"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Dragon:1346563296584794122>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "predator"
-    },
-    {
-        "emoji": "<:Battle_Blimp:1346563046927237231>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "predator",
-        "theme": "clash"
-    },
-    {
-        "emoji": "<:Lava_Hound:1346564007368200273>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "predator",
-        "theme": "clash"
-    },
-    {
-        "emoji": "<:Baby_Dragon:1346562942858170598>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "babydragon",
-        "theme": "clash"
-    },
-    {
-        "guild_id": "236523452230533121",
-        "movement_speed": "special",
-        "emoji": "<:Raged_Barbarian:1346564384062705715>",
-        "theme": "clash"
-    },
-    {
-        "emoji": "<:Super_PEKKA:1346565036734419056>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "slow",
-        "theme": "clash"
-    },
-    {
-        "emoji": "<:PEKKA:1346564223203016856>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "slow",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "slow",
-        "emoji": "<:Bowler:1346563167316344862>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Witch:1346565365659861034>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "slow"
-    },
-    {
-        "movement_speed": "slow",
-        "emoji": "<:Wall_Wrecker:1346565296365895711>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "slow",
-        "emoji": "<:Night_Witch:1346564187924725902>",
-        "guild_id": "236523452230533121",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "slow",
-        "emoji": "<:Golem:1346563552684671017>",
-        "guild_id": "236523452230533121"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "slow",
-        "emoji": "<:Giant:1346563485735059597>",
-        "guild_id": "236523452230533121"
-    },
-    {
-        "emoji": "<:Boxer_Giant:1346563200392499311>",
-        "guild_id": "236523452230533121",
-        "movement_speed": "slow",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "veryfast",
-        "emoji": "<:Minion:1346564146463768636>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "veryfast",
-        "emoji": "<:Miner:1346564114243391528>",
-        "guild_id": "724319470528626738"
-    },
-    {
-        "movement_speed": "veryfast",
-        "emoji": "<:Goblin:1346563510733373490>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "veryfast",
-        "emoji": "<:Beta_Minion:1346563119044100096>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "guild_id": "724319470528626738",
-        "movement_speed": "fast",
-        "emoji": "<:Wall_Breaker:1346565268087771217>"
-    },
-    {
-        "emoji": "<:Valkrie:1346565227755602103>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "fast",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Sneaky_Archer:1346564629815492699>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "fast"
-    },
-    {
-        "movement_speed": "fast",
-        "emoji": "<:Hog_Rider:1346563786408071239>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "fast",
-        "emoji": "<:Archer_Queen:1346562884720922707>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Archer:1346562917713186856>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "fast"
-    },
-    {
-        "movement_speed": "steady",
-        "emoji": "<:Barbarian:1346563008968654963>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Cannon_Cart:1346563222085570751>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "steady"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Healer:1346563687137280081>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "steady"
-    },
-    {
-        "guild_id": "724319470528626738",
-        "movement_speed": "steady",
-        "theme": "clash",
-        "emoji": "<:Wizard:1346565389743816704>"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Barbarian_King:1346562986810146826>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "steady"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Grand_Warden:1346563596058103962>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "steady"
-    },
-    {
-        "movement_speed": "steady",
-        "emoji": "<:Battle_Machine:1346563090732286054>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "guild_id": "724319470528626738",
-        "movement_speed": "abberant",
-        "emoji": "<:Bomber:1346563138186776616>"
-    },
-    {
-        "movement_speed": "abberant",
-        "emoji": "<:Drop_Ship:1346563323390590977>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "abberant",
-        "emoji": "<:Balloon:1346562966543269888>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "emoji": "<:Electro_Dragon:1346563374586265710>",
-        "guild_id": "724319470528626738",
-        "theme": "clash",
-        "movement_speed": "predator"
-    },
-    {
-        "movement_speed": "predator",
-        "emoji": "<:Dragon:1346563296584794122>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "predator",
-        "emoji": "<:Battle_Blimp:1346563046927237231>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "predator",
-        "emoji": "<:Lava_Hound:1346564007368200273>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "babydragon",
-        "emoji": "<:Baby_Dragon:1346562942858170598>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "special",
-        "emoji": "<:Raged_Barbarian:1346564384062705715>",
-        "guild_id": "724319470528626738"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "slow",
-        "emoji": "<:Super_PEKKA:1346565036734419056>",
-        "guild_id": "724319470528626738"
-    },
-    {
-        "guild_id": "724319470528626738",
-        "emoji": "<:PEKKA:1346564223203016856>",
-        "theme": "clash",
-        "movement_speed": "slow"
-    },
-    {
-        "movement_speed": "slow",
-        "emoji": "<:Bowler:1346563167316344862>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Witch:1346565365659861034>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "slow"
-    },
-    {
-        "movement_speed": "slow",
-        "emoji": "<:Wall_Wrecker:1346565296365895711>",
-        "guild_id": "724319470528626738",
-        "theme": "clash"
-    },
-    {
-        "movement_speed": "slow",
-        "guild_id": "724319470528626738",
-        "theme": "clash",
-        "emoji": "<:Night_Witch:1346564187924725902>"
-    },
-    {
-        "emoji": "<:Golem:1346563552684671017>",
-        "guild_id": "724319470528626738",
-        "theme": "clash",
-        "movement_speed": "slow"
-    },
-    {
-        "theme": "clash",
-        "emoji": "<:Giant:1346563485735059597>",
-        "guild_id": "724319470528626738",
-        "movement_speed": "slow"
-    },
-    {
-        "emoji": "<:Boxer_Giant:1346563200392499311>",
-        "guild_id": "724319470528626738",
-        "theme": "clash",
-        "movement_speed": "slow"
-    },
-    {
-        "movement_speed": "veryfast",
-        "emoji": "<:Minion:1346564146463768636>",
-        "theme": "clash"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "veryfast",
-        "emoji": "<:Miner:1346564114243391528>",
-        "guild_id": "1343353297725161605"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "veryfast",
-        "emoji": "<:Goblin:1346563510733373490>",
-        "guild_id": "1343353297725161605"
-    },
-    {
-        "theme": "clash",
         "emoji": "<:Beta_Minion:1346563119044100096>",
         "movement_speed": "veryfast"
     },
     {
-        "theme": "clash",
         "emoji": "<:Wall_Breaker:1346565268087771217>",
         "movement_speed": "fast"
     },
     {
-        "movement_speed": "fast",
         "emoji": "<:Valkrie:1346565227755602103>",
-        "theme": "clash"
+        "movement_speed": "fast"
     },
     {
-        "theme": "clash",
         "emoji": "<:Sneaky_Archer:1346564629815492699>",
         "movement_speed": "fast"
     },
     {
-        "theme": "clash",
         "emoji": "<:Hog_Rider:1346563786408071239>",
         "movement_speed": "fast"
     },
     {
-        "theme": "clash",
-        "movement_speed": "fast",
         "emoji": "<:Archer_Queen:1346562884720922707>",
-        "guild_id": "1343353297725161605"
+        "movement_speed": "fast"
     },
     {
-        "theme": "clash",
-        "movement_speed": "fast",
         "emoji": "<:Archer:1346562917713186856>",
-        "guild_id": "1343353297725161605"
+        "movement_speed": "fast"
     },
     {
-        "theme": "clash",
-        "movement_speed": "steady",
         "emoji": "<:Barbarian:1346563008968654963>",
-        "guild_id": "1343353297725161605"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "steady",
-        "emoji": "<:Cannon_Cart:1346563222085570751>"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "steady",
-        "emoji": "<:Healer:1346563687137280081>"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "steady",
-        "emoji": "<:Wizard:1346565389743816704>",
-        "guild_id": "1343353297725161605"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "steady",
-        "emoji": "<:Barbarian_King:1346562986810146826>",
-        "guild_id": "1343353297725161605"
-    },
-    {
-        "emoji": "<:Grand_Warden:1346563596058103962>",
-        "theme": "clash",
         "movement_speed": "steady"
     },
     {
-        "theme": "clash",
-        "movement_speed": "steady",
+        "emoji": "<:Cannon_Cart:1346563222085570751>",
+        "movement_speed": "steady"
+    },
+    {
+        "emoji": "<:Healer:1346563687137280081>",
+        "movement_speed": "steady"
+    },
+    {
+        "emoji": "<:Wizard:1346565389743816704>",
+        "movement_speed": "steady"
+    },
+    {
+        "emoji": "<:Barbarian_King:1346562986810146826>",
+        "movement_speed": "steady"
+    },
+    {
+        "emoji": "<:Grand_Warden:1346563596058103962>",
+        "movement_speed": "steady"
+    },
+    {
         "emoji": "<:Battle_Machine:1346563090732286054>",
-        "guild_id": "1343353297725161605"
+        "movement_speed": "steady"
     },
     {
-        "theme": "clash",
-        "movement_speed": "abberant",
         "emoji": "<:Bomber:1346563138186776616>",
-        "guild_id": "1343353297725161605"
-    },
-    {
-        "theme": "clash",
-        "movement_speed": "abberant",
-        "emoji": "<:Drop_Ship:1346563323390590977>"
-    },
-    {
-        "emoji": "<:Balloon:1346562966543269888>",
-        "theme": "clash",
         "movement_speed": "abberant"
     },
     {
-        "theme": "clash",
+        "emoji": "<:Drop_Ship:1346563323390590977>",
+        "movement_speed": "abberant"
+    },
+    {
+        "emoji": "<:Balloon:1346562966543269888>",
+        "movement_speed": "abberant"
+    },
+    {
         "emoji": "<:Electro_Dragon:1346563374586265710>",
         "movement_speed": "predator"
     },
     {
-        "theme": "clash",
         "emoji": "<:Dragon:1346563296584794122>",
         "movement_speed": "predator"
     },
     {
-        "emoji": "<:Battle_Blimp:1346563046927237231>",
         "movement_speed": "predator",
-        "theme": "clash"
+        "emoji": "<:Battle_Blimp:1346563046927237231>"
     },
     {
-        "emoji": "<:Lava_Hound:1346564007368200273>",
         "movement_speed": "predator",
-        "theme": "clash"
+        "emoji": "<:Lava_Hound:1346564007368200273>"
     },
     {
         "movement_speed": "babydragon",
-        "theme": "clash",
         "emoji": "<:Baby_Dragon:1346562942858170598>"
     },
     {
         "movement_speed": "special",
-        "theme": "clash",
         "emoji": "<:Raged_Barbarian:1346564384062705715>"
     },
     {
-        "theme": "clash",
         "movement_speed": "slow",
         "emoji": "<:Super_PEKKA:1346565036734419056>"
     },
     {
         "movement_speed": "slow",
-        "emoji": "<:PEKKA:1346564223203016856>",
-        "theme": "clash"
+        "emoji": "<:PEKKA:1346564223203016856>"
     },
     {
         "movement_speed": "slow",
-        "emoji": "<:Bowler:1346563167316344862>",
-        "theme": "clash"
+        "emoji": "<:Bowler:1346563167316344862>"
     },
     {
-        "theme": "clash",
-        "emoji": "<:Witch:1346565365659861034>",
         "movement_speed": "slow",
-        "guild_id": "1343353297725161605"
+        "emoji": "<:Witch:1346565365659861034>"
     },
     {
-        "theme": "clash",
-        "movement_speed": "slow",
-        "emoji": "<:Wall_Wrecker:1346565296365895711>"
+        "emoji": "<:Wall_Wrecker:1346565296365895711>",
+        "movement_speed": "slow"
     },
     {
-        "theme": "clash",
         "emoji": "<:Night_Witch:1346564187924725902>",
-        "movement_speed": "slow",
-        "guild_id": "1343353297725161605"
+        "movement_speed": "slow"
     },
     {
         "movement_speed": "slow",
-        "emoji": "<:Golem:1346563552684671017>",
-        "theme": "clash"
+        "emoji": "<:Golem:1346563552684671017>"
     },
     {
         "movement_speed": "slow",
-        "theme": "clash",
         "emoji": "<:Giant:1346563485735059597>"
     },
     {
-        "theme": "clash",
-        "movement_speed": "slow",
         "emoji": "<:Boxer_Giant:1346563200392499311>",
-        "guild_id": "1343353297725161605"
+        "movement_speed": "slow"
     }
 ]
