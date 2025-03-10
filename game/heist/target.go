@@ -37,7 +37,7 @@ func GetTargets(guildID string, theme string) []*Target {
 
 	targets, _ := readTargets(guildID, theme)
 	if targets == nil {
-		targets = newDefaultTargets(guildID)
+		targets = readTargetsFromFIle(guildID)
 		for _, target := range targets {
 			writeTarget(target)
 		}
@@ -104,11 +104,11 @@ func getTarget(targets []*Target, crewSize int) *Target {
 	return target
 }
 
-// newDefaultTargets returns the default targets for a server.
+// readTargetsFromFIle returns the default targets for a server.
 // If the file is not found or cannot be decoded, the default targets are used.
-func newDefaultTargets(guildID string) []*Target {
-	log.Debug("--> heist.newDefaultTargets")
-	defer log.Debug("<-- heist.newDefaultTargets")
+func readTargetsFromFIle(guildID string) []*Target {
+	log.Debug("--> heist.readTargetsFromFIle")
+	defer log.Debug("<-- heist.readTargetsFromFIle")
 
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")

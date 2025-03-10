@@ -32,7 +32,7 @@ func GetAdminRoles(guildID string) []string {
 		log.WithFields(log.Fields{"guild": guildID}).Debug("server not found in the database")
 	}
 	if server.GuildID == "" {
-		server = newGuild(guildID)
+		server = readGuildFromFile(guildID)
 	}
 
 	return server.AdminRoles

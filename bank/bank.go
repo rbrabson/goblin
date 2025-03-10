@@ -33,16 +33,16 @@ func GetBank(guildID string) *Bank {
 
 	bank := readBank(guildID)
 	if bank == nil {
-		bank = newBank(guildID)
+		bank = readBankFromFile(guildID)
 	}
 
 	return bank
 }
 
-// newBank creates a new bank for the given guild.
-func newBank(guildID string) *Bank {
-	log.Trace("--> bank.newBank")
-	defer log.Trace("<-- bank.newBank")
+// readBankFromFile creates a new bank for the given guild.
+func readBankFromFile(guildID string) *Bank {
+	log.Trace("--> bank.readBankFromFile")
+	defer log.Trace("<-- bank.readBankFromFile")
 
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")

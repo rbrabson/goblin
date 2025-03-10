@@ -31,7 +31,7 @@ func GetPayday(guildID string) *Payday {
 
 	payday := readPayday(guildID)
 	if payday == nil {
-		payday = newPayday(guildID)
+		payday = readPaydayFromFile(guildID)
 	}
 
 	return payday
@@ -65,12 +65,12 @@ func (payday *Payday) SetPaydayFrequency(frequency time.Duration) {
 	writePayday(payday)
 }
 
-// newPayday creates new payday information for a server/guild.
+// readPaydayFromFile creates new payday information for a server/guild.
 // If the default payday configuration file cannot be read or dedcoded, then a
 // default payday configuration is created.
-func newPayday(guildID string) *Payday {
-	log.Trace("--> payday.newPayday")
-	defer log.Trace("<-- payday.newPayday")
+func readPaydayFromFile(guildID string) *Payday {
+	log.Trace("--> payday.readPaydayFromFile")
+	defer log.Trace("<-- payday.readPaydayFromFile")
 
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")

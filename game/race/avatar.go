@@ -30,32 +30,32 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 	racer, err := readAllRacers(filter)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "error": err}).Warn("unable to read racers")
-		return getRaceAvatars(guildID, themeName)
+		return readRaceAvatarsFromFile(guildID, themeName)
 	}
 
 	log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "count": len(racer)}).Info("read racers")
 	return racer
 }
 
-// getRaceAvatars reads the list of characters for the theme and guild from the database. If the list
+// readRaceAvatarsFromFile reads the list of characters for the theme and guild from the database. If the list
 // does not exist, then an error is returned.
-func getRaceAvatars(guildID string, themeName string) []*RaceAvatar {
-	log.Trace("--> race.getRaceAvatars")
-	defer log.Trace("<-- race.getRaceAvatars")
+func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
+	log.Trace("--> race.readRaceAvatarsFromFile")
+	defer log.Trace("<-- race.readRaceAvatarsFromFile")
 
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "race", "avatars", themeName+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		log.WithField("file", configFileName).Error("failed to read default race avatars")
-		return newRaceAvatars(guildID)
+		return getDefaultRaceAvatars(guildID)
 	}
 
 	var avatars []*RaceAvatar
 	err = json.Unmarshal(bytes, &avatars)
 	if err != nil {
 		log.WithField("file", configFileName).Error("failed to unmarshal default race avatars")
-		return newRaceAvatars(guildID)
+		return getDefaultRaceAvatars(guildID)
 	}
 
 	for _, avatar := range avatars {
@@ -69,11 +69,11 @@ func getRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 	return avatars
 }
 
-// newRaceAvatars creates a new list of characters for the guild. The list is saved to
+// getDefaultRaceAvatars creates a new list of characters for the guild. The list is saved to
 // the database.
-func newRaceAvatars(guildID string) []*RaceAvatar {
-	log.Trace("--> race.newRaceAvatars")
-	defer log.Trace("<-- race.newRaceAvatars")
+func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
+	log.Trace("--> race.getDefaultRaceAvatars")
+	defer log.Trace("<-- race.getDefaultRaceAvatars")
 
 	racers := []*RaceAvatar{
 		{

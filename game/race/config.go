@@ -39,17 +39,17 @@ type Config struct {
 func GetConfig(guildID string) *Config {
 	config := readConfig(guildID)
 	if config == nil {
-		return getConfig(guildID)
+		return readConfigFromFile(guildID)
 	}
 	return config
 }
 
-// getConfig gets a new configuration for the guild. If the oconfiguration cannot be
+// readConfigFromFile gets a new configuration for the guild. If the oconfiguration cannot be
 // read from the configuration file or decdoded, then a default configuration is
 // returned.
-func getConfig(guildID string) *Config {
-	log.Trace("--> race.getConfig")
-	defer log.Trace("<-- race.getConfig")
+func readConfigFromFile(guildID string) *Config {
+	log.Trace("--> race.readConfigFromFile")
+	defer log.Trace("<-- race.readConfigFromFile")
 
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
@@ -57,14 +57,14 @@ func getConfig(guildID string) *Config {
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		log.WithField("file", configFileName).Error("failed to read default race config")
-		return newConfig(guildID)
+		return getDefauiltConfig(guildID)
 	}
 
 	config := &Config{}
 	err = json.Unmarshal(bytes, config)
 	if err != nil {
 		log.WithField("file", configFileName).Error("failed to unmarshal default race config")
-		return newConfig(guildID)
+		return getDefauiltConfig(guildID)
 	}
 	config.GuildID = guildID
 
@@ -74,11 +74,11 @@ func getConfig(guildID string) *Config {
 	return config
 }
 
-// newConfig creates a new race configuration for the guild. The configuration is saved to
+// getDefauiltConfig creates a new race configuration for the guild. The configuration is saved to
 // the database.
-func newConfig(guildID string) *Config {
-	log.Trace("--> race.newConfig")
-	defer log.Trace("<-- race.newConfig")
+func getDefauiltConfig(guildID string) *Config {
+	log.Trace("--> race.getDefauiltConfig")
+	defer log.Trace("<-- race.getDefauiltConfig")
 
 	config := &Config{
 		GuildID:          guildID,

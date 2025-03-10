@@ -45,15 +45,15 @@ type Config struct {
 func GetConfig(guildID string) *Config {
 	config := readConfig(guildID)
 	if config == nil {
-		config = NewConfig(guildID)
+		config = readConfigFromFile(guildID)
 	}
 	return config
 }
 
-// NewConfig creates a new default configuration for the specified guild.
+// readConfigFromFile creates a new default configuration for the specified guild.
 // If the default configuration file cannot be read or decoded, then a default
 // configuration is created.
-func NewConfig(guildID string) *Config {
+func readConfigFromFile(guildID string) *Config {
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "heist", "config", configTheme+".json")

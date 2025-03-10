@@ -75,18 +75,18 @@ func GetTheme(guildID string) *Theme {
 	log.WithFields(log.Fields{"guild": guildID, "error": err}).Warn("unable to read theme")
 
 	// The theme was found in the DB, so create the default theme and use that
-	theme = getDefaultTheme(guildID)
+	theme = readThemeFromFile(guildID)
 	writeTheme(theme)
 	log.WithFields(log.Fields{"guild": guildID, "theme": theme.Name}).Debug("created default theme")
 
 	return theme
 }
 
-// getDefaultTheme returns the default theme for a guild. If the theme can't be read
+// readThemeFromFile returns the default theme for a guild. If the theme can't be read
 // from the configuration file or can't be decoded, then a default theme is returned
-func getDefaultTheme(guildID string) *Theme {
-	log.Trace("--> heist.getDefaultTheme")
-	defer log.Trace("<-- heist.getDefaultTheme")
+func readThemeFromFile(guildID string) *Theme {
+	log.Trace("--> heist.readThemeFromFile")
+	defer log.Trace("<-- heist.readThemeFromFile")
 
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
@@ -94,14 +94,14 @@ func getDefaultTheme(guildID string) *Theme {
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		log.WithField("file", configFileName).Error("failed to read default theme")
-		return newDefaultTheme(guildID)
+		return getDefauiltTheme(guildID)
 	}
 
 	theme := &Theme{}
 	err = json.Unmarshal(bytes, theme)
 	if err != nil {
 		log.WithField("file", configFileName).Error("failed to unmarshal default theme")
-		return newDefaultTheme(guildID)
+		return getDefauiltTheme(guildID)
 	}
 	theme.GuildID = guildID
 	theme.Name = configTheme
@@ -111,8 +111,8 @@ func getDefaultTheme(guildID string) *Theme {
 	return theme
 }
 
-// newDefaultTheme returns a default theme for the given guild.
-func newDefaultTheme(guildID string) *Theme {
+// getDefauiltTheme returns a default theme for the given guild.
+func getDefauiltTheme(guildID string) *Theme {
 	escapedMessages := []*HeistMessage{
 		{
 			Message:     "%s brought a few healers to keep themself alive " + emoji.Healer + ", +25 " + emoji.Gold,

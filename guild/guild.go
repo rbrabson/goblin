@@ -26,15 +26,15 @@ type Guild struct {
 func GetGuild(guildID string) *Guild {
 	guild := readGuild(guildID)
 	if guild == nil {
-		guild = newGuild(guildID)
+		guild = readGuildFromFile(guildID)
 	}
 
 	log.Tracef("Guild: %v", guild)
 	return guild
 }
 
-// newGuild creates a new guild configuration for a given guild (guild).
-func newGuild(guildID string) *Guild {
+// readGuildFromFile creates a new guild configuration for a given guild (guild).
+func readGuildFromFile(guildID string) *Guild {
 
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
