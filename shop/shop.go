@@ -74,8 +74,8 @@ func NewShopItem(guildID string, name string, description string, itemType strin
 		Description:   description,
 		Type:          itemType,
 		Price:         price,
-		Duration:      time.Duration(0),
-		AutoRenewable: false,
+		Duration:      duration,
+		AutoRenewable: autoRenewable,
 	}
 
 	err := writeShopItem(item)

@@ -8,6 +8,7 @@ import (
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
+	"github.com/rbrabson/goblin/internal/disctime"
 	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
@@ -47,6 +48,24 @@ var (
 									Name:        "cost",
 									Description: "The cost of the role.",
 									Required:    true,
+								},
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "description",
+									Description: "The description of the role that may be purchased.",
+									Required:    false,
+								},
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "duration",
+									Description: "The duration of the role.",
+									Required:    false,
+								},
+								{
+									Type:        discordgo.ApplicationCommandOptionBoolean,
+									Name:        "renewable",
+									Description: "Whether the role is renewable.",
+									Required:    false,
 								},
 							},
 						},
@@ -159,26 +178,47 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
+	// Get the options for the role to be added
+	var roleName string
+	var roleCost int
+	var roleDesc string
+	var roleDuration time.Duration
+	var roleRenewable bool
 	options := i.ApplicationCommandData().Options
-
-	// Get the role details, hadndlng optional paramateters
-	role := options[0].Options[0]
-	roleName := role.Options[0].StringValue()
-	roleCost := int(role.Options[1].IntValue())
-	// None of the following are configurable at the present
-	roleDesc := roleName + " role"
-	roleDuration := time.Duration(0)
-	roleRenewable := false
+	for _, option := range options[0].Options[0].Options {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "option": option}).Debug("processing option")
+		switch option.Name {
+		case "name":
+			roleName = option.StringValue()
+		case "cost":
+			roleCost = int(option.IntValue())
+		case "description":
+			roleDesc = option.StringValue()
+		case "duration":
+			var err error
+			roleDuration, err = disctime.ParseDuration(option.StringValue())
+			if err != nil {
+				log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": option.StringValue()}).Errorf("Failed to parse role duration: %s", err)
+				discmsg.SendEphemeralResponse(s, i, p.Sprintf("Invalid duration: %s", err.Error()))
+				return
+			}
+		case "renewable":
+			roleRenewable = option.BoolValue()
+		}
+	}
+	if roleDesc == "" {
+		roleDesc = roleName + " role"
+	}
 
 	shop := GetShop(i.GuildID)
 	_, err := shop.AddShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("Failed to add role to shop: %s", err)
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("failed to add role to shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to add role \"%s\" to the shop: %s", roleName, err))
 		return
 	}
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Info("Role added to shop")
+	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Info("role added to shop")
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role \"%s\" has been added to the shop.", roleName))
 }
 
