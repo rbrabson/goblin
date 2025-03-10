@@ -29,12 +29,12 @@ type Plugin struct{}
 func Start() {
 	plugin = &Plugin{}
 	discord.RegisterPlugin(plugin)
-	go sendMonthlyLeaderboard()
 }
 
 // Initialize saves the Discord bot to be used by the leaderboard.
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
+	go sendMonthlyLeaderboard()
 }
 
 // Stop stops the leaderboard. This is called when the bot is shutting down.
