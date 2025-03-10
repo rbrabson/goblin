@@ -345,7 +345,7 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sb.WriteString(p.Sprintf(" Description: %s,", item.Description))
 		sb.WriteString(p.Sprintf(" Cost: %d", item.Price))
 		if item.Duration != 0 {
-			sb.WriteString(p.Sprintf(", Duration: %s", item.Duration))
+			sb.WriteString(p.Sprintf(", Duration: %s", disctime.FormatDuration(item.Duration)))
 			sb.WriteString(p.Sprintf(", Auto-Rewable: %t", item.AutoRenewable))
 		}
 		sb.WriteString("\n")
