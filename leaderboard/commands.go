@@ -52,6 +52,30 @@ var (
 			Name:        "lb",
 			Description: "Commands used to retrieve leaderboards on this server.",
 			Options: []*discordgo.ApplicationCommandOption{
+				// {
+				// 	Name:        "type",
+				// 	Description: "Type of leaderboard to return",
+				// 	Type:        discordgo.ApplicationCommandOptionInteger,
+				// 	Choices: []*discordgo.ApplicationCommandOptionChoice{
+				// 		{
+				// 			Name:  "monthly",
+				// 			Value: 1,
+				// 		},
+				// 		{
+				// 			Name:  "current",
+				// 			Value: 2,
+				// 		},
+				// 		{
+				// 			Name:  "lifetime",
+				// 			Value: 3,
+				// 		},
+				// 		{
+				// 			Name:  "rank",
+				// 			Value: 4,
+				// 		},
+				// 	},
+				// 	Required: true,
+				// },
 				{
 					Name:        "current",
 					Description: "Gets the current economy leaderboard.",
@@ -123,6 +147,19 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		lifetimeLeaderboard(s, i)
 	case "rank":
 		rank(s, i)
+	case "type":
+		switch options[0].IntValue() {
+		case 1:
+			monthlyLeaderboard(s, i)
+		case 2:
+			currentLeaderboard(s, i)
+		case 3:
+			lifetimeLeaderboard(s, i)
+		case 4:
+			rank(s, i)
+		}
+	default:
+		discmsg.SendEphemeralResponse(s, i, "Invalid command: "+options[0].Name)
 	}
 }
 

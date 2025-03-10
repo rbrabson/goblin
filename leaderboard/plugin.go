@@ -33,6 +33,7 @@ func Start() {
 
 // Initialize saves the Discord bot to be used by the leaderboard.
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
+	bot = b
 	db = d
 	go sendMonthlyLeaderboard()
 }
