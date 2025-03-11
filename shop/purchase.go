@@ -30,9 +30,9 @@ type Purchase struct {
 	Item        *ShopItem          `json:"item" bson:"item,inline"`
 	Status      string             `json:"status" bson:"status"`
 	PurchasedOn time.Time          `json:"purchased_on" bson:"purchased_on"`
-	ExpiresOn   time.Time          `json:"expires_on,omitempty" bson:"expires_on,omitempty"`
-	AutoRenew   bool               `json:"autoRenew,omitempty" bson:"autoRenew,omitempty"`
-	IsExpired   bool               `json:"isExpired,omitempty" bson:"isExpired,omitempty"`
+	ExpiresOn   time.Time          `json:"expires_on" bson:"expires_on"`
+	AutoRenew   bool               `json:"autoRenew" bson:"autoRenew"`
+	IsExpired   bool               `json:"is_expired" bson:"is_expired"`
 }
 
 // GetAllRoles returns all the purchases made by a member in the guild.

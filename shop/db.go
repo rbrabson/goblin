@@ -129,8 +129,8 @@ func writePurchase(item *Purchase) error {
 	defer log.Trace("<-- shop.writeShopItem")
 
 	var filter bson.D
-	if item.Item.ID != primitive.NilObjectID {
-		filter = bson.D{{Key: "_id", Value: item.Item.ID}}
+	if item.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: item.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: item.Item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "name", Value: item.Item.Name}, {Key: "type", Value: item.Item.Type}}
 	}
