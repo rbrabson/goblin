@@ -375,7 +375,7 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if item.Duration != "" {
 			duration, _ := disctime.ParseDuration(item.Duration)
 			sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
-			sb.WriteString(p.Sprintf("Auto-Rewable: %t", item.AutoRenewable))
+			// sb.WriteString(p.Sprintf("Auto-Rewable: %t", item.AutoRenewable))
 		}
 		shopItems = append(shopItems, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
