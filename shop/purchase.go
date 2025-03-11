@@ -49,7 +49,6 @@ func GetPurchase(guildID string, memberID string, itemName string, itemType stri
 	defer log.Trace("<-- shop.GetPurchase")
 	purchase, err := readPurchase(guildID, memberID, itemName, itemType)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": itemName, "error": err}).Error("unable to read purchase from the database")
 		return nil
 	}
 	return purchase
