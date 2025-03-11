@@ -178,6 +178,9 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
+	// TODO: verify the role doesn't exist
+	// TODO: verify the role is available on the server
+
 	// Get the options for the role to be added
 	var roleName string
 	var roleCost int
