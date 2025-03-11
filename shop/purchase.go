@@ -47,8 +47,6 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 
 	purchaseCmp := func(a, b *Purchase) int {
 		now := time.Now()
-		log.WithFields(log.Fields{"a": a, "b": b}).Error("comparing purchases")
-
 		// Sort based on one of the two purchases having expired but the other not having expired
 		if (!a.ExpiresOn.IsZero() && a.ExpiresOn.Before(now)) && (b.ExpiresOn.IsZero() || b.ExpiresOn.After(now)) {
 			return 1

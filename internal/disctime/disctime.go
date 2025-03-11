@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // currMon th returns the month and year at for the start of the month
@@ -63,8 +61,6 @@ func ParseDuration(t string) (time.Duration, error) {
 
 	now := time.Now()
 	future := now.AddDate(year, month, day)
-	log.WithFields(log.Fields{"year": year, "month": month, "day": day}).Error("parsed duration")
-	log.WithFields(log.Fields{"now": now, "future": future, "duration": future.Sub(future)}).Error("parsed duration")
 	return future.Sub(now), nil
 }
 
