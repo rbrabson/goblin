@@ -71,11 +71,6 @@ var (
 						},
 					},
 				},
-				{
-					Name:        "list",
-					Description: "Lists the items in the shop.",
-					Type:        discordgo.ApplicationCommandOptionSubCommand,
-				},
 			},
 		},
 	}
