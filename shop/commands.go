@@ -55,18 +55,18 @@ var (
 									Description: "The description of the role that may be purchased.",
 									Required:    false,
 								},
-								// {
-								// 	Type:        discordgo.ApplicationCommandOptionString,
-								// 	Name:        "duration",
-								// 	Description: "The duration of the role.",
-								// 	Required:    false,
-								// },
-								// {
-								// 	Type:        discordgo.ApplicationCommandOptionBoolean,
-								// 	Name:        "renewable",
-								// 	Description: "Whether the role is renewable.",
-								// 	Required:    false,
-								// },
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "duration",
+									Description: "The duration of the role.",
+									Required:    false,
+								},
+								{
+									Type:        discordgo.ApplicationCommandOptionBoolean,
+									Name:        "renewable",
+									Description: "Whether the role is renewable.",
+									Required:    false,
+								},
 							},
 						},
 					},
@@ -367,8 +367,8 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	shopItems := make([]*discordgo.MessageEmbedField, 0, len(items))
-	sb := strings.Builder{}
 	for _, item := range items {
+		sb := strings.Builder{}
 		sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
 		sb.WriteString(p.Sprintf("Cost: %d", item.Price))
 		if item.Duration != "" {
@@ -379,7 +379,7 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		shopItems = append(shopItems, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
 			Value:  sb.String(),
-			Inline: true,
+			Inline: false,
 		})
 	}
 
@@ -632,7 +632,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		purchasesMsg = append(purchasesMsg, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
 			Value:  sb.String(),
-			Inline: true,
+			Inline: false,
 		})
 	}
 
