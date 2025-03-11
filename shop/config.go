@@ -49,7 +49,9 @@ func (c *Config) SetChannel(channelID string) {
 	defer log.Trace("<-- shop.Config.SetChannel")
 
 	c.ChannelID = channelID
+	c.Interaction = nil
 	writeConfig(c)
+	log.WithFields(log.Fields{"guildID": c.GuildID, "channel": channelID}).Debug("set shop channel")
 }
 
 // SetInteraction saves the interaction used to publish the shop items.
@@ -59,4 +61,5 @@ func (c *Config) SetInteraction(interaction *discordgo.Interaction) {
 
 	c.Interaction = interaction
 	writeConfig(c)
+	log.WithFields(log.Fields{"guildID": c.GuildID, "interaction": interaction.ID}).Debug("set shop interaction")
 }

@@ -50,22 +50,6 @@ func writeConfig(config *Config) error {
 	return nil
 }
 
-// deleteConfig deletes the configuration from the database.
-func deleteConfig(guildID string) error {
-	log.Trace("--> shop.deleteConfig")
-	defer log.Trace("<-- shop.deleteConfig")
-
-	filter := bson.D{{Key: "guild_id", Value: guildID}}
-	err := db.Delete(CONFIG_COLLECTION, filter)
-	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to delete shop config from the database")
-		return err
-	}
-	log.WithFields(log.Fields{"guild": guildID}).Debug("delete shop config from the database")
-
-	return nil
-}
-
 // readShopItems reads all the shop items for the given guild.
 func readShopItems(guildID string) ([]*ShopItem, error) {
 	log.Trace("--> shop.readShopItems")
