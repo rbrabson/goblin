@@ -1,6 +1,7 @@
 package shop
 
 import (
+	"slices"
 	"strings"
 	"time"
 
@@ -213,6 +214,19 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		roleDesc = roleName + " role"
 	}
 
+	// Verify the role exists on the server
+	allRoles := guild.GetGuildRoles(s, i.GuildID)
+	roleNames := make([]string, 0, len(allRoles))
+	for _, role := range allRoles {
+		roleNames = append(roleNames, role.Name)
+	}
+	if !slices.Contains(roleNames, roleName) {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found on the server.", roleName))
+		return
+	}
+
+	// Add the role to the shop. If it already exists, this will return an error.
 	shop := GetShop(i.GuildID)
 	_, err := shop.AddShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
 	if err != nil {
@@ -423,6 +437,11 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- shop.buyRoleFromShop")
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
+
+	// TODO: verify the role exists on the server
+	// TODO: verify the person doesn't already have the role
+	// TODO: verify the person doesn't have an auto-renew purchase
+	// TODO: verify the person has enough money to buy the role
 
 	options := i.ApplicationCommandData().Options
 
