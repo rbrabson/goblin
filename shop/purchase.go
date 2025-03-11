@@ -3,6 +3,7 @@ package shop
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rbrabson/goblin/bank"
@@ -140,13 +141,25 @@ func (p *Purchase) Update(autoRenew bool) error {
 
 // String returns a string representation of the purchase.
 func (p *Purchase) String() string {
-	return fmt.Sprintf("Purchase{GuildID: %s, MemberID: %s, Item: %v, Status: %s, PurchasedOn: %s, ExpiresOn: %s, AutoRenew: %t}",
-		p.Item.GuildID,
-		p.MemberID,
-		p.Item,
-		p.Status,
-		p.PurchasedOn.Format(time.RFC3339),
-		p.ExpiresOn.Format(time.RFC3339),
-		p.AutoRenew,
-	)
+	sb := &strings.Builder{}
+
+	sb.WriteString("Purchase{")
+	sb.WriteString("GuildID: ")
+	sb.WriteString(p.GuildID)
+	sb.WriteString(", MemberID: ")
+	sb.WriteString(p.MemberID)
+	sb.WriteString(", Item: ")
+	sb.WriteString(p.Item.String())
+	sb.WriteString(", Status: ")
+	sb.WriteString(p.Status)
+	sb.WriteString(", PurchasedOn: ")
+	sb.WriteString(p.PurchasedOn.Format(time.RFC3339))
+	if !p.ExpiresOn.IsZero() {
+		sb.WriteString(", ExpiresOn: ")
+		sb.WriteString(p.ExpiresOn.Format(time.RFC3339))
+		sb.WriteString(", AutoRenew: ")
+		sb.WriteString(fmt.Sprintf("%v", p.AutoRenew))
+	}
+
+	return sb.String()
 }

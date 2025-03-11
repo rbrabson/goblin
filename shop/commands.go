@@ -3,7 +3,6 @@ package shop
 import (
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/discord"
@@ -469,7 +468,7 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	if slices.Contains(member.Roles, guildRoleID) {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Error("member already has role")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Warn("member already has role")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the \"%s\" role.", roleName))
 		return
 	}
@@ -504,7 +503,7 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Purchase the role
-	_, err = shopItem.Purchase(i.Member.User.ID, roleRenew)
+	purchase, err = shopItem.Purchase(i.Member.User.ID, roleRenew)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
 		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
@@ -520,7 +519,7 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Info("Role purchased")
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("role purchased")
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role \"%s\" has been purchased.", roleName))
 }
 
@@ -606,7 +605,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		sb.WriteString(p.Sprintf(", Type: %s,", purchase.Item.Type))
 		sb.WriteString(p.Sprintf(" Description: %s", purchase.Item.Description))
 		sb.WriteString(p.Sprintf(", Price: %d", purchase.Item.Price))
-		if purchase.ExpiresOn.Equal(time.Time{}) {
+		if !purchase.ExpiresOn.IsZero() {
 			sb.WriteString(p.Sprintf(", Expires On: %s", purchase.ExpiresOn))
 			sb.WriteString(p.Sprintf(", Auto-Renew: %t", purchase.AutoRenew))
 		}
