@@ -252,6 +252,7 @@ func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		removeRoleFromShop(s, i)
 	default:
 		msg := p.Sprint("Command \"%s\\%s\" is not recognized.", options[0].Name, options[0].Options[0].Name)
+		log.Warn(msg)
 		discmsg.SendEphemeralResponse(s, i, msg)
 	}
 }
@@ -272,12 +273,12 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	shop := GetShop(i.GuildID)
 	err := shop.RemoveShopItem(roleName, ROLE)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("Failed to remove role from shop: %s", err)
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to remove role from shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to remove role \"%s\" from the shop: %s", roleName, err))
 		return
 	}
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Info("Role removed from shop")
+	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Info("role removed from shop")
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role \"%s\" has been removed from the shop.", roleName))
 }
 
