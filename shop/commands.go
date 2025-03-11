@@ -344,6 +344,12 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	shop := GetShop(i.GuildID)
 	items := shop.Items
 
+	if len(items) == 0 {
+		log.WithFields(log.Fields{"guildID": i.GuildID}).Debug("no items found")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("No items found in the shop."))
+		return
+	}
+
 	sb := strings.Builder{}
 	for _, item := range items {
 		sb.WriteString(p.Sprintf("`%s`", item.Name))
@@ -360,6 +366,7 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	discmsg.SendEphemeralResponse(s, i, sb.String())
 	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(items)}).Info("Shop items listed")
+	log.Error(items)
 }
 
 // shop routes the shop commands to the proper handers.

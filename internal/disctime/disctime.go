@@ -2,8 +2,11 @@ package disctime
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // currMon th returns the month and year at for the start of the month
@@ -42,26 +45,34 @@ func ParseDuration(t string) (time.Duration, error) {
 		if piece == "" {
 			continue
 		}
+		numToAdd, err := strconv.Atoi(string(runes[:len(runes)-1]))
+		if err != nil {
+			return 0, fmt.Errorf("invalid duration: %s", t)
+		}
 		switch runes[len(runes)-1] {
 		case 'y', 'Y':
-			year++
+			year += numToAdd
 		case 'm', 'M':
-			month++
+			month += numToAdd
 		case 'd', 'D':
-			day++
+			day += numToAdd
 		default:
 			return 0, fmt.Errorf("invalid duration: %s", t)
 		}
 	}
 
-	future := time.Now().AddDate(year, month, day)
-	return time.Until(future), nil
+	now := time.Now()
+	future := now.AddDate(year, month, day)
+	log.WithFields(log.Fields{"year": year, "month": month, "day": day}).Error("parsed duration")
+	log.WithFields(log.Fields{"now": now, "future": future, "duration": future.Sub(future)}).Error("parsed duration")
+	return future.Sub(now), nil
 }
 
 // FormatDuration returns duration formatted for inclusion in Discord messages.
 func FormatDuration(duration time.Duration) string {
-	currentYear, currentMonth, currentDay := time.Now().Date()
-	futureYear, futureMonth, futureDay := time.Now().Add(duration).Date()
+	now := time.Now()
+	currentYear, currentMonth, currentDay := now.Date()
+	futureYear, futureMonth, futureDay := now.Add(duration).Date()
 	elapsedYear := futureYear - currentYear
 	elapsedMonth := futureMonth - currentMonth
 	elapsedDay := futureDay - currentDay
