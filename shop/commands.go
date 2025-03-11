@@ -438,11 +438,6 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	// TODO: verify the role exists on the server
-	// TODO: verify the person doesn't already have the role
-	// TODO: verify the person doesn't have an auto-renew purchase
-	// TODO: verify the person has enough money to buy the role
-
 	options := i.ApplicationCommandData().Options
 
 	// Get the role details
@@ -451,13 +446,28 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// None of the following are configurable at the present
 	roleRenew := false
 
-	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if purchase != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have already purchased role \"%s\".", roleName))
+	// Check to see if the member already has the role
+	member, err := s.GuildMember(i.GuildID, i.Member.User.ID)
+	memberRoles := member.Roles
+	if slices.Contains(memberRoles, roleName) {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("member already has role")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the \"%s\" role.", roleName))
 		return
 	}
 
+	// Make sure the role still exits on the server
+	roles := guild.GetGuildRoles(s, i.GuildID)
+	roleNames := make([]string, 0, len(roles))
+	for _, role := range roles {
+		roleNames = append(roleNames, role.Name)
+	}
+	if !slices.Contains(roleNames, roleName) {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found on the server.", roleName))
+		return
+	}
+
+	// Make sure the role is still available in the shop
 	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
 	if shopItem == nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
@@ -465,11 +475,28 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	// Make sure the role hasn't already been purchased
+	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
+	if purchase != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have already purchased role \"%s\".", roleName))
+		return
+	}
+
 	// Purchase the role
-	_, err := shopItem.Purchase(i.Member.User.ID, roleRenew)
+	_, err = shopItem.Purchase(i.Member.User.ID, roleRenew)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to purchase role \"%s\"", roleName))
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
+		return
+	}
+
+	// Assign the role to the user
+	err = guild.AssignRole(s, i.GuildID, i.Member.User.ID, roleName)
+	if err != nil {
+		purchase.Return()
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Error("failed to assign role")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to assign role \"%s\" to you: %s", roleName, err))
 		return
 	}
 

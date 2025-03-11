@@ -67,6 +67,31 @@ func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
 	return roleNames
 }
 
+// AssignRole assigns a role to the member in the guild.
+func AssignRole(s *discordgo.Session, guildID string, memberID string, roleName string) error {
+	log.Trace("--> role.AssignRole")
+	defer log.Trace("<-- role.AssignRole")
+
+	guildRoles := GetGuildRoles(s, guildID)
+	roleID := ""
+	for _, role := range guildRoles {
+		if role.Name == roleName {
+			roleID = role.ID
+			break
+		}
+	}
+	if roleID == "" {
+		log.WithFields(log.Fields{"guildID": guildID, "roleName": roleName}).Error("role not found")
+		return nil
+	}
+
+	err := s.GuildMemberRoleAdd(guildID, memberID, roleID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "roleID": roleID, "error": err}).Error("failed to assign role")
+	}
+	return err
+}
+
 // CheckAdminRole checks if a member has any admin role in the server.
 func CheckAdminRole(adminRoles []string, memberRoles []string) bool {
 	log.Trace("--> role.CheckAdminRole")

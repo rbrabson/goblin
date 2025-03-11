@@ -146,10 +146,10 @@ func (item *ShopItem) Purchase(memberID string, renew bool) (*Purchase, error) {
 	log.Trace("--> shop.ShopItem.Purchase")
 	defer log.Trace("<-- shop.ShopItem.Purchase")
 
-	purchase, err := NewPurchase(item.GuildID, memberID, item, renew)
+	purchase, err := PurchaseItem(item.GuildID, memberID, item, renew)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": item.GuildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to create purchase")
-		return nil, fmt.Errorf("unable to purchase the item")
+		return nil, err
 	}
 
 	return purchase, nil

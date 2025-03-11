@@ -1,12 +1,16 @@
 package shop
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/disctime"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -54,9 +58,19 @@ func GetPurchase(guildID string, memberID string, itemName string, itemType stri
 	return purchase
 }
 
-// NewPurchase creates a new Purchase with the given guild ID, member ID, and a purchasable
+// PurchaseItem creates a new Purchase with the given guild ID, member ID, and a purchasable
 // shop item.
-func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
+func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
+	bankAccount := bank.GetAccount(guildID, memberID)
+	err := bankAccount.Withdraw(item.Price)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to withdraw cash from the bank account")
+		return nil, errors.New(p.Sprintf("insufficient funds to buy the %s `%s` for %d", item.Type, item.Name, item.Price))
+	}
+
 	purchase := &Purchase{
 		GuildID:     guildID,
 		MemberID:    memberID,
@@ -71,14 +85,36 @@ func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchas
 		duration, _ := disctime.ParseDuration(item.Duration)
 		purchase.ExpiresOn = time.Now().Add(duration)
 	}
-	err := writePurchase(purchase)
+	err = writePurchase(purchase)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to write purchase to the database")
+		bankAccount.Deposit(item.Price)
 		return nil, fmt.Errorf("unable to write purchase to the database: %w", err)
 	}
 	log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Info("creating new purchase")
 
 	return purchase, nil
+}
+
+// Return the purchase to the shop.
+func (p *Purchase) Return() error {
+	log.Trace("--> shop.Purchase.Return")
+	defer log.Trace("<-- shop.Purchase.Return")
+
+	bankAccount := bank.GetAccount(p.GuildID, p.MemberID)
+	err := bankAccount.Deposit(p.Item.Price)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to deposit cash to the bank account")
+		return fmt.Errorf("unable to deposit cash to the bank account: %w", err)
+	}
+
+	err = deletePurchase(p)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to delete purchase from the database")
+		return fmt.Errorf("unable to delete purchase from the database: %w", err)
+	}
+
+	return nil
 }
 
 // Update updates the purchase with the given autoRenew value.
