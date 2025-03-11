@@ -7,9 +7,64 @@ import (
 )
 
 const (
+	CONFIG_COLLECTION    = "shop_configs"
 	SHOP_ITEM_COLLECTION = "shop_items"
 	PURCHASE_COLLECTION  = "shop_purchases"
 )
+
+// readConfig reads the configuration from the database. If the config does not exist, it returns nil.
+func readConfig(guildID string) (*Config, error) {
+	log.Trace("--> shop.readConfig")
+	defer log.Trace("<-- shop.readConfig")
+
+	filter := bson.M{"guild_id": guildID}
+	var config *Config
+	err := db.FindOne(CONFIG_COLLECTION, filter, &config)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID}).Error("unable to read shop config from the database")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"guild": guildID}).Debug("read shop config from the database")
+
+	return config, nil
+}
+
+// writeConfig writes the configuration to the database.
+func writeConfig(config *Config) error {
+	log.Trace("--> shop.writeConfig")
+	defer log.Trace("<-- shop.writeConfig")
+
+	var filter bson.D
+	if config.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: config.ID}}
+	} else {
+		filter = bson.D{{Key: "guild_id", Value: config.GuildID}}
+	}
+	err := db.UpdateOrInsert(CONFIG_COLLECTION, filter, config)
+	if err != nil {
+		log.WithFields(log.Fields{"config": config, "error": err}).Error("unable to write shop config to the database")
+		return err
+	}
+	log.WithFields(log.Fields{"config": config}).Debug("write shop config to the database")
+
+	return nil
+}
+
+// deleteConfig deletes the configuration from the database.
+func deleteConfig(guildID string) error {
+	log.Trace("--> shop.deleteConfig")
+	defer log.Trace("<-- shop.deleteConfig")
+
+	filter := bson.D{{Key: "guild_id", Value: guildID}}
+	err := db.Delete(CONFIG_COLLECTION, filter)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to delete shop config from the database")
+		return err
+	}
+	log.WithFields(log.Fields{"guild": guildID}).Debug("delete shop config from the database")
+
+	return nil
+}
 
 // readShopItems reads all the shop items for the given guild.
 func readShopItems(guildID string) ([]*ShopItem, error) {
