@@ -51,6 +51,22 @@ func GetGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
 	return guildRoles
 }
 
+// GetGuildRole returns the role for a guild with the given name.
+// If the role is not found, it returns nil.
+func GetGuildRole(s *discordgo.Session, guildID string, roleName string) *discordgo.Role {
+	log.Trace("--> role.GetGuildRole")
+	defer log.Trace("<-- role.GetGuildRole")
+
+	guildRoles := GetGuildRoles(s, guildID)
+	for _, role := range guildRoles {
+		if role.Name == roleName {
+			return role
+		}
+	}
+	log.WithFields(log.Fields{"guildID": guildID, "roleName": roleName}).Debug("role not found")
+	return nil
+}
+
 // GetMemberRoles returns the list of roles names for a member with the given set of role IDs
 func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
 	log.Trace("--> role.GetMemberRoles")

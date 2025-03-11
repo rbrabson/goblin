@@ -179,9 +179,6 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	// TODO: verify the role doesn't exist
-	// TODO: verify the role is available on the server
-
 	// Get the options for the role to be added
 	var roleName string
 	var roleCost int
@@ -215,12 +212,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Verify the role exists on the server
-	allRoles := guild.GetGuildRoles(s, i.GuildID)
-	roleNames := make([]string, 0, len(allRoles))
-	for _, role := range allRoles {
-		roleNames = append(roleNames, role.Name)
-	}
-	if !slices.Contains(roleNames, roleName) {
+	if role := guild.GetGuildRole(s, i.GuildID, roleName); role == nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found on the server.", roleName))
 		return
@@ -467,16 +459,9 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// None of the following are configurable at the present
 	roleRenew := false
 
-	// Make sure the role still exists on the server
-	var guildRoleID string
-	guildRoles := guild.GetGuildRoles(s, i.GuildID)
-	for _, role := range guildRoles {
-		if role.Name == roleName {
-			guildRoleID = role.ID
-			break
-		}
-	}
-	if guildRoleID == "" {
+	// Verify the role exists on the server
+	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
+	if guildRole == nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found on the server.", roleName))
 		return
@@ -489,12 +474,12 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to read member: %s", err))
 		return
 	}
-	if slices.Contains(member.Roles, guildRoleID) {
+	if slices.Contains(member.Roles, guildRole.ID) {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Warn("member already has role")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the \"%s\" role.", roleName))
 		return
 	}
-	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName, "guildRoleID": guildRoleID, "memberRoles": member.Roles}).Debug("role not assigned to member")
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName, "guildRoleID": guildRole.ID, "memberRoles": member.Roles}).Debug("role not assigned to member")
 
 	// Make sure the role still exits on the server
 	roles := guild.GetGuildRoles(s, i.GuildID)
