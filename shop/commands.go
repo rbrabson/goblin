@@ -446,14 +446,34 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// None of the following are configurable at the present
 	roleRenew := false
 
+	// Make sure the role still exists on the server
+	var guildRoleID string
+	guildRoles := guild.GetGuildRoles(s, i.GuildID)
+	for _, role := range guildRoles {
+		if role.Name == roleName {
+			guildRoleID = role.ID
+			break
+		}
+	}
+	if guildRoleID == "" {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found on the server.", roleName))
+		return
+	}
+
 	// Check to see if the member already has the role
 	member, err := s.GuildMember(i.GuildID, i.Member.User.ID)
-	memberRoles := member.Roles
-	if slices.Contains(memberRoles, roleName) {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("member already has role")
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("failed to read member")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to read member: %s", err))
+		return
+	}
+	if slices.Contains(member.Roles, guildRoleID) {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Error("member already has role")
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the \"%s\" role.", roleName))
 		return
 	}
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName, "guildRoleID": guildRoleID, "memberRoles": member.Roles}).Debug("role not assigned to member")
 
 	// Make sure the role still exits on the server
 	roles := guild.GetGuildRoles(s, i.GuildID)
