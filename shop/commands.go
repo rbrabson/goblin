@@ -190,7 +190,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var roleRenewable bool
 	options := i.ApplicationCommandData().Options
 	for _, option := range options[0].Options[0].Options {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "option": option}).Debug("processing option")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "option": option}).Trace("processing option")
 		switch option.Name {
 		case "name":
 			roleName = option.StringValue()
