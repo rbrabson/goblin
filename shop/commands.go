@@ -366,23 +366,43 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	shopItems := make([]*discordgo.MessageEmbedField, 0, len(items))
 	sb := strings.Builder{}
 	for _, item := range items {
-		sb.WriteString(p.Sprintf("`%s`", item.Name))
-		sb.WriteString(p.Sprintf(", Type: %s,", unicode.FirstToUpper(item.Type)))
-		sb.WriteString(p.Sprintf(" Description: %s,", item.Description))
-		sb.WriteString(p.Sprintf(" Cost: %d", item.Price))
+		sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
+		sb.WriteString(p.Sprintf("Cost: %d", item.Price))
 		if item.Duration != "" {
 			duration, _ := disctime.ParseDuration(item.Duration)
-			sb.WriteString(p.Sprintf(", Duration: %s", disctime.FormatDuration(duration)))
-			sb.WriteString(p.Sprintf(", Auto-Rewable: %t", item.AutoRenewable))
+			sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
+			sb.WriteString(p.Sprintf("Auto-Rewable: %t", item.AutoRenewable))
 		}
-		sb.WriteString("\n")
+		shopItems = append(shopItems, &discordgo.MessageEmbedField{
+			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
+			Value:  sb.String(),
+			Inline: true,
+		})
 	}
 
-	discmsg.SendEphemeralResponse(s, i, sb.String())
-	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(items)}).Info("Shop items listed")
-	log.Error(items)
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:  "Shop Items",
+			Fields: shopItems,
+		},
+	}
+
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: embeds,
+			Flags:  discordgo.MessageFlagsEphemeral,
+		},
+	})
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("unable to send list of shop items")
+		return
+	}
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(items)}).Info("shop items listed")
 }
 
 // shop routes the shop commands to the proper handers.
@@ -599,19 +619,41 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 
-	sb := strings.Builder{}
+	purchasesMsg := make([]*discordgo.MessageEmbedField, 0, len(purchases))
+
 	for _, purchase := range purchases {
-		sb.WriteString(p.Sprintf("`%s`", purchase.Item.Name))
-		sb.WriteString(p.Sprintf(", Type: %s,", purchase.Item.Type))
-		sb.WriteString(p.Sprintf(" Description: %s", purchase.Item.Description))
-		sb.WriteString(p.Sprintf(", Price: %d", purchase.Item.Price))
+		sb := strings.Builder{}
+		sb.WriteString(p.Sprintf("Description: %s\n", purchase.Item.Description))
+		sb.WriteString(p.Sprintf("Price: %d", purchase.Item.Price))
 		if !purchase.ExpiresOn.IsZero() {
-			sb.WriteString(p.Sprintf(", Expires On: %s", purchase.ExpiresOn))
-			sb.WriteString(p.Sprintf(", Auto-Renew: %t", purchase.AutoRenew))
+			sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn))
+			sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
 		}
-		sb.WriteString("\n")
+		purchasesMsg = append(purchasesMsg, &discordgo.MessageEmbedField{
+			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
+			Value:  sb.String(),
+			Inline: true,
+		})
 	}
 
-	discmsg.SendEphemeralResponse(s, i, sb.String())
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:  "Purchases",
+			Fields: purchasesMsg,
+		},
+	}
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: embeds,
+			Flags:  discordgo.MessageFlagsEphemeral,
+		},
+	})
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("unable to send shop purchases")
+		return
+	}
+
 	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(purchases)}).Debug("shop purchases listed")
 }
