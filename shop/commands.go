@@ -3,6 +3,7 @@ package shop
 import (
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/discord"
@@ -606,12 +607,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	purchases, err := readPurchases(i.GuildID, i.Member.User.ID)
-	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("Failed to read purchases from shop")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to read purchases from the shop: %s", err))
-		return
-	}
+	purchases := GetAllPurchases(i.GuildID, i.Member.User.ID)
 
 	if len(purchases) == 0 {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID}).Debug("no purchases found")
@@ -626,8 +622,12 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		sb.WriteString(p.Sprintf("Description: %s\n", purchase.Item.Description))
 		sb.WriteString(p.Sprintf("Price: %d", purchase.Item.Price))
 		if !purchase.ExpiresOn.IsZero() {
-			sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn))
-			sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
+			if purchase.ExpiresOn.Before(time.Now()) {
+				sb.WriteString(p.Sprintf("\nExpired On: %s\n", purchase.ExpiresOn.Format("Jan 02 2006")))
+			} else {
+				sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn.Format("Jan 02 2006")))
+				sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
+			}
 		}
 		purchasesMsg = append(purchasesMsg, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
@@ -643,7 +643,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		},
 	}
 
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: embeds,
