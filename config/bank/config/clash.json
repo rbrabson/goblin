@@ -1,0 +1,5 @@
+{
+    "bank_name": "Treasury",
+    "currency": "Coins",
+    "default_balance": 20000
+  }

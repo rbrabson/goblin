@@ -1,7 +1,10 @@
 package bank
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -30,16 +33,46 @@ func GetBank(guildID string) *Bank {
 
 	bank := readBank(guildID)
 	if bank == nil {
-		bank = newBank(guildID)
+		bank = readBankFromFile(guildID)
 	}
 
 	return bank
 }
 
-// newBank creates a new bank for the given guild.
-func newBank(guildID string) *Bank {
-	log.Trace("--> bank.newBank")
-	defer log.Trace("<-- bank.newBank")
+// readBankFromFile creates a new bank for the given guild.
+func readBankFromFile(guildID string) *Bank {
+	log.Trace("--> bank.readBankFromFile")
+	defer log.Trace("<-- bank.readBankFromFile")
+
+	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
+	configDir := os.Getenv("DISCORD_CONFIG_DIR")
+	configFileName := filepath.Join(configDir, "bank", "config", configTheme+".json")
+	bytes, err := os.ReadFile(configFileName)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to read default bank config")
+		return getDefaultBank(guildID)
+	}
+
+	bank := &Bank{}
+	err = json.Unmarshal(bytes, bank)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to unmarshal default bank config")
+		return getDefaultBank(guildID)
+	}
+	bank.GuildID = guildID
+
+	writeBank(bank)
+	log.WithField("guild", bank.GuildID).Info("create new bank")
+
+	return bank
+}
+
+// getDefaultBank returns a default bank for the given guild.
+// This is used when no default bank config file is found, or when
+// the default bank config file is invalid.
+func getDefaultBank(guildID string) *Bank {
+	log.Trace("--> bank.getDefaultBank")
+	defer log.Trace("<-- bank.getDefaultBank")
 
 	bank := &Bank{
 		GuildID:        guildID,
@@ -51,7 +84,6 @@ func newBank(guildID string) *Bank {
 	log.WithField("guild", bank.GuildID).Info("create new bank")
 
 	return bank
-
 }
 
 // SetDefaultBalance sets the default balance for the bank.

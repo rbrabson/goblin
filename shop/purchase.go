@@ -1,11 +1,17 @@
 package shop
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/internal/discmsg"
+	"github.com/rbrabson/goblin/internal/disctime"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -48,15 +54,24 @@ func GetPurchase(guildID string, memberID string, itemName string, itemType stri
 	defer log.Trace("<-- shop.GetPurchase")
 	purchase, err := readPurchase(guildID, memberID, itemName, itemType)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": itemName, "error": err}).Error("unable to read purchase from the database")
 		return nil
 	}
 	return purchase
 }
 
-// NewPurchase creates a new Purchase with the given guild ID, member ID, and a purchasable
+// PurchaseItem creates a new Purchase with the given guild ID, member ID, and a purchasable
 // shop item.
-func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
+func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
+	bankAccount := bank.GetAccount(guildID, memberID)
+	err := bankAccount.Withdraw(item.Price)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to withdraw cash from the bank account")
+		return nil, errors.New(p.Sprintf("insufficient funds to buy the %s `%s` for %d", item.Type, item.Name, item.Price))
+	}
+
 	purchase := &Purchase{
 		GuildID:     guildID,
 		MemberID:    memberID,
@@ -67,17 +82,40 @@ func NewPurchase(guildID, memberID string, item *ShopItem, renew bool) (*Purchas
 	if item.AutoRenewable {
 		purchase.AutoRenew = renew
 	}
-	if item.Duration != 0 {
-		purchase.ExpiresOn = time.Now().Add(item.Duration)
+	if item.Duration != "" {
+		duration, _ := disctime.ParseDuration(item.Duration)
+		purchase.ExpiresOn = time.Now().Add(duration)
 	}
-	err := writePurchase(purchase)
+	err = writePurchase(purchase)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to write purchase to the database")
+		bankAccount.Deposit(item.Price)
 		return nil, fmt.Errorf("unable to write purchase to the database: %w", err)
 	}
 	log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Info("creating new purchase")
 
 	return purchase, nil
+}
+
+// Return the purchase to the shop.
+func (p *Purchase) Return() error {
+	log.Trace("--> shop.Purchase.Return")
+	defer log.Trace("<-- shop.Purchase.Return")
+
+	bankAccount := bank.GetAccount(p.GuildID, p.MemberID)
+	err := bankAccount.Deposit(p.Item.Price)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to deposit cash to the bank account")
+		return fmt.Errorf("unable to deposit cash to the bank account: %w", err)
+	}
+
+	err = deletePurchase(p)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to delete purchase from the database")
+		return fmt.Errorf("unable to delete purchase from the database: %w", err)
+	}
+
+	return nil
 }
 
 // Update updates the purchase with the given autoRenew value.
@@ -103,13 +141,25 @@ func (p *Purchase) Update(autoRenew bool) error {
 
 // String returns a string representation of the purchase.
 func (p *Purchase) String() string {
-	return fmt.Sprintf("Purchase{GuildID: %s, MemberID: %s, Item: %v, Status: %s, PurchasedOn: %s, ExpiresOn: %s, AutoRenew: %t}",
-		p.Item.GuildID,
-		p.MemberID,
-		p.Item,
-		p.Status,
-		p.PurchasedOn.Format(time.RFC3339),
-		p.ExpiresOn.Format(time.RFC3339),
-		p.AutoRenew,
-	)
+	sb := &strings.Builder{}
+
+	sb.WriteString("Purchase{")
+	sb.WriteString("GuildID: ")
+	sb.WriteString(p.GuildID)
+	sb.WriteString(", MemberID: ")
+	sb.WriteString(p.MemberID)
+	sb.WriteString(", Item: ")
+	sb.WriteString(p.Item.String())
+	sb.WriteString(", Status: ")
+	sb.WriteString(p.Status)
+	sb.WriteString(", PurchasedOn: ")
+	sb.WriteString(p.PurchasedOn.Format(time.RFC3339))
+	if !p.ExpiresOn.IsZero() {
+		sb.WriteString(", ExpiresOn: ")
+		sb.WriteString(p.ExpiresOn.Format(time.RFC3339))
+		sb.WriteString(", AutoRenew: ")
+		sb.WriteString(fmt.Sprintf("%v", p.AutoRenew))
+	}
+
+	return sb.String()
 }

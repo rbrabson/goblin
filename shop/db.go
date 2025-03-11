@@ -115,7 +115,7 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 	var item Purchase
 	err := db.FindOne(PURCHASE_COLLECTION, filter, &item)
 	if err != nil {
-		log.WithFields(log.Fields{"filter": filter}).Error("unable to read purchase from the database")
+		log.WithFields(log.Fields{"filter": filter}).Debug("unable to read purchase from the database")
 		return nil, err
 	}
 	log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "name": itemName, "type": itemType}).Debug("read shop item from the database")

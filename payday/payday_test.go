@@ -41,7 +41,7 @@ func TestNewPayday(t *testing.T) {
 		}
 	}()
 
-	payday := newPayday("12345")
+	payday := readPaydayFromFile("12345")
 	if payday == nil {
 		t.Error("payday is nil")
 		return
@@ -67,7 +67,7 @@ func TestSetPaydayAmount(t *testing.T) {
 		}
 	}()
 
-	payday := newPayday("12345")
+	payday := readPaydayFromFile("12345")
 	if payday == nil {
 		t.Error("payday is nil")
 		return
@@ -90,7 +90,7 @@ func TestSetPaydayFrequency(t *testing.T) {
 		}
 	}()
 
-	payday := newPayday("12345")
+	payday := readPaydayFromFile("12345")
 	if payday == nil {
 		t.Error("payday is nil")
 		return

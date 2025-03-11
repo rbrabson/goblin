@@ -1,7 +1,10 @@
 package payday
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -28,7 +31,7 @@ func GetPayday(guildID string) *Payday {
 
 	payday := readPayday(guildID)
 	if payday == nil {
-		payday = newPayday(guildID)
+		payday = readPaydayFromFile(guildID)
 	}
 
 	return payday
@@ -62,10 +65,40 @@ func (payday *Payday) SetPaydayFrequency(frequency time.Duration) {
 	writePayday(payday)
 }
 
-// newPayday creates new payday information for a server/guild
-func newPayday(guildID string) *Payday {
-	log.Trace("--> payday.newPayday")
-	defer log.Trace("<-- payday.newPayday")
+// readPaydayFromFile creates new payday information for a server/guild.
+// If the default payday configuration file cannot be read or dedcoded, then a
+// default payday configuration is created.
+func readPaydayFromFile(guildID string) *Payday {
+	log.Trace("--> payday.readPaydayFromFile")
+	defer log.Trace("<-- payday.readPaydayFromFile")
+
+	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
+	configDir := os.Getenv("DISCORD_CONFIG_DIR")
+	configFileName := filepath.Join(configDir, "payday", "config", configTheme+".json")
+	bytes, err := os.ReadFile(configFileName)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to read default payday config")
+		return getDefaultPayday(guildID)
+	}
+
+	payday := &Payday{}
+	err = json.Unmarshal(bytes, payday)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to unmarshal default payday config")
+		return getDefaultPayday(guildID)
+	}
+	payday.GuildID = guildID
+
+	writePayday(payday)
+	log.WithField("guild", payday.GuildID).Info("create new payday config")
+
+	return payday
+}
+
+// getDefaultPayday creates new payday information for a server/guild
+func getDefaultPayday(guildID string) *Payday {
+	log.Trace("--> payday.getDefaultPayday")
+	defer log.Trace("<-- payday.getDefaultPayday")
 
 	payday := &Payday{
 		GuildID:         guildID,

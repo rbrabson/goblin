@@ -1,20 +1,22 @@
 package shop
 
 import (
+	"slices"
 	"strings"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
+	"github.com/rbrabson/goblin/internal/disctime"
+	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 )
 
 var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"show-admin": shopAdmin,
+		"shop-admin": shopAdmin,
 		"shop":       shop,
 	}
 )
@@ -42,93 +44,29 @@ var (
 									Required:    true,
 								},
 								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "description",
-									Description: "A brief description of the role to be purchased. This defaults to the role name",
-									Required:    false,
-								},
-								{
 									Type:        discordgo.ApplicationCommandOptionInteger,
 									Name:        "cost",
 									Description: "The cost of the role.",
 									Required:    true,
 								},
 								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "duration",
-									Description: "The length the role is assigned before being automatically removed.",
-									Required:    false,
-								},
-								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "renewable",
-									Description: "Whether the member can auto-renew the role purchase when the duration expires. This has no effect unless duration is set to a value.",
-									Required:    false,
-								},
-							},
-						},
-					},
-				},
-				{
-					Name:        "update",
-					Description: "Updates an item in the shop that may be purchased by a member.",
-					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Name:        "role",
-							Description: "Updates a purchasable role to the shop.",
-							Type:        discordgo.ApplicationCommandOptionSubCommand,
-							Options: []*discordgo.ApplicationCommandOption{
-								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "The name of the role that may be purchased.",
-									Required:    true,
-								},
-								{
 									Type:        discordgo.ApplicationCommandOptionString,
 									Name:        "description",
-									Description: "A brief description of the role to be purchased.",
-									Required:    true,
-								},
-								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "cost",
-									Description: "The cost of the role.",
-									Required:    true,
-								},
-								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "duration",
-									Description: "The length the role is assigned before being automatically removed.",
+									Description: "The description of the role that may be purchased.",
 									Required:    false,
 								},
-								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "renewable",
-									Description: "Whether the member can auto-renew the role purchase when the duration expires.",
-									Required:    false,
-								},
-							},
-						},
-					},
-				},
-				{
-					Name:        "remove",
-					Description: "Removes an item from the shop.",
-					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Name:        "role",
-							Description: "A role in the shop that is to be removed.",
-							Type:        discordgo.ApplicationCommandOptionSubCommand,
-							Options: []*discordgo.ApplicationCommandOption{
-								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "The name of the role to remove from the shop.",
-									Required:    true,
-								},
+								// {
+								// 	Type:        discordgo.ApplicationCommandOptionString,
+								// 	Name:        "duration",
+								// 	Description: "The duration of the role.",
+								// 	Required:    false,
+								// },
+								// {
+								// 	Type:        discordgo.ApplicationCommandOptionBoolean,
+								// 	Name:        "renewable",
+								// 	Description: "Whether the role is renewable.",
+								// 	Required:    false,
+								// },
 							},
 						},
 					},
@@ -136,7 +74,7 @@ var (
 				{
 					Name:        "list",
 					Description: "Lists the items in the shop.",
-					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
 			},
 		},
@@ -163,46 +101,19 @@ var (
 									Description: "The name of the role to be purchased.",
 									Required:    true,
 								},
-								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "renew",
-									Description: "Controls whether the role is auto-renewed when the purchase duration expires.",
-									Required:    false,
-								},
 							},
 						},
 					},
 				},
 				{
-					Name:        "update",
-					Description: "Changes the auto-renew status for a role that was previously purchased.",
-					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Name:        "role",
-							Description: "Adds a purchasable role to the shop.",
-							Type:        discordgo.ApplicationCommandOptionSubCommand,
-							Options: []*discordgo.ApplicationCommandOption{
-								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "The name of the role to be purchased.",
-									Required:    true,
-								},
-								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "renew",
-									Description: "Controls whether the role is auto-renewed when the purchase duration expires.",
-									Required:    true,
-								},
-							},
-						},
-					},
+					Name:        "purchases",
+					Description: "Lists the items in the shop that may be purchased.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
 				{
 					Name:        "list",
-					Description: "Lists the items in the shop that may be purchased.",
-					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
+					Description: "Lists the items in the shop.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
 			},
 		},
@@ -267,31 +178,63 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	options := i.ApplicationCommandData().Options
+	// TODO: verify the role doesn't exist
+	// TODO: verify the role is available on the server
 
-	// Get the role details, hadndlng optional paramateters
-	role := options[0].Options[0]
-	roleName := role.Options[0].StringValue()
-	roleDesc := role.Options[1].StringValue()
-	roleCost := int(role.Options[2].IntValue())
-	var roleDuration time.Duration
-	if len(role.Options) > 3 {
-		roleDuration = time.Duration(role.Options[3].IntValue())
-	}
+	// Get the options for the role to be added
+	var roleName string
+	var roleCost int
+	var roleDesc string
+	var roleDuration string
 	var roleRenewable bool
-	if len(role.Options) > 4 {
-		roleRenewable = role.Options[4].BoolValue()
+	options := i.ApplicationCommandData().Options
+	for _, option := range options[0].Options[0].Options {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "option": option}).Trace("processing option")
+		switch option.Name {
+		case "name":
+			roleName = option.StringValue()
+		case "cost":
+			roleCost = int(option.IntValue())
+		case "description":
+			roleDesc = option.StringValue()
+		case "duration":
+			roleDuration = strings.ToUpper(option.StringValue())
+			_, err := disctime.ParseDuration(roleDuration)
+			if err != nil {
+				log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": option.StringValue()}).Errorf("Failed to parse role duration: %s", err)
+				discmsg.SendEphemeralResponse(s, i, p.Sprintf("Invalid duration: %s", err.Error()))
+				return
+			}
+		case "renewable":
+			roleRenewable = option.BoolValue()
+		}
+	}
+	if roleDesc == "" {
+		roleDesc = roleName + " role"
 	}
 
+	// Verify the role exists on the server
+	allRoles := guild.GetGuildRoles(s, i.GuildID)
+	roleNames := make([]string, 0, len(allRoles))
+	for _, role := range allRoles {
+		roleNames = append(roleNames, role.Name)
+	}
+	if !slices.Contains(roleNames, roleName) {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found on the server.", roleName))
+		return
+	}
+
+	// Add the role to the shop. If it already exists, this will return an error.
 	shop := GetShop(i.GuildID)
 	_, err := shop.AddShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("Failed to add role to shop: %s", err)
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("failed to add role to shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to add role \"%s\" to the shop: %s", roleName, err))
 		return
 	}
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Info("Role added to shop")
+	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Info("role added to shop")
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role \"%s\" has been added to the shop.", roleName))
 }
 
@@ -368,9 +311,15 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleName := role.Options[0].StringValue()
 	roleDesc := role.Options[1].StringValue()
 	roleCost := int(role.Options[2].IntValue())
-	var roleDuration time.Duration
+	var roleDuration string
 	if len(role.Options) > 3 {
-		roleDuration = time.Duration(role.Options[3].IntValue())
+		roleDuration = role.Options[3].StringValue()
+		_, err := disctime.ParseDuration(roleDuration)
+		if err != nil {
+			log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": roleDuration}).Errorf("Failed to parse role duration: %s", err)
+			discmsg.SendEphemeralResponse(s, i, p.Sprintf("invalid duration: %s", err.Error()))
+			return
+		}
 	}
 	var roleRenewable bool
 	if len(role.Options) > 4 {
@@ -379,7 +328,7 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	item, err := readShopItem(i.GuildID, roleName, ROLE)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("Failed to read role from shop: %s", err)
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to read role from shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found in the shop.", roleName))
 		return
 	}
@@ -411,21 +360,29 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	shop := GetShop(i.GuildID)
 	items := shop.Items
 
+	if len(items) == 0 {
+		log.WithFields(log.Fields{"guildID": i.GuildID}).Debug("no items found")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("No items found in the shop."))
+		return
+	}
+
 	sb := strings.Builder{}
 	for _, item := range items {
 		sb.WriteString(p.Sprintf("`%s`", item.Name))
-		sb.WriteString(p.Sprintf(", %s,", item.Type))
-		sb.WriteString(p.Sprintf(" (%s)", item.Description))
-		sb.WriteString(p.Sprintf(" $%d", item.Price))
-		if item.Duration != 0 {
-			sb.WriteString(p.Sprintf(", %s", item.Duration))
-			sb.WriteString(p.Sprintf(", %t", item.AutoRenewable))
+		sb.WriteString(p.Sprintf(", Type: %s,", unicode.FirstToUpper(item.Type)))
+		sb.WriteString(p.Sprintf(" Description: %s,", item.Description))
+		sb.WriteString(p.Sprintf(" Cost: %d", item.Price))
+		if item.Duration != "" {
+			duration, _ := disctime.ParseDuration(item.Duration)
+			sb.WriteString(p.Sprintf(", Duration: %s", disctime.FormatDuration(duration)))
+			sb.WriteString(p.Sprintf(", Auto-Rewable: %t", item.AutoRenewable))
 		}
 		sb.WriteString("\n")
 	}
 
 	discmsg.SendEphemeralResponse(s, i, sb.String())
 	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(items)}).Info("Shop items listed")
+	log.Error(items)
 }
 
 // shop routes the shop commands to the proper handers.
@@ -446,8 +403,10 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		buyFromShop(s, i)
 	case "update":
 		updatePurchaseFromShop(s, i)
-	case "list":
+	case "purchases":
 		listPurchasesFromShop(s, i)
+	case "list":
+		listShopItems(s, i)
 	default:
 		msg := p.Sprint("Command \"\\shop\\%s\" is not recognized.", options[0].Name)
 		discmsg.SendEphemeralResponse(s, i, msg)
@@ -483,11 +442,59 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Get the role details
 	role := options[0].Options[0]
 	roleName := role.Options[0].StringValue()
-	var roleRenew bool
-	if len(role.Options) > 1 {
-		roleRenew = role.Options[1].BoolValue()
+	// None of the following are configurable at the present
+	roleRenew := false
+
+	// Make sure the role still exists on the server
+	var guildRoleID string
+	guildRoles := guild.GetGuildRoles(s, i.GuildID)
+	for _, role := range guildRoles {
+		if role.Name == roleName {
+			guildRoleID = role.ID
+			break
+		}
+	}
+	if guildRoleID == "" {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found on the server.", roleName))
+		return
 	}
 
+	// Check to see if the member already has the role
+	member, err := s.GuildMember(i.GuildID, i.Member.User.ID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("failed to read member")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to read member: %s", err))
+		return
+	}
+	if slices.Contains(member.Roles, guildRoleID) {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Warn("member already has role")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the \"%s\" role.", roleName))
+		return
+	}
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName, "guildRoleID": guildRoleID, "memberRoles": member.Roles}).Debug("role not assigned to member")
+
+	// Make sure the role still exits on the server
+	roles := guild.GetGuildRoles(s, i.GuildID)
+	roleNames := make([]string, 0, len(roles))
+	for _, role := range roles {
+		roleNames = append(roleNames, role.Name)
+	}
+	if !slices.Contains(roleNames, roleName) {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found on the server.", roleName))
+		return
+	}
+
+	// Make sure the role is still available in the shop
+	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
+	if shopItem == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found in the shop.", roleName))
+		return
+	}
+
+	// Make sure the role hasn't already been purchased
 	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
 	if purchase != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
@@ -495,22 +502,24 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
-	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("Failed to read role from shop")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role \"%s\" not found in the shop.", roleName))
-		return
-	}
-
 	// Purchase the role
-	_, err := shopItem.Purchase(i.Member.User.ID, roleRenew)
+	purchase, err = shopItem.Purchase(i.Member.User.ID, roleRenew)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to purchase role \"%s\"", roleName))
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Info("Role purchased")
+	// Assign the role to the user
+	err = guild.AssignRole(s, i.GuildID, i.Member.User.ID, roleName)
+	if err != nil {
+		purchase.Return()
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Error("failed to assign role")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to assign role \"%s\" to you: %s", roleName, err))
+		return
+	}
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("role purchased")
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role \"%s\" has been purchased.", roleName))
 }
 
@@ -584,19 +593,25 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 
+	if len(purchases) == 0 {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID}).Debug("no purchases found")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You haven't made any purchases from the shop!"))
+		return
+	}
+
 	sb := strings.Builder{}
 	for _, purchase := range purchases {
 		sb.WriteString(p.Sprintf("`%s`", purchase.Item.Name))
-		sb.WriteString(p.Sprintf(", %s,", purchase.Item.Type))
-		sb.WriteString(p.Sprintf(" (%s)", purchase.Item.Description))
-		sb.WriteString(p.Sprintf(" $%d", purchase.Item.Price))
-		if purchase.Item.Duration != 0 {
-			sb.WriteString(p.Sprintf(", %s", purchase.Item.Duration))
-			sb.WriteString(p.Sprintf(", %t", purchase.AutoRenew))
+		sb.WriteString(p.Sprintf(", Type: %s,", purchase.Item.Type))
+		sb.WriteString(p.Sprintf(" Description: %s", purchase.Item.Description))
+		sb.WriteString(p.Sprintf(", Price: %d", purchase.Item.Price))
+		if !purchase.ExpiresOn.IsZero() {
+			sb.WriteString(p.Sprintf(", Expires On: %s", purchase.ExpiresOn))
+			sb.WriteString(p.Sprintf(", Auto-Renew: %t", purchase.AutoRenew))
 		}
 		sb.WriteString("\n")
 	}
 
 	discmsg.SendEphemeralResponse(s, i, sb.String())
-	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(purchases)}).Info("Shop purchases listed")
+	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(purchases)}).Debug("shop purchases listed")
 }

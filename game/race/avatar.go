@@ -1,7 +1,10 @@
 package race
 
 import (
+	"encoding/json"
 	"math/rand"
+	"os"
+	"path/filepath"
 
 	"github.com/rbrabson/goblin/internal/emoji"
 	log "github.com/sirupsen/logrus"
@@ -23,35 +26,54 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 	log.Trace("--> race.GetRaceAvatars")
 	defer log.Trace("<-- race.GetRaceAvatars")
 
-	characters, err := getRaceAvatars(guildID, themeName)
-	if err != nil {
-		characters = newRaceAvatars(guildID)
-	}
-	return characters
-}
-
-// getRaceAvatars reads the list of characters for the theme and guild from the database. If the list
-// does not exist, then an error is returned.
-func getRaceAvatars(guildID string, themeName string) ([]*RaceAvatar, error) {
-	log.Trace("--> race.getRaceAvatars")
-	defer log.Trace("<-- race.getRaceAvatars")
-
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
 	racer, err := readAllRacers(filter)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "error": err}).Error("unable to read racers")
-		return nil, err
+		log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "error": err}).Warn("unable to read racers")
+		return readRaceAvatarsFromFile(guildID, themeName)
 	}
 
 	log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "count": len(racer)}).Info("read racers")
-	return racer, nil
+	return racer
 }
 
-// newRaceAvatars creates a new list of characters for the guild. The list is saved to
+// readRaceAvatarsFromFile reads the list of characters for the theme and guild from the database. If the list
+// does not exist, then an error is returned.
+func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
+	log.Trace("--> race.readRaceAvatarsFromFile")
+	defer log.Trace("<-- race.readRaceAvatarsFromFile")
+
+	configDir := os.Getenv("DISCORD_CONFIG_DIR")
+	configFileName := filepath.Join(configDir, "race", "avatars", themeName+".json")
+	bytes, err := os.ReadFile(configFileName)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to read default race avatars")
+		return getDefaultRaceAvatars(guildID)
+	}
+
+	var avatars []*RaceAvatar
+	err = json.Unmarshal(bytes, &avatars)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to unmarshal default race avatars")
+		return getDefaultRaceAvatars(guildID)
+	}
+
+	for _, avatar := range avatars {
+		avatar.GuildID = guildID
+		avatar.Theme = themeName
+		writeRacer(avatar)
+	}
+
+	log.WithField("guild", guildID).Info("create new race avatars")
+
+	return avatars
+}
+
+// getDefaultRaceAvatars creates a new list of characters for the guild. The list is saved to
 // the database.
-func newRaceAvatars(guildID string) []*RaceAvatar {
-	log.Trace("--> race.newRaceAvatars")
-	defer log.Trace("<-- race.newRaceAvatars")
+func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
+	log.Trace("--> race.getDefaultRaceAvatars")
+	defer log.Trace("<-- race.getDefaultRaceAvatars")
 
 	racers := []*RaceAvatar{
 		{

@@ -2,8 +2,11 @@ package heist
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -42,13 +45,40 @@ type Config struct {
 func GetConfig(guildID string) *Config {
 	config := readConfig(guildID)
 	if config == nil {
-		config = NewConfig(guildID)
+		config = readConfigFromFile(guildID)
 	}
 	return config
 }
 
+// readConfigFromFile creates a new default configuration for the specified guild.
+// If the default configuration file cannot be read or decoded, then a default
+// configuration is created.
+func readConfigFromFile(guildID string) *Config {
+	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
+	configDir := os.Getenv("DISCORD_CONFIG_DIR")
+	configFileName := filepath.Join(configDir, "heist", "config", configTheme+".json")
+	bytes, err := os.ReadFile(configFileName)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to read default heist config")
+		return getDefaultConfig(guildID)
+	}
+
+	config := &Config{}
+	err = json.Unmarshal(bytes, config)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to unmarshal default heist config")
+		return getDefaultConfig(guildID)
+	}
+	config.GuildID = guildID
+
+	writeConfig(config)
+	log.WithField("guild", config.GuildID).Info("create new heist config")
+
+	return config
+}
+
 // NewConfig creates a new default configuration for the specified guild.
-func NewConfig(guildID string) *Config {
+func getDefaultConfig(guildID string) *Config {
 	config := &Config{
 		GuildID:      guildID,
 		BailBase:     BAIL_BASE,

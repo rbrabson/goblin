@@ -123,6 +123,19 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		lifetimeLeaderboard(s, i)
 	case "rank":
 		rank(s, i)
+	case "type":
+		switch options[0].IntValue() {
+		case 1:
+			monthlyLeaderboard(s, i)
+		case 2:
+			currentLeaderboard(s, i)
+		case 3:
+			lifetimeLeaderboard(s, i)
+		case 4:
+			rank(s, i)
+		}
+	default:
+		discmsg.SendEphemeralResponse(s, i, "Invalid command: "+options[0].Name)
 	}
 }
 

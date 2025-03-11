@@ -33,7 +33,7 @@ func TestGetAccount(t *testing.T) {
 		}
 	}()
 
-	payday := newPayday("12345")
+	payday := readPaydayFromFile("12345")
 	if payday == nil {
 		t.Errorf("newPayday() returned nil")
 		return
@@ -62,7 +62,7 @@ func TestNewAccount(t *testing.T) {
 		}
 	}()
 
-	payday := newPayday("12345")
+	payday := readPaydayFromFile("12345")
 	if payday == nil {
 		t.Errorf("newPayday() returned nil")
 		return
@@ -100,7 +100,7 @@ func TestSetNextPayday(t *testing.T) {
 		}
 	}()
 
-	payday := newPayday("12345")
+	payday := readPaydayFromFile("12345")
 	if payday == nil {
 		t.Errorf("newPayday() returned nil")
 		return
@@ -141,7 +141,7 @@ func TestGetNextPayday(t *testing.T) {
 		}
 	}()
 
-	payday := newPayday("12345")
+	payday := readPaydayFromFile("12345")
 	if payday == nil {
 		t.Errorf("newPayday() returned nil")
 		return

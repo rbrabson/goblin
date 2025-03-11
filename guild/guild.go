@@ -1,7 +1,10 @@
 package guild
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 
 	log "github.com/sirupsen/logrus"
@@ -23,15 +26,40 @@ type Guild struct {
 func GetGuild(guildID string) *Guild {
 	guild := readGuild(guildID)
 	if guild == nil {
-		guild = newGuild(guildID)
+		guild = readGuildFromFile(guildID)
 	}
 
 	log.Tracef("Guild: %v", guild)
 	return guild
 }
 
-// newGuild creates a new guild configuration for a given guild (guild).
-func newGuild(guildID string) *Guild {
+// readGuildFromFile creates a new guild configuration for a given guild (guild).
+func readGuildFromFile(guildID string) *Guild {
+
+	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
+	configDir := os.Getenv("DISCORD_CONFIG_DIR")
+	configFileName := filepath.Join(configDir, "guild", "config", configTheme+".json")
+	bytes, err := os.ReadFile(configFileName)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to read default guild config")
+		return getDefaultGuild(guildID)
+	}
+
+	guild := &Guild{}
+	err = json.Unmarshal(bytes, guild)
+	if err != nil {
+		log.WithField("file", configFileName).Error("failed to unmarshal default guild config")
+		return getDefaultGuild(guildID)
+	}
+	guild.GuildID = guildID
+
+	writeGuild(guild)
+	log.WithField("guild", guild.GuildID).Info("create new guild")
+
+	return guild
+}
+
+func getDefaultGuild(guildID string) *Guild {
 	guild := &Guild{
 		GuildID: guildID,
 	}

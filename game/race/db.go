@@ -114,5 +114,5 @@ func writeRacer(racer *RaceAvatar) {
 	}
 
 	db.UpdateOrInsert(RACER_COLLECTION, filter, racer)
-	log.WithFields(log.Fields{"guild": racer.GuildID, "target": racer.Theme}).Debug("create or update target")
+	log.WithFields(log.Fields{"guild": racer.GuildID, "theme": racer.Theme}).Debug("create or update race avatar")
 }

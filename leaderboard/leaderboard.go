@@ -185,7 +185,7 @@ func sendhMonthlyLeaderboard(lb *Leaderboard) error {
 			Embeds: embeds,
 		})
 		if err != nil {
-			log.WithError(err).Error("unable to send montly leaderboard")
+			log.WithFields(log.Fields{"error": err, "leaderboard": sortedAccounts}).Error("unable to send montly leaderboard")
 			return err
 		}
 	} else {
@@ -205,24 +205,24 @@ func sendMonthlyLeaderboard() {
 	lastSeason := time.Now()
 	leaderboards := getLeaderboards()
 	for _, lb := range leaderboards {
-		lastSeason = lb.LastSeason
-		break
+		if lb.LastSeason.Before(lastSeason) {
+			lastSeason = lb.LastSeason
+		}
 	}
 
 	for {
 		nextMonth := disctime.NextMonth(lastSeason)
 		time.Sleep(time.Until(nextMonth))
-		lastSeason = nextMonth
+		lastSeason = disctime.CurrentMonth(time.Now())
 
 		leaderboards := getLeaderboards()
 		for _, lb := range leaderboards {
 			err := sendhMonthlyLeaderboard(lb)
 			if err != nil {
 				log.WithFields(log.Fields{"guildID": lb.GuildID, "error": err}).Error("unable to send monthly leaderboard")
-			} else {
-				lb.LastSeason = lastSeason
-				writeLeaderboard(lb)
 			}
+			lb.LastSeason = lastSeason
+			writeLeaderboard(lb)
 		}
 
 		bank.ResetMonthlyBalances()

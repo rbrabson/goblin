@@ -61,6 +61,7 @@ func main() {
 	payday.Start()
 	race.Start()
 	role.Start()
+	// shop.Start()
 
 	bot := discord.NewBot(BotName, Version, Revision)
 	err = bot.Session.Open()
