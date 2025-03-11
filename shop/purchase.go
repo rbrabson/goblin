@@ -11,6 +11,7 @@ import (
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/disctime"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/text/language"
 )
@@ -197,6 +198,28 @@ func (p *Purchase) Update(autoRenew bool) error {
 	log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("updating purchase")
 
 	return nil
+}
+
+// checkForExpiredPurchases checks once a day to see if any purchases that may be expired have expired.
+func checkForExpiredPurchases() {
+	log.Trace("--> shop.checkForExpiredPurchases")
+	defer log.Trace("<-- shop.checkForExpiredPurchases")
+
+	for {
+		filter := bson.D{{Key: "is_expired", Value: false}, {Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now}}}}
+		purchases, _ := readAllPurchases(filter)
+		for _, purchase := range purchases {
+			expired := purchase.HasExpired()
+			if expired {
+				log.WithFields(log.Fields{"guild": purchase.GuildID, "member": purchase.MemberID, "type": purchase.Item.Type, "item": purchase.Item.Name}).Info("purchase has expired")
+			}
+		}
+
+		// Wait until tomorrow to check again
+		year, month, day := time.Now().Date()
+		tomorrow := time.Date(year, month, day+1, 0, 0, 0, 0, time.UTC)
+		time.Sleep(time.Until(tomorrow))
+	}
 }
 
 // String returns a string representation of the purchase.

@@ -88,6 +88,22 @@ func deleteShopItem(item *ShopItem) error {
 	return nil
 }
 
+// readAllPurchases reads all the purchases from the database that match the input filter
+func readAllPurchases(filter interface{}) ([]*Purchase, error) {
+	log.Trace("--> shop.readAllPurchases")
+	defer log.Trace("<-- shop.readAllPurchases")
+
+	var items []*Purchase
+	err := db.FindMany(PURCHASE_COLLECTION, filter, &items, bson.D{}, 0)
+	if err != nil {
+		log.WithFields(log.Fields{"filter": filter}).Error("unable to read purchases from the database")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"count": len(items)}).Debug("read purchases from the database")
+
+	return items, nil
+}
+
 // readPurchases reads all the purchases for the member in the given guild.
 func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 	log.Trace("--> shop.readPurchases")
