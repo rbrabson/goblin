@@ -32,6 +32,7 @@ type Purchase struct {
 	PurchasedOn time.Time          `json:"purchased_on" bson:"purchased_on"`
 	ExpiresOn   time.Time          `json:"expires_on,omitempty" bson:"expires_on,omitempty"`
 	AutoRenew   bool               `json:"autoRenew,omitempty" bson:"autoRenew,omitempty"`
+	IsExpired   bool               `json:"isExpired,omitempty" bson:"isExpired,omitempty"`
 }
 
 // GetAllRoles returns all the purchases made by a member in the guild.
@@ -46,12 +47,11 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 	}
 
 	purchaseCmp := func(a, b *Purchase) int {
-		now := time.Now()
-		// Sort based on one of the two purchases having expired but the other not having expired
-		if (!a.ExpiresOn.IsZero() && a.ExpiresOn.Before(now)) && (b.ExpiresOn.IsZero() || b.ExpiresOn.After(now)) {
+		// Sort expired purchases to the bottom of the purchases
+		if a.HasExpired() && !b.HasExpired() {
 			return 1
 		}
-		if (a.ExpiresOn.IsZero() || a.ExpiresOn.After(now)) && (!b.ExpiresOn.IsZero() && b.ExpiresOn.Before(now)) {
+		if !a.HasExpired() && b.HasExpired() {
 			return -1
 		}
 
@@ -118,7 +118,7 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 	}
 	if item.Duration != "" {
 		duration, _ := disctime.ParseDuration(item.Duration)
-		purchase.ExpiresOn = time.Now().Add(duration)
+		purchase.ExpiresOn = disctime.RoundToNextDay(time.Now().Add(duration))
 	}
 	err = writePurchase(purchase)
 	if err != nil {
@@ -129,6 +129,32 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 	log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Info("creating new purchase")
 
 	return purchase, nil
+}
+
+// Determine if a purchase has expired.
+func (p *Purchase) HasExpired() bool {
+	log.Trace("--> shop.Purchase.HasExpired")
+	defer log.Trace("<-- shop.Purchase.HasExpired")
+
+	if p.IsExpired {
+		return true
+	}
+
+	oldIsExpired := p.IsExpired
+	switch {
+	case p.ExpiresOn.IsZero():
+		p.IsExpired = false
+	case p.ExpiresOn.Before(time.Now()):
+		p.IsExpired = true
+	default:
+		p.IsExpired = false
+	}
+
+	if p.IsExpired != oldIsExpired {
+		writePurchase(p)
+	}
+
+	return p.IsExpired
 }
 
 // Return the purchase to the shop.
@@ -193,6 +219,8 @@ func (p *Purchase) String() string {
 		sb.WriteString(p.ExpiresOn.Format(time.RFC3339))
 		sb.WriteString(", AutoRenew: ")
 		sb.WriteString(fmt.Sprintf("%v", p.AutoRenew))
+		sb.WriteString(", IsExpired: ")
+		sb.WriteString(fmt.Sprintf("%v", p.IsExpired))
 	}
 
 	return sb.String()

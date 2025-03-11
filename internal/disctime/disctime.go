@@ -28,6 +28,20 @@ func NextMonth(t time.Time) time.Time {
 	return month
 }
 
+// RoundToNextDay rounds the time up to the next whole day. The time is returned
+// in UTC.
+func RoundToNextDay(t time.Time) time.Time {
+	// Round to the next day
+	utc := t.UTC()
+	year, month, day := utc.Date()
+	hour, minute, _ := utc.Clock()
+	if hour != 0 || minute != 0 {
+		day++
+	}
+
+	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+}
+
 // ParseDuration parses a duration string.
 func ParseDuration(t string) (time.Duration, error) {
 	// No string, so return a duration of 0
