@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
@@ -244,14 +243,17 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Add the role to the shop. If it already exists, this will return an error.
 	shop := GetShop(i.GuildID)
-	_, err := shop.AddShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
+	shopItem, err := shop.AddShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("failed to add role to shop: %s", err)
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to add role `%s` to the shop: %s", roleName, err))
 		return
 	}
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Info("role added to shop")
+	// Register the component handlers for the item
+	registerShopItemComponentHandlers(shopItem)
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": shopItem.Name, "roleDesc": shopItem.Description, "roleCost": shopItem.Price, "roleDuration": shopItem.Duration, "roleRenewable": shopItem.AutoRenewable}).Info("role added to shop")
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role `%s` has been added to the shop.", roleName))
 }
 
@@ -581,46 +583,14 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	log.Trace("--> shop.buyRoleFromShop")
 	defer log.Trace("<-- shop.buyRoleFromShop")
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-
-	// Verify the role exists on the server
-	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
-	if guildRole == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found on the server.", roleName))
+	// Make sure the member can purchase the role
+	err := rolePurchaseChecks(s, i, roleName)
+	if err != nil {
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
 
-	// Make sure the member doesn't already have the role
-	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the `%s` role.", roleName))
-		return
-	}
-
-	// Make sure the role is still available in the shop
 	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
-	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found in the shop.", roleName))
-		return
-	}
-
-	// Make sure the role hasn't already been purchased
-	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if purchase != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have already purchased role `%s`.", roleName))
-		return
-	}
-
-	// Make sure the member has sufficient funds to purchase the role
-	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
-	if bankAccount.CurrentBalance < shopItem.Price {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Error("insufficient funds")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You do not have enough money to purchase the `%s` role.", roleName))
-		return
-	}
-
 	sendConfirmationMessage(s, i, shopItem)
 	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("purchase of role initiated")
 }
@@ -661,37 +631,15 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	// Verify the role exists on the server
-	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
-	if guildRole == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found on the server.", roleName))
-		return
-	}
-
-	// Make sure the member doesn't already have the role
-	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the `%s` role.", roleName))
-		return
-	}
-
-	// Make sure the role is still available in the shop
-	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
-	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found in the shop.", roleName))
-		return
-	}
-
-	// Make sure the role hasn't already been purchased
-	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if purchase != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have already purchased role `%s`.", roleName))
+	// Make sure the member can purchase the role
+	err := rolePurchaseChecks(s, i, roleName)
+	if err != nil {
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
 		return
 	}
 
 	// Purchase the role
+	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
 	purchase, err := shopItem.Purchase(i.Member.User.ID, false)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
@@ -844,7 +792,6 @@ func getShopButtons(shop *Shop) []discordgo.ActionsRow {
 				Emoji:    nil,
 			}
 			buttons = append(buttons, button)
-			bot.AddComponentHandler(customID, initiatePurchase)
 		}
 		itemsIncludedInButtons += buttonsForNextRow
 

@@ -47,7 +47,7 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	bot = b
 	db = d
-	registerPurchaseComponentHandlers()
+	registerAllShoopItemComponentHandlers()
 	go checkForExpiredPurchases()
 }
 
@@ -111,14 +111,22 @@ func (plugin *Plugin) GetAdminHelp() []string {
 	return help
 }
 
-// Add the purchase command handlers for each item in the shop
-func registerPurchaseComponentHandlers() {
+// registerAllShoopItemComponentHandlers adds the component handlers for all
+// shop items that may be purchased.
+func registerAllShoopItemComponentHandlers() {
 	for _, guild := range guild.GetAllGuilds() {
 		shop := GetShop(guild.GuildID)
 		for _, item := range shop.Items {
-			customID := item.Type + ":" + item.Name
-			bot.AddComponentHandler("shop:"+customID, initiatePurchase)
-			bot.AddComponentHandler("shop:buy:"+customID, completePurchase)
+			registerShopItemComponentHandlers(item)
 		}
 	}
+}
+
+// registerShopItemComponentHandlers registers the component handlers for
+// the shop item.
+func registerShopItemComponentHandlers(shopItem *ShopItem) {
+	// Register the component handlers for the item
+	customID := shopItem.Type + ":" + shopItem.Name
+	bot.AddComponentHandler("shop:"+customID, initiatePurchase)
+	bot.AddComponentHandler("shop:buy:"+customID, completePurchase)
 }

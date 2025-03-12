@@ -127,6 +127,35 @@ func AssignRole(s *discordgo.Session, guildID string, memberID string, roleName 
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "roleID": roleID, "error": err}).Error("failed to assign role")
 	}
+
+	log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "roleID": roleID}).Info("assigned role")
+	return err
+}
+
+// UnAssignRole removes a role to the member in the guild.
+func UnAssignRole(s *discordgo.Session, guildID string, memberID string, roleName string) error {
+	log.Trace("--> role.UnAssignRole")
+	defer log.Trace("<-- role.UnAssignRole")
+
+	guildRoles := GetGuildRoles(s, guildID)
+	roleID := ""
+	for _, role := range guildRoles {
+		if role.Name == roleName {
+			roleID = role.ID
+			break
+		}
+	}
+	if roleID == "" {
+		log.WithFields(log.Fields{"guildID": guildID, "roleName": roleName}).Error("role not found")
+		return nil
+	}
+
+	err := s.GuildMemberRoleRemove(guildID, memberID, roleID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "roleID": roleID, "error": err}).Error("failed to unassign role")
+	}
+
+	log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "roleID": roleID}).Info("unassigned role")
 	return err
 }
 
