@@ -521,7 +521,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 				sb.WriteString(p.Sprintf("\nExpired On: %s\n", purchase.ExpiresOn.Format("Jan 02 2006")))
 			} else {
 				sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn.Format("Jan 02 2006")))
-				sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
+				// sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
 			}
 		}
 		purchasesMsg = append(purchasesMsg, &discordgo.MessageEmbedField{
