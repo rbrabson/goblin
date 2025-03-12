@@ -77,6 +77,26 @@ var (
 					},
 				},
 				{
+					Name:        "delete",
+					Description: "Delete removes an item from the shop.",
+					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Name:        "role",
+							Description: "Removes a purchasable role to the shop.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "name",
+									Description: "The name of the role to be removed.",
+									Required:    true,
+								},
+							},
+						},
+					},
+				},
+				{
 					Name:        "channel",
 					Description: "Sets the channel to which to pulish the shop items.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -140,7 +160,7 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch options[0].Name {
 	case "add":
 		addShopItem(s, i)
-	case "remove":
+	case "delete":
 		removeShopItem(s, i)
 	case "update":
 		updateShopItem(s, i)
@@ -274,6 +294,8 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to remove role `%s` from the shop: %s", roleName, err))
 		return
 	}
+	config := GetConfig(i.GuildID)
+	publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
 
 	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Info("role removed from shop")
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role `%s` has been removed from the shop.", roleName))
