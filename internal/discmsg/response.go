@@ -68,3 +68,26 @@ func SendEphemeralResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 		log.WithError(err).Error("Unable to send an ephemeral response")
 	}
 }
+
+// SendComplexResponse is a utility routine used to send an non-ephemeral response to a user's message or
+// button press. It allows for the inclusion of components and embeds in the response.
+func SendComplexEphemeralResponse(s *discordgo.Session, i *discordgo.InteractionCreate, msg string, components []discordgo.MessageComponent, embeds []*discordgo.MessageEmbed) error {
+	log.Trace("--> SendComplexEphemeralResponse")
+	defer log.Trace("<-- SendComplexEphemeralResponse")
+
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content:    msg,
+			Flags:      discordgo.MessageFlagsEphemeral,
+			Components: components,
+			Embeds:     embeds,
+		},
+	})
+
+	if err != nil {
+		log.WithError(err).Error("Unable to send an ephemeral response")
+		return err
+	}
+	return nil
+}

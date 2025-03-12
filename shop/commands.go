@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
@@ -20,7 +21,8 @@ var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"shop-admin": shopAdmin,
 		"shop":       shop,
-		"purchase":   purchase,
+		"purchase":   initiatePurchase,
+		"confirm":    completePurchase,
 	}
 )
 
@@ -97,26 +99,6 @@ var (
 			Description: "Commands used by a member to purchase items in the shop.",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Name:        "buy",
-					Description: "Adds an item to the shop that may be purchased by a member.",
-					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Name:        "role",
-							Description: "Buys a custom role for the server.",
-							Type:        discordgo.ApplicationCommandOptionSubCommand,
-							Options: []*discordgo.ApplicationCommandOption{
-								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "The name of the role to be purchased.",
-									Required:    true,
-								},
-							},
-						},
-					},
-				},
-				{
 					Name:        "purchases",
 					Description: "Lists the items in the shop that may be purchased.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -183,7 +165,8 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		discmsg.SendEphemeralResponse(s, i, msg)
 	}
 
-	// TODO: publish the shop items to the channel
+	config := GetConfig(i.GuildID)
+	publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
 }
 
 // addRoleToShop adds a role to the shop.
@@ -453,10 +436,6 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {
-	case "buy":
-		buyFromShop(s, i)
-	case "update":
-		updatePurchaseFromShop(s, i)
 	case "purchases":
 		listPurchasesFromShop(s, i)
 	case "list":
@@ -465,143 +444,6 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		msg := p.Sprint("Command `\\shop\\%s` is not recognized.", options[0].Name)
 		discmsg.SendEphemeralResponse(s, i, msg)
 	}
-}
-
-// buyFromShop routes the buy shop item commands to the proper handers.
-func buyFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.buyFromShop")
-	defer log.Trace("<-- shop.buyFromShop")
-
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-
-	options := i.ApplicationCommandData().Options
-	switch options[0].Options[0].Name {
-	case "role":
-		options := i.ApplicationCommandData().Options
-		role := options[0].Options[0]
-		roleName := role.Options[0].StringValue()
-		buyRoleFromShop(s, i, roleName)
-	default:
-		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
-		discmsg.SendEphemeralResponse(s, i, msg)
-	}
-}
-
-// buyRoleFromShop buys a role from the shop.
-func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) {
-	log.Trace("--> shop.buyRoleFromShop")
-	defer log.Trace("<-- shop.buyRoleFromShop")
-
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-
-	// None of the following are configurable at the present
-	roleRenew := false
-
-	// Verify the role exists on the server
-	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
-	if guildRole == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found on the server.", roleName))
-		return
-	}
-
-	// Make sure the member doesn't already have the role
-	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the `%s` role.", roleName))
-		return
-	}
-
-	// Make sure the role is still available in the shop
-	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
-	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found in the shop.", roleName))
-		return
-	}
-
-	// Make sure the role hasn't already been purchased
-	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if purchase != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have already purchased role `%s`.", roleName))
-		return
-	}
-
-	// Purchase the role
-	purchase, err := shopItem.Purchase(i.Member.User.ID, roleRenew)
-	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
-		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
-		return
-	}
-
-	// Assign the role to the user. If the role can't be assigned, then undo the purchase of the role.
-	err = guild.AssignRole(s, i.GuildID, i.Member.User.ID, roleName)
-	if err != nil {
-		purchase.Return()
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Error("failed to assign role")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to assign role `%s` to you: %s", roleName, err))
-		return
-	}
-
-	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("role purchased")
-	discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` has been purchased.", roleName))
-}
-
-// upatePurchaseFromShop routes the update purchase shop item commands to the proper handers.
-func updatePurchaseFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.updatePurchaseFromShop")
-	defer log.Trace("<-- shop.updatePurchaseFromShop")
-
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-
-	options := i.ApplicationCommandData().Options
-	switch options[0].Options[0].Name {
-	case "role":
-		updateRolePurchaseFromShop(s, i)
-	default:
-		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
-		discmsg.SendEphemeralResponse(s, i, msg)
-	}
-}
-
-// updateRolePurchaseFromShop updates a role purchase from the shop.
-func updateRolePurchaseFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.updateRolePurchaseFromShop")
-	defer log.Trace("<-- shop.updateRolePurchaseFromShop")
-
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-
-	options := i.ApplicationCommandData().Options
-
-	// Get the role details
-	role := options[0].Options[0]
-	roleName := role.Options[0].StringValue()
-	roleRenew := role.Options[1].BoolValue()
-
-	purchase, err := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "error": err}).Error("Failed to read purchase from shop")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Purchase for role `%s` not found.", roleName))
-		return
-	}
-
-	if purchase == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role purchase not found")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have not purchases the %s role.", roleName))
-		return
-	}
-
-	purchase.AutoRenew = roleRenew
-	err = writePurchase(purchase)
-	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleRenew": roleRenew}).Errorf("Failed to update role purchase: %s", err)
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to update role `%s` purchase: %s", roleName, err))
-		return
-	}
-
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleRenew": roleRenew}).Info("Role purchase updated")
-	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role`%s` purchase has been updated.", roleName))
 }
 
 // listPurchasesFromShop lists the purchases made by the member in the shop.
@@ -662,8 +504,8 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(purchases)}).Debug("shop purchases listed")
 }
 
-// purchase is used to buy an item from the shop using a button in the shop channel.
-func purchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// initiatePurchase is used to buy an item from the shop using a button in the shop channel.
+func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> shop.purchase")
 	defer log.Trace("<-- shop.purchase")
 
@@ -678,21 +520,203 @@ func purchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch itemType {
 	case ROLE:
-		buyRoleFromShop(s, i, itemName)
+		initiatePurchaseOfRoleFromShop(s, i, itemName)
 	default:
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("unknown item type")
 		discmsg.SendEphemeralResponse(s, i, fmt.Sprintf("Unknown item type `%s`", itemType))
 		return
 	}
+}
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("TODO: `purchase` not implemented")
-	discmsg.SendEphemeralResponse(s, i, fmt.Sprintf("Purchase not implemented, type=%s, name=%s", itemType, itemName))
+// initiatePurchaseOfRoleFromShop initiates the purchases of a role from the shop.
+// The member will be prompted to confirm the purchase.
+func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) {
+	log.Trace("--> shop.buyRoleFromShop")
+	defer log.Trace("<-- shop.buyRoleFromShop")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
+	// Verify the role exists on the server
+	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
+	if guildRole == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found on the server.", roleName))
+		return
+	}
+
+	// Make sure the member doesn't already have the role
+	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the `%s` role.", roleName))
+		return
+	}
+
+	// Make sure the role is still available in the shop
+	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
+	if shopItem == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found in the shop.", roleName))
+		return
+	}
+
+	// Make sure the role hasn't already been purchased
+	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
+	if purchase != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have already purchased role `%s`.", roleName))
+		return
+	}
+
+	// Make sure the member has sufficient funds to purchase the role
+	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
+	if bankAccount.CurrentBalance < shopItem.Price {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Error("insufficient funds")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You do not have enough money to purchase the `%s` role.", roleName))
+		return
+	}
+
+	sendConfirmationMessage(s, i, shopItem)
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("purchase of role initiated")
+}
+
+// completePurchase is used to finalize the purchase of an item from the shop.
+// It is called when the member confirms the purchase using a "Buy" button.
+func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> shop.purchase")
+	defer log.Trace("<-- shop.purchase")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
+
+	strs := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")
+	itemType := strs[1]
+	itemName := strs[2]
+
+	switch itemType {
+	case ROLE:
+		completePurchaseOfRoleFromShop(s, i, itemName)
+	default:
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("unknown item type")
+		discmsg.SendEphemeralResponse(s, i, fmt.Sprintf("Unknown item type `%s`", itemType))
+		return
+	}
+}
+
+// Complete the purchase of a role from the shop. This is called after the purchase has been confirmed by
+// the member.
+func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) {
+	log.Trace("--> shop.confirmPurchase")
+	defer log.Trace("<-- shop.confirmPurchase")
+
+	log.Trace("--> shop.buyRoleFromShop")
+	defer log.Trace("<-- shop.buyRoleFromShop")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
+	// Verify the role exists on the server
+	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
+	if guildRole == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found on the server.", roleName))
+		return
+	}
+
+	// Make sure the member doesn't already have the role
+	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You already have the `%s` role.", roleName))
+		return
+	}
+
+	// Make sure the role is still available in the shop
+	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
+	if shopItem == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` not found in the shop.", roleName))
+		return
+	}
+
+	// Make sure the role hasn't already been purchased
+	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
+	if purchase != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("You have already purchased role `%s`.", roleName))
+		return
+	}
+
+	// Purchase the role
+	purchase, err := shopItem.Purchase(i.Member.User.ID, false)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
+		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
+		return
+	}
+
+	// Assign the role to the user. If the role can't be assigned, then undo the purchase of the role.
+	err = guild.AssignRole(s, i.GuildID, i.Member.User.ID, roleName)
+	if err != nil {
+		purchase.Return()
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Error("failed to assign role")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to assign role `%s` to you: %s", roleName, err))
+		return
+	}
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("role purchased")
+	discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` has been purchased.", roleName))
+
+}
+
+// sendConfirmationMessage sends a message to the member to confirm the purchase of an item from the shop.
+func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreate, item *ShopItem) {
+	log.Trace("--> shop.sendConfirmationMessage")
+	defer log.Trace("<-- shop.sendConfirmationMessage")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
+	shopItems := make([]*discordgo.MessageEmbedField, 0, 1)
+	sb := strings.Builder{}
+	sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
+	sb.WriteString(p.Sprintf("Cost: %d", item.Price))
+	if item.Duration != "" {
+		duration, _ := disctime.ParseDuration(item.Duration)
+		sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
+	}
+	embed := &discordgo.MessageEmbedField{
+		Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
+		Value:  sb.String(),
+		Inline: false,
+	}
+	shopItems = append(shopItems, embed)
+
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:  "Confirm the purchase of this item",
+			Fields: shopItems,
+		},
+	}
+
+	actionRow := []discordgo.MessageComponent{
+		discordgo.Button{
+			Label:    "Buy",
+			Style:    discordgo.SuccessButton,
+			CustomID: "buy:" + item.Type + ":" + item.Name,
+		},
+	}
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: actionRow,
+		},
+	}
+
+	discmsg.SendComplexEphemeralResponse(s, i, "", components, embeds)
 }
 
 // publishShop publishes the shop items to the channel.
 func publishShop(s *discordgo.Session, guildID string, channelID string, messageID string) (string, error) {
 	log.Trace("--> shop.publishShop")
 	defer log.Trace("<-- shop.publishShop")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
 
 	shop := GetShop(guildID)
 	items := shop.Items
@@ -706,15 +730,15 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 	shopItems := make([]*discordgo.MessageEmbedField, 0, len(items))
 	for _, item := range items {
 		sb := strings.Builder{}
-		sb.WriteString(fmt.Sprintf("Description: %s\n", item.Description))
-		sb.WriteString(fmt.Sprintf("Cost: %d", item.Price))
+		sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
+		sb.WriteString(p.Sprintf("Cost: %d", item.Price))
 		if item.Duration != "" {
 			duration, _ := disctime.ParseDuration(item.Duration)
-			sb.WriteString(fmt.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
+			sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
 			// sb.WriteString(p.Sprintf("Auto-Rewable: %t", item.AutoRenewable))
 		}
 		embed := &discordgo.MessageEmbedField{
-			Name:   fmt.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
+			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
 			Value:  sb.String(),
 			Inline: false,
 		}
@@ -770,7 +794,7 @@ func getShopButtons(shop *Shop) []discordgo.ActionsRow {
 				Emoji:    nil,
 			}
 			buttons = append(buttons, button)
-			bot.AddComponentHandler(customID, purchase)
+			bot.AddComponentHandler(customID, initiatePurchase)
 		}
 		itemsIncludedInButtons += buttonsForNextRow
 

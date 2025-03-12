@@ -117,7 +117,8 @@ func registerPurchaseComponentHandlers() {
 		shop := GetShop(guild.GuildID)
 		for _, item := range shop.Items {
 			customID := item.Type + ":" + item.Name
-			bot.AddComponentHandler(customID, purchase)
+			bot.AddComponentHandler(customID, initiatePurchase)
+			bot.AddComponentHandler("buy:"+customID, completePurchase)
 		}
 	}
 }
