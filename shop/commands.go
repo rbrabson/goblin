@@ -1,7 +1,6 @@
 package shop
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -772,11 +771,6 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 
 	shop := GetShop(guildID)
 	items := shop.Items
-
-	if len(items) == 0 {
-		log.WithFields(log.Fields{"guildID": guildID}).Debug("no items found")
-		return "", errors.New("no items found in the shop")
-	}
 
 	// Create the message for the shop items
 	shopItems := make([]*discordgo.MessageEmbedField, 0, len(items))
