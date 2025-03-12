@@ -8,9 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rbrabso/goblin/internal/paginator"
+	"github.com/joho/godotenv"
+	"github.com/rbrabson/goblin/internal/paginator"
 
 	"github.com/bwmarrin/discordgo"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -18,7 +20,14 @@ var (
 )
 
 func main() {
-	dg, err := discordgo.New("Bot " + Token)
+	err := godotenv.Load(".env_test")
+	if err != nil {
+		log.WithError(err).Warn("unable to load .env_test file")
+	}
+	// appID := os.Getenv("DISCORD_APP_ID")
+	token := os.Getenv("DISCORD_BOT_TOKEN")
+
+	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 		return
@@ -95,7 +104,7 @@ func main() {
 				content := "too slow!"
 				_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 					Content:    &content,
-					Components: []discordgo.MessageComponent{},
+					Components: &[]discordgo.MessageComponent{},
 					ID:         msg.ID,
 					Channel:    msg.ChannelID,
 				})
