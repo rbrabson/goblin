@@ -510,7 +510,8 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 
-	purchasesMsg := make([]*discordgo.MessageEmbedField, 0, len(purchases))
+	activePurchases := make([]*discordgo.MessageEmbedField, 0, len(purchases))
+	expiredPurchases := make([]*discordgo.MessageEmbedField, 0, len(purchases))
 
 	for _, purchase := range purchases {
 		sb := strings.Builder{}
@@ -519,22 +520,37 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		if !purchase.ExpiresOn.IsZero() {
 			if purchase.ExpiresOn.Before(time.Now()) {
 				sb.WriteString(p.Sprintf("\nExpired On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
+				expiredPurchases = append(expiredPurchases, &discordgo.MessageEmbedField{
+					Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
+					Value:  sb.String(),
+					Inline: false,
+				})
 			} else {
 				sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
 				// sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
+				activePurchases = append(activePurchases, &discordgo.MessageEmbedField{
+					Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
+					Value:  sb.String(),
+					Inline: false,
+				})
 			}
+		} else {
+			activePurchases = append(activePurchases, &discordgo.MessageEmbedField{
+				Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
+				Value:  sb.String(),
+				Inline: false,
+			})
 		}
-		purchasesMsg = append(purchasesMsg, &discordgo.MessageEmbedField{
-			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
-			Value:  sb.String(),
-			Inline: false,
-		})
 	}
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title:  "Purchases",
-			Fields: purchasesMsg,
+			Title:  "Active Purchases",
+			Fields: activePurchases,
+		},
+		{
+			Title:  "Expired Purchases",
+			Fields: expiredPurchases,
 		},
 	}
 
