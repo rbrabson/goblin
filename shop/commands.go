@@ -518,9 +518,9 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		sb.WriteString(p.Sprintf("Price: %d", purchase.Item.Price))
 		if !purchase.ExpiresOn.IsZero() {
 			if purchase.ExpiresOn.Before(time.Now()) {
-				sb.WriteString(p.Sprintf("\nExpired On: %s\n", purchase.ExpiresOn.Format("Jan 02 2006")))
+				sb.WriteString(p.Sprintf("\nExpired On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
 			} else {
-				sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn.Format("Jan 02 2006")))
+				sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
 				// sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
 			}
 		}
