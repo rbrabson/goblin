@@ -1,23 +1,21 @@
 package shop
 
 import (
-	"github.com/bwmarrin/discordgo"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Config represents the configuration for the shop in a guild.
 type Config struct {
-	ID          primitive.ObjectID     `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID     string                 `json:"guild_id" bson:"guild_id"`
-	ChannelID   string                 `json:"channel_id" bson:"channel_id"`
-	MessageID   string                 `json:"message_id" bson:"message_id"`
-	Interaction *discordgo.Interaction `json:"interaction" bson:"interaction"`
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID   string             `json:"guild_id" bson:"guild_id"`
+	ChannelID string             `json:"channel_id" bson:"channel_id"`
+	MessageID string             `json:"message_id" bson:"message_id"`
 }
 
 // GetConfig reads the configuration from the database. If the config does not exist,
 // then one is created.
-func GetConfig(guildID string) (*Config, error) {
+func GetConfig(guildID string) *Config {
 	log.Trace("--> shop.GetConfig")
 	defer log.Trace("<-- shop.GetConfig")
 
@@ -26,7 +24,7 @@ func GetConfig(guildID string) (*Config, error) {
 		config = newConfig(guildID)
 	}
 
-	return config, nil
+	return config
 }
 
 // newConfig creates a new configuration for the given guild ID and writes it to the database.
@@ -49,17 +47,17 @@ func (c *Config) SetChannel(channelID string) {
 	defer log.Trace("<-- shop.Config.SetChannel")
 
 	c.ChannelID = channelID
-	c.Interaction = nil
+	c.MessageID = ""
 	writeConfig(c)
 	log.WithFields(log.Fields{"guildID": c.GuildID, "channel": channelID}).Debug("set shop channel")
 }
 
-// SetInteraction saves the interaction used to publish the shop items.
-func (c *Config) SetInteraction(interaction *discordgo.Interaction) {
-	log.Trace("--> shop.Config.SetInteraction")
-	defer log.Trace("<-- shop.Config.SetInteraction")
+// SetMessageID saves the interaction used to publish the shop items.
+func (c *Config) SetMessageID(messageID string) {
+	log.Trace("--> shop.Config.SetMessageID")
+	defer log.Trace("<-- shop.Config.SetMessageID")
 
-	c.Interaction = interaction
+	c.MessageID = messageID
 	writeConfig(c)
-	log.WithFields(log.Fields{"guildID": c.GuildID, "interaction": interaction.ID}).Debug("set shop interaction")
+	log.WithFields(log.Fields{"guildID": c.GuildID, "messageID": messageID}).Debug("set shop message ID")
 }

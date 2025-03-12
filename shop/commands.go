@@ -1,6 +1,7 @@
 package shop
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -156,6 +157,8 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		updateShopItem(s, i)
 	case "list":
 		listShopItems(s, i)
+	case "channel":
+		setShopChannel(s, i)
 	default:
 		msg := p.Sprint("Command `%s` is not recognized.", options[0].Name)
 		discmsg.SendEphemeralResponse(s, i, msg)
@@ -177,6 +180,8 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
 		discmsg.SendEphemeralResponse(s, i, msg)
 	}
+
+	// TODO: publish the shop items to the channel
 }
 
 // addRoleToShop adds a role to the shop.
@@ -406,6 +411,31 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(items)}).Info("shop items listed")
 }
 
+func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> shop.setShopChannel")
+	defer log.Trace("<-- shop.setShopChannel")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+	options := i.ApplicationCommandData().Options
+	channelID := options[0].Options[0].ChannelValue(s).ID
+	_, err := s.State.Channel(channelID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "channelID": channelID}).Error("failed to get channel from state")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to get channel %s: %s", channelID, err))
+		return
+	}
+	config := GetConfig(i.GuildID)
+	if config.ChannelID != channelID {
+		config.SetChannel(channelID)
+		messageID, _ := publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
+		config.SetMessageID(messageID)
+	} else if config.MessageID == "" {
+		messageID, _ := publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
+		config.SetMessageID(messageID)
+	}
+	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("shop channel set to <#%s>", channelID))
+}
+
 // shop routes the shop commands to the proper handers.
 func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> shop.shop")
@@ -629,4 +659,54 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 	}
 
 	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(purchases)}).Debug("shop purchases listed")
+}
+
+// publishShop publishes the shop items to the channel.
+func publishShop(s *discordgo.Session, guildID string, channelID string, messageID string) (string, error) {
+	log.Trace("--> shop.publishShop")
+	defer log.Trace("<-- shop.publishShop")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
+	shop := GetShop(guildID)
+	items := shop.Items
+
+	if len(items) == 0 {
+		log.WithFields(log.Fields{"guildID": guildID}).Debug("no items found")
+		return "", errors.New("no items found in the shop")
+	}
+
+	shopItems := make([]*discordgo.MessageEmbedField, 0, len(items))
+	for _, item := range items {
+		sb := strings.Builder{}
+		sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
+		sb.WriteString(p.Sprintf("Cost: %d", item.Price))
+		if item.Duration != "" {
+			duration, _ := disctime.ParseDuration(item.Duration)
+			sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
+			// sb.WriteString(p.Sprintf("Auto-Rewable: %t", item.AutoRenewable))
+		}
+		shopItems = append(shopItems, &discordgo.MessageEmbedField{
+			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
+			Value:  sb.String(),
+			Inline: false,
+		})
+	}
+
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:  "Shop Items",
+			Fields: shopItems,
+		},
+	}
+
+	if messageID == "" {
+		message := discmsg.SendMessage(s, channelID, "", embeds)
+		messageID = message.ID
+	} else {
+		discmsg.EditMessage(s, channelID, messageID, "", embeds)
+	}
+
+	log.WithFields(log.Fields{"guildID": guildID, "numItems": len(items)}).Info("shop items published")
+	return messageID, nil
 }
