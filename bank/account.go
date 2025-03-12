@@ -57,6 +57,18 @@ func (account *Account) Deposit(amt int) error {
 	return err
 }
 
+// DepositToCurrentOnly adds the amount to the balance of the account.
+func (account *Account) DepositToCurrentOnly(amt int) error {
+	log.Trace("--> bank.Account.DepositToCurrentOnly")
+	defer log.Trace("<-- bank.Account.DepositToCurrentOnly")
+
+	account.CurrentBalance += amt
+
+	err := writeAccount(account)
+	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amt}).Info("deposit into account")
+	return err
+}
+
 // Withdraw deducts the amount from the balance of the account
 func (account *Account) Withdraw(amt int) error {
 	log.Trace("--> bank.Account.Withdraw")

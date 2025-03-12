@@ -101,7 +101,7 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
 	bankAccount := bank.GetAccount(guildID, memberID)
-	err := bankAccount.Withdraw(item.Price)
+	err := bankAccount.WithdrawFromCurrentOnly(item.Price)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to withdraw cash from the bank account")
 		return nil, errors.New(p.Sprintf("insufficient funds to buy the %s `%s` for %d", item.Type, item.Name, item.Price))
@@ -164,7 +164,7 @@ func (p *Purchase) Return() error {
 	defer log.Trace("<-- shop.Purchase.Return")
 
 	bankAccount := bank.GetAccount(p.GuildID, p.MemberID)
-	err := bankAccount.Deposit(p.Item.Price)
+	err := bankAccount.DepositToCurrentOnly(p.Item.Price)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to deposit cash to the bank account")
 		return fmt.Errorf("unable to deposit cash to the bank account: %w", err)
