@@ -25,7 +25,7 @@ func SendMessage(s *discordgo.Session, channelID string, msg string, components 
 }
 
 // EditMessage edits the current message in a channel.
-func EditMessage(s *discordgo.Session, channelID string, messageID string, msg string, components []discordgo.MessageComponent, embeds []*discordgo.MessageEmbed) {
+func EditMessage(s *discordgo.Session, channelID string, messageID string, msg string, components []discordgo.MessageComponent, embeds []*discordgo.MessageEmbed) error {
 	log.Trace("--> EditMessage")
 	defer log.Trace("<-- EditMessage")
 
@@ -38,8 +38,9 @@ func EditMessage(s *discordgo.Session, channelID string, messageID string, msg s
 	})
 	if err != nil {
 		log.WithFields(log.Fields{"channelID": channelID, "messageID": messageID, "error": err}).Error("unable to edit a message")
-		return
+		return err
 	}
 
 	log.WithFields(log.Fields{"channel": channelID, "messageID": messageID}).Trace("edited message")
+	return nil
 }

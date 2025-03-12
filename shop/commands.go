@@ -166,7 +166,8 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	config := GetConfig(i.GuildID)
-	publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
+	messageID, _ := publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
+	config.SetMessageID(messageID)
 }
 
 // addRoleToShop adds a role to the shop.
@@ -758,11 +759,19 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		components = append(components, row)
 	}
 
+	if messageID != "" {
+		err := discmsg.EditMessage(s, channelID, messageID, "", components, embeds)
+		if err != nil {
+			log.WithFields(log.Fields{"guildID": guildID, "channelID": channelID, "messageID": messageID}).Error("failed to edit shop items")
+			messageID = ""
+		}
+		log.WithFields(log.Fields{"guildID": guildID, "channelID": channelID, "messageID": messageID}).Info("shop items updated")
+	}
 	if messageID == "" {
 		message := discmsg.SendMessage(s, channelID, "", components, embeds)
-		messageID = message.ID
-	} else {
-		discmsg.EditMessage(s, channelID, messageID, "", components, embeds)
+		if message != nil {
+			messageID = message.ID
+		}
 	}
 
 	log.WithFields(log.Fields{"guildID": guildID, "numItems": len(items)}).Info("shop items published")
