@@ -78,7 +78,7 @@ var (
 				},
 				{
 					Name:        "delete",
-					Description: "Delete removes an item from the shop.",
+					Description: "Removes a purchasable item from the shop.",
 					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
