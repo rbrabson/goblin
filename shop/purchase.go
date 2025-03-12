@@ -157,9 +157,6 @@ func (p *Purchase) HasExpired() bool {
 			if err != nil {
 				log.WithFields(log.Fields{"guildID": p.GuildID, "roleName": p.Item.Name, "memberID": p.MemberID, "error": err}).Error("failed to unassign role")
 			}
-
-			// Handle the role having expired by removing said role from
-			// the member
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("role purchase has expired")
 		default:
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("unknown purchase has expired")

@@ -166,7 +166,7 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 	log.Trace("--> shop.readPurchases")
 	defer log.Trace("<-- shop.readPurchases")
 
-	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}, {Key: "name", Value: itemName}, {Key: "type", Value: itemType}}
+	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}, {Key: "name", Value: itemName}, {Key: "type", Value: itemType}, {Key: "is_expired", Value: false}}
 	var item Purchase
 	err := db.FindOne(PURCHASE_COLLECTION, filter, &item)
 	if err != nil {
@@ -187,7 +187,7 @@ func writePurchase(item *Purchase) error {
 	if item.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: item.ID}}
 	} else {
-		filter = bson.D{{Key: "guild_id", Value: item.Item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "name", Value: item.Item.Name}, {Key: "type", Value: item.Item.Type}}
+		filter = bson.D{{Key: "guild_id", Value: item.Item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "name", Value: item.Item.Name}, {Key: "type", Value: item.Item.Type}, {Key: "is_expired", Value: false}}
 	}
 	err := db.UpdateOrInsert(PURCHASE_COLLECTION, filter, item)
 	if err != nil {
