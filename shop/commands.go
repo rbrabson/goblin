@@ -89,6 +89,11 @@ var (
 						},
 					},
 				},
+				{
+					Name:        "publish",
+					Description: "Publishes the shop items in the shop channel.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+				},
 			},
 		},
 	}
@@ -143,6 +148,8 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		listShopItems(s, i)
 	case "channel":
 		setShopChannel(s, i)
+	case "publish":
+		refreshShop(s, i)
 	default:
 		msg := p.Sprint("Command `%s` is not recognized.", options[0].Name)
 		discmsg.SendEphemeralResponse(s, i, msg)
@@ -421,6 +428,28 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		config.SetMessageID(messageID)
 	}
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("shop channel set to <#%s>", channelID))
+}
+
+// refreshShop refreshes the shop items in the shop channel.
+func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> shop.refreshShop")
+	defer log.Trace("<-- shop.refreshShop")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+	config := GetConfig(i.GuildID)
+	if config.ChannelID == "" {
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("No shop channel set."))
+		return
+	}
+	messageID, err := publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "channelID": config.ChannelID}).Error("failed to publish shop")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to publish shop: %s", err))
+		return
+	}
+	config.SetMessageID(messageID)
+	discmsg.SendEphemeralResponse(s, i, p.Sprintf("Shop refreshed in the <#%s> channel", config.ChannelID))
+	log.WithFields(log.Fields{"guildID": i.GuildID}).Info("shop refreshed")
 }
 
 // shop routes the shop commands to the proper handers.
