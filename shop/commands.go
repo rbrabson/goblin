@@ -682,7 +682,7 @@ func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreat
 		sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
 	}
 	embed := &discordgo.MessageEmbedField{
-		Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
+		Name:   p.Sprintf("%s: %s", unicode.FirstToUpper(item.Type), item.Name),
 		Value:  sb.String(),
 		Inline: false,
 	}
