@@ -46,10 +46,12 @@ func (c *Config) SetChannel(channelID string) {
 	log.Trace("--> shop.Config.SetChannel")
 	defer log.Trace("<-- shop.Config.SetChannel")
 
-	c.ChannelID = channelID
-	c.MessageID = ""
-	writeConfig(c)
-	log.WithFields(log.Fields{"guildID": c.GuildID, "channel": channelID}).Debug("set shop channel")
+	if c.ChannelID != channelID {
+		c.ChannelID = channelID
+		c.MessageID = ""
+		writeConfig(c)
+		log.WithFields(log.Fields{"guildID": c.GuildID, "channel": channelID}).Debug("set shop channel")
+	}
 }
 
 // SetMessageID saves the interaction used to publish the shop items.
@@ -57,7 +59,9 @@ func (c *Config) SetMessageID(messageID string) {
 	log.Trace("--> shop.Config.SetMessageID")
 	defer log.Trace("<-- shop.Config.SetMessageID")
 
-	c.MessageID = messageID
-	writeConfig(c)
-	log.WithFields(log.Fields{"guildID": c.GuildID, "messageID": messageID}).Debug("set shop message ID")
+	if c.MessageID != messageID {
+		c.MessageID = messageID
+		writeConfig(c)
+		log.WithFields(log.Fields{"guildID": c.GuildID, "messageID": messageID}).Debug("set shop message ID")
+	}
 }

@@ -440,14 +440,10 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	config := GetConfig(i.GuildID)
-	if config.ChannelID != channelID {
-		config.SetChannel(channelID)
-		messageID, _ := publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
-		config.SetMessageID(messageID)
-	} else if config.MessageID == "" {
-		messageID, _ := publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
-		config.SetMessageID(messageID)
-	}
+	messageID, _ := publishShop(s, i.GuildID, channelID, config.MessageID)
+	config.SetChannel(channelID)
+	config.SetMessageID(messageID)
+
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("shop channel set to <#%s>", channelID))
 }
 
