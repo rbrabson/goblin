@@ -71,6 +71,19 @@ var (
 						},
 					},
 				},
+				{
+					Name:        "channel",
+					Description: "Sets the channel to which to pulish the shop items.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionChannel,
+							Name:        "id",
+							Description: "The ID of the channel to which to publish the shop items.",
+							Required:    true,
+						},
+					},
+				},
 			},
 		},
 	}

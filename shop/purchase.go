@@ -206,7 +206,7 @@ func checkForExpiredPurchases() {
 	defer log.Trace("<-- shop.checkForExpiredPurchases")
 
 	for {
-		filter := bson.D{{Key: "is_expired", Value: false}, {Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now}}}}
+		filter := bson.D{{Key: "is_expired", Value: false}, {Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now()}}}}
 		purchases, _ := readAllPurchases(filter)
 		for _, purchase := range purchases {
 			expired := purchase.HasExpired()
@@ -216,7 +216,7 @@ func checkForExpiredPurchases() {
 		}
 
 		// Wait until tomorrow to check again
-		year, month, day := time.Now().Date()
+		year, month, day := time.Now().UTC().Date()
 		tomorrow := time.Date(year, month, day+1, 0, 0, 0, 0, time.UTC)
 		time.Sleep(time.Until(tomorrow))
 	}

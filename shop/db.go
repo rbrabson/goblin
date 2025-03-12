@@ -135,7 +135,7 @@ func readAllPurchases(filter interface{}) ([]*Purchase, error) {
 	var items []*Purchase
 	err := db.FindMany(PURCHASE_COLLECTION, filter, &items, bson.D{}, 0)
 	if err != nil {
-		log.WithFields(log.Fields{"filter": filter}).Error("unable to read purchases from the database")
+		log.WithFields(log.Fields{"filter": filter}).Error("unable to read all purchases from the database")
 		return nil, err
 	}
 	log.WithFields(log.Fields{"count": len(items)}).Debug("read purchases from the database")
