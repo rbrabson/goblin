@@ -2,6 +2,7 @@ package shop
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"shop-admin": shopAdmin,
 		"shop":       shop,
+		"purchase":   purchase,
 	}
 )
 
@@ -411,6 +413,7 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(items)}).Info("shop items listed")
 }
 
+// setShopChannel sets the channel to which to publish the shop items.
 func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> shop.setShopChannel")
 	defer log.Trace("<-- shop.setShopChannel")
@@ -474,7 +477,10 @@ func buyFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	switch options[0].Options[0].Name {
 	case "role":
-		buyRoleFromShop(s, i)
+		options := i.ApplicationCommandData().Options
+		role := options[0].Options[0]
+		roleName := role.Options[0].StringValue()
+		buyRoleFromShop(s, i, roleName)
 	default:
 		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
 		discmsg.SendEphemeralResponse(s, i, msg)
@@ -482,17 +488,12 @@ func buyFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 // buyRoleFromShop buys a role from the shop.
-func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) {
 	log.Trace("--> shop.buyRoleFromShop")
 	defer log.Trace("<-- shop.buyRoleFromShop")
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
-	options := i.ApplicationCommandData().Options
-
-	// Get the role details
-	role := options[0].Options[0]
-	roleName := role.Options[0].StringValue()
 	// None of the following are configurable at the present
 	roleRenew := false
 
@@ -544,7 +545,7 @@ func buyRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("role purchased")
-	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role `%s` has been purchased.", roleName))
+	discmsg.SendEphemeralResponse(s, i, p.Sprintf("Role `%s` has been purchased.", roleName))
 }
 
 // upatePurchaseFromShop routes the update purchase shop item commands to the proper handers.
@@ -661,12 +662,37 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(purchases)}).Debug("shop purchases listed")
 }
 
+// purchase is used to buy an item from the shop using a button in the shop channel.
+func purchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> shop.purchase")
+	defer log.Trace("<-- shop.purchase")
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		return
+	}
+
+	strs := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")
+	itemType := strs[0]
+	itemName := strs[1]
+
+	switch itemType {
+	case ROLE:
+		buyRoleFromShop(s, i, itemName)
+	default:
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("unknown item type")
+		discmsg.SendEphemeralResponse(s, i, fmt.Sprintf("Unknown item type `%s`", itemType))
+		return
+	}
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("TODO: `purchase` not implemented")
+	discmsg.SendEphemeralResponse(s, i, fmt.Sprintf("Purchase not implemented, type=%s, name=%s", itemType, itemName))
+}
+
 // publishShop publishes the shop items to the channel.
 func publishShop(s *discordgo.Session, guildID string, channelID string, messageID string) (string, error) {
 	log.Trace("--> shop.publishShop")
 	defer log.Trace("<-- shop.publishShop")
-
-	p := discmsg.GetPrinter(language.AmericanEnglish)
 
 	shop := GetShop(guildID)
 	items := shop.Items
@@ -676,23 +702,24 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		return "", errors.New("no items found in the shop")
 	}
 
+	// Create the message for the shop items
 	shopItems := make([]*discordgo.MessageEmbedField, 0, len(items))
 	for _, item := range items {
 		sb := strings.Builder{}
-		sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
-		sb.WriteString(p.Sprintf("Cost: %d", item.Price))
+		sb.WriteString(fmt.Sprintf("Description: %s\n", item.Description))
+		sb.WriteString(fmt.Sprintf("Cost: %d", item.Price))
 		if item.Duration != "" {
 			duration, _ := disctime.ParseDuration(item.Duration)
-			sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
+			sb.WriteString(fmt.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
 			// sb.WriteString(p.Sprintf("Auto-Rewable: %t", item.AutoRenewable))
 		}
-		shopItems = append(shopItems, &discordgo.MessageEmbedField{
-			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
+		embed := &discordgo.MessageEmbedField{
+			Name:   fmt.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
 			Value:  sb.String(),
 			Inline: false,
-		})
+		}
+		shopItems = append(shopItems, embed)
 	}
-
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Title:  "Shop Items",
@@ -700,13 +727,56 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		},
 	}
 
+	// Build the buttons to use for purchasing shop items
+	actionRows := getShopButtons(shop)
+	components := make([]discordgo.MessageComponent, 0, len(actionRows))
+	for _, row := range actionRows {
+		components = append(components, row)
+	}
+
 	if messageID == "" {
-		message := discmsg.SendMessage(s, channelID, "", embeds)
+		message := discmsg.SendMessage(s, channelID, "", components, embeds)
 		messageID = message.ID
 	} else {
-		discmsg.EditMessage(s, channelID, messageID, "", embeds)
+		discmsg.EditMessage(s, channelID, messageID, "", components, embeds)
 	}
 
 	log.WithFields(log.Fields{"guildID": guildID, "numItems": len(items)}).Info("shop items published")
 	return messageID, nil
+}
+
+// getShopButtons returns the buttons for the shop items, which may be used to
+// purchase items in the shop.
+func getShopButtons(shop *Shop) []discordgo.ActionsRow {
+	log.Trace("--> getShopButtons")
+	defer log.Trace("<-- getShopButtons")
+
+	buttonsPerRow := 5
+	rows := make([]discordgo.ActionsRow, 0, len(shop.Items)/buttonsPerRow)
+
+	itemsIncludedInButtons := 0
+	for len(shop.Items) > itemsIncludedInButtons {
+		racersNotInButtons := len(shop.Items) - itemsIncludedInButtons
+		buttonsForNextRow := min(buttonsPerRow, racersNotInButtons)
+		buttons := make([]discordgo.MessageComponent, 0, buttonsForNextRow)
+		for j := 0; j < buttonsForNextRow; j++ {
+			index := j + itemsIncludedInButtons
+			item := shop.Items[index]
+			customID := item.Type + ":" + item.Name
+			button := discordgo.Button{
+				Label:    unicode.FirstToUpper(item.Type) + ": " + item.Name,
+				Style:    discordgo.PrimaryButton,
+				CustomID: customID,
+				Emoji:    nil,
+			}
+			buttons = append(buttons, button)
+			bot.AddComponentHandler(customID, purchase)
+		}
+		itemsIncludedInButtons += buttonsForNextRow
+
+		row := discordgo.ActionsRow{Components: buttons}
+		rows = append(rows, row)
+	}
+
+	return rows
 }

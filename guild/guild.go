@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -20,6 +21,22 @@ type Guild struct {
 	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID    string             `json:"guild_id" bson:"guild_id"`
 	AdminRoles []string           `json:"admin_roles" bson:"admin_roles"`
+}
+
+// GetAllGuilds returns all guilds in the database.
+func GetAllGuilds() []*Guild {
+	log.Trace("--> guild.GetAllGuilds")
+	defer log.Trace("<-- guild.GetAllGuilds")
+
+	guilds := make([]*Guild, 0)
+	err := db.FindMany(GUILD_COLLECTION, bson.M{}, &guilds, bson.M{}, 0)
+	if err != nil {
+		log.Error("failed to get all guilds")
+		return nil
+	}
+
+	log.WithField("guilds", len(guilds)).Debug("all guilds")
+	return guilds
 }
 
 // GetGuild returns the guild configuration for a given guild (guild).

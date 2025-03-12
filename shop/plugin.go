@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/discord"
+	"github.com/rbrabson/goblin/guild"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -17,6 +18,7 @@ const (
 
 var (
 	plugin *Plugin
+	bot    *discord.Bot
 	db     *mongo.MongoDB
 	status discord.PluginStatus = discord.RUNNING
 )
@@ -43,7 +45,9 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 
 // Initialize saves the Discord bot to be used by the banking system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
+	bot = b
 	db = d
+	registerPurchaseComponentHandlers()
 	go checkForExpiredPurchases()
 }
 
@@ -105,4 +109,15 @@ func (plugin *Plugin) GetAdminHelp() []string {
 	help = append([]string{title}, help...)
 
 	return help
+}
+
+// Add the purchase command handlers for each item in the shop
+func registerPurchaseComponentHandlers() {
+	for _, guild := range guild.GetAllGuilds() {
+		shop := GetShop(guild.GuildID)
+		for _, item := range shop.Items {
+			customID := item.Type + ":" + item.Name
+			bot.AddComponentHandler(customID, purchase)
+		}
+	}
 }
