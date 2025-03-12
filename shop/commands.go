@@ -515,8 +515,8 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	strs := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")
-	itemType := strs[0]
-	itemName := strs[1]
+	itemType := strs[1]
+	itemName := strs[2]
 
 	switch itemType {
 	case ROLE:
@@ -590,8 +590,8 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	strs := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")
-	itemType := strs[1]
-	itemName := strs[2]
+	itemType := strs[2]
+	itemName := strs[3]
 
 	switch itemType {
 	case ROLE:
@@ -699,7 +699,7 @@ func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreat
 		discordgo.Button{
 			Label:    "Buy",
 			Style:    discordgo.SuccessButton,
-			CustomID: "buy:" + item.Type + ":" + item.Name,
+			CustomID: "shop:buy:" + item.Type + ":" + item.Name,
 		},
 	}
 	components := []discordgo.MessageComponent{
@@ -786,7 +786,7 @@ func getShopButtons(shop *Shop) []discordgo.ActionsRow {
 		for j := 0; j < buttonsForNextRow; j++ {
 			index := j + itemsIncludedInButtons
 			item := shop.Items[index]
-			customID := item.Type + ":" + item.Name
+			customID := "shop:" + item.Type + ":" + item.Name
 			button := discordgo.Button{
 				Label:    unicode.FirstToUpper(item.Type) + ": " + item.Name,
 				Style:    discordgo.PrimaryButton,
