@@ -268,7 +268,7 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 
 	// Make sure the role hasn't already been purchased
 	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if purchase != nil {
+	if purchase != nil && !purchase.IsExpired {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
 		return fmt.Errorf("you have already purchased role `%s`", roleName)
 	}
