@@ -448,7 +448,7 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	config.SetMessageID(messageID)
-	discmsg.SendEphemeralResponse(s, i, p.Sprintf("Shop refreshed in the <#%s> channel", config.ChannelID))
+	discmsg.SendEphemeralResponse(s, i, p.Sprintf("Shop published to the <#%s> channel", config.ChannelID))
 	log.WithFields(log.Fields{"guildID": i.GuildID}).Info("shop refreshed")
 }
 
