@@ -41,5 +41,5 @@ func EditMessage(s *discordgo.Session, channelID string, messageID string, msg s
 		return
 	}
 
-	log.WithFields(log.Fields{"channel": channelID, "messageID": messageID}).Error("edited message")
+	log.WithFields(log.Fields{"channel": channelID, "messageID": messageID}).Trace("edited message")
 }
