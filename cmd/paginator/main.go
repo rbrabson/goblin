@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/rbrabson/goblin/internal/paginator"
+	paginator "github.com/rbrabson/goblin/internal/paginator_old"
 
 	"github.com/bwmarrin/discordgo"
 	log "github.com/sirupsen/logrus"

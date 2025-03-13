@@ -4,7 +4,12 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var DefaultConfig = Config{
+const (
+	defaultItemsPerPage = 5
+)
+
+// defaultConfig is the default configuration used by the paginator.
+var defaultConfig = Config{
 	ButtonsConfig: ButtonsConfig{
 		First: &ComponentOptions{
 			Emoji: &discordgo.ComponentEmoji{
@@ -17,12 +22,6 @@ var DefaultConfig = Config{
 				Name: "◀",
 			},
 			Style: discordgo.PrimaryButton,
-		},
-		Stop: &ComponentOptions{
-			Emoji: &discordgo.ComponentEmoji{
-				Name: "🗑",
-			},
-			Style: discordgo.DangerButton,
 		},
 		Next: &ComponentOptions{
 			Emoji: &discordgo.ComponentEmoji{
@@ -37,26 +36,29 @@ var DefaultConfig = Config{
 			Style: discordgo.PrimaryButton,
 		},
 	},
-	NotYourPaginatorMessage: "You can't interact with this paginator because it's not yours.",
-	CustomIDPrefix:          "paginator",
-	EmbedColor:              0x4c50c1,
+	CustomIDPrefix:      "paginator",
+	EmbedColor:          0x4c50c1,
+	DefaultItemsPerPage: defaultItemsPerPage,
 }
 
+// Config is the configuration used by the paginator.
 type Config struct {
 	ButtonsConfig           ButtonsConfig
 	NotYourPaginatorMessage string
 	CustomIDPrefix          string
 	EmbedColor              int
+	DefaultItemsPerPage     int
 }
 
+// ButtonsConfig are the buttons used to navigate through the paginator.
 type ButtonsConfig struct {
 	First *ComponentOptions
 	Back  *ComponentOptions
-	Stop  *ComponentOptions
 	Next  *ComponentOptions
 	Last  *ComponentOptions
 }
 
+// ComponentOptions are the options used to create a pagination button.
 type ComponentOptions struct {
 	Emoji *discordgo.ComponentEmoji
 	Label string
@@ -69,29 +71,5 @@ type ConfigOpt func(config *Config)
 func (c *Config) Apply(opts []ConfigOpt) {
 	for _, opt := range opts {
 		opt(c)
-	}
-}
-
-func WithButtonsConfig(buttonsConfig ButtonsConfig) ConfigOpt {
-	return func(config *Config) {
-		config.ButtonsConfig = buttonsConfig
-	}
-}
-
-func WithNotYourPaginatorMessage(message string) ConfigOpt {
-	return func(config *Config) {
-		config.NotYourPaginatorMessage = message
-	}
-}
-
-func WithCustomIDPrefix(prefix string) ConfigOpt {
-	return func(config *Config) {
-		config.CustomIDPrefix = prefix
-	}
-}
-
-func WithEmbedColor(color int) ConfigOpt {
-	return func(config *Config) {
-		config.EmbedColor = color
 	}
 }

@@ -1,4 +1,4 @@
-package paginator2
+package paginator
 
 import (
 	"sync"
