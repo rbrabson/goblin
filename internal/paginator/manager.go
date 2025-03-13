@@ -70,7 +70,7 @@ func (m *paginatorManager) startCleanup() {
 		ticker := time.NewTicker(time.Minute)
 		defer ticker.Stop()
 		for range ticker.C {
-			log.WithFields(log.Fields{"count": len(m.paginators)}).Debug("running cleanup")
+			log.WithFields(log.Fields{"count": len(m.paginators)}).Debug("running paginator cleanup")
 			m.cleanup()
 		}
 	}()

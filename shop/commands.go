@@ -799,6 +799,9 @@ func getShopButtons(shop *Shop) []discordgo.ActionsRow {
 
 		row := discordgo.ActionsRow{Components: buttons}
 		rows = append(rows, row)
+		if itemsIncludedInButtons >= MAX_SHOP_ITEMS_DISPLAYED {
+			break
+		}
 	}
 
 	return rows
