@@ -58,7 +58,7 @@ func (m *paginatorManager) cleanup() {
 
 	for _, p := range m.paginators {
 		if p.hasExpired() {
-			log.WithFields(log.Fields{"paginator": p.id}).Debug("cleaning up expired paginator")
+			log.WithFields(log.Fields{"paginator": p.id}).Trace("cleaning up expired paginator")
 			m.removePaginator(p)
 		}
 	}
@@ -70,7 +70,7 @@ func (m *paginatorManager) startCleanup() {
 		ticker := time.NewTicker(time.Minute)
 		defer ticker.Stop()
 		for range ticker.C {
-			log.WithFields(log.Fields{"count": len(m.paginators)}).Debug("running paginator cleanup")
+			log.WithFields(log.Fields{"count": len(m.paginators)}).Trace("running paginator cleanup")
 			m.cleanup()
 		}
 	}()
