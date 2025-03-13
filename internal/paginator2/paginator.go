@@ -32,8 +32,8 @@ func NewPaginator(id string, title string, content []*discordgo.MessageEmbedFiel
 	return paginator
 }
 
-// PageCount returns the number of pages in the paginator.
-func (p *Paginator) PageCount() int {
+// pageCount returns the number of pages in the paginator.
+func (p *Paginator) pageCount() int {
 	itemsPerPage := p.itemsPerPage()
 	pageCount := (len(p.Content) + itemsPerPage - 1) / itemsPerPage
 	return pageCount
@@ -46,13 +46,65 @@ func (p *Paginator) makeEmbed() *discordgo.MessageEmbed {
 		Title:  p.Title,
 		Fields: make([]*discordgo.MessageEmbedField, 0, p.itemsPerPage()),
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("Page %d/%d", p.currentPage+1, p.PageCount()),
+			Text: fmt.Sprintf("Page %d/%d", p.currentPage+1, p.pageCount()),
 		},
 	}
 	start := p.currentPage * p.itemsPerPage()
 	end := min(start+p.itemsPerPage(), len(p.Content))
 	embed.Fields = append(embed.Fields, p.Content[start:end]...)
 	return embed
+}
+
+// createComponents creates  the message components to be included in the
+// message. It contains the buttons used to navigate through the paginator.
+func (p *Paginator) createComponents(paginator *Paginator) discordgo.MessageComponent {
+	cfg := p.config.ButtonsConfig
+	actionRow := discordgo.ActionsRow{}
+
+	if cfg.First != nil {
+		actionRow.Components = append(actionRow.Components, discordgo.Button{
+			Label:    cfg.First.Label,
+			Style:    cfg.First.Style,
+			Disabled: paginator.currentPage == 0,
+			Emoji:    cfg.First.Emoji,
+			CustomID: p.formatCustomID("first"),
+		})
+	}
+	if cfg.Back != nil {
+		actionRow.Components = append(actionRow.Components, discordgo.Button{
+			Label:    cfg.Back.Label,
+			Style:    cfg.Back.Style,
+			Disabled: paginator.currentPage == 0,
+			Emoji:    cfg.Back.Emoji,
+			CustomID: p.formatCustomID("back"),
+		})
+	}
+
+	if cfg.Next != nil {
+		actionRow.Components = append(actionRow.Components, discordgo.Button{
+			Label:    cfg.Next.Label,
+			Style:    cfg.Next.Style,
+			Disabled: paginator.currentPage == paginator.pageCount()-1,
+			Emoji:    cfg.Next.Emoji,
+			CustomID: p.formatCustomID("next"),
+		})
+	}
+	if cfg.Last != nil {
+		actionRow.Components = append(actionRow.Components, discordgo.Button{
+			Label:    cfg.Last.Label,
+			Style:    cfg.Last.Style,
+			Disabled: paginator.currentPage == paginator.pageCount()-1,
+			Emoji:    cfg.Last.Emoji,
+			CustomID: p.formatCustomID("last"),
+		})
+	}
+
+	return actionRow
+}
+
+// formatCustomID formats the custom ID for the paginator buttons.
+func (p *Paginator) formatCustomID(action string) string {
+	return p.config.CustomIDPrefix + ":" + p.ID + ":" + action
 }
 
 // itemsPerPage returns the number of items per page. If the
