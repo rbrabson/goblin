@@ -15,7 +15,6 @@ import (
 	"github.com/rbrabson/goblin/leaderboard"
 	"github.com/rbrabson/goblin/payday"
 	"github.com/rbrabson/goblin/role"
-	"github.com/rbrabson/goblin/shop"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -63,7 +62,7 @@ func main() {
 	payday.Start()
 	race.Start()
 	role.Start()
-	shop.Start()
+	// shop.Start()
 
 	bot := discord.NewBot(BotName, Version, Revision)
 	err = bot.Session.Open()
