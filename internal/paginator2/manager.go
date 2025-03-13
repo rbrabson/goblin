@@ -20,12 +20,11 @@ type Manager struct {
 // NewManager creates a new paginator manager. It takes a variadic number of ConfigOpt
 // options to configure the paginator. The default configuration is used if no
 // options are provided.  The manager starts a goroutine to clean up expired paginators.
-// The cleanup goroutine runs every 30 seconds and removes expired paginators.
-func NewManager(opts ...ConfigOpt) *Manager {
-	config := &defaultConfig
-	config.Apply(opts)
+// The cleanup goroutine runs every minute and removes expired paginators.
+func NewManager() *Manager {
 	manager := &Manager{
 		paginators: map[string]*Paginator{},
+		mutex:      sync.Mutex{},
 	}
 	manager.startCleanup()
 
@@ -60,9 +59,8 @@ func (m *Manager) cleanup() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	now := time.Now()
 	for _, p := range m.paginators {
-		if !p.expiry.IsZero() && p.expiry.After(now) {
+		if p.hasExpired() {
 			m.remove(p.id)
 		}
 	}

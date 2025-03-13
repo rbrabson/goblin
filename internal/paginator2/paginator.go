@@ -190,6 +190,11 @@ func (p *Paginator) getItemsPerPage() int {
 	return p.itemsPerPage
 }
 
+// hasExpired returns true if the paginator has expired.
+func (p *Paginator) hasExpired() bool {
+	return !p.expiry.IsZero() && p.expiry.After(time.Now())
+}
+
 // pageThroughItems is called when a page button is selected in a paginated message.
 func pageThroughItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	ids := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")
