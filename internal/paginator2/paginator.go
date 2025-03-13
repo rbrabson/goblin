@@ -7,6 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/discord"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -29,7 +30,6 @@ type Paginator struct {
 	itemsPerPage int
 	currentPage  int
 	config       *Config
-	manager      *Manager
 	channelID    string
 	messageID    string
 	ephemeral    bool
@@ -45,7 +45,6 @@ func NewPaginator(title string, itemsPerPage int, idleWait time.Duration, conten
 		currentPage:  0,
 		itemsPerPage: itemsPerPage,
 		config:       &defaultConfig,
-		manager:      manager,
 	}
 
 	return paginator
@@ -55,7 +54,7 @@ func NewPaginator(title string, itemsPerPage int, idleWait time.Duration, conten
 func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, ephemeral ...bool) (*discordgo.Message, error) {
 	if p.id == "" {
 		p.id = fmt.Sprintf("%s-%d", channelID, time.Now().UnixNano())
-		p.manager.Add(p)
+		manager.Add(p)
 	}
 	p.channelID = channelID
 	p.ephemeral = len(ephemeral) > 0 && ephemeral[0]
@@ -79,7 +78,7 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, epheme
 }
 
 // editMessage edits the current message sent by the paginator in a channel.
-func (p *Paginator) editMessage(s *discordgo.Session) error {
+func (p *Paginator) editMessage(s *discordgo.Session) (*discordgo.Message, error) {
 	var flags discordgo.MessageFlags
 	if p.ephemeral {
 		flags = discordgo.MessageFlagsEphemeral
@@ -87,14 +86,17 @@ func (p *Paginator) editMessage(s *discordgo.Session) error {
 
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
 	components := []discordgo.MessageComponent{p.createComponents(p.id)}
-	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+	message, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		ID:         p.messageID,
 		Channel:    p.channelID,
 		Embeds:     &embeds,
 		Components: &components,
 		Flags:      flags,
 	})
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return message, nil
 }
 
 // pageCount returns the number of pages in the paginator.
@@ -223,8 +225,8 @@ func pageThroughItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	paginator.expiry = time.Now().Add(paginator.idleWait)
 
-	if err := paginator.editMessage(s); err != nil {
-		fmt.Printf("error editing message: %s\n", err)
+	if _, err := paginator.editMessage(s); err != nil {
+		log.WithFields(log.Fields{"paginator": paginatorID, "action": action, "error": err}).Error("error editing message")
 		return
 	}
 }
