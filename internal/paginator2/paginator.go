@@ -24,6 +24,7 @@ type Paginator struct {
 	id           string
 	title        string
 	content      []*discordgo.MessageEmbedField
+	idleWait     time.Duration
 	expiry       time.Time
 	itemsPerPage int
 	currentPage  int
@@ -35,11 +36,12 @@ type Paginator struct {
 }
 
 // NewPaginator creates a new paginator.
-func NewPaginator(title string, content []*discordgo.MessageEmbedField, itemsPerPage int, expiry time.Time) *Paginator {
+func NewPaginator(title string, itemsPerPage int, idleWait time.Duration, content []*discordgo.MessageEmbedField) *Paginator {
 	paginator := &Paginator{
 		title:        title,
 		content:      content,
-		expiry:       expiry,
+		idleWait:     idleWait,
+		expiry:       time.Now().Add(idleWait),
 		currentPage:  0,
 		itemsPerPage: itemsPerPage,
 		config:       &defaultConfig,
@@ -214,7 +216,7 @@ func pageThroughItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		paginator.currentPage = paginator.pageCount() - 1
 	}
 
-	paginator.expiry = time.Now()
+	paginator.expiry = time.Now().Add(paginator.idleWait)
 
 	if err := paginator.editMessage(s); err != nil {
 		fmt.Printf("error editing message: %s\n", err)
