@@ -7,9 +7,48 @@ import (
 )
 
 const (
+	CONFIG_COLLECTION    = "shop_configs"
 	SHOP_ITEM_COLLECTION = "shop_items"
 	PURCHASE_COLLECTION  = "shop_purchases"
 )
+
+// readConfig reads the configuration from the database. If the config does not exist, it returns nil.
+func readConfig(guildID string) (*Config, error) {
+	log.Trace("--> shop.readConfig")
+	defer log.Trace("<-- shop.readConfig")
+
+	filter := bson.M{"guild_id": guildID}
+	var config *Config
+	err := db.FindOne(CONFIG_COLLECTION, filter, &config)
+	if err != nil {
+		log.WithFields(log.Fields{"guild": guildID}).Error("unable to read shop config from the database")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"guild": guildID}).Debug("read shop config from the database")
+
+	return config, nil
+}
+
+// writeConfig writes the configuration to the database.
+func writeConfig(config *Config) error {
+	log.Trace("--> shop.writeConfig")
+	defer log.Trace("<-- shop.writeConfig")
+
+	var filter bson.D
+	if config.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: config.ID}}
+	} else {
+		filter = bson.D{{Key: "guild_id", Value: config.GuildID}}
+	}
+	err := db.UpdateOrInsert(CONFIG_COLLECTION, filter, config)
+	if err != nil {
+		log.WithFields(log.Fields{"config": config, "error": err}).Error("unable to write shop config to the database")
+		return err
+	}
+	log.WithFields(log.Fields{"config": config}).Debug("write shop config to the database")
+
+	return nil
+}
 
 // readShopItems reads all the shop items for the given guild.
 func readShopItems(guildID string) ([]*ShopItem, error) {
@@ -88,6 +127,22 @@ func deleteShopItem(item *ShopItem) error {
 	return nil
 }
 
+// readAllPurchases reads all the purchases from the database that match the input filter
+func readAllPurchases(filter interface{}) ([]*Purchase, error) {
+	log.Trace("--> shop.readAllPurchases")
+	defer log.Trace("<-- shop.readAllPurchases")
+
+	var items []*Purchase
+	err := db.FindMany(PURCHASE_COLLECTION, filter, &items, bson.D{}, 0)
+	if err != nil {
+		log.WithFields(log.Fields{"filter": filter}).Error("unable to read all purchases from the database")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"count": len(items)}).Debug("read purchases from the database")
+
+	return items, nil
+}
+
 // readPurchases reads all the purchases for the member in the given guild.
 func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 	log.Trace("--> shop.readPurchases")
@@ -111,7 +166,7 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 	log.Trace("--> shop.readPurchases")
 	defer log.Trace("<-- shop.readPurchases")
 
-	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}, {Key: "name", Value: itemName}, {Key: "type", Value: itemType}}
+	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}, {Key: "name", Value: itemName}, {Key: "type", Value: itemType}, {Key: "is_expired", Value: false}}
 	var item Purchase
 	err := db.FindOne(PURCHASE_COLLECTION, filter, &item)
 	if err != nil {
@@ -129,10 +184,10 @@ func writePurchase(item *Purchase) error {
 	defer log.Trace("<-- shop.writeShopItem")
 
 	var filter bson.D
-	if item.Item.ID != primitive.NilObjectID {
-		filter = bson.D{{Key: "_id", Value: item.Item.ID}}
+	if item.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: item.ID}}
 	} else {
-		filter = bson.D{{Key: "guild_id", Value: item.Item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "name", Value: item.Item.Name}, {Key: "type", Value: item.Item.Type}}
+		filter = bson.D{{Key: "guild_id", Value: item.Item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "name", Value: item.Item.Name}, {Key: "type", Value: item.Item.Type}, {Key: "is_expired", Value: false}}
 	}
 	err := db.UpdateOrInsert(PURCHASE_COLLECTION, filter, item)
 	if err != nil {

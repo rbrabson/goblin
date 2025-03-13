@@ -3,13 +3,17 @@ package shop
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/disctime"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/text/language"
 )
@@ -29,8 +33,9 @@ type Purchase struct {
 	Item        *ShopItem          `json:"item" bson:"item,inline"`
 	Status      string             `json:"status" bson:"status"`
 	PurchasedOn time.Time          `json:"purchased_on" bson:"purchased_on"`
-	ExpiresOn   time.Time          `json:"expires_on,omitempty" bson:"expires_on,omitempty"`
-	AutoRenew   bool               `json:"autoRenew,omitempty" bson:"autoRenew,omitempty"`
+	ExpiresOn   time.Time          `json:"expires_on" bson:"expires_on"`
+	AutoRenew   bool               `json:"autoRenew" bson:"autoRenew"`
+	IsExpired   bool               `json:"is_expired" bson:"is_expired"`
 }
 
 // GetAllRoles returns all the purchases made by a member in the guild.
@@ -43,6 +48,38 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "error": err}).Error("unable to read purchases from the database")
 		return nil
 	}
+
+	purchaseCmp := func(a, b *Purchase) int {
+		// Sort expired purchases to the bottom of the purchases
+		if a.HasExpired() && !b.HasExpired() {
+			return 1
+		}
+		if !a.HasExpired() && b.HasExpired() {
+			return -1
+		}
+
+		// Sort on the basic purchase information
+		if a.Item.Type < b.Item.Type {
+			return -1
+		}
+		if a.Item.Type > b.Item.Type {
+			return 1
+		}
+		if a.Item.Name < b.Item.Name {
+			return -1
+		}
+		if a.Item.Name > b.Item.Name {
+			return 1
+		}
+		if a.PurchasedOn.Before(b.PurchasedOn) {
+			return -1
+		}
+		if a.PurchasedOn.After(b.PurchasedOn) {
+			return 1
+		}
+		return 0
+	}
+	slices.SortFunc(purchases, purchaseCmp)
 
 	return purchases
 }
@@ -62,11 +99,13 @@ func GetPurchase(guildID string, memberID string, itemName string, itemType stri
 // PurchaseItem creates a new Purchase with the given guild ID, member ID, and a purchasable
 // shop item.
 func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
+	log.Trace("--> shop.PurchaseItem")
+	defer log.Trace("<-- shop.PurchaseItem")
 
 	p := discmsg.GetPrinter(language.AmericanEnglish)
 
 	bankAccount := bank.GetAccount(guildID, memberID)
-	err := bankAccount.Withdraw(item.Price)
+	err := bankAccount.WithdrawFromCurrentOnly(item.Price)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to withdraw cash from the bank account")
 		return nil, errors.New(p.Sprintf("insufficient funds to buy the %s `%s` for %d", item.Type, item.Name, item.Price))
@@ -84,7 +123,7 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 	}
 	if item.Duration != "" {
 		duration, _ := disctime.ParseDuration(item.Duration)
-		purchase.ExpiresOn = time.Now().Add(duration)
+		purchase.ExpiresOn = disctime.RoundToNextDay(time.Now().Add(duration))
 	}
 	err = writePurchase(purchase)
 	if err != nil {
@@ -97,13 +136,51 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 	return purchase, nil
 }
 
+// Determine if a purchase has expired.
+func (p *Purchase) HasExpired() bool {
+	log.Trace("--> shop.Purchase.HasExpired")
+	defer log.Trace("<-- shop.Purchase.HasExpired")
+
+	if p.IsExpired {
+		return true
+	}
+
+	oldIsExpired := p.IsExpired
+	switch {
+	case p.ExpiresOn.IsZero():
+		p.IsExpired = false
+	case p.ExpiresOn.Before(time.Now()):
+		switch p.Item.Type {
+		case ROLE:
+			// Assign the role to the user. If the role can't be assigned, then undo the purchase of the role.
+			err := guild.UnAssignRole(bot.Session, p.GuildID, p.MemberID, p.Item.Name)
+			if err != nil {
+				log.WithFields(log.Fields{"guildID": p.GuildID, "roleName": p.Item.Name, "memberID": p.MemberID, "error": err}).Error("failed to unassign role")
+			}
+			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("role purchase has expired")
+		default:
+			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("unknown purchase has expired")
+		}
+
+		p.IsExpired = true
+	default:
+		p.IsExpired = false
+	}
+
+	if p.IsExpired != oldIsExpired {
+		writePurchase(p)
+	}
+
+	return p.IsExpired
+}
+
 // Return the purchase to the shop.
 func (p *Purchase) Return() error {
 	log.Trace("--> shop.Purchase.Return")
 	defer log.Trace("<-- shop.Purchase.Return")
 
 	bankAccount := bank.GetAccount(p.GuildID, p.MemberID)
-	err := bankAccount.Deposit(p.Item.Price)
+	err := bankAccount.DepositToCurrentOnly(p.Item.Price)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to deposit cash to the bank account")
 		return fmt.Errorf("unable to deposit cash to the bank account: %w", err)
@@ -139,6 +216,69 @@ func (p *Purchase) Update(autoRenew bool) error {
 	return nil
 }
 
+// checkForExpiredPurchases checks once a day to see if any purchases that may be expired have expired.
+func checkForExpiredPurchases() {
+	log.Trace("--> shop.checkForExpiredPurchases")
+	defer log.Trace("<-- shop.checkForExpiredPurchases")
+
+	for {
+		filter := bson.D{{Key: "is_expired", Value: false}, {Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now()}}}}
+		purchases, _ := readAllPurchases(filter)
+		for _, purchase := range purchases {
+			expired := purchase.HasExpired()
+			if expired {
+				log.WithFields(log.Fields{"guild": purchase.GuildID, "member": purchase.MemberID, "type": purchase.Item.Type, "item": purchase.Item.Name}).Info("purchase has expired")
+			}
+		}
+
+		// Wait until tomorrow to check again
+		year, month, day := time.Now().UTC().Date()
+		tomorrow := time.Date(year, month, day+1, 0, 0, 0, 0, time.UTC)
+		time.Sleep(time.Until(tomorrow))
+	}
+}
+
+// rolePurchaseChecks performs checks to see if a role can be purchased.
+func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
+	log.Trace("--> shop.rolePurchaseChecks")
+	defer log.Trace("<-- shop.rolePurchaseChecks")
+
+	// Verify the role exists on the server
+	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
+	if guildRole == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		return fmt.Errorf("role `%s` not found on the server", roleName)
+	}
+
+	// Make sure the member doesn't already have the role
+	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("member already has the role")
+		return fmt.Errorf("you already have the `%s` role", roleName)
+	}
+
+	// Make sure the role is still available in the shop
+	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
+	if shopItem == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
+		return fmt.Errorf("role `%s` not found in the shop", roleName)
+	}
+
+	// Make sure the role hasn't already been purchased
+	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
+	if purchase != nil && !purchase.IsExpired {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role already purchased")
+		return fmt.Errorf("you have already purchased role `%s`", roleName)
+	}
+
+	// Make sure the member has sufficient funds to purchase the role
+	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
+	if bankAccount.CurrentBalance < shopItem.Price {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Error("insufficient funds")
+		return fmt.Errorf("you do not have enough credits to purchase the `%s` role", roleName)
+	}
+	return nil
+}
+
 // String returns a string representation of the purchase.
 func (p *Purchase) String() string {
 	sb := &strings.Builder{}
@@ -159,6 +299,8 @@ func (p *Purchase) String() string {
 		sb.WriteString(p.ExpiresOn.Format(time.RFC3339))
 		sb.WriteString(", AutoRenew: ")
 		sb.WriteString(fmt.Sprintf("%v", p.AutoRenew))
+		sb.WriteString(", IsExpired: ")
+		sb.WriteString(fmt.Sprintf("%v", p.IsExpired))
 	}
 
 	return sb.String()

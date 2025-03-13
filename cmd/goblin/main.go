@@ -11,6 +11,7 @@ import (
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/game/heist"
 	"github.com/rbrabson/goblin/game/race"
+	"github.com/rbrabson/goblin/internal/paginator"
 	"github.com/rbrabson/goblin/leaderboard"
 	"github.com/rbrabson/goblin/payday"
 	"github.com/rbrabson/goblin/role"
@@ -69,6 +70,9 @@ func main() {
 		log.WithError(err).Fatal("unable to create Discord bot")
 	}
 	defer bot.Session.Close()
+
+	// Register bot with services
+	paginator.SetBot(bot)
 
 	// Wait for the user to cancel the program
 	sc := make(chan os.Signal, 1)

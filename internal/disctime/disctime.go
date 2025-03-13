@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // currMon th returns the month and year at for the start of the month
@@ -28,6 +26,20 @@ func NextMonth(t time.Time) time.Time {
 	y, m, _ := t.Date()
 	month := time.Date(y, m+1, 1, 0, 0, 0, 0, time.UTC)
 	return month
+}
+
+// RoundToNextDay rounds the time up to the next whole day. The time is returned
+// in UTC.
+func RoundToNextDay(t time.Time) time.Time {
+	// Round to the next day
+	utc := t.UTC()
+	year, month, day := utc.Date()
+	hour, minute, _ := utc.Clock()
+	if hour != 0 || minute != 0 {
+		day++
+	}
+
+	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
 }
 
 // ParseDuration parses a duration string.
@@ -63,8 +75,6 @@ func ParseDuration(t string) (time.Duration, error) {
 
 	now := time.Now()
 	future := now.AddDate(year, month, day)
-	log.WithFields(log.Fields{"year": year, "month": month, "day": day}).Error("parsed duration")
-	log.WithFields(log.Fields{"now": now, "future": future, "duration": future.Sub(future)}).Error("parsed duration")
 	return future.Sub(now), nil
 }
 

@@ -23,6 +23,13 @@ var (
 	db       *mongo.MongoDB
 )
 
+var (
+	componentHandlers       = make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
+	commandHandlers         = make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
+	commands                = make([]*discordgo.ApplicationCommand, 0, 2)
+	customComponentHandlers = make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
+)
+
 // Bot is a Discord bot which is capable of running multiple services, each of which
 // implement various commands.
 type Bot struct {
@@ -72,10 +79,6 @@ func NewBot(botName string, version string, revision string) *Bot {
 		log.WithFields(log.Fields{"plugin": plugin.GetName()}).Info("initialized plugin")
 	}
 
-	componentHandlers := make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
-	commandHandlers := make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
-	commands := make([]*discordgo.ApplicationCommand, 0, 2)
-
 	// Add commands and handlers for the bot itself
 	commands = append(commands, helpCommands...)
 	for key, value := range helpCommandHandler {
@@ -111,7 +114,11 @@ func NewBot(botName string, version string, revision string) *Bot {
 			if h, ok := componentHandlers[i.MessageComponentData().CustomID]; ok {
 				h(s, i)
 			} else {
-				log.WithField("component", i.MessageComponentData().CustomID).Warn("unhandled component")
+				if h, ok := customComponentHandlers[i.MessageComponentData().CustomID]; ok {
+					h(s, i)
+				} else {
+					log.WithField("component", i.MessageComponentData().CustomID).Warn("unhandled component")
+				}
 			}
 		}
 	})
@@ -169,4 +176,24 @@ func (bot *Bot) LoadCommands(commands []*discordgo.ApplicationCommand) {
 
 	}
 	log.Info("new bot commands loaded")
+}
+
+// SetDefaultCommandHandler sets the default command handler for the bot. This is used to
+// handle commands that are not explicitly defined in the bot. This is useful for plugins
+// that want to handle commands that are not explicitly defined in the bot.
+func (bot *Bot) AddComponentHandler(key string, handler func(*discordgo.Session, *discordgo.InteractionCreate)) {
+	log.Trace("--> discord.Bot.SetDefaultCommandHandler")
+	defer log.Trace("<-- discord.Bot.SetDefaultCommandHandler")
+
+	customComponentHandlers[key] = handler
+}
+
+// SetDefaultCommandHandler sets the default command handler for the bot. This is used to
+// handle commands that are not explicitly defined in the bot. This is useful for plugins
+// that want to handle commands that are not explicitly defined in the bot.
+func (bot *Bot) RemoveComponentHandler(key string) {
+	log.Trace("--> discord.Bot.SetDefaultCommandHandler")
+	defer log.Trace("<-- discord.Bot.SetDefaultCommandHandler")
+
+	delete(customComponentHandlers, key)
 }

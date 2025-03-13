@@ -2,6 +2,7 @@ package shop
 
 import (
 	"fmt"
+	"slices"
 
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -44,6 +45,23 @@ func GetShop(guildID string) *Shop {
 		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read shop items from the database")
 		shop.Items = make([]*ShopItem, 0)
 	}
+
+	shopItemCmp := func(a, b *ShopItem) int {
+		if a.Type < b.Type {
+			return -1
+		}
+		if a.Type > b.Type {
+			return 1
+		}
+		if a.Name < b.Name {
+			return -1
+		}
+		if a.Name > b.Name {
+			return 1
+		}
+		return 0
+	}
+	slices.SortFunc(shop.Items, shopItemCmp)
 
 	return shop
 }
