@@ -8,6 +8,7 @@ import (
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
+	"github.com/rbrabson/goblin/internal/paginator2"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -47,6 +48,7 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	bot = b
 	db = d
+	paginator2.SetBot(bot)
 	registerAllShoopItemComponentHandlers()
 	go checkForExpiredPurchases()
 }

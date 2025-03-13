@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+var (
+	manager *Manager = NewManager()
+)
+
 // Manager is the main controller for the paginator. It contains the
 // configuration used by all paginators, as well as all active
 // paginators
@@ -58,7 +62,7 @@ func (m *Manager) cleanup() {
 
 	now := time.Now()
 	for _, p := range m.paginators {
-		if !p.cxpiry.IsZero() && p.cxpiry.After(now) {
+		if !p.expiry.IsZero() && p.expiry.After(now) {
 			m.remove(p.id)
 		}
 	}

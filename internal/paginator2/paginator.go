@@ -2,10 +2,21 @@ package paginator2
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/discord"
 )
+
+var (
+	bot *discord.Bot
+)
+
+// SetBot sets the discord bot used to interact with the Discord servers.
+func SetBot(b *discord.Bot) {
+	bot = b
+}
 
 // Paginator represents a single paginator. It contains the the data to
 // page through the user's data.
@@ -13,7 +24,7 @@ type Paginator struct {
 	id           string
 	title        string
 	content      []*discordgo.MessageEmbedField
-	cxpiry       time.Time
+	expiry       time.Time
 	itemsPerPage int
 	currentPage  int
 	config       *Config
@@ -24,11 +35,11 @@ type Paginator struct {
 }
 
 // NewPaginator creates a new paginator.
-func NewPaginator(manager *Manager, title string, content []*discordgo.MessageEmbedField, itemsPerPage int, expiry time.Time) *Paginator {
+func NewPaginator(title string, content []*discordgo.MessageEmbedField, itemsPerPage int, expiry time.Time) *Paginator {
 	paginator := &Paginator{
 		title:        title,
 		content:      content,
-		cxpiry:       expiry,
+		expiry:       expiry,
 		currentPage:  0,
 		itemsPerPage: itemsPerPage,
 		config:       &defaultConfig,
@@ -52,7 +63,7 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, epheme
 	}
 
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
-	components := []discordgo.MessageComponent{p.createComponents()}
+	components := []discordgo.MessageComponent{p.createComponents(p.id)}
 	message, err := s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Embeds:     embeds,
 		Components: components,
@@ -73,7 +84,7 @@ func (p *Paginator) editMessage(s *discordgo.Session) error {
 	}
 
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
-	components := []discordgo.MessageComponent{p.createComponents()}
+	components := []discordgo.MessageComponent{p.createComponents(p.id)}
 	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		ID:         p.messageID,
 		Channel:    p.channelID,
@@ -110,45 +121,53 @@ func (p *Paginator) makeEmbed() *discordgo.MessageEmbed {
 // createComponents creates  the message components to be included in the
 // message. It returns an action row that contains the buttons used to navigate
 // through the paginator.
-func (p *Paginator) createComponents() discordgo.MessageComponent {
+func (p *Paginator) createComponents(customID string) discordgo.MessageComponent {
 	cfg := p.config.ButtonsConfig
 	actionRow := discordgo.ActionsRow{}
 
 	if cfg.First != nil {
+		buttonID := customID + ":first"
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.First.Label,
 			Style:    cfg.First.Style,
 			Disabled: p.currentPage == 0,
 			Emoji:    cfg.First.Emoji,
-			CustomID: p.formatCustomID("first"),
+			CustomID: p.formatCustomID(buttonID),
 		})
+		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
 	if cfg.Back != nil {
+		buttonID := customID + ":back"
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Back.Label,
 			Style:    cfg.Back.Style,
 			Disabled: p.currentPage == 0,
 			Emoji:    cfg.Back.Emoji,
-			CustomID: p.formatCustomID("back"),
+			CustomID: p.formatCustomID(buttonID),
 		})
+		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
 	if cfg.Next != nil {
+		buttonID := customID + ":next"
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Next.Label,
 			Style:    cfg.Next.Style,
 			Disabled: p.currentPage == p.pageCount()-1,
 			Emoji:    cfg.Next.Emoji,
-			CustomID: p.formatCustomID("next"),
+			CustomID: p.formatCustomID(buttonID),
 		})
+		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
 	if cfg.Last != nil {
+		buttonID := customID + ":last"
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Last.Label,
 			Style:    cfg.Last.Style,
 			Disabled: p.currentPage == p.pageCount()-1,
 			Emoji:    cfg.Last.Emoji,
-			CustomID: p.formatCustomID("last"),
+			CustomID: p.formatCustomID(buttonID),
 		})
+		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
 
 	return actionRow
@@ -167,4 +186,38 @@ func (p *Paginator) getItemsPerPage() int {
 		return p.config.DefaultItemsPerPage
 	}
 	return p.itemsPerPage
+}
+
+// pageThroughItems is called when a page button is selected in a paginated message.
+func pageThroughItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	ids := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")
+	paginatorID, action := ids[1], ids[2]
+
+	manager.mutex.Lock()
+	paginator, ok := manager.paginators[paginatorID]
+	manager.mutex.Unlock()
+	if !ok {
+		return
+	}
+
+	switch action {
+	case "first":
+		paginator.currentPage = 0
+
+	case "back":
+		paginator.currentPage--
+
+	case "next":
+		paginator.currentPage++
+
+	case "last":
+		paginator.currentPage = paginator.pageCount() - 1
+	}
+
+	paginator.expiry = time.Now()
+
+	if err := paginator.editMessage(s); err != nil {
+		fmt.Printf("error editing message: %s\n", err)
+		return
+	}
 }
