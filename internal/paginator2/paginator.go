@@ -10,59 +10,84 @@ import (
 // Paginator represents a single paginator. It contains the the data to
 // page through the user's data.
 type Paginator struct {
-	ID           string
-	Title        string
-	Content      []*discordgo.MessageEmbedField
-	Expiry       time.Time
-	ItemsPerPage int
+	id           string
+	title        string
+	content      []*discordgo.MessageEmbedField
+	cxpiry       time.Time
+	itemsPerPage int
 	currentPage  int
 	config       *Config
+	manager      *Manager
+	channelID    string
+	messageID    string
+	ephemeral    bool
 }
 
 // NewPaginator creates a new paginator.
-func NewPaginator(id string, title string, content []*discordgo.MessageEmbedField, expiry time.Time) *Paginator {
+func NewPaginator(manager *Manager, title string, content []*discordgo.MessageEmbedField, itemsPerPage int, expiry time.Time) *Paginator {
 	paginator := &Paginator{
-		ID:          id,
-		Title:       title,
-		Content:     content,
-		Expiry:      expiry,
-		currentPage: 0,
-		config:      &defaultConfig,
+		title:        title,
+		content:      content,
+		cxpiry:       expiry,
+		currentPage:  0,
+		itemsPerPage: itemsPerPage,
+		config:       &defaultConfig,
+		manager:      manager,
 	}
+
 	return paginator
 }
 
 // CreateMessage creates and sends a message withthe paginator's content.
-func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string) (*discordgo.Message, error) {
+func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, ephemeral ...bool) (*discordgo.Message, error) {
+	if p.id == "" {
+		p.id = fmt.Sprintf("%s-%d", channelID, time.Now().UnixNano())
+		p.manager.Add(p)
+	}
+	p.channelID = channelID
+	p.ephemeral = len(ephemeral) > 0 && ephemeral[0]
+	var flags discordgo.MessageFlags
+	if p.ephemeral {
+		flags = discordgo.MessageFlagsEphemeral
+	}
+
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
 	components := []discordgo.MessageComponent{p.createComponents()}
 	message, err := s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Embeds:     embeds,
 		Components: components,
+		Flags:      flags,
 	})
 	if err != nil {
 		return nil, err
 	}
+	p.messageID = message.ID
 	return message, nil
 }
 
-// EditMessage edits the current message sent by the paginator in a channel.
-func (p *Paginator) EditMessage(s *discordgo.Session, channelID string, messageID string) error {
+// editMessage edits the current message sent by the paginator in a channel.
+func (p *Paginator) editMessage(s *discordgo.Session) error {
+	var flags discordgo.MessageFlags
+	if p.ephemeral {
+		flags = discordgo.MessageFlagsEphemeral
+	}
+
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
 	components := []discordgo.MessageComponent{p.createComponents()}
 	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-		ID:         messageID,
-		Channel:    channelID,
+		ID:         p.messageID,
+		Channel:    p.channelID,
 		Embeds:     &embeds,
 		Components: &components,
+		Flags:      flags,
 	})
 	return err
 }
 
 // pageCount returns the number of pages in the paginator.
 func (p *Paginator) pageCount() int {
-	itemsPerPage := p.itemsPerPage()
-	pageCount := (len(p.Content) + itemsPerPage - 1) / itemsPerPage
+	itemsPerPage := p.getItemsPerPage()
+	pageCount := (len(p.content) + itemsPerPage - 1) / itemsPerPage
 	return pageCount
 }
 
@@ -70,15 +95,15 @@ func (p *Paginator) pageCount() int {
 func (p *Paginator) makeEmbed() *discordgo.MessageEmbed {
 	embed := &discordgo.MessageEmbed{
 		Color:  p.config.EmbedColor,
-		Title:  p.Title,
-		Fields: make([]*discordgo.MessageEmbedField, 0, p.itemsPerPage()),
+		Title:  p.title,
+		Fields: make([]*discordgo.MessageEmbedField, 0, p.getItemsPerPage()),
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: fmt.Sprintf("Page %d/%d", p.currentPage+1, p.pageCount()),
 		},
 	}
-	start := p.currentPage * p.itemsPerPage()
-	end := min(start+p.itemsPerPage(), len(p.Content))
-	embed.Fields = append(embed.Fields, p.Content[start:end]...)
+	start := p.currentPage * p.getItemsPerPage()
+	end := min(start+p.getItemsPerPage(), len(p.content))
+	embed.Fields = append(embed.Fields, p.content[start:end]...)
 	return embed
 }
 
@@ -131,15 +156,15 @@ func (p *Paginator) createComponents() discordgo.MessageComponent {
 
 // formatCustomID formats the custom ID for the paginator buttons.
 func (p *Paginator) formatCustomID(action string) string {
-	return p.config.CustomIDPrefix + ":" + p.ID + ":" + action
+	return p.config.CustomIDPrefix + ":" + p.id + ":" + action
 }
 
 // itemsPerPage returns the number of items per page. If the
 // ItemsPerPage field is 0, it returns the default number of items
 // per page.
-func (p *Paginator) itemsPerPage() int {
-	if p.ItemsPerPage == 0 {
+func (p *Paginator) getItemsPerPage() int {
+	if p.itemsPerPage == 0 {
 		return p.config.DefaultItemsPerPage
 	}
-	return p.ItemsPerPage
+	return p.itemsPerPage
 }

@@ -33,7 +33,7 @@ func (m *Manager) Add(paginator *Paginator) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.paginators[paginator.ID] = paginator
+	m.paginators[paginator.id] = paginator
 }
 
 // remove removes a paginator from the manager.
@@ -58,8 +58,8 @@ func (m *Manager) cleanup() {
 
 	now := time.Now()
 	for _, p := range m.paginators {
-		if !p.Expiry.IsZero() && p.Expiry.After(now) {
-			m.remove(p.ID)
+		if !p.cxpiry.IsZero() && p.cxpiry.After(now) {
+			m.remove(p.id)
 		}
 	}
 }
