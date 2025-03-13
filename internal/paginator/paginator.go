@@ -53,7 +53,6 @@ func NewPaginator(title string, itemsPerPage int, idleWait time.Duration, conten
 
 // CreateMessage creates and sends a message withthe paginator's content.
 func (p *Paginator) CreateMessage(s *discordgo.Session, i *discordgo.InteractionCreate, ephemeral ...bool) error {
-	log.WithFields(log.Fields{"paginator": p.id, "channel": i.ChannelID}).Debug("creating paginated message")
 	if p.id == "" {
 		p.id = fmt.Sprintf("%s-%d", i.ChannelID, time.Now().UnixNano())
 		manager.Add(p)
@@ -219,7 +218,7 @@ func (p *Paginator) registerComponentHandlers() {
 		buttonID := p.id + ":last"
 		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
-	log.WithFields(log.Fields{"paginator": p.id}).Debug("registered component handlers")
+	log.WithFields(log.Fields{"paginator": p.id}).Trace("registered component handlers")
 }
 
 // deregisterComponentHandlers deregisters the component handlers for the paginator.
@@ -241,7 +240,7 @@ func (p *Paginator) deregisterComponentHandlers() {
 		buttonID := p.id + ":last"
 		bot.RemoveComponentHandler(buttonID)
 	}
-	log.WithFields(log.Fields{"paginator": p.id}).Debug("deregistered component handlers")
+	log.WithFields(log.Fields{"paginator": p.id}).Trace("deregistered component handlers")
 }
 
 // itemsPerPage returns the number of items per page. If the

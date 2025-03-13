@@ -16,6 +16,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+const (
+	MAX_SHOP_ITEMS_DISPLAYED = 25
+)
+
 var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"shop-admin": shopAdmin,
@@ -404,6 +408,9 @@ func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Value:  sb.String(),
 			Inline: false,
 		})
+		if len(shopItems) == MAX_SHOP_ITEMS_DISPLAYED {
+			break
+		}
 	}
 
 	embeds := []*discordgo.MessageEmbed{
@@ -723,6 +730,11 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 			Inline: false,
 		}
 		shopItems = append(shopItems, embed)
+
+		if len(shopItems) == MAX_SHOP_ITEMS_DISPLAYED {
+			log.WithFields(log.Fields{"guildID": guildID, "numItems": len(shopItems)}).Warn("maximum number of shop items reached")
+			break
+		}
 	}
 	embeds := []*discordgo.MessageEmbed{
 		{
