@@ -53,6 +53,7 @@ func NewPaginator(title string, itemsPerPage int, idleWait time.Duration, conten
 
 // CreateMessage creates and sends a message withthe paginator's content.
 func (p *Paginator) CreateMessage(s *discordgo.Session, i *discordgo.InteractionCreate, ephemeral ...bool) error {
+	log.WithFields(log.Fields{"paginator": p.id, "channel": i.ChannelID}).Debug("creating paginated message")
 	if p.id == "" {
 		p.id = fmt.Sprintf("%s-%d", i.ChannelID, time.Now().UnixNano())
 		manager.Add(p)
@@ -67,7 +68,7 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, i *discordgo.Interaction
 
 	p.registerComponentHandlers()
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
-	components := []discordgo.MessageComponent{p.makeComponent()}
+	components := []discordgo.MessageComponent{p.makeComponent(false)}
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -87,13 +88,8 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, i *discordgo.Interaction
 
 // editMessage edits the current message sent by the paginator in a channel.
 func (p *Paginator) editMessage(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	// var flags discordgo.MessageFlags
-	// if p.ephemeral {
-	// 	flags = discordgo.MessageFlagsEphemeral
-	// }
-
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
-	components := []discordgo.MessageComponent{p.makeComponent()}
+	components := []discordgo.MessageComponent{p.makeComponent(false)}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
@@ -102,7 +98,6 @@ func (p *Paginator) editMessage(s *discordgo.Session, i *discordgo.InteractionCr
 	_, err := s.InteractionResponseEdit(p.interaction, &discordgo.WebhookEdit{
 		Embeds:     &embeds,
 		Components: &components,
-		// Flags:      flags,
 	})
 	if err != nil {
 		log.WithFields(log.Fields{"paginator": p.id, "channel": p.channelID, "error": err}).Error("error editing paginated message")
@@ -110,6 +105,24 @@ func (p *Paginator) editMessage(s *discordgo.Session, i *discordgo.InteractionCr
 	}
 
 	log.WithFields(log.Fields{"paginator": p.id, "channel": p.channelID}).Debug("edited paginated message")
+	return nil
+}
+
+// disable disables the paginator by removing the buttons and setting the setting the expiry time to now.
+func (p *Paginator) disable() error {
+	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
+	components := []discordgo.MessageComponent{p.makeComponent(true)}
+
+	_, err := bot.Session.InteractionResponseEdit(p.interaction, &discordgo.WebhookEdit{
+		Embeds:     &embeds,
+		Components: &components,
+	})
+	if err != nil {
+		log.WithFields(log.Fields{"paginator": p.id, "channel": p.channelID, "error": err}).Error("error disabling paginated message")
+		return err
+	}
+
+	log.WithFields(log.Fields{"paginator": p.id, "channel": p.channelID}).Debug("disabled paginated message")
 	return nil
 }
 
@@ -139,7 +152,7 @@ func (p *Paginator) makeEmbed() *discordgo.MessageEmbed {
 // makeComponent creates  the message components to be included in the
 // message. It returns an action row that contains the buttons used to navigate
 // through the paginator.
-func (p *Paginator) makeComponent() discordgo.MessageComponent {
+func (p *Paginator) makeComponent(disabled bool) discordgo.MessageComponent {
 	cfg := p.config.ButtonsConfig
 	actionRow := discordgo.ActionsRow{}
 
@@ -148,7 +161,7 @@ func (p *Paginator) makeComponent() discordgo.MessageComponent {
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.First.Label,
 			Style:    cfg.First.Style,
-			Disabled: p.currentPage == 0,
+			Disabled: disabled || p.currentPage == 0,
 			Emoji:    cfg.First.Emoji,
 			CustomID: buttonID,
 		})
@@ -158,7 +171,7 @@ func (p *Paginator) makeComponent() discordgo.MessageComponent {
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Back.Label,
 			Style:    cfg.Back.Style,
-			Disabled: p.currentPage == 0,
+			Disabled: disabled || p.currentPage == 0,
 			Emoji:    cfg.Back.Emoji,
 			CustomID: buttonID,
 		})
@@ -168,7 +181,7 @@ func (p *Paginator) makeComponent() discordgo.MessageComponent {
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Next.Label,
 			Style:    cfg.Next.Style,
-			Disabled: p.currentPage == p.pageCount()-1,
+			Disabled: disabled || p.currentPage == p.pageCount()-1,
 			Emoji:    cfg.Next.Emoji,
 			CustomID: buttonID,
 		})
@@ -178,7 +191,7 @@ func (p *Paginator) makeComponent() discordgo.MessageComponent {
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Last.Label,
 			Style:    cfg.Last.Style,
-			Disabled: p.currentPage == p.pageCount()-1,
+			Disabled: disabled || p.currentPage == p.pageCount()-1,
 			Emoji:    cfg.Last.Emoji,
 			CustomID: buttonID,
 		})

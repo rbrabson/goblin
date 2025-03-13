@@ -45,9 +45,7 @@ func (m *paginatorManager) Add(paginator *Paginator) {
 // removePaginator removes a paginator from the manager and performs any necessary cleanup.
 // It contains the shared logic used by `Remove“ and `cleanup`.
 func (m *paginatorManager) removePaginator(p *Paginator) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
+	p.disable()
 	p.deregisterComponentHandlers()
 	delete(m.paginators, p.id)
 	log.WithFields(log.Fields{"paginator": p.id, "count": len(m.paginators)}).Debug("removed paginator from manager")
