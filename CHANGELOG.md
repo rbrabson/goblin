@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0-alpha1
+
+Add a `shop` to the bot, where members can purchase items using their accumulated credits. Administrators add items to the shop, and members can then purchase the items.
+
+The initial implementation allows for roles to be added to the shop. Purchasing the role will assign the role to the member on the server on which the purchase is made.
+
 ## 1.1.4-alpha1
 
 The foolowing bugs were addressed:
