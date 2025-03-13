@@ -32,6 +32,33 @@ func NewPaginator(id string, title string, content []*discordgo.MessageEmbedFiel
 	return paginator
 }
 
+// CreateMessage creates and sends a message withthe paginator's content.
+func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string) (*discordgo.Message, error) {
+	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
+	components := []discordgo.MessageComponent{p.createComponents()}
+	message, err := s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
+		Embeds:     embeds,
+		Components: components,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return message, nil
+}
+
+// EditMessage edits the current message sent by the paginator in a channel.
+func (p *Paginator) EditMessage(s *discordgo.Session, channelID string, messageID string) error {
+	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
+	components := []discordgo.MessageComponent{p.createComponents()}
+	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		ID:         messageID,
+		Channel:    channelID,
+		Embeds:     &embeds,
+		Components: &components,
+	})
+	return err
+}
+
 // pageCount returns the number of pages in the paginator.
 func (p *Paginator) pageCount() int {
 	itemsPerPage := p.itemsPerPage()
@@ -56,8 +83,9 @@ func (p *Paginator) makeEmbed() *discordgo.MessageEmbed {
 }
 
 // createComponents creates  the message components to be included in the
-// message. It contains the buttons used to navigate through the paginator.
-func (p *Paginator) createComponents(paginator *Paginator) discordgo.MessageComponent {
+// message. It returns an action row that contains the buttons used to navigate
+// through the paginator.
+func (p *Paginator) createComponents() discordgo.MessageComponent {
 	cfg := p.config.ButtonsConfig
 	actionRow := discordgo.ActionsRow{}
 
@@ -65,7 +93,7 @@ func (p *Paginator) createComponents(paginator *Paginator) discordgo.MessageComp
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.First.Label,
 			Style:    cfg.First.Style,
-			Disabled: paginator.currentPage == 0,
+			Disabled: p.currentPage == 0,
 			Emoji:    cfg.First.Emoji,
 			CustomID: p.formatCustomID("first"),
 		})
@@ -74,17 +102,16 @@ func (p *Paginator) createComponents(paginator *Paginator) discordgo.MessageComp
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Back.Label,
 			Style:    cfg.Back.Style,
-			Disabled: paginator.currentPage == 0,
+			Disabled: p.currentPage == 0,
 			Emoji:    cfg.Back.Emoji,
 			CustomID: p.formatCustomID("back"),
 		})
 	}
-
 	if cfg.Next != nil {
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Next.Label,
 			Style:    cfg.Next.Style,
-			Disabled: paginator.currentPage == paginator.pageCount()-1,
+			Disabled: p.currentPage == p.pageCount()-1,
 			Emoji:    cfg.Next.Emoji,
 			CustomID: p.formatCustomID("next"),
 		})
@@ -93,7 +120,7 @@ func (p *Paginator) createComponents(paginator *Paginator) discordgo.MessageComp
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Last.Label,
 			Style:    cfg.Last.Style,
-			Disabled: paginator.currentPage == paginator.pageCount()-1,
+			Disabled: p.currentPage == p.pageCount()-1,
 			Emoji:    cfg.Last.Emoji,
 			CustomID: p.formatCustomID("last"),
 		})
