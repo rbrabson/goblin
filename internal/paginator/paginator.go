@@ -139,12 +139,21 @@ func (m *Manager) OnInteractionCreate(s *discordgo.Session, interaction *discord
 		paginator.CurrentPage--
 
 	case "stop":
-		_ = s.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
+		if err := s.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseUpdateMessage,
 			Data: &discordgo.InteractionResponseData{
-				Components: []discordgo.MessageComponent{},
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Color: m.Config.EmbedColor,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text: "Paginator stopped",
+						},
+					},
+				},
 			},
-		})
+		}); err != nil {
+			fmt.Printf("error remoing interaction: %s\n", err)
+		}
 		m.remove(paginatorID)
 		return
 
