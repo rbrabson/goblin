@@ -540,7 +540,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		})
 	}
 
-	paginator := paginator.NewPaginator("Purchases", 2, time.Duration(1*time.Minute), embedFields)
+	paginator := paginator.NewPaginator("Purchases", 5, time.Duration(5*time.Minute), embedFields)
 	err := paginator.CreateMessage(s, i, true)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("unable to send shop purchases")

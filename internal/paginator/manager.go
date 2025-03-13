@@ -48,7 +48,7 @@ func (m *paginatorManager) removePaginator(p *Paginator) {
 	p.disable()
 	p.deregisterComponentHandlers()
 	delete(m.paginators, p.id)
-	log.WithFields(log.Fields{"paginator": p.id, "count": len(m.paginators)}).Debug("removed paginator from manager")
+	log.WithFields(log.Fields{"paginator": p.id}).Debug("removed paginator from manager")
 }
 
 // cleanup removes expired paginators from the manager.
