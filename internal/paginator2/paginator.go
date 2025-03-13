@@ -98,7 +98,7 @@ func (p *Paginator) makeEmbed() *discordgo.MessageEmbed {
 		Title:  p.title,
 		Fields: make([]*discordgo.MessageEmbedField, 0, p.getItemsPerPage()),
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("Page %d/%d", p.currentPage+1, p.pageCount()),
+			Text: fmt.Sprintf("Page %d of %d", p.currentPage+1, p.pageCount()),
 		},
 	}
 	start := p.currentPage * p.getItemsPerPage()
