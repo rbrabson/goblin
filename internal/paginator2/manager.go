@@ -39,19 +39,11 @@ func (m *paginatorManager) Add(paginator *Paginator) {
 	m.paginators[paginator.id] = paginator
 }
 
-// remove removes a paginator from the manager.
-func (m *paginatorManager) remove(paginatorID string) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	m.removePaginator(paginatorID)
-}
-
 // removePaginator removes a paginator from the manager and performs any necessary cleanup.
 // It contains the shared logic used by `Remove“ and `cleanup`.
-func (m *paginatorManager) removePaginator(paginatorID string) {
-	// TODO: remove components?
-	delete(m.paginators, paginatorID)
+func (m *paginatorManager) removePaginator(p *Paginator) {
+	p.deregisterComponentHandlers()
+	delete(m.paginators, p.id)
 }
 
 // cleanup removes expired paginators from the manager.
@@ -61,7 +53,7 @@ func (m *paginatorManager) cleanup() {
 
 	for _, p := range m.paginators {
 		if p.hasExpired() {
-			m.removePaginator(p.id)
+			m.removePaginator(p)
 		}
 	}
 }

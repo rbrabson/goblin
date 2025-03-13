@@ -43,7 +43,6 @@ func (m *Manager) cleanup() {
 	now := time.Now()
 	for _, p := range m.paginators {
 		if !p.Expiry.IsZero() && p.Expiry.After(now) {
-			// TODO: remove components?
 			delete(m.paginators, p.ID)
 		}
 	}

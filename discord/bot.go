@@ -187,3 +187,13 @@ func (bot *Bot) AddComponentHandler(key string, handler func(*discordgo.Session,
 
 	customComponentHandlers[key] = handler
 }
+
+// SetDefaultCommandHandler sets the default command handler for the bot. This is used to
+// handle commands that are not explicitly defined in the bot. This is useful for plugins
+// that want to handle commands that are not explicitly defined in the bot.
+func (bot *Bot) RemoveComponentHandler(key string) {
+	log.Trace("--> discord.Bot.SetDefaultCommandHandler")
+	defer log.Trace("<-- discord.Bot.SetDefaultCommandHandler")
+
+	delete(customComponentHandlers, key)
+}

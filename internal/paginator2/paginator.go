@@ -63,14 +63,16 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, epheme
 		flags = discordgo.MessageFlagsEphemeral
 	}
 
+	p.registerComponentHandlers()
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
-	components := []discordgo.MessageComponent{p.createComponents(p.id)}
+	components := []discordgo.MessageComponent{p.makeComponent()}
 	message, err := s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Embeds:     embeds,
 		Components: components,
 		Flags:      flags,
 	})
 	if err != nil {
+		p.deregisterComponentHandlers()
 		return nil, err
 	}
 	p.messageID = message.ID
@@ -85,7 +87,7 @@ func (p *Paginator) editMessage(s *discordgo.Session) (*discordgo.Message, error
 	}
 
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
-	components := []discordgo.MessageComponent{p.createComponents(p.id)}
+	components := []discordgo.MessageComponent{p.makeComponent()}
 	message, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		ID:         p.messageID,
 		Channel:    p.channelID,
@@ -122,15 +124,15 @@ func (p *Paginator) makeEmbed() *discordgo.MessageEmbed {
 	return embed
 }
 
-// createComponents creates  the message components to be included in the
+// makeComponent creates  the message components to be included in the
 // message. It returns an action row that contains the buttons used to navigate
 // through the paginator.
-func (p *Paginator) createComponents(customID string) discordgo.MessageComponent {
+func (p *Paginator) makeComponent() discordgo.MessageComponent {
 	cfg := p.config.ButtonsConfig
 	actionRow := discordgo.ActionsRow{}
 
 	if cfg.First != nil {
-		buttonID := customID + ":first"
+		buttonID := p.id + ":first"
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.First.Label,
 			Style:    cfg.First.Style,
@@ -138,10 +140,9 @@ func (p *Paginator) createComponents(customID string) discordgo.MessageComponent
 			Emoji:    cfg.First.Emoji,
 			CustomID: p.formatCustomID(buttonID),
 		})
-		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
 	if cfg.Back != nil {
-		buttonID := customID + ":back"
+		buttonID := p.id + ":back"
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Back.Label,
 			Style:    cfg.Back.Style,
@@ -149,10 +150,9 @@ func (p *Paginator) createComponents(customID string) discordgo.MessageComponent
 			Emoji:    cfg.Back.Emoji,
 			CustomID: p.formatCustomID(buttonID),
 		})
-		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
 	if cfg.Next != nil {
-		buttonID := customID + ":next"
+		buttonID := p.id + ":next"
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Next.Label,
 			Style:    cfg.Next.Style,
@@ -160,10 +160,9 @@ func (p *Paginator) createComponents(customID string) discordgo.MessageComponent
 			Emoji:    cfg.Next.Emoji,
 			CustomID: p.formatCustomID(buttonID),
 		})
-		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
 	if cfg.Last != nil {
-		buttonID := customID + ":last"
+		buttonID := p.id + ":last"
 		actionRow.Components = append(actionRow.Components, discordgo.Button{
 			Label:    cfg.Last.Label,
 			Style:    cfg.Last.Style,
@@ -171,11 +170,54 @@ func (p *Paginator) createComponents(customID string) discordgo.MessageComponent
 			Emoji:    cfg.Last.Emoji,
 			CustomID: p.formatCustomID(buttonID),
 		})
-		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
 
 	return actionRow
 }
+
+// registerComponentHandlers registers the component handlers for the paginator.
+func (p *Paginator) registerComponentHandlers() {
+	cfg := p.config.ButtonsConfig
+	if cfg.First != nil {
+		buttonID := p.id + ":first"
+		bot.AddComponentHandler(buttonID, pageThroughItems)
+	}
+	if cfg.Back != nil {
+		buttonID := p.id + ":back"
+		bot.AddComponentHandler(buttonID, pageThroughItems)
+	}
+	if cfg.Next != nil {
+		buttonID := p.id + ":next"
+		bot.AddComponentHandler(buttonID, pageThroughItems)
+	}
+	if cfg.Last != nil {
+		buttonID := p.id + ":last"
+		bot.AddComponentHandler(buttonID, pageThroughItems)
+	}
+}
+
+// deregisterComponentHandlers deregisters the component handlers for the paginator.
+func (p *Paginator) deregisterComponentHandlers() {
+	cfg := p.config.ButtonsConfig
+	if cfg.First != nil {
+		buttonID := p.id + ":first"
+		bot.RemoveComponentHandler(buttonID)
+	}
+	if cfg.Back != nil {
+		buttonID := p.id + ":back"
+		bot.RemoveComponentHandler(buttonID)
+	}
+	if cfg.Next != nil {
+		buttonID := p.id + ":next"
+		bot.RemoveComponentHandler(buttonID)
+	}
+	if cfg.Last != nil {
+		buttonID := p.id + ":last"
+		bot.RemoveComponentHandler(buttonID)
+	}
+}
+
+// min returns the minimum of two integers.
 
 // formatCustomID formats the custom ID for the paginator buttons.
 func (p *Paginator) formatCustomID(action string) string {
