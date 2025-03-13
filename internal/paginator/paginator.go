@@ -31,7 +31,7 @@ type Paginator struct {
 	currentPage  int
 	config       *Config
 	channelID    string
-	messageID    string
+	interaction  *discordgo.Interaction
 	ephemeral    bool
 }
 
@@ -47,16 +47,18 @@ func NewPaginator(title string, itemsPerPage int, idleWait time.Duration, conten
 		config:       &defaultConfig,
 	}
 
+	log.WithFields(log.Fields{"title": title, "itemsPerPage": itemsPerPage, "idleWait": idleWait, "content": len(content)}).Debug("creating new paginator")
 	return paginator
 }
 
 // CreateMessage creates and sends a message withthe paginator's content.
-func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, ephemeral ...bool) (*discordgo.Message, error) {
+func (p *Paginator) CreateMessage(s *discordgo.Session, i *discordgo.InteractionCreate, ephemeral ...bool) error {
 	if p.id == "" {
-		p.id = fmt.Sprintf("%s-%d", channelID, time.Now().UnixNano())
+		p.id = fmt.Sprintf("%s-%d", i.ChannelID, time.Now().UnixNano())
 		manager.Add(p)
 	}
-	p.channelID = channelID
+	p.channelID = i.ChannelID
+	p.interaction = i.Interaction
 	p.ephemeral = len(ephemeral) > 0 && ephemeral[0]
 	var flags discordgo.MessageFlags
 	if p.ephemeral {
@@ -66,39 +68,49 @@ func (p *Paginator) CreateMessage(s *discordgo.Session, channelID string, epheme
 	p.registerComponentHandlers()
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
 	components := []discordgo.MessageComponent{p.makeComponent()}
-	message, err := s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
-		Embeds:     embeds,
-		Components: components,
-		Flags:      flags,
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds:     embeds,
+			Components: components,
+			Flags:      flags,
+		},
 	})
 	if err != nil {
+		log.WithFields(log.Fields{"paginator": p.id, "channel": i.ChannelID, "error": err}).Error("error sending paginated message")
 		p.deregisterComponentHandlers()
-		return nil, err
+		return err
 	}
-	p.messageID = message.ID
-	return message, nil
+	log.WithFields(log.Fields{"paginator": p.id, "channel": i.ChannelID}).Debug("created paginated message")
+	return nil
 }
 
 // editMessage edits the current message sent by the paginator in a channel.
-func (p *Paginator) editMessage(s *discordgo.Session) (*discordgo.Message, error) {
-	var flags discordgo.MessageFlags
-	if p.ephemeral {
-		flags = discordgo.MessageFlagsEphemeral
-	}
+func (p *Paginator) editMessage(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	// var flags discordgo.MessageFlags
+	// if p.ephemeral {
+	// 	flags = discordgo.MessageFlagsEphemeral
+	// }
 
 	embeds := []*discordgo.MessageEmbed{p.makeEmbed()}
 	components := []discordgo.MessageComponent{p.makeComponent()}
-	message, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-		ID:         p.messageID,
-		Channel:    p.channelID,
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
+
+	_, err := s.InteractionResponseEdit(p.interaction, &discordgo.WebhookEdit{
 		Embeds:     &embeds,
 		Components: &components,
-		Flags:      flags,
+		// Flags:      flags,
 	})
 	if err != nil {
-		return nil, err
+		log.WithFields(log.Fields{"paginator": p.id, "channel": p.channelID, "error": err}).Error("error editing paginated message")
+		return err
 	}
-	return message, nil
+
+	log.WithFields(log.Fields{"paginator": p.id, "channel": p.channelID}).Debug("edited paginated message")
+	return nil
 }
 
 // pageCount returns the number of pages in the paginator.
@@ -138,7 +150,7 @@ func (p *Paginator) makeComponent() discordgo.MessageComponent {
 			Style:    cfg.First.Style,
 			Disabled: p.currentPage == 0,
 			Emoji:    cfg.First.Emoji,
-			CustomID: p.formatCustomID(buttonID),
+			CustomID: buttonID,
 		})
 	}
 	if cfg.Back != nil {
@@ -148,7 +160,7 @@ func (p *Paginator) makeComponent() discordgo.MessageComponent {
 			Style:    cfg.Back.Style,
 			Disabled: p.currentPage == 0,
 			Emoji:    cfg.Back.Emoji,
-			CustomID: p.formatCustomID(buttonID),
+			CustomID: buttonID,
 		})
 	}
 	if cfg.Next != nil {
@@ -158,7 +170,7 @@ func (p *Paginator) makeComponent() discordgo.MessageComponent {
 			Style:    cfg.Next.Style,
 			Disabled: p.currentPage == p.pageCount()-1,
 			Emoji:    cfg.Next.Emoji,
-			CustomID: p.formatCustomID(buttonID),
+			CustomID: buttonID,
 		})
 	}
 	if cfg.Last != nil {
@@ -168,7 +180,7 @@ func (p *Paginator) makeComponent() discordgo.MessageComponent {
 			Style:    cfg.Last.Style,
 			Disabled: p.currentPage == p.pageCount()-1,
 			Emoji:    cfg.Last.Emoji,
-			CustomID: p.formatCustomID(buttonID),
+			CustomID: buttonID,
 		})
 	}
 
@@ -194,6 +206,7 @@ func (p *Paginator) registerComponentHandlers() {
 		buttonID := p.id + ":last"
 		bot.AddComponentHandler(buttonID, pageThroughItems)
 	}
+	log.WithFields(log.Fields{"paginator": p.id}).Debug("registered component handlers")
 }
 
 // deregisterComponentHandlers deregisters the component handlers for the paginator.
@@ -215,13 +228,7 @@ func (p *Paginator) deregisterComponentHandlers() {
 		buttonID := p.id + ":last"
 		bot.RemoveComponentHandler(buttonID)
 	}
-}
-
-// min returns the minimum of two integers.
-
-// formatCustomID formats the custom ID for the paginator buttons.
-func (p *Paginator) formatCustomID(action string) string {
-	return p.config.CustomIDPrefix + ":" + p.id + ":" + action
+	log.WithFields(log.Fields{"paginator": p.id}).Debug("deregistered component handlers")
 }
 
 // itemsPerPage returns the number of items per page. If the
@@ -236,13 +243,13 @@ func (p *Paginator) getItemsPerPage() int {
 
 // hasExpired returns true if the paginator has expired.
 func (p *Paginator) hasExpired() bool {
-	return !p.expiry.IsZero() && p.expiry.After(time.Now())
+	return !p.expiry.IsZero() && p.expiry.Before(time.Now())
 }
 
 // pageThroughItems is called when a page button is selected in a paginated message.
 func pageThroughItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	ids := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")
-	paginatorID, action := ids[1], ids[2]
+	paginatorID, action := ids[0], ids[1]
 
 	manager.mutex.Lock()
 	paginator, ok := manager.paginators[paginatorID]
@@ -266,9 +273,5 @@ func pageThroughItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	paginator.expiry = time.Now().Add(paginator.idleWait)
-
-	if _, err := paginator.editMessage(s); err != nil {
-		log.WithFields(log.Fields{"paginator": paginatorID, "action": action, "error": err}).Error("error editing message")
-		return
-	}
+	paginator.editMessage(s, i)
 }

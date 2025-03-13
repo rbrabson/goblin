@@ -10,6 +10,7 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/disctime"
+	"github.com/rbrabson/goblin/internal/paginator"
 	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
@@ -510,57 +511,30 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 
-	activePurchases := make([]*discordgo.MessageEmbedField, 0, len(purchases))
-	expiredPurchases := make([]*discordgo.MessageEmbedField, 0, len(purchases))
+	embedFields := make([]*discordgo.MessageEmbedField, 0, len(purchases))
 
 	for _, purchase := range purchases {
 		sb := strings.Builder{}
 		sb.WriteString(p.Sprintf("Description: %s\n", purchase.Item.Description))
 		sb.WriteString(p.Sprintf("Price: %d", purchase.Item.Price))
-		if !purchase.ExpiresOn.IsZero() {
-			if purchase.ExpiresOn.Before(time.Now()) {
-				sb.WriteString(p.Sprintf("\nExpired On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
-				expiredPurchases = append(expiredPurchases, &discordgo.MessageEmbedField{
-					Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
-					Value:  sb.String(),
-					Inline: false,
-				})
-			} else {
-				sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
-				// sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
-				activePurchases = append(activePurchases, &discordgo.MessageEmbedField{
-					Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
-					Value:  sb.String(),
-					Inline: false,
-				})
-			}
-		} else {
-			activePurchases = append(activePurchases, &discordgo.MessageEmbedField{
-				Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
-				Value:  sb.String(),
-				Inline: false,
-			})
+		switch {
+		case purchase.ExpiresOn.IsZero():
+			// NO-OP
+		case !purchase.HasExpired():
+			sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
+			// sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
+		default:
+			sb.WriteString(p.Sprintf("\nExpired On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
 		}
+		embedFields = append(embedFields, &discordgo.MessageEmbedField{
+			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),
+			Value:  sb.String(),
+			Inline: false,
+		})
 	}
 
-	embeds := []*discordgo.MessageEmbed{
-		{
-			Title:  "Active Purchases",
-			Fields: activePurchases,
-		},
-		{
-			Title:  "Expired Purchases",
-			Fields: expiredPurchases,
-		},
-	}
-
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: embeds,
-			Flags:  discordgo.MessageFlagsEphemeral,
-		},
-	})
+	paginator := paginator.NewPaginator("Purchases", 2, time.Duration(1*time.Minute), embedFields)
+	err := paginator.CreateMessage(s, i, true)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("unable to send shop purchases")
 		return
