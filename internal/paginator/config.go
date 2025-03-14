@@ -13,25 +13,25 @@ var defaultConfig = Config{
 	ButtonsConfig: ButtonsConfig{
 		First: &ComponentOptions{
 			Emoji: &discordgo.ComponentEmoji{
-				Name: "⏮",
+				Name: "⏮️",
 			},
 			Style: discordgo.PrimaryButton,
 		},
 		Back: &ComponentOptions{
 			Emoji: &discordgo.ComponentEmoji{
-				Name: "◀",
+				Name: "◀️",
 			},
 			Style: discordgo.PrimaryButton,
 		},
 		Next: &ComponentOptions{
 			Emoji: &discordgo.ComponentEmoji{
-				Name: "▶",
+				Name: "▶️",
 			},
 			Style: discordgo.PrimaryButton,
 		},
 		Last: &ComponentOptions{
 			Emoji: &discordgo.ComponentEmoji{
-				Name: "⏭",
+				Name: "⏭️",
 			},
 			Style: discordgo.PrimaryButton,
 		},
