@@ -97,7 +97,6 @@ func MemberHasRole(s *discordgo.Session, guildID string, memberID string, role *
 	}
 	if slices.Contains(member.Roles, role.ID) {
 		log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "roleName": role.Name}).Warn("member already has role")
-		log.WithFields(log.Fields{"member.Roles": member.Roles, "role.ID": role.ID}).Warn("member already has role")
 		return true
 	}
 

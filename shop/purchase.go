@@ -252,7 +252,6 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 
 	// Make sure the member doesn't already have the role
 	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("member already has the role")
 		return fmt.Errorf("you already have the `%s` role", roleName)
 	}
 
@@ -266,14 +265,14 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 	// Make sure the role hasn't already been purchased
 	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
 	if purchase != nil && !purchase.IsExpired {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Warn("role already purchased")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Debug("role already purchased")
 		return fmt.Errorf("you have already purchased role `%s`", roleName)
 	}
 
 	// Make sure the member has sufficient funds to purchase the role
 	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	if bankAccount.CurrentBalance < shopItem.Price {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Warn("insufficient funds")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Debug("insufficient funds")
 		return fmt.Errorf("you do not have enough credits to purchase the `%s` role", roleName)
 	}
 	return nil
