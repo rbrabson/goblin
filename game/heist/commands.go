@@ -532,6 +532,8 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> playerStats")
 	defer log.Trace("<-- playerStats")
 
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
 	theme := GetTheme(i.GuildID)
 	player := getHeistMember(i.GuildID, i.Member.User.ID)
 	player.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
@@ -564,12 +566,12 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "Spree",
-					Value:  fmt.Sprintf("%d", player.Spree),
+					Value:  p.Sprintf("%d", player.Spree),
 					Inline: true,
 				},
 				{
 					Name:   caser.String(theme.Bail),
-					Value:  fmt.Sprintf("%d", player.BailCost),
+					Value:  p.Sprintf("%d", player.BailCost),
 					Inline: true,
 				},
 				{
@@ -579,22 +581,22 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "Apprehended",
-					Value:  fmt.Sprintf("%d", player.JailCounter),
+					Value:  p.Sprintf("%d", player.JailCounter),
 					Inline: true,
 				},
 				{
 					Name:   "Total Deaths",
-					Value:  fmt.Sprintf("%d", player.Deaths),
+					Value:  p.Sprintf("%d", player.Deaths),
 					Inline: true,
 				},
 				{
 					Name:   "Lifetime Apprehensions",
-					Value:  fmt.Sprintf("%d", player.TotalJail),
+					Value:  p.Sprintf("%d", player.TotalJail),
 					Inline: true,
 				},
 				{
 					Name:   "Credits",
-					Value:  fmt.Sprintf("%d", account.CurrentBalance),
+					Value:  p.Sprintf("%d", account.CurrentBalance),
 					Inline: true,
 				},
 			},
