@@ -140,6 +140,10 @@ var (
 	}
 )
 
+var (
+	paginator *page.Paginator
+)
+
 // shopAdmin routes the shop admin commands to the proper handers.
 func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> shop.shopAdmin")
@@ -539,15 +543,6 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		})
 	}
 
-	paginator := page.NewPaginator(
-		page.WithDiscordConfig(
-			page.DiscordConfig{
-				Session:                s,
-				AddComponentHandler:    bot.AddComponentHandler,
-				RemoveComponentHandler: bot.RemoveComponentHandler,
-			},
-		),
-	)
 	err := paginator.CreateInteractionResponse(s, i, "Purchases", embedFields, true)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("unable to send shop purchases")

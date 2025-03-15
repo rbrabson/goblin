@@ -6,6 +6,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/guild"
+	"github.com/rbrabson/goblin/internal/discmsg"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -109,6 +110,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 				h(s, i)
 			} else {
 				log.WithField("command", i.ApplicationCommandData().Name).Warn("unhandled command")
+				discmsg.SendEphemeralResponse(s, i, "Unknown command. Use `/help` to see a list of available commands.")
 			}
 		case discordgo.InteractionMessageComponent:
 			if h, ok := componentHandlers[i.MessageComponentData().CustomID]; ok {
@@ -118,6 +120,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 					h(s, i)
 				} else {
 					log.WithField("component", i.MessageComponentData().CustomID).Warn("unhandled component")
+					discmsg.SendEphemeralResponse(s, i, "Unknown interacton")
 				}
 			}
 		}
