@@ -231,7 +231,7 @@ func (member *HeistMember) RemainingJailTime() time.Duration {
 	log.Trace("--> heist.Member.RemainingJailTime")
 	log.Trace("<-- heist.Member.RemainingJailTime")
 
-	if member.JailTimer.IsZero() || member.JailTimer.Before(time.Now()) {
+	if member.JailTimer.Before(time.Now()) {
 		return 0
 	}
 	return time.Until(member.JailTimer)
@@ -242,7 +242,7 @@ func (member *HeistMember) RemainingDeathTime() time.Duration {
 	log.Trace("--> heist.Member.RemainingDeathTime")
 	log.Trace("<-- heist.Member.RemainingDeathTime")
 
-	if member.DeathTimer.IsZero() || member.DeathTimer.Before(time.Now()) {
+	if member.DeathTimer.Before(time.Now()) {
 		return 0
 	}
 	return time.Until(member.DeathTimer)

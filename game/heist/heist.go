@@ -254,7 +254,6 @@ func heistChecks(h *Heist, member *HeistMember) error {
 		remainingTime := member.RemainingDeathTime()
 		err := &ErrDead{remainingTime}
 		return err
-
 	}
 
 	return nil

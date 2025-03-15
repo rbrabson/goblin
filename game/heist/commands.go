@@ -21,6 +21,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	MAX_WINNINGS_PER_PAGE = 30
+)
+
 // componentHandlers are the buttons that appear on messages sent by this bot.
 var (
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -429,6 +433,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	} else {
 		msg = "\nThe raid is now over. Distributing player spoils."
 		s.ChannelMessageSend(i.ChannelID, msg)
+
 		// Render the results into a table and returnt he results.
 		var tableBuffer strings.Builder
 		table := tablewriter.NewWriter(&tableBuffer)
@@ -450,11 +455,18 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 			if result.Status == FREE || result.Status == APPREHENDED {
 				data := []string{guildMember.Name, p.Sprintf("%d", result.StolenCredits), p.Sprintf("%d", result.BonusCredits), p.Sprintf("%d", result.StolenCredits+result.BonusCredits)}
 				table.Append(data)
+				if table.NumLines() >= MAX_WINNINGS_PER_PAGE {
+					table.Render()
+					s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"\n```")
+					table.ClearRows()
+					tableBuffer.Reset()
+				}
 			}
-
 		}
-		table.Render()
-		s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"```")
+		if table.NumLines() > 0 {
+			table.Render()
+			s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"```")
+		}
 	}
 
 	// Update the status for each player and then save the information
@@ -520,6 +532,8 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> playerStats")
 	defer log.Trace("<-- playerStats")
 
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+
 	theme := GetTheme(i.GuildID)
 	player := getHeistMember(i.GuildID, i.Member.User.ID)
 	player.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
@@ -529,7 +543,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	var sentence string
 	if player.Status == APPREHENDED {
-		if player.JailTimer.Before(time.Now()) {
+		if player.RemainingJailTime() <= 0 {
 			sentence = "Served"
 		} else {
 			timeRemaining := time.Until(player.JailTimer)
@@ -552,12 +566,12 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "Spree",
-					Value:  fmt.Sprintf("%d", player.Spree),
+					Value:  p.Sprintf("%d", player.Spree),
 					Inline: true,
 				},
 				{
 					Name:   caser.String(theme.Bail),
-					Value:  fmt.Sprintf("%d", player.BailCost),
+					Value:  p.Sprintf("%d", player.BailCost),
 					Inline: true,
 				},
 				{
@@ -567,22 +581,22 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "Apprehended",
-					Value:  fmt.Sprintf("%d", player.JailCounter),
+					Value:  p.Sprintf("%d", player.JailCounter),
 					Inline: true,
 				},
 				{
 					Name:   "Total Deaths",
-					Value:  fmt.Sprintf("%d", player.Deaths),
+					Value:  p.Sprintf("%d", player.Deaths),
 					Inline: true,
 				},
 				{
 					Name:   "Lifetime Apprehensions",
-					Value:  fmt.Sprintf("%d", player.TotalJail),
+					Value:  p.Sprintf("%d", player.TotalJail),
 					Inline: true,
 				},
 				{
 					Name:   "Credits",
-					Value:  fmt.Sprintf("%d", account.CurrentBalance),
+					Value:  p.Sprintf("%d", account.CurrentBalance),
 					Inline: true,
 				},
 			},

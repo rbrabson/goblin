@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/bwmarrin/discordgo"
+	page "github.com/rbrabson/disgopage"
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
@@ -13,7 +14,8 @@ import (
 )
 
 const (
-	PLUGIN_NAME = "shop"
+	PLUGIN_NAME        = "shop"
+	PURCHASES_PER_PAGE = 5
 )
 
 var (
@@ -34,6 +36,7 @@ func Start() {
 
 // Stop stops the heist game. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
+	paginator.Close()
 	status = discord.STOPPED
 }
 
@@ -48,6 +51,16 @@ func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	bot = b
 	db = d
 	registerAllShoopItemComponentHandlers()
+	paginator = page.NewPaginator(
+		page.WithDiscordConfig(
+			page.DiscordConfig{
+				Session:                bot.Session,
+				AddComponentHandler:    bot.AddComponentHandler,
+				RemoveComponentHandler: bot.RemoveComponentHandler,
+			},
+		),
+		page.WithItemsPerPage(PURCHASES_PER_PAGE),
+	)
 	go checkForExpiredPurchases()
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/guild"
+	"github.com/rbrabson/goblin/internal/discmsg"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -109,6 +110,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 				h(s, i)
 			} else {
 				log.WithField("command", i.ApplicationCommandData().Name).Warn("unhandled command")
+				discmsg.SendEphemeralResponse(s, i, "Unknown command. Use `/help` to see a list of available commands.")
 			}
 		case discordgo.InteractionMessageComponent:
 			if h, ok := componentHandlers[i.MessageComponentData().CustomID]; ok {
@@ -118,6 +120,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 					h(s, i)
 				} else {
 					log.WithField("component", i.MessageComponentData().CustomID).Warn("unhandled component")
+					discmsg.SendEphemeralResponse(s, i, "Unknown interacton")
 				}
 			}
 		}
@@ -178,22 +181,20 @@ func (bot *Bot) LoadCommands(commands []*discordgo.ApplicationCommand) {
 	log.Info("new bot commands loaded")
 }
 
-// SetDefaultCommandHandler sets the default command handler for the bot. This is used to
-// handle commands that are not explicitly defined in the bot. This is useful for plugins
-// that want to handle commands that are not explicitly defined in the bot.
+// AddComponentHandler adds a component handler for the bot. This is used to handle
+// components that are not explicitly defined in the bot.
 func (bot *Bot) AddComponentHandler(key string, handler func(*discordgo.Session, *discordgo.InteractionCreate)) {
-	log.Trace("--> discord.Bot.SetDefaultCommandHandler")
-	defer log.Trace("<-- discord.Bot.SetDefaultCommandHandler")
+	log.Trace("--> discord.Bot.AddComponentHandler")
+	defer log.Trace("<-- discord.Bot.AddComponentHandler")
 
 	customComponentHandlers[key] = handler
 }
 
-// SetDefaultCommandHandler sets the default command handler for the bot. This is used to
-// handle commands that are not explicitly defined in the bot. This is useful for plugins
-// that want to handle commands that are not explicitly defined in the bot.
+// removeComponentHandler removes a component handler for the bot. This is used to remove
+// components that are not explicitly defined in the bot.
 func (bot *Bot) RemoveComponentHandler(key string) {
-	log.Trace("--> discord.Bot.SetDefaultCommandHandler")
-	defer log.Trace("<-- discord.Bot.SetDefaultCommandHandler")
+	log.Trace("--> discord.Bot.RemoveComponentHandler")
+	defer log.Trace("<-- discord.Bot.RemoveComponentHandler")
 
 	delete(customComponentHandlers, key)
 }

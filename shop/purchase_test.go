@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/database/mongo"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,6 +20,7 @@ func init() {
 	}
 	log.SetLevel(log.DebugLevel)
 	db = mongo.NewDatabase()
+	bank.SetDB(db)
 	testShop = GetShop(GUILD_ID)
 }
 
