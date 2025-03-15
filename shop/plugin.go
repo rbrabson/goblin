@@ -35,6 +35,7 @@ func Start() {
 
 // Stop stops the heist game. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
+	paginator.Close()
 	status = discord.STOPPED
 }
 
