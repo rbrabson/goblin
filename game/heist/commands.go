@@ -21,6 +21,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	MAX_WINNINGS_PER_PAGE = 20
+)
+
 // componentHandlers are the buttons that appear on messages sent by this bot.
 var (
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -429,6 +433,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	} else {
 		msg = "\nThe raid is now over. Distributing player spoils."
 		s.ChannelMessageSend(i.ChannelID, msg)
+
 		// Render the results into a table and returnt he results.
 		var tableBuffer strings.Builder
 		table := tablewriter.NewWriter(&tableBuffer)
@@ -450,11 +455,18 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 			if result.Status == FREE || result.Status == APPREHENDED {
 				data := []string{guildMember.Name, p.Sprintf("%d", result.StolenCredits), p.Sprintf("%d", result.BonusCredits), p.Sprintf("%d", result.StolenCredits+result.BonusCredits)}
 				table.Append(data)
+				if table.NumLines() >= MAX_WINNINGS_PER_PAGE {
+					table.Render()
+					s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"\n```")
+					table.ClearRows()
+					tableBuffer.Reset()
+				}
 			}
-
 		}
-		table.Render()
-		s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"```")
+		if table.NumLines() > 0 {
+			table.Render()
+			s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"```")
+		}
 	}
 
 	// Update the status for each player and then save the information
