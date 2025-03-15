@@ -456,7 +456,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	embedFields := make([]*discordgo.MessageEmbedField, 0, len(purchases))
 
-	for _, purchase := range purchases {
+	for i, purchase := range purchases {
 		sb := strings.Builder{}
 		sb.WriteString(p.Sprintf("Description: %s\n", purchase.Item.Description))
 		sb.WriteString(p.Sprintf("Price: %d", purchase.Item.Price))
@@ -464,10 +464,13 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		case purchase.ExpiresOn.IsZero():
 			// NO-OP
 		case !purchase.HasExpired():
-			sb.WriteString(p.Sprintf("\nExpires On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
+			sb.WriteString(p.Sprintf("\nExpires On: %s", purchase.ExpiresOn.Format("02 Jan 2006")))
 			// sb.WriteString(p.Sprintf("Auto-Renew: %t\n", purchase.AutoRenew))
 		default:
-			sb.WriteString(p.Sprintf("\nExpired On: %s\n", purchase.ExpiresOn.Format("02 Jan 2006")))
+			sb.WriteString(p.Sprintf("\nExpired On: %s", purchase.ExpiresOn.Format("02 Jan 2006")))
+		}
+		if (i+1)%PURCHASES_PER_PAGE != 0 && (i+1) < len(purchases) {
+			sb.WriteString("\n\u200B")
 		}
 		embedFields = append(embedFields, &discordgo.MessageEmbedField{
 			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(purchase.Item.Type), purchase.Item.Name),

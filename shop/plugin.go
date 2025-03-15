@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	PLUGIN_NAME = "shop"
+	PLUGIN_NAME        = "shop"
+	PURCHASES_PER_PAGE = 5
 )
 
 var (
@@ -58,6 +59,7 @@ func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 				RemoveComponentHandler: bot.RemoveComponentHandler,
 			},
 		),
+		page.WithItemsPerPage(PURCHASES_PER_PAGE),
 	)
 	go checkForExpiredPurchases()
 }
