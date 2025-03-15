@@ -130,11 +130,6 @@ var (
 					Description: "Lists the items in the shop that may be purchased.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
-				{
-					Name:        "list",
-					Description: "Lists the items in the shop.",
-					Type:        discordgo.ApplicationCommandOptionSubCommand,
-				},
 			},
 		},
 	}
@@ -170,8 +165,6 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		removeShopItem(s, i)
 	case "update":
 		updateShopItem(s, i)
-	case "list":
-		listShopItems(s, i)
 	case "channel":
 		setShopChannel(s, i)
 	case "publish":
@@ -380,64 +373,6 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("Role `%s` has been updated in the shop.", roleName))
 }
 
-// listShopItems lists the items in the shop.
-func listShopItems(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.listShopItems")
-	defer log.Trace("<-- shop.listShopItems")
-
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-
-	shop := GetShop(i.GuildID)
-	items := shop.Items
-
-	if len(items) == 0 {
-		log.WithFields(log.Fields{"guildID": i.GuildID}).Debug("no items found")
-		discmsg.SendEphemeralResponse(s, i, p.Sprintf("No items found in the shop."))
-		return
-	}
-
-	shopItems := make([]*discordgo.MessageEmbedField, 0, len(items))
-	for _, item := range items {
-		sb := strings.Builder{}
-		sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
-		sb.WriteString(p.Sprintf("Cost: %d", item.Price))
-		if item.Duration != "" {
-			duration, _ := disctime.ParseDuration(item.Duration)
-			sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
-			// sb.WriteString(p.Sprintf("Auto-Rewable: %t", item.AutoRenewable))
-		}
-		shopItems = append(shopItems, &discordgo.MessageEmbedField{
-			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
-			Value:  sb.String(),
-			Inline: false,
-		})
-		if len(shopItems) == MAX_SHOP_ITEMS_DISPLAYED {
-			break
-		}
-	}
-
-	embeds := []*discordgo.MessageEmbed{
-		{
-			Title:  "Shop Items",
-			Fields: shopItems,
-		},
-	}
-
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: embeds,
-			Flags:  discordgo.MessageFlagsEphemeral,
-		},
-	})
-	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("unable to send list of shop items")
-		return
-	}
-
-	log.WithFields(log.Fields{"guildID": i.GuildID, "numItems": len(items)}).Info("shop items listed")
-}
-
 // setShopChannel sets the channel to which to publish the shop items.
 func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> shop.setShopChannel")
@@ -498,8 +433,6 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch options[0].Name {
 	case "purchases":
 		listPurchasesFromShop(s, i)
-	case "list":
-		listShopItems(s, i)
 	default:
 		msg := p.Sprint("Command `\\shop\\%s` is not recognized.", options[0].Name)
 		discmsg.SendEphemeralResponse(s, i, msg)
@@ -717,14 +650,18 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 
 	// Create the message for the shop items
 	shopItems := make([]*discordgo.MessageEmbedField, 0, len(items))
+	sb := strings.Builder{}
 	for _, item := range items {
-		sb := strings.Builder{}
+		sb.Reset()
 		sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
 		sb.WriteString(p.Sprintf("Cost: %d", item.Price))
 		if item.Duration != "" {
 			duration, _ := disctime.ParseDuration(item.Duration)
-			sb.WriteString(p.Sprintf("\nDuration: %s\n", disctime.FormatDuration(duration)))
-			// sb.WriteString(p.Sprintf("Auto-Rewable: %t", item.AutoRenewable))
+			sb.WriteString(p.Sprintf("\nDuration: %s", disctime.FormatDuration(duration)))
+			// sb.WriteString(p.Sprintf("\nAuto-Rewable: %t", item.AutoRenewable))
+		}
+		if len(shopItems)+1 < len(items) && len(shopItems)+1 < MAX_SHOP_ITEMS_DISPLAYED {
+			sb.WriteString("\n\u200B")
 		}
 		embed := &discordgo.MessageEmbedField{
 			Name:   p.Sprintf("%s %s", unicode.FirstToUpper(item.Type), item.Name),
