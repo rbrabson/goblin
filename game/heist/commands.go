@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	MAX_WINNINGS_PER_PAGE = 20
+	MAX_WINNINGS_PER_PAGE = 30
 )
 
 // componentHandlers are the buttons that appear on messages sent by this bot.
