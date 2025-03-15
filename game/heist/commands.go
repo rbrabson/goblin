@@ -543,7 +543,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	var sentence string
 	if player.Status == APPREHENDED {
-		if player.JailTimer.Before(time.Now()) {
+		if player.RemainingJailTime() <= 0 {
 			sentence = "Served"
 		} else {
 			timeRemaining := time.Until(player.JailTimer)
