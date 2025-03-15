@@ -3,14 +3,13 @@ package shop
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
+	page "github.com/rbrabson/disgopage"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/disctime"
-	"github.com/rbrabson/goblin/internal/paginator"
 	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
@@ -540,8 +539,16 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		})
 	}
 
-	paginator := paginator.NewPaginator("Purchases", 5, time.Duration(5*time.Minute), embedFields)
-	err := paginator.CreateMessage(s, i, true)
+	paginator := page.NewPaginator(
+		page.WithDiscordConfig(
+			page.DiscordConfig{
+				Session:                s,
+				AddComponentHandler:    bot.AddComponentHandler,
+				RemoveComponentHandler: bot.RemoveComponentHandler,
+			},
+		),
+	)
+	err := paginator.CreateInteractionResponse(s, i, "Purchases", embedFields, true)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "error": err}).Error("unable to send shop purchases")
 		return

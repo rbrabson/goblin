@@ -6,6 +6,7 @@ require (
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/joho/godotenv v1.5.1
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/rbrabson/disgopage v0.0.0-20250315034234-e0773d7c64eb
 	github.com/sirupsen/logrus v1.9.3
 	go.mongodb.org/mongo-driver v1.17.3
 	golang.org/x/text v0.22.0
