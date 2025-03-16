@@ -260,7 +260,15 @@ func checkForExpiredPurchases() {
 	defer log.Trace("<-- shop.checkForExpiredPurchases")
 
 	for {
-		filter := bson.D{{Key: "is_expired", Value: false}, {Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now()}}}}
+		filter := bson.D{
+			{Key: "is_expired", Value: false},
+			{Key: "$and", Value: bson.A{
+				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$ne", Value: time.Time{}}}}},
+				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now()}}}},
+			}},
+		}
+
+		log.WithFields(log.Fields{"filter": filter}).Debug("checking for expired purchases")
 		purchases, _ := readAllPurchases(filter)
 		log.WithFields(log.Fields{"count": len(purchases)}).Debug("checking for expired purchases")
 		for _, purchase := range purchases {
