@@ -135,7 +135,7 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 	config := GetConfig(guildID)
 	if config.ModChannelID != "" {
 		guildMember := guild.GetMember(guildID, memberID)
-		discmsg.SendMessage(bot.Session, config.ModChannelID, p.Sprintf("`%s` (%s) purchased the item %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price), nil, nil)
+		discmsg.SendMessage(bot.Session, config.ModChannelID, p.Sprintf("`%s` (id=%s) purchased %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price), nil, nil)
 	}
 
 	return purchase, nil
@@ -182,7 +182,7 @@ func (p *Purchase) HasExpired() bool {
 		if config.ModChannelID != "" {
 			guildMember := guild.GetMember(p.GuildID, p.MemberID)
 			printer := discmsg.GetPrinter(language.AmericanEnglish)
-			discmsg.SendMessage(bot.Session, config.ModChannelID, printer.Sprintf("`%s`'s (%s) purchase of item %s `%s` has expired", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name), nil, nil)
+			discmsg.SendMessage(bot.Session, config.ModChannelID, printer.Sprintf("`%s` (id=%s) had their purchase of %s `%s` expire", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name), nil, nil)
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase has expired")
 		} else {
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("no mod channel configured to notify of expired purchase")
@@ -216,7 +216,7 @@ func (p *Purchase) Return() error {
 	if config.ModChannelID != "" {
 		guildMember := guild.GetMember(p.GuildID, p.MemberID)
 		printer := discmsg.GetPrinter(language.AmericanEnglish)
-		discmsg.SendMessage(bot.Session, config.ModChannelID, printer.Sprintf("`%s` (%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name), nil, nil)
+		discmsg.SendMessage(bot.Session, config.ModChannelID, printer.Sprintf("`%s` (id=%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name), nil, nil)
 
 	}
 
