@@ -263,9 +263,10 @@ func checkForExpiredPurchases() {
 			{Key: "is_expired", Value: false},
 			{Key: "$and", Value: bson.A{
 				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$ne", Value: time.Time{}}}}},
-				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now()}}}},
+				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now().UTC()}}}},
 			}},
 		}
+		log.WithFields(log.Fields{"filter": filter}).Trace("checking for expired purchases")
 		purchases, _ := readAllPurchases(filter)
 		log.WithFields(log.Fields{"count": len(purchases)}).Debug("checking for expired purchases")
 		for _, purchase := range purchases {
@@ -274,7 +275,8 @@ func checkForExpiredPurchases() {
 
 		// Wait until tomorrow to check again
 		year, month, day := time.Now().UTC().Date()
-		tomorrow := time.Date(year, month, day+1, 0, 0, 0, 0, time.UTC) // TDO: change this back
+		tomorrow := time.Date(year, month, day+1, 0, 0, 0, 0, time.UTC)
+		log.WithFields(log.Fields{"tomorrow": tomorrow}).Trace("waiting until tomorrow to check for expired purchases")
 		time.Sleep(time.Until(tomorrow))
 	}
 }
