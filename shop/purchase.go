@@ -157,7 +157,7 @@ func (p *Purchase) HasExpired() bool {
 	case p.ExpiresOn.IsZero():
 		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase has a zero expiration timer")
 		return false
-	case p.ExpiresOn.Before(time.Now()):
+	case p.ExpiresOn.Before(time.Now().UTC()):
 		switch p.Item.Type {
 		case ROLE:
 			// Assign the role to the user. If the role can't be assigned, then undo the purchase of the role.
