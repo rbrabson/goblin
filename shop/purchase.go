@@ -178,6 +178,14 @@ func (p *Purchase) HasExpired() bool {
 
 	if p.IsExpired != oldIsExpired {
 		writePurchase(p)
+		g, _ := bot.Session.Guild(p.GuildID)
+		var msg string
+		if g != nil && g.Name != "" {
+			msg = fmt.Sprintf("Your purchase of %s `%s` on `%s` has expired", p.Item.Type, p.Item.Name, g.Name)
+		} else {
+			msg = fmt.Sprintf("Your purchase of %s `%s` has expired", p.Item.Type, p.Item.Name)
+		}
+		SendMessageToUser(bot.Session, p.MemberID, msg)
 		config := GetConfig(p.GuildID)
 		if config.ModChannelID != "" {
 			guildMember := guild.GetMember(p.GuildID, p.MemberID)
