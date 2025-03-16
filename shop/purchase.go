@@ -132,6 +132,11 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 		return nil, fmt.Errorf("unable to write purchase to the database: %w", err)
 	}
 	log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Info("creating new purchase")
+	config := GetConfig(guildID)
+	if config.ModChannelID != "" {
+		guildMember := guild.GetMember(guildID, memberID)
+		discmsg.SendMessage(bot.Session, config.ModChannelID, p.Sprintf("`%s` (%s) purchased the item %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price), nil, nil)
+	}
 
 	return purchase, nil
 }
@@ -143,12 +148,14 @@ func (p *Purchase) HasExpired() bool {
 	defer log.Trace("<-- shop.Purchase.HasExpired")
 
 	if p.IsExpired {
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase has already been marked as expired")
 		return true
 	}
 
 	oldIsExpired := p.IsExpired
 	switch {
 	case p.ExpiresOn.IsZero():
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase has a zero expiration timer")
 		return false
 	case p.ExpiresOn.Before(time.Now()):
 		switch p.Item.Type {
@@ -171,6 +178,17 @@ func (p *Purchase) HasExpired() bool {
 
 	if p.IsExpired != oldIsExpired {
 		writePurchase(p)
+		config := GetConfig(p.GuildID)
+		if config.ModChannelID != "" {
+			guildMember := guild.GetMember(p.GuildID, p.MemberID)
+			printer := discmsg.GetPrinter(language.AmericanEnglish)
+			discmsg.SendMessage(bot.Session, config.ModChannelID, printer.Sprintf("`%s`'s (%s) purchase of item %s `%s` has expired", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name), nil, nil)
+			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase has expired")
+		} else {
+			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("no mod channel configured to notify of expired purchase")
+		}
+	} else {
+		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase expiration has not changed")
 	}
 
 	return p.IsExpired
@@ -192,6 +210,14 @@ func (p *Purchase) Return() error {
 	if err != nil {
 		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to delete purchase from the database")
 		return fmt.Errorf("unable to delete purchase from the database: %w", err)
+	}
+
+	config := GetConfig(p.GuildID)
+	if config.ModChannelID != "" {
+		guildMember := guild.GetMember(p.GuildID, p.MemberID)
+		printer := discmsg.GetPrinter(language.AmericanEnglish)
+		discmsg.SendMessage(bot.Session, config.ModChannelID, printer.Sprintf("`%s` (%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name), nil, nil)
+
 	}
 
 	return nil
@@ -226,9 +252,12 @@ func checkForExpiredPurchases() {
 	for {
 		filter := bson.D{{Key: "is_expired", Value: false}, {Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now()}}}}
 		purchases, _ := readAllPurchases(filter)
+		log.WithFields(log.Fields{"count": len(purchases)}).Debug("checking for expired purchases")
 		for _, purchase := range purchases {
 			if purchase.HasExpired() {
 				log.WithFields(log.Fields{"guild": purchase.GuildID, "member": purchase.MemberID, "type": purchase.Item.Type, "item": purchase.Item.Name}).Info("purchase has expired")
+			} else {
+				log.WithFields(log.Fields{"guild": purchase.GuildID, "member": purchase.MemberID, "type": purchase.Item.Type, "item": purchase.Item.Name}).Trace("purchase has not expired")
 			}
 		}
 

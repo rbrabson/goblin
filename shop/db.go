@@ -138,7 +138,7 @@ func readAllPurchases(filter interface{}) ([]*Purchase, error) {
 		log.WithFields(log.Fields{"filter": filter}).Error("unable to read all purchases from the database")
 		return nil, err
 	}
-	log.WithFields(log.Fields{"count": len(items)}).Debug("read purchases from the database")
+	log.WithFields(log.Fields{"count": len(items)}).Trace("read purchases from the database")
 
 	return items, nil
 }
@@ -156,7 +156,7 @@ func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 		log.WithFields(log.Fields{"guild": guildID, "member_id": memberID}).Error("unable to read purchases from the database")
 		return nil, err
 	}
-	log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "count": len(items)}).Debug("read shop items from the database")
+	log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "count": len(items)}).Trace("read shop items from the database")
 
 	return items, nil
 }
