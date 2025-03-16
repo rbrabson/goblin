@@ -136,7 +136,8 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 	return purchase, nil
 }
 
-// Determine if a purchase has expired.
+// Determine if a purchase has expired. This marks the purchase as expired and undoes the effects of the purchase
+// if it has expired.
 func (p *Purchase) HasExpired() bool {
 	log.Trace("--> shop.Purchase.HasExpired")
 	defer log.Trace("<-- shop.Purchase.HasExpired")
@@ -226,8 +227,7 @@ func checkForExpiredPurchases() {
 		filter := bson.D{{Key: "is_expired", Value: false}, {Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now()}}}}
 		purchases, _ := readAllPurchases(filter)
 		for _, purchase := range purchases {
-			expired := purchase.HasExpired()
-			if expired {
+			if purchase.HasExpired() {
 				log.WithFields(log.Fields{"guild": purchase.GuildID, "member": purchase.MemberID, "type": purchase.Item.Type, "item": purchase.Item.Name}).Info("purchase has expired")
 			}
 		}
