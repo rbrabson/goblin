@@ -34,7 +34,7 @@ type Purchase struct {
 	Status      string             `json:"status" bson:"status"`
 	PurchasedOn time.Time          `json:"purchased_on" bson:"purchased_on"`
 	ExpiresOn   time.Time          `json:"expires_on" bson:"expires_on"`
-	AutoRenew   bool               `json:"autoRenew" bson:"autoRenew"`
+	AutoRenew   bool               `json:"auto_renew" bson:"auto_renew"`
 	IsExpired   bool               `json:"is_expired" bson:"is_expired"`
 }
 
@@ -148,7 +148,7 @@ func (p *Purchase) HasExpired() bool {
 	oldIsExpired := p.IsExpired
 	switch {
 	case p.ExpiresOn.IsZero():
-		p.IsExpired = false
+		return false
 	case p.ExpiresOn.Before(time.Now()):
 		switch p.Item.Type {
 		case ROLE:
@@ -156,6 +156,7 @@ func (p *Purchase) HasExpired() bool {
 			err := guild.UnAssignRole(bot.Session, p.GuildID, p.MemberID, p.Item.Name)
 			if err != nil {
 				log.WithFields(log.Fields{"guildID": p.GuildID, "roleName": p.Item.Name, "memberID": p.MemberID, "error": err}).Error("failed to unassign role")
+				return false
 			}
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("role purchase has expired")
 		default:
@@ -164,7 +165,7 @@ func (p *Purchase) HasExpired() bool {
 
 		p.IsExpired = true
 	default:
-		p.IsExpired = false
+		return false
 	}
 
 	if p.IsExpired != oldIsExpired {
