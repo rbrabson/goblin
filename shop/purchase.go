@@ -166,7 +166,6 @@ func (p *Purchase) HasExpired() bool {
 				log.WithFields(log.Fields{"guildID": p.GuildID, "roleName": p.Item.Name, "memberID": p.MemberID, "error": err}).Error("failed to unassign role")
 				return false
 			}
-			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("role purchase has expired")
 		default:
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("unknown purchase has expired")
 		}
@@ -270,11 +269,7 @@ func checkForExpiredPurchases() {
 		purchases, _ := readAllPurchases(filter)
 		log.WithFields(log.Fields{"count": len(purchases)}).Debug("checking for expired purchases")
 		for _, purchase := range purchases {
-			if purchase.HasExpired() {
-				log.WithFields(log.Fields{"guild": purchase.GuildID, "member": purchase.MemberID, "type": purchase.Item.Type, "item": purchase.Item.Name}).Info("purchase has expired")
-			} else {
-				log.WithFields(log.Fields{"guild": purchase.GuildID, "member": purchase.MemberID, "type": purchase.Item.Type, "item": purchase.Item.Name}).Trace("purchase has not expired")
-			}
+			purchase.HasExpired()
 		}
 
 		// Wait until tomorrow to check again
