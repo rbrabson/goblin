@@ -263,7 +263,7 @@ func checkForExpiredPurchases() {
 			{Key: "is_expired", Value: false},
 			{Key: "$and", Value: bson.A{
 				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$ne", Value: time.Time{}}}}},
-				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$lt", Value: time.Now().UTC()}}}},
+				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$lte", Value: time.Now().UTC()}}}},
 			}},
 		}
 		log.WithFields(log.Fields{"filter": filter}).Trace("checking for expired purchases")
