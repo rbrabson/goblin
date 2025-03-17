@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0-alpha1
+## 1.2.0
 
 Add a `shop` to the bot, where members can purchase items using their accumulated credits. Administrators add items to the shop, and members can then purchase the items.
 

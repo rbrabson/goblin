@@ -94,7 +94,11 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	discmsg.SendEphemeralResponse(s, i, "You are running "+BotName+" version "+Version+"-"+Revision+".")
+	if Revision == "" {
+		discmsg.SendEphemeralResponse(s, i, "You are running "+BotName+" version "+Version+".")
+	} else {
+		discmsg.SendEphemeralResponse(s, i, "You are running "+BotName+" version "+Version+"-"+Revision+".")
+	}
 }
 
 // getHelp gets help about commands from all plugins.

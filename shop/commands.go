@@ -112,6 +112,19 @@ var (
 					},
 				},
 				{
+					Name:        "mod-channel",
+					Description: "Sets the channel to which to publish notices when an item is purchased or the purchase removed.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionChannel,
+							Name:        "id",
+							Description: "The ID of the channel to which to publish the shop items.",
+							Required:    true,
+						},
+					},
+				},
+				{
 					Name:        "publish",
 					Description: "Publishes the shop items in the shop channel.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -167,6 +180,8 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		updateShopItem(s, i)
 	case "channel":
 		setShopChannel(s, i)
+	case "mod-channel":
+		setShopModChannel(s, i)
 	case "publish":
 		refreshShop(s, i)
 	default:
@@ -393,6 +408,26 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config.SetMessageID(messageID)
 
 	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("shop channel set to <#%s>", channelID))
+}
+
+// setShopModChannel sets the channel to which to publish the shop items.
+func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	log.Trace("--> shop.setShopModChannel")
+	defer log.Trace("<-- shop.setShopModChannel")
+
+	p := discmsg.GetPrinter(language.AmericanEnglish)
+	options := i.ApplicationCommandData().Options
+	channelID := options[0].Options[0].ChannelValue(s).ID
+	_, err := s.State.Channel(channelID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "channelID": channelID}).Error("failed to get mod channel from state")
+		discmsg.SendEphemeralResponse(s, i, p.Sprintf("Failed to get mod channel %s: %s", channelID, err))
+		return
+	}
+	config := GetConfig(i.GuildID)
+	config.SetModChannel(channelID)
+
+	discmsg.SendNonEphemeralResponse(s, i, p.Sprintf("shop mod channel set to <#%s>", channelID))
 }
 
 // refreshShop refreshes the shop items in the shop channel.
