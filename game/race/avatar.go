@@ -313,7 +313,7 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 		return 2 * 3
 	case "abberant":
 		chance := rand.Intn(100)
-		if chance > 80 {
+		if chance >= 70 {
 			return 5 * 3
 		}
 		return rand.Intn(3) * 3
