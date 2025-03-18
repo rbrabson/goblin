@@ -327,7 +327,7 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 		fallthrough
 	default:
 		switch currentTurn {
-		case 0, 1:
+		case 1:
 			return 14 * 3
 		case 2:
 			return 0
