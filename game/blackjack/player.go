@@ -3,21 +3,28 @@ package blackjack
 import (
 	"errors"
 	"fmt"
+
+	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/guild"
 )
 
 type Player struct {
 	Hands        []*Hand
-	Table        *Table
+	table        *Table
 	HasInsurance bool
 	currentHand  int
+	guildMember  *guild.Member
+	bankAccount  *bank.Account
 }
 
 // NewPlayer returns a new player with a single hand.
-func NewPlayer(initialBet int) *Player {
+func NewPlayer(guildID string, memberID string) *Player {
 	return &Player{
 		Hands: []*Hand{
 			NewHand(),
 		},
+		guildMember: guild.GetMember(guildID, memberID),
+		bankAccount: bank.GetAccount(guildID, memberID),
 	}
 }
 
@@ -27,7 +34,7 @@ func (player *Player) Hit() error {
 	if hand.Busted() {
 		return errors.New("cannot hit on a busted hand")
 	}
-	newCard := player.Table.Shoe.Deal()
+	newCard := player.table.Shoe.Deal()
 	hand.Cards = append(hand.Cards, newCard)
 	if hand.Busted() {
 		return errors.New("hand busted")
@@ -46,11 +53,11 @@ func (player *Player) Stand() bool {
 // Split splits a player's hand into two hands.
 func (player *Player) Split() error {
 	hand := player.Hands[player.currentHand]
-	if player.Table.Config.NumSplits == 0 {
+	if player.table.Config.NumSplits == 0 {
 		return fmt.Errorf("cannot split")
 	}
-	if len(player.Hands) > player.Table.Config.NumSplits {
-		return fmt.Errorf("cannot split more than %d times", player.Table.Config.NumSplits)
+	if len(player.Hands) > player.table.Config.NumSplits {
+		return fmt.Errorf("cannot split more than %d times", player.table.Config.NumSplits)
 	}
 	if hand.Cards[0].Rank != hand.Cards[1].Rank {
 		return fmt.Errorf("cannot split %s and %s", hand.Cards[0].Rank, hand.Cards[1].Rank)
@@ -66,7 +73,7 @@ func (player *Player) Split() error {
 
 // BuyInsurance buys insurance for the player.
 func (player *Player) BuyInsurance() error {
-	if player.Table.Dealer.Cards[0].Rank != Ace {
+	if player.table.Dealer.Cards[0].Rank != Ace {
 		return errors.New("dealer does not have an Ace")
 	}
 	player.HasInsurance = true

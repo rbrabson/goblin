@@ -21,7 +21,7 @@ func NewTable(guildID string, numDecks int) *Table {
 // AddPlayer adds a player to the table.
 func (table *Table) AddPlayer(player *Player) {
 	table.Players = append(table.Players, player)
-	player.Table = table
+	player.table = table
 }
 
 // RemovePlayer removes a player from the table.
