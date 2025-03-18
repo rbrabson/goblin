@@ -98,7 +98,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("sbowed in race")
+	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("showed in race")
 }
 
 // LoseRace is called when the race member fails to win, place or show in a race.
