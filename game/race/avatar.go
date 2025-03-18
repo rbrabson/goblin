@@ -27,14 +27,18 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 	defer log.Trace("<-- race.GetRaceAvatars")
 
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
-	racer, err := readAllRacers(filter)
+	avatars, err := readAllRacers(filter)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "error": err}).Warn("unable to read racers")
 		return readRaceAvatarsFromFile(guildID, themeName)
 	}
 
-	log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "count": len(racer)}).Info("read racers")
-	return racer
+	rand.Shuffle(len(avatars), func(i, j int) {
+		avatars[i], avatars[j] = avatars[j], avatars[i]
+	})
+
+	log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "count": len(avatars)}).Info("read racers")
+	return avatars
 }
 
 // readRaceAvatarsFromFile reads the list of characters for the theme and guild from the database. If the list

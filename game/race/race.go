@@ -286,8 +286,15 @@ func getRaceAvatar(race *Race) *RaceAvatar {
 	log.Trace("--> race.getRaceAvatar")
 	defer log.Trace("<-- race.getRaceAvatar")
 
-	index := rand.Intn(len(race.raceAvatars))
-	return race.raceAvatars[index]
+	if len(race.raceAvatars) == 0 {
+		race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
+	}
+
+	index := len(race.raceAvatars) - 1
+	avatar := race.raceAvatars[index]
+	race.raceAvatars[index] = nil
+	race.raceAvatars = race.raceAvatars[:index]
+	return avatar
 }
 
 // Move returns the new race position for a particpant based on the previous position and the current turn.
