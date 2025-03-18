@@ -9,6 +9,7 @@ type Player struct {
 	Hands        []*Hand
 	Table        *Table
 	HasInsurance bool
+	currentHand  int
 }
 
 // NewPlayer returns a new player with a single hand.
@@ -20,8 +21,31 @@ func NewPlayer(initialBet int) *Player {
 	}
 }
 
+// Hit adds a card to the player's hand.
+func (player *Player) Hit() error {
+	hand := player.Hands[player.currentHand]
+	if hand.Busted() {
+		return errors.New("cannot hit on a busted hand")
+	}
+	newCard := player.Table.Shoe.Deal()
+	hand.Cards = append(hand.Cards, newCard)
+	if hand.Busted() {
+		return errors.New("hand busted")
+	}
+	return nil
+}
+
+// Stand has the player take no more actions on the current hand. If the player has
+// more hands to play, then the next hand will be played. If the player has no more
+// hands to play, then the player is done.
+func (player *Player) Stand() bool {
+	player.currentHand++
+	return player.currentHand+1 >= len(player.Hands)
+}
+
 // Split splits a player's hand into two hands.
-func (player *Player) Split(hand *Hand) error {
+func (player *Player) Split() error {
+	hand := player.Hands[player.currentHand]
 	if player.Table.Config.NumSplits == 0 {
 		return fmt.Errorf("cannot split")
 	}
