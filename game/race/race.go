@@ -197,6 +197,7 @@ func (race *Race) RunRace(trackLength int) {
 	previousLeg := raceLeg
 
 	// Run the race until all racers cross the finish line
+	log.WithFields(log.Fields{"guildID": race.GuildID, "numRacers": len(race.Racers), "trackLength": trackLength}).Debug("starting race")
 	turn := 0
 	stillRacing := true
 	for stillRacing {

@@ -318,7 +318,7 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 		}
 		return rand.Intn(3) * 3
 	case "predator":
-		if currentTurn%2 == 0 {
+		if currentTurn%2 != 0 {
 			return 0
 		} else {
 			return (rand.Intn(4) + 2) * 3
@@ -327,9 +327,9 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 		fallthrough
 	default:
 		switch currentTurn {
-		case 0:
+		case 0, 1:
 			return 14 * 3
-		case 1:
+		case 2:
 			return 0
 		default:
 			return rand.Intn(3) * 3
