@@ -30,6 +30,9 @@ func NewPlayer(guildID string, memberID string) *Player {
 
 // Hit adds a card to the player's hand.
 func (player *Player) Hit() error {
+	if player.currentHand+1 >= len(player.Hands) {
+		return errors.New("cannot hit after playing last hand")
+	}
 	hand := player.Hands[player.currentHand]
 	if hand.Busted() {
 		return errors.New("cannot hit on a busted hand")
@@ -52,13 +55,16 @@ func (player *Player) Stand() bool {
 
 // Split splits a player's hand into two hands.
 func (player *Player) Split() error {
-	hand := player.Hands[player.currentHand]
 	if player.table.Config.NumSplits == 0 {
 		return fmt.Errorf("cannot split")
 	}
 	if len(player.Hands) > player.table.Config.NumSplits {
 		return fmt.Errorf("cannot split more than %d times", player.table.Config.NumSplits)
 	}
+	if player.currentHand+1 >= len(player.Hands) {
+		return errors.New("cannot split after playing last hand")
+	}
+	hand := player.Hands[player.currentHand]
 	if hand.Cards[0].Rank != hand.Cards[1].Rank {
 		return fmt.Errorf("cannot split %s and %s", hand.Cards[0].Rank, hand.Cards[1].Rank)
 	}
@@ -68,6 +74,25 @@ func (player *Player) Split() error {
 	newHand.Cards = append(newHand.Cards, hand.Cards[1])
 	hand.Cards = hand.Cards[:1]
 	player.Hands = append(player.Hands, newHand)
+	return nil
+}
+
+// Surrender surrenders the player's hand. The player loses the hand, but only a portion
+// of the bet is lost.
+func (player *Player) Surrender() error {
+	if len(player.Hands) > 1 {
+		return errors.New("cannot surrender with multiple hands")
+	}
+	if player.currentHand+1 >= len(player.Hands) {
+		return errors.New("can't surrender after playing last hand")
+	}
+	hand := player.Hands[0]
+	if hand.Busted() {
+		return errors.New("cannot surrender a busted hand")
+	}
+
+	player.Hands[0].Surrendered = true
+	player.currentHand++
 	return nil
 }
 

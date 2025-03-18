@@ -54,6 +54,7 @@ type Hand struct {
 	Cards       []*Card
 	Bet         int
 	DoubledDown bool
+	Surrendered bool
 }
 
 // NewDeck returns a new deck. The cards within the deck are not shuffled.
@@ -121,10 +122,11 @@ func (shoe *Shoe) setCards() {
 }
 
 // DoubleDown doubles down on the hand. The player will receive one more card and the bet will be doubled.
-func (hand *Hand) DoubleDown() error {
+func (hand *Hand) DoubleDown(card *Card) error {
 	if hand.DoubledDown {
 		return errors.New("hand has already been doubled down")
 	}
+	hand.Cards = append(hand.Cards, card)
 	hand.DoubledDown = true
 	hand.Bet *= 2
 	return nil
@@ -133,6 +135,21 @@ func (hand *Hand) DoubleDown() error {
 // Busted returns true if the hand has busted.
 func (hand *Hand) Busted() bool {
 	return hand.Score() > 21
+}
+
+// HasBlackjack returns true if the hand is a blackjack.
+func (hand *Hand) HasBlackjack() bool {
+	return len(hand.Cards) == 2 && hand.Score() == 21
+}
+
+// HasAce returns true if the hand has an ace.
+func (hand *Hand) HasAce() bool {
+	for _, card := range hand.Cards {
+		if card.Rank == Ace {
+			return true
+		}
+	}
+	return false
 }
 
 // Score returns the score of the hand. Aces are worth 11 points unless the hand would bust.
