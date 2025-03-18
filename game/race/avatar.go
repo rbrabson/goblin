@@ -328,9 +328,9 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 	default:
 		switch currentTurn {
 		case 1:
-			return 14 * 3
+			return 7 * 3
 		case 2:
-			return 0
+			return 7 * 3
 		default:
 			return rand.Intn(3) * 3
 		}
