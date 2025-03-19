@@ -308,24 +308,24 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 
 	switch r.MovementSpeed {
 	case "veryfast":
-		return rand.N(8) * 2
+		return rand.IntN(8) * 2
 	case "fast":
-		return rand.N(5) * 3
+		return rand.IntN(5) * 3
 	case "slow":
-		return (rand.N(3) + 1) * 3
+		return (rand.IntN(3) + 1) * 3
 	case "steady":
 		return 2 * 3
 	case "abberant":
-		chance := rand.N(100)
+		chance := rand.IntN(100)
 		if chance >= 70 {
 			return 5 * 3
 		}
-		return rand.N(3) * 3
+		return rand.IntN(3) * 3
 	case "predator":
 		if currentTurn%2 != 0 {
 			return 0
 		} else {
-			return (rand.N(4) + 2) * 3
+			return (rand.IntN(4) + 2) * 3
 		}
 	case "special":
 		fallthrough
@@ -336,7 +336,7 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 		case 2:
 			return 7 * 3
 		default:
-			return rand.N(3) * 3
+			return rand.IntN(3) * 3
 		}
 	}
 }

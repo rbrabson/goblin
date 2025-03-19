@@ -415,13 +415,13 @@ func calculateWinnings(race *Race, lastLeg *RaceLeg) {
 	// sort the participants in the final race leg
 	sort.Slice(lastLeg.ParticipantPositions, func(i, j int) bool {
 		if lastLeg.ParticipantPositions[i].Speed == lastLeg.ParticipantPositions[j].Speed {
-			return rand.N(2) == 0
+			return rand.IntN(2) == 0
 		}
 		return lastLeg.ParticipantPositions[i].Speed < lastLeg.ParticipantPositions[j].Speed
 	})
 
 	// Calculate the winners of the race and save in the results
-	prize := rand.N(int(race.config.MaxPrizeAmount-race.config.MinPrizeAmount)) + race.config.MinPrizeAmount
+	prize := rand.IntN(int(race.config.MaxPrizeAmount-race.config.MinPrizeAmount)) + race.config.MinPrizeAmount
 	prize *= len(race.Racers)
 
 	// Assign the purse for the winner
