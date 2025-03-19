@@ -302,30 +302,32 @@ func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
 }
 
 // calculateMovement calculates the distance a racer moves on a given turn
-func (r *RaceAvatar) calculateMovement(currentTurn int) int {
+func (avatar *RaceAvatar) calculateMovement(currentTurn int) int {
 	log.Trace("--> calculateMovement")
 	defer log.Trace("<-- calculateMovement")
 
-	switch r.MovementSpeed {
+	source := rand.NewPCG(rand.Uint64(), rand.Uint64())
+	r := rand.New(source)
+	switch avatar.MovementSpeed {
 	case "veryfast":
-		return rand.IntN(8) * 2
+		return r.IntN(8) * 2
 	case "fast":
-		return rand.IntN(5) * 3
+		return r.IntN(5) * 3
 	case "slow":
-		return (rand.IntN(3) + 1) * 3
+		return (r.IntN(3) + 1) * 3
 	case "steady":
 		return 2 * 3
 	case "abberant":
-		chance := rand.IntN(100)
+		chance := r.IntN(100)
 		if chance >= 70 {
 			return 5 * 3
 		}
-		return rand.IntN(3) * 3
+		return r.IntN(3) * 3
 	case "predator":
 		if currentTurn%2 != 0 {
 			return 0
 		} else {
-			return (rand.IntN(4) + 2) * 3
+			return (r.IntN(4) + 2) * 3
 		}
 	case "special":
 		fallthrough
@@ -336,7 +338,7 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 		case 2:
 			return 7 * 3
 		default:
-			return rand.IntN(3) * 3
+			return r.IntN(3) * 3
 		}
 	}
 }

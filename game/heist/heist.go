@@ -141,12 +141,14 @@ func (h *Heist) Start() (*HeistResult, error) {
 
 	successRate := calculateSuccessRate(h, target)
 
+	source := rand.NewPCG(rand.Uint64(), rand.Uint64())
+	r := rand.New(source)
 	for _, crewMember := range h.Crew {
 		guildMember := crewMember.guildMember
-		chance := rand.IntN(100) + 1
+		chance := r.IntN(100) + 1
 		log.WithFields(log.Fields{"Player": guildMember.Name, "Chance": chance, "SuccessRate": successRate}).Debug("Heist Results")
 		if chance <= successRate {
-			index := rand.IntN(len(goodResults))
+			index := r.IntN(len(goodResults))
 			goodResult := goodResults[index]
 			updatedResults := make([]*HeistMessage, 0, len(goodResults))
 			updatedResults = append(updatedResults, goodResults[:index]...)
@@ -167,7 +169,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 			results.Escaped = append(results.Escaped, result)
 			results.AllResults = append(results.AllResults, result)
 		} else {
-			index := rand.IntN(len(badResults))
+			index := r.IntN(len(badResults))
 			badResult := badResults[index]
 			updatedResults := make([]*HeistMessage, 0, len(badResults))
 			updatedResults = append(updatedResults, badResults[:index]...)
