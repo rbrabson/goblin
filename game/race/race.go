@@ -237,13 +237,13 @@ func (r *Race) End() {
 	// The race runs if there are 2 or more racers. If that is the case, then reset the time the last
 	// successful race ran.
 	race := currentRaces[r.GuildID]
-	if race != nil && len(race.raceAvatars) >= 2 {
+	if race != nil && len(race.Racers) >= r.config.MinNumRacers {
 		lastRaceTimes[r.GuildID] = time.Now()
 	}
 
 	delete(currentRaces, r.GuildID)
 
-	if r.RaceResult != nil {
+	if r.RaceResult != nil && len(r.Racers) >= r.config.MinNumRacers {
 		log.WithFields(log.Fields{"guild": r.GuildID, "racers": len(r.Racers)}).Info("processing race results")
 		for _, racer := range r.Racers {
 			switch {

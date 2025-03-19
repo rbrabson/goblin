@@ -235,7 +235,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	race.addRaceParticipant(raceMember)
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("you have joined the race")
+	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("joined the race")
 	discmsg.SendEphemeralResponse(s, i, "You have joined the race")
 
 	err = raceMessage(s, race, "join")

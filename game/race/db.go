@@ -96,7 +96,7 @@ func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 		return nil, ErrNoRacersFound
 	}
 
-	log.WithField("racers", racers).Info("load racers")
+	log.WithField("racers", racers).Trace("load racers")
 
 	return racers, nil
 }

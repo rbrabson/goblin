@@ -37,7 +37,7 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 		avatars[i], avatars[j] = avatars[j], avatars[i]
 	})
 
-	log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "count": len(avatars)}).Info("read racers")
+	log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "count": len(avatars)}).Debug("read racers")
 	return avatars
 }
 
