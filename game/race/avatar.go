@@ -2,7 +2,7 @@ package race
 
 import (
 	"encoding/json"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 
@@ -308,24 +308,24 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 
 	switch r.MovementSpeed {
 	case "veryfast":
-		return rand.Intn(8) * 2
+		return rand.N(8) * 2
 	case "fast":
-		return rand.Intn(5) * 3
+		return rand.N(5) * 3
 	case "slow":
-		return (rand.Intn(3) + 1) * 3
+		return (rand.N(3) + 1) * 3
 	case "steady":
 		return 2 * 3
 	case "abberant":
-		chance := rand.Intn(100)
+		chance := rand.N(100)
 		if chance >= 70 {
 			return 5 * 3
 		}
-		return rand.Intn(3) * 3
+		return rand.N(3) * 3
 	case "predator":
 		if currentTurn%2 != 0 {
 			return 0
 		} else {
-			return (rand.Intn(4) + 2) * 3
+			return (rand.N(4) + 2) * 3
 		}
 	case "special":
 		fallthrough
@@ -336,7 +336,7 @@ func (r *RaceAvatar) calculateMovement(currentTurn int) int {
 		case 2:
 			return 7 * 3
 		default:
-			return rand.Intn(3) * 3
+			return rand.N(3) * 3
 		}
 	}
 }
