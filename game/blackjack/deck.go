@@ -2,7 +2,7 @@ package blackjack
 
 import (
 	"errors"
-	"math/rand"
+	"math/rand/v2"
 )
 
 type Rank int
@@ -117,7 +117,7 @@ func (shoe *Shoe) setCards() {
 	shoe.Shuffle()
 
 	// 70% to 90% of the deck size for cuttoff
-	cuttoff := len(shoe.Cards) * (70 + rand.Intn(21)) / 100
+	cuttoff := len(shoe.Cards) * (70 + rand.N(21)) / 100
 	shoe.Cards = shoe.Cards[:cuttoff]
 }
 
