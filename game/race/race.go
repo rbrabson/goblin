@@ -369,11 +369,6 @@ func raceJoinChecks(race *Race, memberID string) error {
 		return ErrBettingHasOpened
 	}
 
-	if race.config.MaxNumRacers == len(race.Racers) {
-		log.WithFields(log.Fields{"guild_id": race.GuildID, "maxRacers": race.config.MaxNumRacers}).Warn("max racers already entered")
-		return ErrRaceFull{MaxNumRacersAllowed: race.config.MaxNumRacers}
-	}
-
 	for _, r := range race.Racers {
 		if r.Member.MemberID == memberID {
 			return ErrAlreadyJoinedRace

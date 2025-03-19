@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -17,31 +18,11 @@ import (
 )
 
 var (
-	racerButtonNames = []string{
-		"race_bet_one",
-		"race_bet_two",
-		"race_bet_three",
-		"race_bet_four",
-		"race_bet_five",
-		"race_bet_six",
-		"race_bet_seven",
-		"race_bet_eight",
-		"race_bet_nine",
-		"race_bet_ten",
-	}
+	raceButtons     = make(map[string]map[string]*raceButton)
+	raceButtonMutex = sync.Mutex{}
 
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"join_race":         joinRace,
-		racerButtonNames[0]: betOnRace,
-		racerButtonNames[1]: betOnRace,
-		racerButtonNames[2]: betOnRace,
-		racerButtonNames[3]: betOnRace,
-		racerButtonNames[4]: betOnRace,
-		racerButtonNames[5]: betOnRace,
-		racerButtonNames[6]: betOnRace,
-		racerButtonNames[7]: betOnRace,
-		racerButtonNames[8]: betOnRace,
-		racerButtonNames[9]: betOnRace,
+		"join_race": joinRace,
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -82,6 +63,11 @@ var (
 		},
 	}
 )
+
+type raceButton struct {
+	label string
+	racer *RaceParticipant
+}
 
 // raceAdmin routes various `race-raceAdmin` subcommands to the appropriate handlers.
 func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -180,6 +166,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guild_id": i.GuildID}).Info("race ended")
 
 	sendRaceResults(s, i.ChannelID, race)
+	removeRaceButtons(race)
 }
 
 // waitForMembersToJoin waits until members join the race before proceeding
@@ -392,11 +379,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "racer": raceParticipant.Member.guildMember.Name}).Info("you have placed a bet")
 }
 
-// getRacerButtons returns the buttons for the racers, which may be used to
+// getRaceButtons returns the buttons for the racers, which may be used to
 // bet on the various racers.
-func getRacerButtons(race *Race) []discordgo.ActionsRow {
-	log.Trace("--> getRacerButtons")
-	defer log.Trace("<-- getRacerButtons")
+func getRaceButtons(race *Race) []discordgo.ActionsRow {
+	log.Trace("--> getRaceButtons")
+	defer log.Trace("<-- getRaceButtons")
 
 	buttonsPerRow := 5
 	rows := make([]discordgo.ActionsRow, 0, len(race.Racers)/buttonsPerRow)
@@ -408,10 +395,11 @@ func getRacerButtons(race *Race) []discordgo.ActionsRow {
 		buttons := make([]discordgo.MessageComponent, 0, buttonsForNextRow)
 		for j := 0; j < buttonsForNextRow; j++ {
 			index := j + racersIncludedInButtons
+			racer := race.Racers[index]
 			button := discordgo.Button{
 				Label:    race.Racers[index].Member.guildMember.Name,
 				Style:    discordgo.PrimaryButton,
-				CustomID: racerButtonNames[index],
+				CustomID: getRaceButton(racer).label,
 				Emoji:    nil,
 			}
 			buttons = append(buttons, button)
@@ -428,6 +416,64 @@ func getRacerButtons(race *Race) []discordgo.ActionsRow {
 	}
 
 	return rows
+}
+
+// getRaceButton creates and returns a new race button for the racer, as well as
+// registers the handlers for the button with Discord.
+func getRaceButton(rp *RaceParticipant) *raceButton {
+	log.Trace("--> getRaceButton")
+	defer log.Trace("<-- getRaceButton")
+
+	raceButtonMutex.Lock()
+	defer raceButtonMutex.Unlock()
+
+	// Get the race buttons for the guild
+	buttons := raceButtons[rp.Member.GuildID]
+	if buttons == nil {
+		buttons = make(map[string]*raceButton)
+		raceButtons[rp.Member.GuildID] = buttons
+		log.WithFields(log.Fields{"guild_id": rp.Member.GuildID}).Trace("created new button list")
+	}
+
+	// Add a new button to the guild's button list
+	label := fmt.Sprintf("%s:%s", rp.Member.GuildID, rp.Member.MemberID)
+	button := buttons[label]
+	if button != nil {
+		log.WithFields(log.Fields{"guild_id": rp.Member.GuildID, "member_id": rp.Member.MemberID, "label": label}).Trace("found existing button")
+		return button
+	}
+
+	button = &raceButton{
+		label: label,
+		racer: rp,
+	}
+	buttons[button.label] = button
+
+	log.WithFields(log.Fields{"guild_id": rp.Member.GuildID, "member_id": rp.Member.MemberID, "lable": button.label}).Trace("created new button")
+
+	// Register the component handler for the button
+	bot.AddComponentHandler(button.label, betOnRace)
+	log.WithFields(log.Fields{"guild_id": rp.Member.GuildID, "member_id": rp.Member.MemberID, "label": button.label}).Debug("registered button component handler")
+
+	return button
+}
+
+// removeRaceButtons removes the buttons for the current race and de-registers the
+// handlers for all buttons in the race from Discord.
+func removeRaceButtons(race *Race) {
+	log.Trace("--> removeRaceButtons")
+	defer log.Trace("<-- removeRaceButtons")
+
+	raceButtonMutex.Lock()
+	defer raceButtonMutex.Unlock()
+
+	buttons := raceButtons[race.GuildID]
+	for key := range buttons {
+		bot.RemoveComponentHandler(key)
+		log.WithFields(log.Fields{"guild_id": race.GuildID, "label": key}).Debug("removed button component handler")
+	}
+	raceButtons[race.GuildID] = make(map[string]*raceButton)
+	log.WithFields(log.Fields{"guild_id": race.GuildID}).Trace("removed all buttons for the guild")
 }
 
 // raceMessage sends the main command used to start and join the race. It also handles the case where
@@ -522,7 +568,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 		})
 	case "betting":
 		components := []discordgo.MessageComponent{}
-		rows := getRacerButtons(race)
+		rows := getRaceButtons(race)
 		for _, row := range rows {
 			components = append(components, row)
 		}
@@ -663,31 +709,12 @@ func getCurrentRaceParticipant(race *Race, customID string) *RaceParticipant {
 	log.Trace("--> getRacer")
 	defer log.Trace("<-- getRacer")
 
-	switch customID {
-	case racerButtonNames[0]:
-		return race.Racers[0]
-	case racerButtonNames[1]:
-		return race.Racers[1]
-	case racerButtonNames[2]:
-		return race.Racers[2]
-	case racerButtonNames[3]:
-		return race.Racers[3]
-	case racerButtonNames[4]:
-		return race.Racers[4]
-	case racerButtonNames[5]:
-		return race.Racers[5]
-	case racerButtonNames[6]:
-		return race.Racers[6]
-	case racerButtonNames[7]:
-		return race.Racers[7]
-	case racerButtonNames[8]:
-		return race.Racers[8]
-	case racerButtonNames[9]:
-		return race.Racers[9]
-	case racerButtonNames[10]:
-		return race.Racers[10]
-	}
+	log.WithFields(log.Fields{"guild_id": race.GuildID, "customID": customID}).Warn("getting race participant for button")
 
-	log.WithField("customID", customID).Errorf("Invalid custom ID")
-	return nil
+	raceButtonMutex.Lock()
+	defer raceButtonMutex.Unlock()
+
+	buttons := raceButtons[race.GuildID]
+	button := buttons[customID]
+	return button.racer
 }

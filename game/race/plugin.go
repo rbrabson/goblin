@@ -17,6 +17,7 @@ const (
 
 var (
 	plugin *Plugin
+	bot    *discord.Bot
 	db     *mongo.MongoDB
 	status discord.PluginStatus = discord.RUNNING
 )
@@ -51,6 +52,7 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 
 // Initialize saves the Discord bot to be used by the banking system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
+	bot = b
 	db = d
 }
 

@@ -21,7 +21,6 @@ type Config struct {
 	GuildID          string             `json:"guild_id" bson:"guild_id"`
 	BetAmount        int                `json:"bet_amount" bson:"bet_amount"`
 	Currency         string             `json:"currency" bson:"currency"`
-	MaxNumRacers     int                `json:"max_num_racers" bson:"max_num_racers"`
 	MaxPrizeAmount   int                `json:"max_prize_amount" bson:"max_prize_amount"`
 	MinNumRacers     int                `json:"min_num_racers" bson:"min_num_racers"`
 	MinPrizeAmount   int                `json:"min_price_amount" bson:"min_price_amount"`
@@ -88,7 +87,6 @@ func getDefauiltConfig(guildID string) *Config {
 		StartingLine:     ":checkered_flag:",
 		EndingLine:       "<:gems:312346463453708289>",
 		Track:            track,
-		MaxNumRacers:     10,
 		MaxPrizeAmount:   1250,
 		MinNumRacers:     2,
 		MinPrizeAmount:   750,
