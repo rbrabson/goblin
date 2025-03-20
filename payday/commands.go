@@ -1,15 +1,17 @@
 package payday
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
-	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 var (
@@ -31,18 +33,25 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- payday")
 
 	if status == discord.STOPPING || status == discord.STOPPED {
-		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		resp := disgomsg.Response{
+			Content:     "The system is shutting down.",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 	payday := GetPayday(i.GuildID)
 	paydayAccount := payday.GetAccount(i.Member.User.ID)
 
 	if paydayAccount.getNextPayday().After(time.Now()) {
 		remainingTime := time.Until(paydayAccount.NextPayday)
-		resp := p.Sprintf("You can't get another payday yet. You need to wait %s.", format.Duration(remainingTime))
-		discmsg.SendEphemeralResponse(s, i, resp)
+		resp := disgomsg.Response{
+			Content:     fmt.Sprintf("You can't get another payday yet. You need to wait %s.", format.Duration(remainingTime)),
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -51,6 +60,9 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	paydayAccount.setNextPayday(time.Now().Add(payday.PaydayFrequency))
 
-	resp := p.Sprintf("You deposited your check of %d into your bank account. You now have %d credits.", payday.Amount, account.CurrentBalance)
-	discmsg.SendEphemeralResponse(s, i, resp)
+	resp := disgomsg.Response{
+		Content:     p.Sprintf("You deposited your check of %d into your bank account. You now have %d credits.", payday.Amount, account.CurrentBalance),
+		Interaction: i.Interaction,
+	}
+	resp.SendEphemeral(s)
 }

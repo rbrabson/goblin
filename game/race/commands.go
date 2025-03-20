@@ -8,13 +8,14 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 var (
@@ -75,7 +76,11 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- race.admin")
 
 	if status == discord.STOPPING || status == discord.STOPPED {
-		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		resp := disgomsg.Response{
+			Content:     "System is shutting down",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -85,7 +90,11 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resetRace(s, i)
 	default:
 		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID, "command": options[0].Name}).Error("unknown command")
-		discmsg.SendEphemeralResponse(s, i, "Command is unknown")
+		resp := disgomsg.Response{
+			Content:     "Command is unknown",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 	}
 }
 
@@ -95,7 +104,11 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- race.race")
 
 	if status == discord.STOPPING || status == discord.STOPPED {
-		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		resp := disgomsg.Response{
+			Content:     "System is shutting down",
+			Interaction: i.Interaction,
+		}
+		resp.Send(s)
 		return
 	}
 
@@ -106,7 +119,11 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "stats":
 		raceStats(s, i)
 	default:
-		discmsg.SendEphemeralResponse(s, i, "Command is unknown")
+		resp := disgomsg.Response{
+			Content:     "Command is unknown",
+			Interaction: i.Interaction,
+		}
+		resp.Send(s)
 		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID, "command": options[0].Name}).Error("unknown command")
 	}
 }
@@ -120,7 +137,11 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer raceLock.Unlock()
 
 	ResetRace(i.GuildID)
-	discmsg.SendEphemeralResponse(s, i, "Race has been reset")
+	resp := disgomsg.Response{
+		Content:     "Race has been reset",
+		Interaction: i.Interaction,
+	}
+	resp.SendEphemeral(s)
 }
 
 // startRace starts a race that other members may join.
@@ -131,7 +152,11 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceLock.Lock()
 	err := raceStartChecks(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
+		resp := disgomsg.Response{
+			Content:     unicode.FirstToUpper(err.Error()),
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		raceLock.Unlock()
 		return
 	}
@@ -221,13 +246,21 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race := currentRaces[i.GuildID]
 	if race == nil {
 		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
-		discmsg.SendEphemeralResponse(s, i, "No race is planned")
+		resp := disgomsg.Response{
+			Content:     "No race is planned",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
 	err := raceJoinChecks(race, i.Member.User.ID)
 	if err != nil {
-		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
+		resp := disgomsg.Response{
+			Content:     unicode.FirstToUpper(err.Error()),
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -236,7 +269,11 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	race.addRaceParticipant(raceMember)
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("joined the race")
-	discmsg.SendEphemeralResponse(s, i, "You have joined the race")
+	resp := disgomsg.Response{
+		Content:     "You have joined the race",
+		Interaction: i.Interaction,
+	}
+	resp.SendEphemeral(s)
 
 	err = raceMessage(s, race, "join")
 	if err != nil {
@@ -253,7 +290,7 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		lang = language.AmericanEnglish
 	}
-	p := discmsg.GetPrinter(lang)
+	p := message.NewPrinter(lang)
 
 	// Update the member's name in the guild.
 	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
@@ -341,14 +378,22 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race := currentRaces[i.GuildID]
 	if race == nil {
 		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
-		discmsg.SendEphemeralResponse(s, i, "No race is planned")
+		resp := disgomsg.Response{
+			Content:     "No race is planned",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
 	// Check to see if the member can place a bet
 	err := raceBetChecks(race, i.Member.User.ID)
 	if err != nil {
-		discmsg.SendEphemeralResponse(s, i, unicode.FirstToUpper(err.Error()))
+		resp := disgomsg.Response{
+			Content:     unicode.FirstToUpper(err.Error()),
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -364,7 +409,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err = raceMember.PlaceBet(race.config.BetAmount)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID}).Error("unable to withdraw bet amount")
-		discmsg.SendEphemeralResponse(s, i, "Insufficiient funds in your bank account to place a bet")
+		resp := disgomsg.Response{
+			Content:     "Insufficiient funds in your bank account to place a bet",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -372,9 +421,12 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	better := getRaceBetter(raceMember, raceParticipant)
 	race.addBetter(better)
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-	betMessage := p.Sprintf("You have placed a %d credit bet on %s", race.config.BetAmount, raceParticipant.Member.guildMember.Name)
-	discmsg.SendEphemeralResponse(s, i, betMessage)
+	p := message.NewPrinter(language.AmericanEnglish)
+	resp := disgomsg.Response{
+		Content:     p.Sprintf("You have placed a %d credit bet on %s", race.config.BetAmount, raceParticipant.Member.guildMember.Name),
+		Interaction: i.Interaction,
+	}
+	resp.SendEphemeral(s)
 
 	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "racer": raceParticipant.Member.guildMember.Name}).Info("you have placed a bet")
 }
@@ -482,7 +534,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 	log.Trace("--> raceMessage")
 	defer log.Trace("<-- raceMessage")
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 
 	racerNames := make([]string, 0, len(race.Racers))
 	for _, racer := range race.Racers {
@@ -637,7 +689,7 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 	log.Trace("--> sendRaceResults")
 	defer log.Trace("<-- sendRaceResults")
 
-	p := discmsg.GetPrinter(language.English)
+	p := message.NewPrinter(language.English)
 	raceResults := make([]*discordgo.MessageEmbedField, 0, 4)
 
 	racers := race.Racers

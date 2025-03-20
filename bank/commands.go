@@ -4,12 +4,12 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
-
-	"github.com/rbrabson/goblin/internal/discmsg"
+	"golang.org/x/text/message"
 )
 
 var (
@@ -111,15 +111,20 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- bank.bankAdmin")
 
 	if status == discord.STOPPING || status == discord.STOPPED {
-		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		resp := disgomsg.Response{
+			Content:     "The system is currently shutting down.",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := p.Sprintf("You do not have permission to use this command.")
-		discmsg.SendEphemeralResponse(s, i, resp)
+		resp := disgomsg.Response{
+			Content:     "You do not have permission to use this command.",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -146,7 +151,11 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer log.Trace("<-- bank.bank")
 
 	if status == discord.STOPPING || status == discord.STOPPED {
-		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		resp := disgomsg.Response{
+			Content:     "The system is currently shutting down.",
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -164,17 +173,20 @@ func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> bank.account")
 	defer log.Trace("<-- bank.account")
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 
 	account := GetAccount(i.GuildID, i.Member.User.ID)
 
-	resp := p.Sprintf("**Current Balance**: %d\n**Monthly Balance**: %d\n**Lifetime Balance**: %d\n**Created**: %s\n",
-		account.CurrentBalance,
-		account.MonthlyBalance,
-		account.LifetimeBalance,
-		account.CreatedAt,
-	)
-	discmsg.SendEphemeralResponse(s, i, resp)
+	resp := disgomsg.Response{
+		Content: p.Sprintf("**Current Balance**: %d\n**Monthly Balance**: %d\n**Lifetime Balance**: %d\n**Created**: %s\n",
+			account.CurrentBalance,
+			account.MonthlyBalance,
+			account.LifetimeBalance,
+			account.CreatedAt,
+		),
+		Interaction: i.Interaction,
+	}
+	resp.SendEphemeral(s)
 }
 
 // setAccountBalance sets the balance of the account for the member of the guild to the specified amount
@@ -194,12 +206,15 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 
 	member, err := s.GuildMember(i.GuildID, id)
 	if err != nil {
-		resp := p.Sprintf("An account with ID `%s` is not a member of this server", id)
-		discmsg.SendEphemeralResponse(s, i, resp)
+		resp := disgomsg.Response{
+			Content:     p.Sprintf("An account with ID `%s` is not a member of this server", id),
+			Interaction: i.Interaction,
+		}
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -215,8 +230,10 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		"balance": amount,
 	}).Debug("/bank-admin set account")
 
-	resp := p.Sprintf("Account balance for %s was set to %d", m.Name, account.CurrentBalance)
-	discmsg.SendResponse(s, i, resp)
+	resp := disgomsg.Response{
+		Content:     p.Sprintf("Account balance for %s was set to %d", m.Name, account.CurrentBalance),
+		Interaction: i.Interaction}
+	resp.Send(s)
 }
 
 // setDefaultBalance sets the default balance for bank for the guild (server).
@@ -233,7 +250,7 @@ func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 
 	bank := GetBank(i.GuildID)
 	bank.SetDefaultBalance(balance)
@@ -243,8 +260,11 @@ func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		"balance": balance,
 	}).Debug("/bank-admin balance")
 
-	resp := p.Sprintf("Bank default balance was set to %s", bank.DefaultBalance)
-	discmsg.SendResponse(s, i, resp)
+	resp := disgomsg.Response{
+		Content:     p.Sprintf("Bank default balance was set to %s", bank.DefaultBalance),
+		Interaction: i.Interaction,
+	}
+	resp.Send(s)
 }
 
 // setBankName sets the name of the bank for the guild (server).
@@ -261,7 +281,7 @@ func setBankName(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 
 	bank := GetBank(i.GuildID)
 	bank.SetName(name)
@@ -271,8 +291,11 @@ func setBankName(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		"name":  name,
 	}).Debug("bank-admin name")
 
-	resp := p.Sprintf("Bank name was set to %s", bank.Name)
-	discmsg.SendResponse(s, i, resp)
+	resp := disgomsg.Response{
+		Content:     p.Sprintf("Bank name was set to %s", bank.Name),
+		Interaction: i.Interaction,
+	}
+	resp.Send(s)
 }
 
 // setBankCurrency sets the name of the currency used by the bank for the guild (server).
@@ -289,7 +312,7 @@ func setBankCurrency(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 
 	bank := GetBank(i.GuildID)
 	bank.SetCurrency(currency)
@@ -299,8 +322,11 @@ func setBankCurrency(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		"name":  currency,
 	}).Debug("/bank-admin currency")
 
-	resp := p.Sprintf("Bank currency was set to %s", bank.Currency)
-	discmsg.SendResponse(s, i, resp)
+	resp := disgomsg.Response{
+		Content:     p.Sprintf("Bank currency was set to %s", bank.Currency),
+		Interaction: i.Interaction,
+	}
+	resp.Send(s)
 }
 
 // getBankInfo gets information about the bank for the guild (server).
@@ -308,14 +334,17 @@ func getBankInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("--> bank.getBankInfo")
 	defer log.Trace("<-- bank.getBankInfo")
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 
 	bank := GetBank(i.GuildID)
 
-	resp := p.Sprintf("**Bank Name**: %s\n**Currency**: %s\n**Default Balance**: %d\n",
-		bank.Name,
-		bank.Currency,
-		bank.DefaultBalance,
-	)
-	discmsg.SendEphemeralResponse(s, i, resp)
+	resp := disgomsg.Response{
+		Content: p.Sprintf("**Bank Name**: %s\n**Currency**: %s\n**Default Balance**: %d\n",
+			bank.Name,
+			bank.Currency,
+			bank.DefaultBalance,
+		),
+		Interaction: i.Interaction,
+	}
+	resp.SendEphemeral(s)
 }

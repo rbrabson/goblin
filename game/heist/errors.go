@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/format"
 	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 var (
@@ -26,7 +26,7 @@ type ErrNotEnoughMembers struct {
 
 // Error returns the error message for ErrNotEnoughMembers.
 func (e ErrNotEnoughMembers) Error() string {
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 	return p.Sprintf("You tried to rally a %s, but no one wanted to follow you. The %s has been cancelled.", e.Theme.Crew, e.Theme.Heist)
 }
 
@@ -45,7 +45,7 @@ type ErrNotEnoughCredits struct {
 
 // Error returns the error message for ErrNotEnoughCredits.
 func (e ErrNotEnoughCredits) Error() string {
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 	return p.Sprintf("You do not have enough credits to cover the cost of entry. You need %d credits to participate",
 		e.CreditsNeeded,
 	)
@@ -59,7 +59,7 @@ type ErrPoliceOnAlert struct {
 
 // Error returns the error message for ErrPoliceOnAlert.
 func (e ErrPoliceOnAlert) Error() string {
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 	return p.Sprintf("The %s are on high alert after the last target. We should wait for things to cool off before hitting another target. Time remaining: %s.",
 		e.Police,
 		format.Duration(e.RemainingTime),

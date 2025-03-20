@@ -7,12 +7,12 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
-	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/disctime"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 // A Leaderboard is used to send a monthly leaderboard to the Discord server for each guild.
@@ -179,7 +179,7 @@ func sendhMonthlyLeaderboard(lb *Leaderboard) error {
 	firstOfMonth := disctime.PreviousMonth(time.Now())
 	year, month, _ := firstOfMonth.Date()
 	if lb.ChannelID != "" {
-		p := discmsg.GetPrinter(language.AmericanEnglish)
+		p := message.NewPrinter(language.AmericanEnglish)
 		embeds := formatAccounts(p, fmt.Sprintf("%s %d Top 10", month, year), sortedAccounts)
 		_, err := bot.Session.ChannelMessageSendComplex(lb.ChannelID, &discordgo.MessageSend{
 			Embeds: embeds,
