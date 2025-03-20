@@ -709,7 +709,7 @@ func getCurrentRaceParticipant(race *Race, customID string) *RaceParticipant {
 	log.Trace("--> getRacer")
 	defer log.Trace("<-- getRacer")
 
-	log.WithFields(log.Fields{"guild_id": race.GuildID, "customID": customID}).Warn("getting race participant for button")
+	log.WithFields(log.Fields{"guild_id": race.GuildID, "customID": customID}).Trace("getting race participant for button")
 
 	raceButtonMutex.Lock()
 	defer raceButtonMutex.Unlock()
