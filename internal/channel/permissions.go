@@ -20,11 +20,11 @@ type Mute struct {
 func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute {
 	channel, err := s.Channel(i.ChannelID)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "error": err}).Error("Error getting channel, error")
+		log.WithFields(log.Fields{"guildID": i.GuildID, "error": err}).Error("error getting channel to mute")
 		return nil
 	}
 	if channel == nil {
-		log.Error("channel is nil")
+		log.WithFields(log.Fields{"guildID": i.GuildID}).Error("channel to mute is is nil")
 		return nil
 	}
 
@@ -54,7 +54,7 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 // MuteChannel sets the channel so that `@everyone`	 can't send messages to the channel.
 func (c *Mute) MuteChannel() {
 	if c == nil {
-		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID}).Error("channelMute is nil")
+		log.Error("channelMute is nil")
 		return
 	}
 	mute := int64(discordgo.PermissionSendMessages)
@@ -72,7 +72,7 @@ func (c *Mute) MuteChannel() {
 // UnmuteChannel resets the permissions for `@everyone` to what they were before the channel was muted.
 func (c *Mute) UnmuteChannel() {
 	if c == nil {
-		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID}).Error("channelMute is nil")
+		log.Error("channelMute is nil")
 		return
 	}
 	if c.everyoneID != "" {
