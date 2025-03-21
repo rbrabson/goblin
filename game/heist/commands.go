@@ -686,15 +686,18 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		resp.Content = msg
 		resp.Edit(s)
+		log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Debug("member is not in jail")
 		return
 	}
 
 	if heistMember.RemainingJailTime() <= 0 {
 		if heistMember.MemberID == i.Member.User.ID {
 			resp.Content = "You have already served your sentence."
+			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Debug("member already served sentence")
 			resp.Edit(s)
 		} else {
 			resp.Content = fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name)
+			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.guildMember.Name}).Debug("member already served sentence")
 			resp.Edit(s)
 		}
 		heistMember.ClearJailAndDeathStatus()
