@@ -252,19 +252,17 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
-			Content:     "The system is currently shutting down.",
-			Interaction: i.Interaction,
+			Content: "The system is currently shutting down.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Content:     "You do not have permission to use this command.",
-			Interaction: i.Interaction,
+			Content: "You do not have permission to use this command.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -290,10 +288,9 @@ func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
-			Content:     "The system is currently shutting down.",
-			Interaction: i.Interaction,
+			Content: "The system is currently shutting down.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -334,19 +331,17 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		log.WithError(err).Warn("unable to create the heist")
 		resp := disgomsg.Response{
-			Content:     "Unable to create the heist. Please try again later.",
-			Interaction: i.Interaction,
+			Content: "Unable to create the heist. Please try again later.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	theme := GetTheme(i.GuildID)
 	resp := disgomsg.Response{
-		Content:     "Starting a " + theme.Heist + "...",
-		Interaction: i.Interaction,
+		Content: "Starting a " + theme.Heist + "...",
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 	heist.Organizer.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	heist.interaction = i
 
@@ -386,10 +381,9 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		log.WithError(err).Error("unable to start the heist")
 		resp := disgomsg.Response{
-			Content:     unicode.FirstToUpper(err.Error()),
-			Interaction: i.Interaction,
+			Content: unicode.FirstToUpper(err.Error()),
 		}
-		resp.Send(s)
+		resp.Send(s, i.Interaction)
 		return
 	}
 
@@ -530,10 +524,9 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if heist == nil {
 		theme := GetTheme(i.GuildID)
 		resp := disgomsg.Response{
-			Content:     fmt.Sprintf("No %s is being planned", theme.Heist),
-			Interaction: i.Interaction,
+			Content: fmt.Sprintf("No %s is being planned", theme.Heist),
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -542,10 +535,9 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := heist.AddCrewMember(heistMember)
 	if err != nil {
 		resp := disgomsg.Response{
-			Content:     unicode.FirstToUpper(err.Error()),
-			Interaction: i.Interaction,
+			Content: unicode.FirstToUpper(err.Error()),
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -556,10 +548,9 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
-		Content:     p.Sprintf("You have joined the %s at a cost of %d credits.", heist.theme.Heist, heist.config.HeistCost),
-		Interaction: i.Interaction,
+		Content: p.Sprintf("You have joined the %s at a cost of %d credits.", heist.theme.Heist, heist.config.HeistCost),
 	}
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 
 	heistMessage(s, heist.interaction, heist, heistMember, "join")
 }
@@ -674,17 +665,15 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if playerID != "" {
 		heistMember = getHeistMember(i.GuildID, playerID)
 		resp := disgomsg.Response{
-			Content:     fmt.Sprintf("Bailing out %s...", heistMember.guildMember.Name),
-			Interaction: i.Interaction,
+			Content: fmt.Sprintf("Bailing out %s...", heistMember.guildMember.Name),
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 	} else {
 		heistMember = initiatingHeistMember
 		resp := disgomsg.Response{
-			Content:     "Bailing yourself out...",
-			Interaction: i.Interaction,
+			Content: "Bailing yourself out...",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 	}
 
 	if heistMember.Status != APPREHENDED {
@@ -695,26 +684,23 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			msg = fmt.Sprintf("%s is not in jail", heistMember.guildMember.Name)
 		}
 		resp := disgomsg.Response{
-			Content:     msg,
-			Interaction: i.Interaction,
+			Content: msg,
 		}
-		resp.Edit(s)
+		resp.Edit(s, i.Interaction)
 		return
 	}
 
 	if heistMember.RemainingJailTime() <= 0 {
 		if heistMember.MemberID == i.Member.User.ID {
 			resp := disgomsg.Response{
-				Content:     "You have already served your sentence.",
-				Interaction: i.Interaction,
+				Content: "You have already served your sentence.",
 			}
-			resp.Edit(s)
+			resp.Edit(s, i.Interaction)
 		} else {
 			resp := disgomsg.Response{
-				Content:     fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name),
-				Interaction: i.Interaction,
+				Content: fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name),
 			}
-			resp.Edit(s)
+			resp.Edit(s, i.Interaction)
 		}
 		heistMember.ClearJailAndDeathStatus()
 		return
@@ -724,10 +710,9 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		p := message.NewPrinter(language.AmericanEnglish)
 		resp := disgomsg.Response{
-			Content:     p.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost),
-			Interaction: i.Interaction,
+			Content: p.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost),
 		}
-		resp.Edit(s)
+		resp.Edit(s, i.Interaction)
 		return
 	}
 	heistMember.Status = OOB
@@ -735,10 +720,9 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if heistMember.MemberID == initiatingHeistMember.MemberID {
 		p := message.NewPrinter(language.AmericanEnglish)
 		resp := disgomsg.Response{
-			Content:     p.Sprintf("Congratulations, you are now free! You spent %d credits on your bail. Enjoy your freedom while it lasts.", heistMember.BailCost),
-			Interaction: i.Interaction,
+			Content: p.Sprintf("Congratulations, you are now free! You spent %d credits on your bail. Enjoy your freedom while it lasts.", heistMember.BailCost),
 		}
-		resp.Edit(s)
+		resp.Edit(s, i.Interaction)
 	} else {
 		member := guild.GetMember(heistMember.GuildID, heistMember.MemberID)
 		initiatingMember := initiatingHeistMember.guildMember
@@ -749,9 +733,8 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				initiatingMember.Name,
 				heistMember.BailCost,
 			),
-			Interaction: i.Interaction,
 		}
-		resp.Edit(s)
+		resp.Edit(s, i.Interaction)
 	}
 }
 
@@ -861,20 +844,18 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if heist == nil {
 		theme := GetTheme(i.GuildID)
 		resp := disgomsg.Response{
-			Content:     fmt.Sprintf("No %s is being planned; the channel was un-muted", theme.Heist),
-			Interaction: i.Interaction,
+			Content: fmt.Sprintf("No %s is being planned; the channel was un-muted", theme.Heist),
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	heistMessage(s, i, heist, heist.Organizer, "cancel")
 
 	resp := disgomsg.Response{
-		Content:     fmt.Sprintf("The %s has been reset", heist.theme.Heist),
-		Interaction: i.Interaction,
+		Content: fmt.Sprintf("The %s has been reset", heist.theme.Heist),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // resetVaults sets the vaults within the guild to their maximum value.
@@ -884,10 +865,9 @@ func resetVaults(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	ResetVaultsToMaximumValue(i.GuildID)
 	resp := disgomsg.Response{
-		Content:     "Vaults have been reset to their maximum value",
-		Interaction: i.Interaction,
+		Content: "Vaults have been reset to their maximum value",
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // listTargets displays a list of available heist targets.
@@ -900,10 +880,9 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if len(targets) == 0 {
 		resp := disgomsg.Response{
-			Content:     "There aren't any targets!",
-			Interaction: i.Interaction,
+			Content: "There aren't any targets!",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -931,10 +910,9 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	table.Render()
 
 	resp := disgomsg.Response{
-		Content:     "```\n" + tableBuffer.String() + "\n```",
-		Interaction: i.Interaction,
+		Content: "```\n" + tableBuffer.String() + "\n```",
 	}
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // clearMember clears the criminal state of the player.
@@ -947,10 +925,9 @@ func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistMember := getHeistMember(i.GuildID, memberID)
 	heistMember.ClearJailAndDeathStatus()
 	resp := disgomsg.Response{
-		Content:     fmt.Sprintf("Heist membber \"%s\"'s settings cleared", member.Name),
-		Interaction: i.Interaction,
+		Content: fmt.Sprintf("Heist membber \"%s\"'s settings cleared", member.Name),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // listThemes returns the list of available themes that may be used for heists
@@ -1006,10 +983,9 @@ func setTheme(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := GetConfig(i.GuildID)
 	if themeName == config.Theme {
 		resp := disgomsg.Response{
-			Content:     "Theme `" + themeName + "` is already being used.",
-			Interaction: i.Interaction,
+			Content: "Theme `" + themeName + "` is already being used.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 	theme := GetTheme(i.GuildID)
@@ -1017,10 +993,9 @@ func setTheme(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Debug("Now using theme ", config.Theme)
 
 	resp := disgomsg.Response{
-		Content:     "Theme `" + themeName + "` is now being used.",
-		Interaction: i.Interaction,
+		Content: "Theme `" + themeName + "` is now being used.",
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // configCost sets the cost to plan or join a heist
@@ -1035,10 +1010,9 @@ func configCost(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
-		Content:     p.Sprintf("Cost set to %d", cost),
-		Interaction: i.Interaction,
+		Content: p.Sprintf("Cost set to %d", cost),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 	writeConfig(config)
 }
 
@@ -1050,19 +1024,17 @@ func configSentence(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0]
 	if options == nil {
 		resp := disgomsg.Response{
-			Content:     "No sentence time provided (option missing)",
-			Interaction: i.Interaction,
+			Content: "No sentence time provided (option missing)",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 	options = options.Options[0]
 	if options == nil {
 		resp := disgomsg.Response{
-			Content:     "No sentence time provided (1st level option missing)",
-			Interaction: i.Interaction,
+			Content: "No sentence time provided (1st level option missing)",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -1070,10 +1042,9 @@ func configSentence(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.ApplicationCommandData().Options[0].Options[0].IntValue() == 0 {
 		config.SentenceBase = 0
 		resp := disgomsg.Response{
-			Content:     "Sentence disabled",
-			Interaction: i.Interaction,
+			Content: "Sentence disabled",
 		}
-		resp.Send(s)
+		resp.Send(s, i.Interaction)
 		writeConfig(config)
 		return
 	}
@@ -1082,10 +1053,9 @@ func configSentence(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
-		Content:     p.Sprintf("Sentence set to %d seconds", sentence),
-		Interaction: i.Interaction,
+		Content: p.Sprintf("Sentence set to %d seconds", sentence),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 
 	writeConfig(config)
 }
@@ -1102,10 +1072,9 @@ func configPatrol(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
-		Content:     p.Sprintf("Patrol set to %d", patrol),
-		Interaction: i.Interaction,
+		Content: p.Sprintf("Patrol set to %d", patrol),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 
 	writeConfig(config)
 }
@@ -1122,10 +1091,9 @@ func configBail(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
-		Content:     p.Sprintf("Bail set to %d", bail),
-		Interaction: i.Interaction,
+		Content: p.Sprintf("Bail set to %d", bail),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 
 	writeConfig(config)
 }
@@ -1142,10 +1110,9 @@ func configDeath(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
-		Content:     p.Sprintf("Death set to %d", death),
-		Interaction: i.Interaction,
+		Content: p.Sprintf("Death set to %d", death),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 
 	writeConfig(config)
 }
@@ -1162,10 +1129,9 @@ func configWait(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
-		Content:     p.Sprintf("Wait set to %d", wait),
-		Interaction: i.Interaction,
+		Content: p.Sprintf("Wait set to %d", wait),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 
 	writeConfig(config)
 }

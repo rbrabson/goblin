@@ -64,10 +64,9 @@ func help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("<-- help")
 
 	resp := disgomsg.Response{
-		Content:     getHelp(),
-		Interaction: i.Interaction,
+		Content: getHelp(),
 	}
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // adminHelp sends a help message for administrative commands.
@@ -77,18 +76,16 @@ func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Content:     "You do not have permission to use this command.",
-			Interaction: i.Interaction,
+			Content: "You do not have permission to use this command.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	resp := disgomsg.Response{
-		Content:     getAdminHelp(),
-		Interaction: i.Interaction,
+		Content: getAdminHelp(),
 	}
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // version shows the version of bot you are running.
@@ -98,25 +95,22 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Content:     "You do not have permission to use this command.",
-			Interaction: i.Interaction,
+			Content: "You do not have permission to use this command.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if Revision == "" {
 		resp := disgomsg.Response{
-			Content:     "You are running " + BotName + " version " + Version + ".",
-			Interaction: i.Interaction,
+			Content: "You are running " + BotName + " version " + Version + ".",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 	} else {
 		resp := disgomsg.Response{
-			Content:     "You are running " + BotName + " version " + Version + "-" + Revision + ".",
-			Interaction: i.Interaction,
+			Content: "You are running " + BotName + " version " + Version + "-" + Revision + ".",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 	}
 }
 
@@ -159,10 +153,9 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Content:     "You do not have permission to use this command.",
-			Interaction: i.Interaction,
+			Content: "You do not have permission to use this command.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -187,10 +180,9 @@ func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	resp := disgomsg.Response{
-		Content:     "Shutting down all bot services.",
-		Interaction: i.Interaction,
+		Content: "Shutting down all bot services.",
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // serverStatus returns the status of the server.

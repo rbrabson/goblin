@@ -71,19 +71,17 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
-			Content:     "The system is shutting down.",
-			Interaction: i.Interaction,
+			Content: "The system is shutting down.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Content:     "You do not have permission to use this command.",
-			Interaction: i.Interaction,
+			Content: "You do not have permission to use this command.",
 		}
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -130,10 +128,9 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role add")
 
 	resp := disgomsg.Response{
-		Content:     fmt.Sprintf("Role \"%s\" added", roleName),
-		Interaction: i.Interaction,
+		Content: fmt.Sprintf("Role \"%s\" added", roleName),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // removeRole removes a role from the list of admin roles for the server.
@@ -153,10 +150,9 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role remove")
 
 	resp := disgomsg.Response{
-		Content:     fmt.Sprintf("Role \"%s\" removed", roleName),
-		Interaction: i.Interaction,
+		Content: fmt.Sprintf("Role \"%s\" removed", roleName),
 	}
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // listRoles lists the admin roles for the server.
@@ -182,8 +178,7 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guild": guildID, "roles": roleList}).Debug("/guild-admin role list")
 
 	resp := disgomsg.Response{
-		Content:     roleList,
-		Interaction: i.Interaction,
+		Content: roleList,
 	}
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 }
