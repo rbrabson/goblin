@@ -85,6 +85,7 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
+			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "The system is shutting down.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -93,6 +94,7 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
+			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "You do not have permission to use this command.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -114,6 +116,7 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
+			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "The system is shutting down.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -143,6 +146,7 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	default:
 		resp := disgomsg.Response{
+			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "Invalid command: " + options[0].Name,
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -189,6 +193,7 @@ func setLeaderboardChannel(s *discordgo.Session, i *discordgo.InteractionCreate)
 	lb.setChannel(channelID)
 
 	resp := disgomsg.Response{
+		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: fmt.Sprintf("Channel ID for the monthly leaderboard set to %s.", lb.ChannelID),
 	}
 	resp.Send(s, i.Interaction)
@@ -201,6 +206,7 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	lb := getLeaderboard(i.GuildID)
 	resp := disgomsg.Response{
+		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: fmt.Sprintf("channel ID for the monthly leaderboard is %s.", lb.ChannelID),
 	}
 	resp.SendEphemeral(s, i.Interaction)
@@ -239,6 +245,7 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
+		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank),
 	}
 	resp.SendEphemeral(s, i.Interaction)

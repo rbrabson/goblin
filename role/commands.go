@@ -71,6 +71,7 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
+			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "The system is shutting down.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -79,6 +80,7 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
+			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "You do not have permission to use this command.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -128,6 +130,7 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role add")
 
 	resp := disgomsg.Response{
+		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: fmt.Sprintf("Role \"%s\" added", roleName),
 	}
 	resp.Send(s, i.Interaction)
@@ -150,6 +153,7 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role remove")
 
 	resp := disgomsg.Response{
+		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: fmt.Sprintf("Role \"%s\" removed", roleName),
 	}
 	resp.Send(s, i.Interaction)
@@ -178,6 +182,7 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guild": guildID, "roles": roleList}).Debug("/guild-admin role list")
 
 	resp := disgomsg.Response{
+		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: roleList,
 	}
 	resp.SendEphemeral(s, i.Interaction)
