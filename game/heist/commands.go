@@ -689,10 +689,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			msg = fmt.Sprintf("%s is not in jail", heistMember.guildMember.Name)
 		}
 		resp.Content = msg
-		err := resp.Edit(s)
-		if err != nil {
-			log.WithError(err).Error("unable to edit the bail message")
-		}
+		resp.Edit(s)
 		log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Trace("member is not in jail")
 		return
 	}
@@ -701,17 +698,11 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if heistMember.MemberID == i.Member.User.ID {
 			resp.Content = "You have already served your sentence."
 			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Trace("member already served sentence")
-			err := resp.Edit(s)
-			if err != nil {
-				log.WithError(err).Error("unable to edit the bail message")
-			}
+			resp.Edit(s)
 		} else {
 			resp.Content = fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name)
 			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.guildMember.Name}).Trace("member already served sentence")
-			err := resp.Edit(s)
-			if err != nil {
-				log.WithError(err).Error("unable to edit the bail message")
-			}
+			resp.Edit(s)
 		}
 		heistMember.ClearJailAndDeathStatus()
 		return
@@ -721,10 +712,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		p := message.NewPrinter(language.AmericanEnglish)
 		resp.Content = p.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost)
-		err := resp.Edit(s)
-		if err != nil {
-			log.WithError(err).Error("unable to edit the bail message")
-		}
+		resp.Edit(s)
 		return
 	}
 	heistMember.Status = OOB
@@ -732,10 +720,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if heistMember.MemberID == initiatingHeistMember.MemberID {
 		p := message.NewPrinter(language.AmericanEnglish)
 		resp.Content = p.Sprintf("Congratulations, you are now free! You spent %d credits on your bail. Enjoy your freedom while it lasts.", heistMember.BailCost)
-		err := resp.Edit(s)
-		if err != nil {
-			log.WithError(err).Error("unable to edit the bail message")
-		}
+		resp.Edit(s)
 		return
 	}
 
@@ -747,10 +732,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		initiatingMember.Name,
 		heistMember.BailCost,
 	)
-	err = resp.Edit(s)
-	if err != nil {
-		log.WithError(err).Error("unable to edit the bail message")
-	}
+	resp.Edit(s)
 }
 
 // heistMessage sends the main command used to plan, join and leave a heist. It also handles the case where
