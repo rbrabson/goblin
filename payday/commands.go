@@ -34,7 +34,6 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "The system is shutting down.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -48,7 +47,6 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if paydayAccount.getNextPayday().After(time.Now()) {
 		remainingTime := time.Until(paydayAccount.NextPayday)
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: fmt.Sprintf("You can't get another payday yet. You need to wait %s.", format.Duration(remainingTime)),
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -61,7 +59,6 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	paydayAccount.setNextPayday(time.Now().Add(payday.PaydayFrequency))
 
 	resp := disgomsg.Response{
-		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: p.Sprintf("You deposited your check of %d into your bank account. You now have %d credits.", payday.Amount, account.CurrentBalance),
 	}
 	resp.SendEphemeral(s, i.Interaction)

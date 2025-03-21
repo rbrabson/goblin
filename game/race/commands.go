@@ -90,7 +90,6 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	default:
 		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID, "command": options[0].Name}).Error("unknown command")
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "Command is unknown",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -104,7 +103,6 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "System is shutting down",
 		}
 		resp.Send(s, i.Interaction)
@@ -119,7 +117,6 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		raceStats(s, i)
 	default:
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "Command is unknown",
 		}
 		resp.Send(s, i.Interaction)
@@ -137,7 +134,6 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	ResetRace(i.GuildID)
 	resp := disgomsg.Response{
-		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: "Race has been reset",
 	}
 	resp.SendEphemeral(s, i.Interaction)
@@ -153,7 +149,6 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		raceLock.Unlock()
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: unicode.FirstToUpper(err.Error()),
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -246,7 +241,6 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if race == nil {
 		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "No race is planned",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -256,7 +250,6 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := raceJoinChecks(race, i.Member.User.ID)
 	if err != nil {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: unicode.FirstToUpper(err.Error()),
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -269,7 +262,6 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race.addRaceParticipant(raceMember)
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("joined the race")
 	resp := disgomsg.Response{
-		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: "You have joined the race",
 	}
 	err = resp.SendEphemeral(s, i.Interaction)
@@ -381,7 +373,6 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if race == nil {
 		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "No race is planned",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -392,7 +383,6 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := raceBetChecks(race, i.Member.User.ID)
 	if err != nil {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: unicode.FirstToUpper(err.Error()),
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -412,7 +402,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID}).Error("unable to withdraw bet amount")
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
+
 			Content: "Insufficiient funds in your bank account to place a bet",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -425,7 +415,6 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race.addBetter(better)
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.Response{
-		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: p.Sprintf("You have placed a %d credit bet on %s", race.config.BetAmount, raceParticipant.Member.guildMember.Name),
 	}
 	resp.SendEphemeral(s, i.Interaction)

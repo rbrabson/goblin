@@ -64,7 +64,6 @@ func help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Trace("<-- help")
 
 	resp := disgomsg.Response{
-		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: getHelp(),
 	}
 	resp.SendEphemeral(s, i.Interaction)
@@ -77,7 +76,6 @@ func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "You do not have permission to use this command.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -85,7 +83,6 @@ func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	resp := disgomsg.Response{
-		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: getAdminHelp(),
 	}
 	resp.SendEphemeral(s, i.Interaction)
@@ -98,7 +95,6 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "You do not have permission to use this command.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -107,13 +103,11 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if Revision == "" {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "You are running " + BotName + " version " + Version + ".",
 		}
 		resp.SendEphemeral(s, i.Interaction)
 	} else {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "You are running " + BotName + " version " + Version + "-" + Revision + ".",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -159,7 +153,6 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Type:    discordgo.InteractionResponseChannelMessageWithSource,
 			Content: "You do not have permission to use this command.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
@@ -187,7 +180,6 @@ func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	resp := disgomsg.Response{
-		Type:    discordgo.InteractionResponseChannelMessageWithSource,
 		Content: "Shutting down all bot services.",
 	}
 	resp.Send(s, i.Interaction)
