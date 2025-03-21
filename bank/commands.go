@@ -120,8 +120,7 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
-			Content:     "You do not have permission to use this command.",
-			Interaction: i.Interaction,
+			Content: "You do not have permission to use this command.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
 		return
@@ -151,8 +150,7 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
-			Content:     "The system is currently shutting down.",
-			Interaction: i.Interaction,
+			Content: "The system is currently shutting down.",
 		}
 		resp.SendEphemeral(s, i.Interaction)
 		return
@@ -183,7 +181,6 @@ func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			account.LifetimeBalance,
 			account.CreatedAt,
 		),
-		Interaction: i.Interaction,
 	}
 	resp.SendEphemeral(s, i.Interaction)
 }
@@ -210,8 +207,7 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	member, err := s.GuildMember(i.GuildID, id)
 	if err != nil {
 		resp := disgomsg.Response{
-			Content:     p.Sprintf("An account with ID `%s` is not a member of this server", id),
-			Interaction: i.Interaction,
+			Content: p.Sprintf("An account with ID `%s` is not a member of this server", id),
 		}
 		resp.SendEphemeral(s, i.Interaction)
 		return

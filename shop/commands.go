@@ -827,10 +827,8 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		msg := disgomsg.Message{
 			Components: components,
 			Embeds:     embeds,
-			ChannelID:  channelID,
-			MessageID:  messageID,
 		}
-		err := msg.Edit(s)
+		err := msg.WithChannelID(channelID).WithMessageID(messageID).Edit(s)
 		if err != nil {
 			log.WithFields(log.Fields{"guildID": guildID, "channelID": channelID, "messageID": messageID}).Error("failed to edit shop items")
 			messageID = ""
