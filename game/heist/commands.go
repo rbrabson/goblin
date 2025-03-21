@@ -661,6 +661,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	initiatingHeistMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 
+	var resp disgomsg.Response
 	var heistMember *HeistMember
 	if playerID != "" {
 		heistMember = getHeistMember(i.GuildID, playerID)
@@ -683,24 +684,18 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		} else {
 			msg = fmt.Sprintf("%s is not in jail", heistMember.guildMember.Name)
 		}
-		resp := disgomsg.Response{
-			Content: msg,
-		}
-		resp.Edit(s, i.Interaction)
+		resp.Content = msg
+		resp.Edit(s)
 		return
 	}
 
 	if heistMember.RemainingJailTime() <= 0 {
 		if heistMember.MemberID == i.Member.User.ID {
-			resp := disgomsg.Response{
-				Content: "You have already served your sentence.",
-			}
-			resp.Edit(s, i.Interaction)
+			resp.Content = "You have already served your sentence."
+			resp.Edit(s)
 		} else {
-			resp := disgomsg.Response{
-				Content: fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name),
-			}
-			resp.Edit(s, i.Interaction)
+			resp.Content = fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name)
+			resp.Edit(s)
 		}
 		heistMember.ClearJailAndDeathStatus()
 		return
@@ -709,32 +704,26 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := account.Withdraw(heistMember.BailCost)
 	if err != nil {
 		p := message.NewPrinter(language.AmericanEnglish)
-		resp := disgomsg.Response{
-			Content: p.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost),
-		}
-		resp.Edit(s, i.Interaction)
+		resp.Content = p.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost)
+		resp.Edit(s)
 		return
 	}
 	heistMember.Status = OOB
 
 	if heistMember.MemberID == initiatingHeistMember.MemberID {
 		p := message.NewPrinter(language.AmericanEnglish)
-		resp := disgomsg.Response{
-			Content: p.Sprintf("Congratulations, you are now free! You spent %d credits on your bail. Enjoy your freedom while it lasts.", heistMember.BailCost),
-		}
-		resp.Edit(s, i.Interaction)
+		resp.Content = p.Sprintf("Congratulations, you are now free! You spent %d credits on your bail. Enjoy your freedom while it lasts.", heistMember.BailCost)
+		resp.Edit(s)
 	} else {
 		member := guild.GetMember(heistMember.GuildID, heistMember.MemberID)
 		initiatingMember := initiatingHeistMember.guildMember
 		p := message.NewPrinter(language.AmericanEnglish)
-		resp := disgomsg.Response{
-			Content: p.Sprintf("Congratulations, %s, %s bailed you out by spending %d credits and now you are free!. Enjoy your freedom while it lasts.",
-				member.Name,
-				initiatingMember.Name,
-				heistMember.BailCost,
-			),
-		}
-		resp.Edit(s, i.Interaction)
+		resp.Content = p.Sprintf("Congratulations, %s, %s bailed you out by spending %d credits and now you are free!. Enjoy your freedom while it lasts.",
+			member.Name,
+			initiatingMember.Name,
+			heistMember.BailCost,
+		)
+		resp.Edit(s)
 	}
 }
 
