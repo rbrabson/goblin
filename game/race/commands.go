@@ -264,7 +264,10 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.Response{
 		Content: "You have joined the race",
 	}
-	resp.SendEphemeral(s, i.Interaction)
+	err = resp.SendEphemeral(s, i.Interaction)
+	if err != nil {
+		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).WithError(err).Error("unable to send joined race message")
+	}
 
 	err = raceMessage(s, race, "join")
 	if err != nil {
