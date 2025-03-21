@@ -665,16 +665,20 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var heistMember *HeistMember
 	if playerID != "" {
 		heistMember = getHeistMember(i.GuildID, playerID)
-		resp := disgomsg.Response{
+		resp = disgomsg.Response{
 			Content: fmt.Sprintf("Bailing out %s...", heistMember.guildMember.Name),
 		}
 		resp.SendEphemeral(s, i.Interaction)
 	} else {
 		heistMember = initiatingHeistMember
-		resp := disgomsg.Response{
+		resp = disgomsg.Response{
 			Content: "Bailing yourself out...",
 		}
-		resp.SendEphemeral(s, i.Interaction)
+		err := resp.SendEphemeral(s, i.Interaction)
+		if err != nil {
+			log.WithError(err).Error("unable to send the bail message")
+			return
+		}
 	}
 
 	if heistMember.Status != APPREHENDED {
@@ -685,20 +689,29 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			msg = fmt.Sprintf("%s is not in jail", heistMember.guildMember.Name)
 		}
 		resp.Content = msg
-		resp.Edit(s)
-		log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Debug("member is not in jail")
+		err := resp.Edit(s)
+		if err != nil {
+			log.WithError(err).Error("unable to edit the bail message")
+		}
+		log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Trace("member is not in jail")
 		return
 	}
 
 	if heistMember.RemainingJailTime() <= 0 {
 		if heistMember.MemberID == i.Member.User.ID {
 			resp.Content = "You have already served your sentence."
-			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Debug("member already served sentence")
-			resp.Edit(s)
+			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Trace("member already served sentence")
+			err := resp.Edit(s)
+			if err != nil {
+				log.WithError(err).Error("unable to edit the bail message")
+			}
 		} else {
 			resp.Content = fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name)
-			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.guildMember.Name}).Debug("member already served sentence")
-			resp.Edit(s)
+			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.guildMember.Name}).Trace("member already served sentence")
+			err := resp.Edit(s)
+			if err != nil {
+				log.WithError(err).Error("unable to edit the bail message")
+			}
 		}
 		heistMember.ClearJailAndDeathStatus()
 		return
@@ -708,7 +721,10 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		p := message.NewPrinter(language.AmericanEnglish)
 		resp.Content = p.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost)
-		resp.Edit(s)
+		err := resp.Edit(s)
+		if err != nil {
+			log.WithError(err).Error("unable to edit the bail message")
+		}
 		return
 	}
 	heistMember.Status = OOB
@@ -716,17 +732,24 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if heistMember.MemberID == initiatingHeistMember.MemberID {
 		p := message.NewPrinter(language.AmericanEnglish)
 		resp.Content = p.Sprintf("Congratulations, you are now free! You spent %d credits on your bail. Enjoy your freedom while it lasts.", heistMember.BailCost)
-		resp.Edit(s)
-	} else {
-		member := guild.GetMember(heistMember.GuildID, heistMember.MemberID)
-		initiatingMember := initiatingHeistMember.guildMember
-		p := message.NewPrinter(language.AmericanEnglish)
-		resp.Content = p.Sprintf("Congratulations, %s, %s bailed you out by spending %d credits and now you are free!. Enjoy your freedom while it lasts.",
-			member.Name,
-			initiatingMember.Name,
-			heistMember.BailCost,
-		)
-		resp.Edit(s)
+		err := resp.Edit(s)
+		if err != nil {
+			log.WithError(err).Error("unable to edit the bail message")
+		}
+		return
+	}
+
+	member := guild.GetMember(heistMember.GuildID, heistMember.MemberID)
+	initiatingMember := initiatingHeistMember.guildMember
+	p := message.NewPrinter(language.AmericanEnglish)
+	resp.Content = p.Sprintf("Congratulations, %s, %s bailed you out by spending %d credits and now you are free!. Enjoy your freedom while it lasts.",
+		member.Name,
+		initiatingMember.Name,
+		heistMember.BailCost,
+	)
+	err = resp.Edit(s)
+	if err != nil {
+		log.WithError(err).Error("unable to edit the bail message")
 	}
 }
 
