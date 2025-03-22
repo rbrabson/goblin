@@ -89,7 +89,7 @@ func getDefauiltConfig(guildID string) *Config {
 		EndingLine:       "<:gems:312346463453708289>",
 		Track:            track,
 		MaxPrizeAmount:   1250,
-		MaxNumRacers:     20,
+		MaxNumRacers:     10,
 		MinNumRacers:     2,
 		MinPrizeAmount:   750,
 		WaitBetweenRaces: time.Second * 60,
