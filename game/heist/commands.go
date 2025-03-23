@@ -733,6 +733,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		heistMember.BailCost,
 	)
 	resp.Edit(s)
+
 }
 
 // heistMessage sends the main command used to plan, join and leave a heist. It also handles the case where
