@@ -719,7 +719,7 @@ func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreat
 		Components: components,
 		Embeds:     embeds,
 	}
-	resp.Send(s, i.Interaction)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // publishShop publishes the shop items to the channel.
