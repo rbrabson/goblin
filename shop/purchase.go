@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
@@ -288,46 +287,6 @@ func checkForExpiredPurchases() {
 		log.WithFields(log.Fields{"tomorrow": tomorrow}).Trace("waiting until tomorrow to check for expired purchases")
 		time.Sleep(time.Until(tomorrow))
 	}
-}
-
-// rolePurchaseChecks performs checks to see if a role can be purchased.
-func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
-	log.Trace("--> shop.rolePurchaseChecks")
-	defer log.Trace("<-- shop.rolePurchaseChecks")
-
-	// Verify the role exists on the server
-	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
-	if guildRole == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
-		return fmt.Errorf("role `%s` not found on the server", roleName)
-	}
-
-	// Make sure the member doesn't already have the role
-	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
-		return fmt.Errorf("you already have the `%s` role", roleName)
-	}
-
-	// Make sure the role is still available in the shop
-	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
-	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
-		return fmt.Errorf("role `%s` not found in the shop", roleName)
-	}
-
-	// Make sure the role hasn't already been purchased
-	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if purchase != nil && !purchase.IsExpired {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Debug("role already purchased")
-		return fmt.Errorf("you have already purchased role `%s`", roleName)
-	}
-
-	// Make sure the member has sufficient funds to purchase the role
-	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
-	if bankAccount.CurrentBalance < shopItem.Price {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Debug("insufficient funds")
-		return fmt.Errorf("you do not have enough credits to purchase the `%s` role", roleName)
-	}
-	return nil
 }
 
 // String returns a string representation of the purchase.
