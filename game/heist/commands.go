@@ -316,7 +316,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		log.WithError(err).Warn("unable to create the heist")
 		resp := disgomsg.Response{
-			Content: "Unable to create the heist. Please try again later.",
+			Content: unicode.FirstToUpper(err.Error()),
 		}
 		resp.SendEphemeral(s, i.Interaction)
 		return
