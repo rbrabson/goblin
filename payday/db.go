@@ -13,9 +13,6 @@ const (
 
 // readPayday loads payday information for the guild from the database.
 func readPayday(guildID string) *Payday {
-	log.Trace("--> payday.readPayday")
-	defer log.Trace("<-- payday.readPayday")
-
 	filter := bson.M{
 		"guild_id": guildID,
 	}
@@ -32,9 +29,6 @@ func readPayday(guildID string) *Payday {
 
 // writePayday saves the payday information for the guild into the database.
 func writePayday(payday *Payday) error {
-	log.Trace("--> payday.writePayday")
-	defer log.Trace("<-- payday.writePayday")
-
 	filter := bson.M{"guild_id": payday.GuildID}
 	db.UpdateOrInsert(PAYDAY_COLLECTION, filter, payday)
 
@@ -49,9 +43,6 @@ func writePayday(payday *Payday) error {
 
 // readAccount loads payday information for a given account in the guild from the database.
 func readAccount(payday *Payday, accountID string) *Account {
-	log.Trace("--> payday.readAccount")
-	defer log.Trace("<-- payday.readAccount")
-
 	filter := bson.M{"guild_id": payday.GuildID, "member_id": accountID}
 	var account *Account
 	err := db.FindOne(PAYDAY_ACCOUNT_COLLECTION, filter, &account)
@@ -67,9 +58,6 @@ func readAccount(payday *Payday, accountID string) *Account {
 
 // writeAccount saves the payday information for a given account in the guild into the database.
 func writeAccount(account *Account) error {
-	log.Trace("--> payday.writeAccount")
-	defer log.Trace("<-- payday.writeAccount")
-
 	var filter bson.M
 	if account.ID != primitive.NilObjectID {
 		log.WithFields(log.Fields{"account": account}).Debug("writing account with ID")

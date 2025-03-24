@@ -155,9 +155,6 @@ var (
 
 // shopAdmin routes the shop admin commands to the proper handers.
 func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.shopAdmin")
-	defer log.Trace("<-- shop.shopAdmin")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -198,9 +195,6 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // addShopItem routes the add shop item commands to the proper handers.
 func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.addShopItem")
-	defer log.Trace("<-- shop.addShopItem")
-
 	options := i.ApplicationCommandData().Options
 	switch options[0].Options[0].Name {
 	case "role":
@@ -219,9 +213,6 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // addRoleToShop adds a role to the shop.
 func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.addRoleToShop")
-	defer log.Trace("<-- shop.addRoleToShop")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	// Get the options for the role to be added
@@ -271,7 +262,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Add the role to the shop. If it already exists, this will return an error.
 	shop := GetShop(i.GuildID)
-	shopItem, err := shop.AddShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
+	shopItem, err := shop.addShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("failed to add role to shop: %s", err)
 		resp := disgomsg.Response{
@@ -293,9 +284,6 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // removeShopItem routes the remove shop item commands to the proper handers.
 func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.removeShopItem")
-	defer log.Trace("<-- shop.removeShopItem")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	options := i.ApplicationCommandData().Options
@@ -314,9 +302,6 @@ func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // removeRoleFromShop removes a role from the shop.
 func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.removeRoleFromShop")
-	defer log.Trace("<-- shop.removeRoleFromShop")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	options := i.ApplicationCommandData().Options
@@ -326,7 +311,7 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleName := role.Options[0].StringValue()
 
 	shop := GetShop(i.GuildID)
-	err := shop.RemoveShopItem(roleName, ROLE)
+	err := shop.removeShopItem(roleName, ROLE)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to remove role from shop: %s", err)
 		resp := disgomsg.Response{
@@ -347,9 +332,6 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // updateShopItem routes the update shop item commands to the proper handers.
 func updateShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.updateShopItem")
-	defer log.Trace("<-- shop.updateShopItem")
-
 	options := i.ApplicationCommandData().Options
 	switch options[0].Options[0].Name {
 	case "role":
@@ -364,9 +346,6 @@ func updateShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // updateRoleInShop updates a role in the shop.
 func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.updateRoleInShop")
-	defer log.Trace("<-- shop.updateRoleInShop")
-
 	options := i.ApplicationCommandData().Options
 
 	// Get the role details
@@ -411,7 +390,7 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = item.UpdateShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
+	err = item.update(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("Failed to update role in shop: %s", err)
 		resp := disgomsg.Response{
@@ -431,9 +410,6 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // setShopChannel sets the channel to which to publish the shop items.
 func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.setShopChannel")
-	defer log.Trace("<-- shop.setShopChannel")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 	options := i.ApplicationCommandData().Options
 	channelID := options[0].Options[0].ChannelValue(s).ID
@@ -459,9 +435,6 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // setShopModChannel sets the channel to which to publish the shop items.
 func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.setShopModChannel")
-	defer log.Trace("<-- shop.setShopModChannel")
-
 	options := i.ApplicationCommandData().Options
 	channelID := options[0].Options[0].ChannelValue(s).ID
 	_, err := s.State.Channel(channelID)
@@ -484,9 +457,6 @@ func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // refreshShop refreshes the shop items in the shop channel.
 func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.refreshShop")
-	defer log.Trace("<-- shop.refreshShop")
-
 	config := GetConfig(i.GuildID)
 	if config.ChannelID == "" {
 		resp := disgomsg.Response{
@@ -514,9 +484,6 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // shop routes the shop commands to the proper handers.
 func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.shop")
-	defer log.Trace("<-- shop.shop")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -539,9 +506,6 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // listPurchasesFromShop lists the purchases made by the member in the shop.
 func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.listPurchasesFromShop")
-	defer log.Trace("<-- shop.listPurchasesFromShop")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	purchases := GetAllPurchases(i.GuildID, i.Member.User.ID)
@@ -591,9 +555,6 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 // initiatePurchase is used to buy an item from the shop using a button in the shop channel.
 func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.purchase")
-	defer log.Trace("<-- shop.purchase")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -622,9 +583,6 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // initiatePurchaseOfRoleFromShop initiates the purchases of a role from the shop.
 // The member will be prompted to confirm the purchase.
 func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) {
-	log.Trace("--> shop.buyRoleFromShop")
-	defer log.Trace("<-- shop.buyRoleFromShop")
-
 	// Make sure the member can purchase the role
 	err := rolePurchaseChecks(s, i, roleName)
 	if err != nil {
@@ -644,9 +602,6 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 // completePurchase is used to finalize the purchase of an item from the shop.
 // It is called when the member confirms the purchase using a "Buy" button.
 func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shop.purchase")
-	defer log.Trace("<-- shop.purchase")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -675,12 +630,6 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // Complete the purchase of a role from the shop. This is called after the purchase has been confirmed by
 // the member.
 func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) {
-	log.Trace("--> shop.confirmPurchase")
-	defer log.Trace("<-- shop.confirmPurchase")
-
-	log.Trace("--> shop.buyRoleFromShop")
-	defer log.Trace("<-- shop.buyRoleFromShop")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	// Make sure the member can purchase the role
@@ -727,9 +676,6 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 
 // sendConfirmationMessage sends a message to the member to confirm the purchase of an item from the shop.
 func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreate, item *ShopItem) {
-	log.Trace("--> shop.sendConfirmationMessage")
-	defer log.Trace("<-- shop.sendConfirmationMessage")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	shopItems := make([]*discordgo.MessageEmbedField, 0, 1)
@@ -776,9 +722,6 @@ func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreat
 
 // publishShop publishes the shop items to the channel.
 func publishShop(s *discordgo.Session, guildID string, channelID string, messageID string) (string, error) {
-	log.Trace("--> shop.publishShop")
-	defer log.Trace("<-- shop.publishShop")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	shop := GetShop(guildID)
@@ -852,9 +795,6 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 // getShopButtons returns the buttons for the shop items, which may be used to
 // purchase items in the shop.
 func getShopButtons(shop *Shop) []discordgo.ActionsRow {
-	log.Trace("--> getShopButtons")
-	defer log.Trace("<-- getShopButtons")
-
 	buttonsPerRow := 5
 	rows := make([]discordgo.ActionsRow, 0, len(shop.Items)/buttonsPerRow)
 

@@ -26,9 +26,9 @@ func TestGetAccount(t *testing.T) {
 			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
 		}
 	}()
-	accunts := make([]*Account, 0, 1)
+	accounts := make([]*Account, 0, 1)
 	defer func() {
-		for _, account := range accunts {
+		for _, account := range accounts {
 			db.Delete(PAYDAY_ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID})
 		}
 	}()
@@ -40,12 +40,12 @@ func TestGetAccount(t *testing.T) {
 	}
 	paydays = append(paydays, payday)
 
-	account := getAccount(payday, "67890")
+	account := payday.GetAccount("67890")
 	if account == nil {
 		t.Error("account is nil")
 		return
 	}
-	accunts = append(accunts, account)
+	accounts = append(accounts, account)
 }
 
 func TestNewAccount(t *testing.T) {

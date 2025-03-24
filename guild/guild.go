@@ -25,9 +25,6 @@ type Guild struct {
 
 // GetAllGuilds returns all guilds in the database.
 func GetAllGuilds() []*Guild {
-	log.Trace("--> guild.GetAllGuilds")
-	defer log.Trace("<-- guild.GetAllGuilds")
-
 	guilds := make([]*Guild, 0)
 	err := db.FindMany(GUILD_COLLECTION, bson.M{}, &guilds, bson.M{}, 0)
 	if err != nil {
@@ -89,9 +86,6 @@ func getDefaultGuild(guildID string) *Guild {
 
 // AddAdminRole adds a role to the list of admin roles for the guild.
 func (guild *Guild) AddAdminRole(roleName string) {
-	log.Trace("--> guild.Guild.AddAdminRole")
-	defer log.Trace("<-- guild.Guild.AddAdminRole")
-
 	if slices.Contains(guild.AdminRoles, roleName) {
 		log.WithFields(log.Fields{"roleName": roleName, "adminRoles": guild.AdminRoles}).Warn("role already exists")
 		return
@@ -104,9 +98,6 @@ func (guild *Guild) AddAdminRole(roleName string) {
 
 // RemoveAdminRole removes a role from the list of admin roles for the guild.
 func (guild *Guild) RemoveAdminRole(roleName string) {
-	log.Trace("--> guild.Guild.RemoveAdminRole")
-	defer log.Trace("<-- guild.Guild.RemoveAdminRole")
-
 	for i, role := range guild.AdminRoles {
 		if role == roleName {
 			guild.AdminRoles = append(guild.AdminRoles[:i], guild.AdminRoles[i+1:]...)
@@ -120,9 +111,6 @@ func (guild *Guild) RemoveAdminRole(roleName string) {
 
 // GetAdminRoles returns the list of admin roles for the guild.
 func (guild *Guild) GetAdminRoles() []string {
-	log.Trace("--> guild.Guild.GetAdminRoles")
-	defer log.Trace("<-- guild.Guild.GetAdminRoles")
-
 	return guild.AdminRoles
 }
 

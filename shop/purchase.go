@@ -40,9 +40,6 @@ type Purchase struct {
 
 // GetAllRoles returns all the purchases made by a member in the guild.
 func GetAllPurchases(guildID string, memberID string) []*Purchase {
-	log.Trace("--> shop.GetAllPurchases")
-	defer log.Trace("<-- shop.GetAllPurchases")
-
 	purchases, err := readPurchases(guildID, memberID)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "error": err}).Error("unable to read purchases from the database")
@@ -87,8 +84,6 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 // GetPurchase returns the purchase made by a member in the guild for the given item name.
 // If the purchase does not exist, nil is returned.
 func GetPurchase(guildID string, memberID string, itemName string, itemType string) *Purchase {
-	log.Trace("--> shop.GetPurchase")
-	defer log.Trace("<-- shop.GetPurchase")
 	purchase, err := readPurchase(guildID, memberID, itemName, itemType)
 	if err != nil {
 		return nil
@@ -99,9 +94,6 @@ func GetPurchase(guildID string, memberID string, itemName string, itemType stri
 // PurchaseItem creates a new Purchase with the given guild ID, member ID, and a purchasable
 // shop item.
 func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
-	log.Trace("--> shop.PurchaseItem")
-	defer log.Trace("<-- shop.PurchaseItem")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	bankAccount := bank.GetAccount(guildID, memberID)
@@ -147,9 +139,6 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 // Determine if a purchase has expired. This marks the purchase as expired and undoes the effects of the purchase
 // if it has expired.
 func (p *Purchase) HasExpired() bool {
-	log.Trace("--> shop.Purchase.HasExpired")
-	defer log.Trace("<-- shop.Purchase.HasExpired")
-
 	if p.IsExpired {
 		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase has already been marked as expired")
 		return true
@@ -211,9 +200,6 @@ func (p *Purchase) HasExpired() bool {
 
 // Return the purchase to the shop.
 func (p *Purchase) Return() error {
-	log.Trace("--> shop.Purchase.Return")
-	defer log.Trace("<-- shop.Purchase.Return")
-
 	bankAccount := bank.GetAccount(p.GuildID, p.MemberID)
 	err := bankAccount.DepositToCurrentOnly(p.Item.Price)
 	if err != nil {
@@ -242,9 +228,6 @@ func (p *Purchase) Return() error {
 
 // Update updates the purchase with the given autoRenew value.
 func (p *Purchase) Update(autoRenew bool) error {
-	log.Trace("--> shop.Purchase.Update")
-	defer log.Trace("<-- shop.Purchase.Update")
-
 	if p.AutoRenew == autoRenew {
 		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase already has the same autoRenew value")
 		return fmt.Errorf("purchase already has the same autoRenew value")
@@ -263,9 +246,6 @@ func (p *Purchase) Update(autoRenew bool) error {
 
 // checkForExpiredPurchases checks once a day to see if any purchases that may be expired have expired.
 func checkForExpiredPurchases() {
-	log.Trace("--> shop.checkForExpiredPurchases")
-	defer log.Trace("<-- shop.checkForExpiredPurchases")
-
 	for {
 		filter := bson.D{
 			{Key: "is_expired", Value: false},

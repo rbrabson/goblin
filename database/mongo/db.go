@@ -25,9 +25,6 @@ type MongoDB struct {
 
 // NewDatabase creates a database to load and save documents in a MongoDB database.
 func NewDatabase() *MongoDB {
-	log.Trace("--> mongo.NewDatabase")
-	defer log.Trace("<-- mongo.NewDatabase")
-
 	uri := os.Getenv("MONGODB_URI")
 	dbname := os.Getenv("MONGODB_DATABASE")
 
@@ -60,9 +57,6 @@ func NewDatabase() *MongoDB {
 
 // FindAllIDs returns the ID of each document in a collection in the database.
 func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]string, error) {
-	log.Trace("--> mongoDB.FindAllIDs")
-	defer log.Trace("<-- mongoDB.FindAllIDs")
-
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 
@@ -105,9 +99,6 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 
 // FindMany reads all documents from the database that match the filter
 func (m *MongoDB) FindMany(collectionName string, filter interface{}, data interface{}, sortBy interface{}, limit int64) error {
-	log.Trace("--> mongo.FindMany")
-	defer log.Trace("<-- mongoDB.FindMany")
-
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 
@@ -140,9 +131,6 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 
 // FindOne loads a document identified by documentID from the collection into data.
 func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interface{}) error {
-	log.Trace("--> mongoDB.FindOne")
-	defer log.Trace("<-- mongoDB.FindOne")
-
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 
@@ -170,9 +158,6 @@ func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interf
 
 // UpdateOrInsert stores data into a documeent within the specified collection.
 func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data interface{}) error {
-	log.Trace("--> mongoDB.Update")
-	defer log.Trace("<-- mongoDB.Update")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -194,9 +179,6 @@ func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data
 
 // Write stores data into multiple documeents within the specified collection.
 func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data interface{}) error {
-	log.Trace("--> mongoDB.UpdateMany")
-	defer log.Trace("<-- mongoDB.UpdateMany")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -218,9 +200,6 @@ func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data int
 
 // Count returns the count of documents that match the filter.
 func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) {
-	log.Trace("--> mongoDB.Count")
-	defer log.Trace("<-- mongoDB.Count")
-
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 
@@ -242,9 +221,6 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 
 // Delete removes a document from the collection that matches the filter.
 func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
-	log.Trace("--> mongoDB.Delete")
-	defer log.Trace("<-- mongoDB.Delete")
-
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 
@@ -268,9 +244,6 @@ func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
 
 // Delete removes all documents from the collection that matche the filter.
 func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
-	log.Trace("--> mongoDB.DeleteMany")
-	defer log.Trace("<-- mongoDB.DeleteMany")
-
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 
@@ -294,9 +267,6 @@ func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
 
 // Close closes the mongo database client connection
 func (m *MongoDB) Close() error {
-	log.Trace("--> mongoDB.Close")
-	defer log.Trace("<-- mongoDB.Close")
-
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 	if err := m.Client.Disconnect(ctx); err != nil {

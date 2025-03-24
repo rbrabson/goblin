@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
 	log "github.com/sirupsen/logrus"
 )
@@ -18,38 +17,44 @@ type Role ShopItem
 
 // GetRole retrieves a role from the shop by its name for a specific guild.
 func GetRole(guildID string, name string) *Role {
-	log.Trace("--> shop.GetRole")
-	defer log.Trace("<-- shop.GetRole")
-
-	item := GetShopItem(guildID, name, ROLE)
+	item := getShopItem(guildID, name, ROLE)
 	role := Role(*item)
 	return &role
 }
 
 // NewRole creates a new role for the shop.
 func NewRole(guildID string, name string, description string, price int, duration string, autoRenewable bool) *Role {
-	log.Trace("--> shop.NewRole")
-	defer log.Trace("<-- shop.NewRole")
-
-	item := NewShopItem(guildID, name, description, ROLE, price, duration, autoRenewable)
+	item := newShopItem(guildID, name, description, ROLE, price, duration, autoRenewable)
 	role := (*Role)(item)
 	return role
 }
 
+// Update updates the role's properties in the shop.
+func (r *Role) Update(name string, description string, price int, duration string, autoRenewable bool) error {
+	item := (*ShopItem)(r)
+	return item.update(name, description, ROLE, price, duration, autoRenewable)
+}
+
 // Purchase allows a member to purchase the role from the shop.
 func (r *Role) Purchase(memberID string, renew bool) (*Purchase, error) {
-	log.Trace("--> shop.Role.Purchase")
-	defer log.Trace("<-- shop.Role.Purchase")
-
 	item := ShopItem(*r)
-	return item.Purchase(memberID, renew)
+	return item.purchase(memberID, renew)
+}
+
+// AddToShop adds the role to the shop. If the role already exists, an error is returned.
+func (r *Role) AddToShop(s *Shop) error {
+	item := (*ShopItem)(r)
+	return item.addToShop(s)
+}
+
+// RemoveFromShop removes the role from the shop. If the role does not exist, an error is returned.
+func (r *Role) RemoveFromShop(s *Shop) error {
+	item := (*ShopItem)(r)
+	return item.removeFromShop(s)
 }
 
 // rolePurchaseChecks performs checks to see if a role can be purchased.
 func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
-	log.Trace("--> shop.rolePurchaseChecks")
-	defer log.Trace("<-- shop.rolePurchaseChecks")
-
 	// Verify the role exists on the server
 	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
 	if guildRole == nil {
@@ -63,24 +68,17 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 	}
 
 	// Make sure the role is still available in the shop
-	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
+	shopItem := getShopItem(i.GuildID, roleName, ROLE)
 	if shopItem == nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
 		return fmt.Errorf("role `%s` not found in the shop", roleName)
 	}
 
-	// Make sure the role hasn't already been purchased
-	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if purchase != nil && !purchase.IsExpired {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Debug("role already purchased")
-		return fmt.Errorf("you have already purchased role `%s`", roleName)
+	// Make common checks for all purchases
+	err := purchaseChecks(i.GuildID, i.Member.User.ID, ROLE, roleName)
+	if err != nil {
+		return err
 	}
 
-	// Make sure the member has sufficient funds to purchase the role
-	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
-	if bankAccount.CurrentBalance < shopItem.Price {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Debug("insufficient funds")
-		return fmt.Errorf("you do not have enough credits to purchase the `%s` role", roleName)
-	}
 	return nil
 }

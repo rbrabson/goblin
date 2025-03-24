@@ -66,9 +66,6 @@ var (
 
 // guildAdmin handles the guildAdmin command.
 func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.guildAdmin")
-	defer log.Trace("<-- server.guildAdmin")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -95,9 +92,6 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // role handles the role subcommands for the server command.
 func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.role")
-	defer log.Trace("<-- server.role")
-
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
 	case "add":
@@ -113,9 +107,6 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // addRole adds a role to the list of admin roles for the server.
 func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.addRole")
-	defer log.Trace("<-- server.addRole")
-
 	guildID := i.GuildID
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	roleName := options[0].StringValue()
@@ -135,9 +126,6 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // removeRole removes a role from the list of admin roles for the server.
 func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.removeRole")
-	defer log.Trace("<-- server.removeRole")
-
 	guildID := i.GuildID
 	options := i.ApplicationCommandData().Options[0].Options
 	roleName := options[0].StringValue()
@@ -157,9 +145,6 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // listRoles lists the admin roles for the server.
 func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.listRoles")
-	defer log.Trace("<-- server.listRoles")
-
 	guildID := i.GuildID
 
 	// Get the server configuration

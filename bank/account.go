@@ -24,9 +24,6 @@ type Account struct {
 // GetAccount gets the bank account for the given member. If the account doesn't
 // exist, then nil is returned.
 func GetAccount(guildID string, memberID string) *Account {
-	log.Trace("--> bank.Bank.getAccount")
-	defer log.Trace("<-- bank.Bank.getAccount")
-
 	account := readAccount(guildID, memberID)
 	if account == nil {
 		account = newAccount(guildID, memberID)
@@ -37,17 +34,11 @@ func GetAccount(guildID string, memberID string) *Account {
 
 // GetAcconts returns a list of all accounts for the given bank
 func GetAccounts(guildID string, filter interface{}, sortBy interface{}, limit int64) []*Account {
-	log.Trace("--> bank.Bank.GetAccounts")
-	defer log.Trace("<-- bank.Bank.GetAccounts")
-
 	return readAccounts(guildID, filter, sortBy, limit)
 }
 
 // Deposit adds the amount to the balance of the account.
 func (account *Account) Deposit(amt int) error {
-	log.Trace("--> bank.Account.Deposit")
-	defer log.Trace("<-- bank.Account.Deposit")
-
 	account.CurrentBalance += amt
 	account.MonthlyBalance += amt
 	account.LifetimeBalance += amt
@@ -59,9 +50,6 @@ func (account *Account) Deposit(amt int) error {
 
 // DepositToCurrentOnly adds the amount to the balance of the account.
 func (account *Account) DepositToCurrentOnly(amt int) error {
-	log.Trace("--> bank.Account.DepositToCurrentOnly")
-	defer log.Trace("<-- bank.Account.DepositToCurrentOnly")
-
 	account.CurrentBalance += amt
 
 	err := writeAccount(account)
@@ -71,9 +59,6 @@ func (account *Account) DepositToCurrentOnly(amt int) error {
 
 // Withdraw deducts the amount from the balance of the account
 func (account *Account) Withdraw(amt int) error {
-	log.Trace("--> bank.Account.Withdraw")
-	defer log.Trace("<-- bank.Account.Withdraw")
-
 	if amt > account.CurrentBalance {
 		log.WithFields(log.Fields{"guild": account.GuildID, "member": account.GuildID, "balance": account.CurrentBalance, "amount": amt}).Warn("insufficient funds for withdrawl")
 		return ErrInsufficentFunds
@@ -90,9 +75,6 @@ func (account *Account) Withdraw(amt int) error {
 // WithdrawFromCurrentOnly deducts the amount from the current balance of the account. This
 // is useful for transactions that should not affect the monthly or lifetime balance.
 func (account *Account) WithdrawFromCurrentOnly(amount int) error {
-	log.Trace("--> bank.Account.WithdrawFromCurrentOnly")
-	defer log.Trace("<-- bank.Account.WithdrawFromCurrentOnly")
-
 	if amount > account.CurrentBalance {
 		log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amount}).Warn("insufficient funds for withdrawal")
 		return ErrInsufficentFunds
@@ -107,9 +89,6 @@ func (account *Account) WithdrawFromCurrentOnly(amount int) error {
 // SetBalance sets the account's balance to the specified amount. This is typically used
 // by an admin to correct an error in the system.
 func (account *Account) SetBalance(balance int) error {
-	log.Trace("--> bank.Account.SetBalance")
-	defer log.Trace("<-- bank.Account.SetBalance")
-
 	account.CurrentBalance = balance
 
 	if balance > account.LifetimeBalance {
@@ -127,9 +106,6 @@ func (account *Account) SetBalance(balance int) error {
 
 // newAccount creates a new bank account for a member in the guild (server).
 func newAccount(guildID string, memberID string) *Account {
-	log.Trace("--> bank.newAccount")
-	defer log.Trace("<-- bank.newAccount")
-
 	bank := GetBank(guildID)
 	account := &Account{
 		GuildID:         guildID,

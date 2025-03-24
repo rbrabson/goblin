@@ -107,9 +107,6 @@ var (
 
 // bankAdmin routes the bankAdmin commands to the proper handers.
 func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bank.bankAdmin")
-	defer log.Trace("<-- bank.bankAdmin")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -145,9 +142,6 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // bank routes the bank commands to the proper handlers.
 func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bank.bank")
-	defer log.Trace("<-- bank.bank")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -167,9 +161,6 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // account gets information about the member's bank account.
 func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bank.account")
-	defer log.Trace("<-- bank.account")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	account := GetAccount(i.GuildID, i.Member.User.ID)
@@ -187,9 +178,6 @@ func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // setAccountBalance sets the balance of the account for the member of the guild to the specified amount
 func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bank.setAccountBalance")
-	defer log.Trace("<-- bank.setAccountBalance")
-
 	var id string
 	var amount int
 	options := i.ApplicationCommandData().Options[0].Options
@@ -233,9 +221,6 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // setDefaultBalance sets the default balance for bank for the guild (server).
 func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bank.setDefaultBalance")
-	defer log.Trace("<-- bank.setDefaultBalance")
-
 	var balance int
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
@@ -263,9 +248,6 @@ func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // setBankName sets the name of the bank for the guild (server).
 func setBankName(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bank.setBankName")
-	defer log.Trace("<-- bank.setBankName")
-
 	var name string
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
@@ -293,9 +275,6 @@ func setBankName(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // setBankCurrency sets the name of the currency used by the bank for the guild (server).
 func setBankCurrency(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bank.setBankCurrency")
-	defer log.Trace("<-- bank.setBankCurrency")
-
 	var currency string
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
@@ -323,9 +302,6 @@ func setBankCurrency(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // getBankInfo gets information about the bank for the guild (server).
 func getBankInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bank.getBankInfo")
-	defer log.Trace("<-- bank.getBankInfo")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	bank := GetBank(i.GuildID)

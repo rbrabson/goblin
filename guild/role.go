@@ -22,9 +22,6 @@ func SetDB(database *mongo.MongoDB) {
 // If the guild is not found, it returns nil.
 // If there are no admin roles, it returns an empty slice.
 func GetAdminRoles(guildID string) []string {
-	log.Trace("--> role.GetAdminRoles")
-	defer log.Trace("<-- role.GetAdminRoles")
-
 	filter := bson.M{"guild_id": guildID}
 	server := &Guild{}
 	err := db.FindOne(GUILD_COLLECTION, filter, server)
@@ -40,9 +37,6 @@ func GetAdminRoles(guildID string) []string {
 
 // GetGuildRoles returns the list of roles for a guild.
 func GetGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
-	log.Trace("--> role.GetGuildRoles")
-	defer log.Trace("<-- Gole.getGuildRoles")
-
 	guildRoles, err := s.GuildRoles(guildID)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": guildID, "error": err, "guildRoles": guildRoles}).Error("failed to get guild roles")
@@ -54,9 +48,6 @@ func GetGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
 // GetGuildRole returns the role for a guild with the given name.
 // If the role is not found, it returns nil.
 func GetGuildRole(s *discordgo.Session, guildID string, roleName string) *discordgo.Role {
-	log.Trace("--> role.GetGuildRole")
-	defer log.Trace("<-- role.GetGuildRole")
-
 	guildRoles := GetGuildRoles(s, guildID)
 	for _, role := range guildRoles {
 		if role.Name == roleName {
@@ -69,9 +60,6 @@ func GetGuildRole(s *discordgo.Session, guildID string, roleName string) *discor
 
 // GetMemberRoles returns the list of roles names for a member with the given set of role IDs
 func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
-	log.Trace("--> role.GetMemberRoles")
-	defer log.Trace("<-- role.GetMemberRoles")
-
 	roleNames := make([]string, 0, len(roleIDs))
 	for _, roleID := range roleIDs {
 		for _, role := range guildRoles {
@@ -86,9 +74,6 @@ func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
 // MemberHasRole returns a boolean indicating whether a member has a specific role in the guild.
 // It returns true if the member has the role, false otherwise.
 func MemberHasRole(s *discordgo.Session, guildID string, memberID string, role *discordgo.Role) bool {
-	log.Trace("--> role.MemberHasRole")
-	defer log.Trace("<-- role.MemberHasRole")
-
 	// Check to see if the member already has the role
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {
@@ -106,9 +91,6 @@ func MemberHasRole(s *discordgo.Session, guildID string, memberID string, role *
 
 // AssignRole assigns a role to the member in the guild.
 func AssignRole(s *discordgo.Session, guildID string, memberID string, roleName string) error {
-	log.Trace("--> role.AssignRole")
-	defer log.Trace("<-- role.AssignRole")
-
 	guildRoles := GetGuildRoles(s, guildID)
 	roleID := ""
 	for _, role := range guildRoles {
@@ -133,9 +115,6 @@ func AssignRole(s *discordgo.Session, guildID string, memberID string, roleName 
 
 // UnAssignRole removes a role to the member in the guild.
 func UnAssignRole(s *discordgo.Session, guildID string, memberID string, roleName string) error {
-	log.Trace("--> role.UnAssignRole")
-	defer log.Trace("<-- role.UnAssignRole")
-
 	guildRoles := GetGuildRoles(s, guildID)
 	roleID := ""
 	for _, role := range guildRoles {
@@ -160,9 +139,6 @@ func UnAssignRole(s *discordgo.Session, guildID string, memberID string, roleNam
 
 // CheckAdminRole checks if a member has any admin role in the server.
 func CheckAdminRole(adminRoles []string, memberRoles []string) bool {
-	log.Trace("--> role.CheckAdminRole")
-	defer log.Trace("<-- role.CheckAdminRole")
-
 	if len(adminRoles) == 0 {
 		log.WithFields(log.Fields{"adminRoles": adminRoles}).Trace("not using admin roles")
 		return true
@@ -182,9 +158,6 @@ func CheckAdminRole(adminRoles []string, memberRoles []string) bool {
 // It returns true if the member has any admin role in the server.
 // It returns false if the member does not have any admin role.
 func IsAdmin(s *discordgo.Session, guildID string, memberID string) bool {
-	log.Trace("--> guild.IsAdmin")
-	defer log.Trace("<-- guild.IsAdmin")
-
 	guildRoles := GetGuildRoles(s, guildID)
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {

@@ -11,7 +11,6 @@ import (
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -80,9 +79,6 @@ var (
 
 // leaderboardAdmin updates the leaderboardAdmin channel.
 func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> leaderboard.leaderboard")
-	defer log.Trace("<-- leaderboard.leaderboard")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -109,9 +105,6 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // leaderboard handles the leaderboard commands.
 func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> leaderboard.leaderboard")
-	defer log.Trace("<-- leaderboard.leaderboard")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -151,9 +144,6 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // currentLeaderboard returns the top ranked accounts for the current balance.
 func currentLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> leader.currentLeaderboard")
-	defer log.Trace("<-- leaderboard.currentLeaderboard")
-
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getCurrentLeaderboard()
 	sendLeaderboard(s, i, "Current Leaderboard", leaderboard)
@@ -161,9 +151,6 @@ func currentLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // monthlyLeaderboard returns the top ranked accounts for the current months.
 func monthlyLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> leaderboard.monthlyLeaderboard")
-	defer log.Trace("<-- leaderboard.monthlyLeaderboard")
-
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getMonthlyLeaderboard()
 	sendLeaderboard(s, i, "Monthly Leaderboard", leaderboard)
@@ -171,9 +158,6 @@ func monthlyLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // lifetimeLeaderboard returns the top ranked accounts for the lifetime of the server.
 func lifetimeLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> leaderboard.lifetimeLeaderboard")
-	defer log.Trace("<-- leaderboard.lifetimeLeaderboard")
-
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getLifetimeLeaderboard()
 	sendLeaderboard(s, i, "Lifetime Leaderboard", leaderboard)
@@ -181,9 +165,6 @@ func lifetimeLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // setLeaderboardChannel sets the server channel to which the monthly leaderboard is published.
 func setLeaderboardChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> setLeaderboardChannel")
-	defer log.Trace("<-- setLeaderboardChannel")
-
 	lb := getLeaderboard(i.GuildID)
 	channelID := i.ApplicationCommandData().Options[0].Options[0].StringValue()
 	lb.setChannel(channelID)
@@ -196,9 +177,6 @@ func setLeaderboardChannel(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 // getLeaderboardInfo returns the leaderboard configuration for the server.
 func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> getLeaderboardInfo")
-	defer log.Trace("<-- getLeaderboardInfo")
-
 	lb := getLeaderboard(i.GuildID)
 	resp := disgomsg.Response{
 		Content: fmt.Sprintf("channel ID for the monthly leaderboard is %s.", lb.ChannelID),
@@ -208,9 +186,6 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // sendLeaderboard is a utility function that sends an economy leaderboard to Discord.
 func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title string, accounts []*bank.Account) {
-	log.Trace("--> sendLeaderboard")
-	defer log.Trace("<-- sendLeaderboard")
-
 	// Make sure the guild member's name is updated
 	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
 
@@ -228,9 +203,6 @@ func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title
 
 // rank returns the rank of the member in the leaderboard.
 func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> leaderboard.rank")
-	defer log.Trace("<-- leaderboard.rank")
-
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	lb := getLeaderboard(i.GuildID)
 	currentRank := getCurrentRanking(lb, account)
@@ -246,9 +218,6 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // formatAccounts formats the leaderboard to be sent to a Discord server
 func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
-	log.Trace("--> leaderboard.formatAccounts")
-	defer log.Trace("<-- leaderboard.formatAccounts")
-
 	var tableBuffer strings.Builder
 	table := tablewriter.NewWriter(&tableBuffer)
 	table.SetAutoWrapText(false)

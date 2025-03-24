@@ -14,9 +14,6 @@ const (
 
 // readConfig reads the configuration from the database. If the config does not exist, it returns nil.
 func readConfig(guildID string) (*Config, error) {
-	log.Trace("--> shop.readConfig")
-	defer log.Trace("<-- shop.readConfig")
-
 	filter := bson.M{"guild_id": guildID}
 	var config *Config
 	err := db.FindOne(CONFIG_COLLECTION, filter, &config)
@@ -31,9 +28,6 @@ func readConfig(guildID string) (*Config, error) {
 
 // writeConfig writes the configuration to the database.
 func writeConfig(config *Config) error {
-	log.Trace("--> shop.writeConfig")
-	defer log.Trace("<-- shop.writeConfig")
-
 	var filter bson.D
 	if config.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: config.ID}}
@@ -52,9 +46,6 @@ func writeConfig(config *Config) error {
 
 // readShopItems reads all the shop items for the given guild.
 func readShopItems(guildID string) ([]*ShopItem, error) {
-	log.Trace("--> shop.readShopItems")
-	defer log.Trace("<-- shop.readShopItems")
-
 	filter := bson.M{"guild_id": guildID}
 	sortBy := bson.M{"name": 1}
 	var items []*ShopItem
@@ -70,9 +61,6 @@ func readShopItems(guildID string) ([]*ShopItem, error) {
 
 // readShopItem reads the shop item with the given name and type for the given guild.
 func readShopItem(guildID string, name string, itemType string) (*ShopItem, error) {
-	log.Trace("--> shop.readShopItem")
-	defer log.Trace("<-- shop.readShopItem")
-
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "name", Value: name}, {Key: "type", Value: itemType}}
 	var item *ShopItem
 	err := db.FindOne(SHOP_ITEM_COLLECTION, filter, &item)
@@ -87,9 +75,6 @@ func readShopItem(guildID string, name string, itemType string) (*ShopItem, erro
 
 // writeShopItem writes the shop item to the database.
 func writeShopItem(item *ShopItem) error {
-	log.Trace("--> shop.writeShopItem")
-	defer log.Trace("<-- shop.writeShopItem")
-
 	var filter bson.D
 	if item.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: item.ID}}
@@ -108,9 +93,6 @@ func writeShopItem(item *ShopItem) error {
 
 // deleteShopItem deletes the shop item from the database.
 func deleteShopItem(item *ShopItem) error {
-	log.Trace("--> shop.deleteShopItem")
-	defer log.Trace("<-- shop.deleteShopItem")
-
 	var filter bson.D
 	if item.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: item.ID}}
@@ -129,9 +111,6 @@ func deleteShopItem(item *ShopItem) error {
 
 // readAllPurchases reads all the purchases from the database that match the input filter
 func readAllPurchases(filter interface{}) ([]*Purchase, error) {
-	log.Trace("--> shop.readAllPurchases")
-	defer log.Trace("<-- shop.readAllPurchases")
-
 	var items []*Purchase
 	err := db.FindMany(PURCHASE_COLLECTION, filter, &items, bson.D{}, 0)
 	if err != nil {
@@ -145,9 +124,6 @@ func readAllPurchases(filter interface{}) ([]*Purchase, error) {
 
 // readPurchases reads all the purchases for the member in the given guild.
 func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
-	log.Trace("--> shop.readPurchases")
-	defer log.Trace("<-- shop.readPurchases")
-
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	sortBy := bson.M{"name": 1}
 	var items []*Purchase
@@ -163,9 +139,6 @@ func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 
 // readPurchase reads the purchase with the given name and type for the given guild.
 func readPurchase(guildID string, memberID string, itemName string, itemType string) (*Purchase, error) {
-	log.Trace("--> shop.readPurchases")
-	defer log.Trace("<-- shop.readPurchases")
-
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}, {Key: "name", Value: itemName}, {Key: "type", Value: itemType}, {Key: "is_expired", Value: false}}
 	var item Purchase
 	err := db.FindOne(PURCHASE_COLLECTION, filter, &item)
@@ -180,9 +153,6 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 
 // writePurchases writes the purchase to the database.
 func writePurchase(item *Purchase) error {
-	log.Trace("--> shop.writeShopItem")
-	defer log.Trace("<-- shop.writeShopItem")
-
 	var filter bson.D
 	if item.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: item.ID}}
@@ -201,9 +171,6 @@ func writePurchase(item *Purchase) error {
 
 // deletePurchase deletes the purchase from the database.
 func deletePurchase(purchase *Purchase) error {
-	log.Trace("--> shop.deletePurchase")
-	defer log.Trace("<-- shop.deletePurchase")
-
 	var filter bson.D
 	if purchase.Item.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: purchase.Item.ID}}

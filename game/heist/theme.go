@@ -49,9 +49,6 @@ func GetThemeNames(guildID string) ([]string, error) {
 
 // GetThemes returns all themes for a guild.
 func GetThemes(guildID string) []*Theme {
-	log.Trace("--> heist.GetThemes")
-	defer log.Trace("<-- heist.GetThemes")
-
 	themes, err := readAllThemes(guildID)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "error": err}).Warn("unable to read themes")
@@ -63,9 +60,6 @@ func GetThemes(guildID string) []*Theme {
 
 // GetTheme returns the theme for a guild
 func GetTheme(guildID string) *Theme {
-	log.Trace("--> heist.GetTheme")
-	defer log.Trace("<-- heist.GetTheme")
-
 	config := GetConfig(guildID)
 	theme, err := readTheme(guildID, config.Theme)
 	if err == nil && theme != nil {
@@ -85,9 +79,6 @@ func GetTheme(guildID string) *Theme {
 // readThemeFromFile returns the default theme for a guild. If the theme can't be read
 // from the configuration file or can't be decoded, then a default theme is returned
 func readThemeFromFile(guildID string) *Theme {
-	log.Trace("--> heist.readThemeFromFile")
-	defer log.Trace("<-- heist.readThemeFromFile")
-
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "heist", "themes", configTheme+".json")

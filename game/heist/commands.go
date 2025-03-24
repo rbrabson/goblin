@@ -223,9 +223,6 @@ var (
 
 // config routes the configuration commands to the proper handlers.
 func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> heist.config")
-	defer log.Trace("<-- heist.config")
-
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
 	case "cost":
@@ -247,9 +244,6 @@ func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // heistAdmin routes the commands to the subcommand and subcommandgroup handlers
 func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> heist.heistAmin")
-	defer log.Trace("<-- heist.heistAdmin")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -283,9 +277,6 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // heist routes the commands to the subcommand and subcommandgroup handlers
 func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> heist")
-	defer log.Trace("<-- heist")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",
@@ -309,9 +300,6 @@ func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // theme routes the theme commands to the proper handlers.
 func theme(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> heist.theme")
-	defer log.Trace("<-- heist.theme")
-
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
 	case "list":
@@ -323,9 +311,6 @@ func theme(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // planHeist plans a new heist
 func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> heist.planHeist")
-	defer log.Trace("<-- heist.planHeist")
-
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
@@ -404,9 +389,6 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // waitForHeistToStart waits until the planning stage for the heist expires.
 func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) {
-	log.Trace("--> heist.waitHeist")
-	defer log.Trace("<-- hesit.waitHeist")
-
 	// Wait for the heist to be ready to start
 	waitTime := heist.StartTime.Add(heist.config.WaitTime)
 	log.WithFields(log.Fields{"guild": heist.GuildID, "waitTime": waitTime, "configWaitTime": heist.config.WaitTime, "currentTime": time.Now()}).Debug("wait for heist to start")
@@ -425,9 +407,6 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 
 // sendHeistResults sends the results of the heist to the channel
 func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res *HeistResult) {
-	log.Trace("--> heist.sendHeistResults")
-	defer log.Trace("<-- heist.sendHeistResults")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 	theme := GetTheme(i.GuildID)
 
@@ -517,9 +496,6 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 
 // joinHeist attempts to join a heist that is being planned
 func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> joinHeist")
-	defer log.Trace("<-- joinHeist")
-
 	heist := currentHeists[i.GuildID]
 	if heist == nil {
 		theme := GetTheme(i.GuildID)
@@ -557,9 +533,6 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // playerStats shows a player's heist stats
 func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> playerStats")
-	defer log.Trace("<-- playerStats")
-
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	theme := GetTheme(i.GuildID)
@@ -646,9 +619,6 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // bailoutPlayer bails a player player out from jail. This defaults to the player initiating the command, but can
 // be another player as well.
 func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> bailoutPlayer")
-	log.Trace("<-- bailoutPlayer")
-
 	var playerID string
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
@@ -738,9 +708,6 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // heistMessage sends the main command used to plan, join and leave a heist. It also handles the case where
 // the heist starts, disabling the buttons to join/leave/cancel the heist.
 func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist, member *HeistMember, action string) error {
-	log.Trace("--> heistMessage")
-	defer log.Trace("<-- heistMessage")
-
 	var status string
 	var buttonDisabled bool
 	switch action {
@@ -828,9 +795,6 @@ func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *H
 
 // Reset resets the heist in case it hangs
 func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> resetHeist")
-	defer log.Trace("<-- resetHeist")
-
 	mute := channel.NewChannelMute(s, i)
 	defer mute.UnmuteChannel()
 
@@ -857,9 +821,6 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // resetVaults sets the vaults within the guild to their maximum value.
 func resetVaults(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> resetVaults")
-	defer log.Trace("<-- resetVaults")
-
 	ResetVaultsToMaximumValue(i.GuildID)
 	resp := disgomsg.Response{
 		Content: "Vaults have been reset to their maximum value",
@@ -869,9 +830,6 @@ func resetVaults(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // listTargets displays a list of available heist targets.
 func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> listTargets")
-	defer log.Trace("<-- listTargets")
-
 	theme := GetTheme(i.GuildID)
 	targets := GetTargets(i.GuildID, theme.Name)
 
@@ -914,9 +872,6 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // clearMember clears the criminal state of the player.
 func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> clearMember")
-	log.Trace("<-- clearMember")
-
 	memberID := i.ApplicationCommandData().Options[0].Options[0].StringValue()
 	member := guild.GetMember(i.GuildID, memberID)
 	heistMember := getHeistMember(i.GuildID, memberID)
@@ -929,9 +884,6 @@ func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // listThemes returns the list of available themes that may be used for heists
 func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> listThemes")
-	defer log.Trace("<-- listThemes")
-
 	themes, err := GetThemeNames(i.GuildID)
 	if err != nil {
 		log.Warning("Unable to get the themes, error:", err)
@@ -966,9 +918,6 @@ func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // setTheme sets the heist theme to the one specified in the command
 func setTheme(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> setTheme")
-	defer log.Trace("<-- setTheme")
-
 	var themeName string
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	for _, option := range options {
@@ -997,9 +946,6 @@ func setTheme(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // configCost sets the cost to plan or join a heist
 func configCost(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> configCost")
-	defer log.Trace("<-- configCost")
-
 	config := GetConfig(i.GuildID)
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	cost := options[0].IntValue()
@@ -1015,9 +961,6 @@ func configCost(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // configSentence sets the base aprehension time when a player is apprehended.
 func configSentence(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> configSentence")
-	defer log.Trace("<-- configSentence")
-
 	options := i.ApplicationCommandData().Options[0]
 	if options == nil {
 		resp := disgomsg.Response{
@@ -1059,9 +1002,6 @@ func configSentence(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // configPatrol sets the time authorities will prevent a new heist following one being completed.
 func configPatrol(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> configPatrol")
-	defer log.Trace("<-- configPatrol")
-
 	config := GetConfig(i.GuildID)
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	patrol := options[0].IntValue()
@@ -1078,9 +1018,6 @@ func configPatrol(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // configBail sets the base cost of bail.
 func configBail(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> configBail")
-	defer log.Trace("<-- configBail")
-
 	config := GetConfig(i.GuildID)
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	bail := options[0].IntValue()
@@ -1097,9 +1034,6 @@ func configBail(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // configDeath sets how long players remain dead.
 func configDeath(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> configDeath")
-	defer log.Trace("<-- configDeath")
-
 	config := GetConfig(i.GuildID)
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	death := options[0].IntValue()
@@ -1116,9 +1050,6 @@ func configDeath(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // configWait sets how long players wait for others to join the heist.
 func configWait(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> configWait")
-	defer log.Trace("<-- configWait")
-
 	config := GetConfig(i.GuildID)
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	wait := options[0].IntValue()
@@ -1135,9 +1066,6 @@ func configWait(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // configInfo returns the configuration for the Heist bot on this server.
 func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> configInfo")
-	defer log.Trace("<-- configInfo")
-
 	config := GetConfig(i.GuildID)
 
 	embed := &discordgo.MessageEmbed{

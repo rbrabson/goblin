@@ -55,9 +55,6 @@ type HeistMemberResult struct {
 
 // NewHeist creates a new heist if one is not already underway.
 func NewHeist(guildID string, memberID string) (*Heist, error) {
-	log.Trace("--> heist.NewHeist")
-	defer log.Trace("<-- heist.NewHeist")
-
 	heistLock.Lock()
 	defer heistLock.Unlock()
 
@@ -95,9 +92,6 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 
 // addCrewMember adds a crew member to the heist
 func (h *Heist) AddCrewMember(member *HeistMember) error {
-	log.Trace("--> heist.Heist.AddCrewMember")
-	defer log.Trace("<-- heist.Heist.AddCrewMember")
-
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
 
@@ -114,9 +108,6 @@ func (h *Heist) AddCrewMember(member *HeistMember) error {
 
 // Start runs the heist and returns the results of the heist.
 func (h *Heist) Start() (*HeistResult, error) {
-	log.Trace("--> heist.Heist.Start")
-	defer log.Trace("<-- heist.Heist.Start")
-
 	if len(h.Crew) < 2 {
 		log.WithFields(log.Fields{"guild": h.GuildID}).Error("not enough members to start heist")
 		return nil, ErrNotEnoughMembers{*h.theme}
@@ -209,9 +200,6 @@ func (h *Heist) Start() (*HeistResult, error) {
 
 // End ends the current heist, allowing for the cleanup of the heist.
 func (h *Heist) End() {
-	log.Trace("--> heist.Heist.End")
-	defer log.Trace("<-- heist.Heist.End")
-
 	heistLock.Lock()
 	defer heistLock.Unlock()
 	delete(currentHeists, h.GuildID)
@@ -222,9 +210,6 @@ func (h *Heist) End() {
 
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.
 func heistChecks(h *Heist, member *HeistMember) error {
-	log.Trace("--> heist.heistChecks")
-	defer log.Trace("<-- heist.heistChecks")
-
 	member.UpdateStatus()
 
 	if slices.ContainsFunc(h.Crew, func(m *HeistMember) bool {
@@ -264,9 +249,6 @@ func heistChecks(h *Heist, member *HeistMember) error {
 // calculateSuccessRate returns the liklihood of a successful raid for each
 // member of the heist crew.
 func calculateSuccessRate(heist *Heist, target *Target) int {
-	log.Trace("--> heist.calculateSuccessRate")
-	defer log.Trace("<-- heist.calculateSuccessRate")
-
 	bonus := calculateBonusRate(heist, target)
 	successChance := int(math.Round(target.Success)) + bonus
 	log.WithFields(log.Fields{"BonusRate": bonus, "TargetSuccess": math.Round(target.Success), "SuccessChance": successChance}).Debug("Success Rate")
@@ -277,9 +259,6 @@ func calculateSuccessRate(heist *Heist, target *Target) int {
 // for a heist. The closer you are to the maximum crew size, the larger
 // the bonus amount.
 func calculateBonusRate(heist *Heist, target *Target) int {
-	log.Trace("--> heist.calculateBonus")
-	defer log.Trace("<-- heist.calculateBonus")
-
 	percent := 100 * len(heist.Crew) / target.CrewSize
 	log.WithField("percent", percent).Debug("percentage for calculating success bonus")
 	if percent <= 20 {
@@ -299,9 +278,6 @@ func calculateBonusRate(heist *Heist, target *Target) int {
 
 // calculateCredits determines the number of credits stolen by each surviving crew member.
 func calculateCredits(results *HeistResult) {
-	log.Trace("--> heist.calculateCredits")
-	defer log.Trace("<-- heist.calculateCredits")
-
 	// Take 3/4 of the amount of the vault, and distribute it among those who survived.
 	numEscaped := len(results.Escaped)
 	numApprehended := len(results.Apprehended)

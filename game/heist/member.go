@@ -53,9 +53,6 @@ type HeistMember struct {
 
 // getHeistMember gets a member for heists. If the member does not exist, then nil is returned.
 func getHeistMember(guildID string, memberID string) *HeistMember {
-	log.Trace("--> heist.GetHeistMember")
-	defer log.Trace("<-- heist.GetHeistMember")
-
 	member := readMember(guildID, memberID)
 	if member == nil {
 		member = newHeistMember(guildID, memberID)
@@ -68,9 +65,6 @@ func getHeistMember(guildID string, memberID string) *HeistMember {
 // newHeistMember creates a new member for heists. It is called when guild member
 // first plans or joins a heist.
 func newHeistMember(guildID string, memberID string) *HeistMember {
-	log.Trace("--> heist.NewHeistMember")
-	defer log.Trace("<-- heist.NewHeistMember")
-
 	member := &HeistMember{
 		GuildID:       guildID,
 		MemberID:      memberID,
@@ -85,9 +79,6 @@ func newHeistMember(guildID string, memberID string) *HeistMember {
 
 // Apprehended updates the member when they are caught during a heist.
 func (member *HeistMember) Apprehended() {
-	log.Trace("--> heist.Member.Apprehended")
-	log.Trace("<-- heist.Member.Apprehended")
-
 	bailCost := member.heist.config.BailBase
 	if member.Status == OOB {
 		bailCost *= 3
@@ -120,9 +111,6 @@ func (member *HeistMember) Apprehended() {
 
 // Died updates the member when they die during a heist.
 func (member *HeistMember) Died() {
-	log.Trace("--> heist.Member.Died")
-	log.Trace("<-- heist.Member.Died")
-
 	member.BailCost = 0
 	member.CriminalLevel = 0
 	member.Deaths++
@@ -153,9 +141,6 @@ func (member *HeistMember) Died() {
 
 // Escaped updates the member when they successfully escape during a heist.
 func (member *HeistMember) Escaped() {
-	log.Trace("--> heist.Member.Escaped")
-	log.Trace("<-- heist.Member.Escaped")
-
 	member.Spree++
 	writeMember(member)
 
@@ -165,9 +150,6 @@ func (member *HeistMember) Escaped() {
 // UpdateStatus updates the status of the member based on the current time. If the member is in jail
 // or dead, then the status is updated to FREE when the time has expired.
 func (member *HeistMember) UpdateStatus() {
-	log.Trace("--> heist.Member.UpdateStatus")
-	defer log.Trace("<-- heist.Member.UpdateStatus")
-
 	switch member.Status {
 	case APPREHENDED:
 		if member.RemainingJailTime() <= 0 {
@@ -186,9 +168,6 @@ func (member *HeistMember) UpdateStatus() {
 
 // ClearJailAndDeathStatus is called when a player is released from jail or rises from the grave.
 func (member *HeistMember) ClearJailAndDeathStatus() {
-	log.Trace("--> heist.Member.ClearJailAndDeathStatus")
-	log.Trace("<-- heist.Member.ClearJailAndDeathStatus")
-
 	if member.Status == DEAD {
 		log.WithFields(log.Fields{
 			"guildID":     member.GuildID,
@@ -228,9 +207,6 @@ func (member *HeistMember) ClearJailAndDeathStatus() {
 
 // RemainingJailTime returns the amount of time remaining on the player's sentence has been served
 func (member *HeistMember) RemainingJailTime() time.Duration {
-	log.Trace("--> heist.Member.RemainingJailTime")
-	log.Trace("<-- heist.Member.RemainingJailTime")
-
 	if member.JailTimer.Before(time.Now()) {
 		return 0
 	}
@@ -239,9 +215,6 @@ func (member *HeistMember) RemainingJailTime() time.Duration {
 
 // RemainingDeathTime returns the amount of time before the member can be resurected.
 func (member *HeistMember) RemainingDeathTime() time.Duration {
-	log.Trace("--> heist.Member.RemainingDeathTime")
-	log.Trace("<-- heist.Member.RemainingDeathTime")
-
 	if member.DeathTimer.Before(time.Now()) {
 		return 0
 	}

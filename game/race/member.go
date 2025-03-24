@@ -28,9 +28,6 @@ type RaceMember struct {
 
 // GetRaceMember gets a race member. THe member is created if it doesn't exist.
 func GetRaceMember(guildID string, memberID string) *RaceMember {
-	log.Trace("--> race.GetRaceMember")
-	defer log.Trace("<-- race.GetRaceMember")
-
 	member := readRaceMember(guildID, memberID)
 	if member == nil {
 		member = newRaceMember(guildID, memberID)
@@ -42,9 +39,6 @@ func GetRaceMember(guildID string, memberID string) *RaceMember {
 // newRaceMember returns a new race member for the guild. The member is saved to
 // the database.
 func newRaceMember(guildID string, memberID string) *RaceMember {
-	log.Trace("--> race.newRaceMember")
-	defer log.Trace("<-- race.newRaceMember")
-
 	member := &RaceMember{
 		GuildID:  guildID,
 		MemberID: memberID,
@@ -58,9 +52,6 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 
 // WinRace is called when the race member won a race.
 func (m *RaceMember) WinRace(amount int) {
-	log.Trace("--> race.Member.WinRace")
-	log.Trace("<-- race.Member.WinRace")
-
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(amount)
 
@@ -73,9 +64,6 @@ func (m *RaceMember) WinRace(amount int) {
 
 // PlaceInRace is called when the race member places (comes in 2nd) in a race.
 func (m *RaceMember) PlaceInRace(amount int) {
-	log.Trace("--> race.Member.PlaceInRace")
-	log.Trace("<-- race.Member.PlaceInRace")
-
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(amount)
 
@@ -88,9 +76,6 @@ func (m *RaceMember) PlaceInRace(amount int) {
 
 // ShowInRace is called when the race member shows (comes in 3rd) in a race.
 func (m *RaceMember) ShowInRace(amount int) {
-	log.Trace("--> race.Member.ShowInRace")
-	log.Trace("<-- race.Member.ShowInRace")
-
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(amount)
 
@@ -103,9 +88,6 @@ func (m *RaceMember) ShowInRace(amount int) {
 
 // LoseRace is called when the race member fails to win, place or show in a race.
 func (m *RaceMember) LoseRace() {
-	log.Trace("--> race.Member.LoseRace")
-	log.Trace("<-- race.Member.LoseRace")
-
 	m.RacesLost++
 	writeRaceMember(m)
 
@@ -114,9 +96,6 @@ func (m *RaceMember) LoseRace() {
 
 // PlaceBet is used to place a bet on a member of a race.
 func (m *RaceMember) PlaceBet(betAmount int) error {
-	log.Trace("-->race.Member.PlaceBet")
-	defer log.Trace("<-- race.Member.PlaceBet")
-
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	err := bankAccount.Withdraw(betAmount)
 	if err != nil {
@@ -133,9 +112,6 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 
 // WinBet is used when a member wins a bet on a race.
 func (m *RaceMember) WinBet(winnings int) {
-	log.Trace("--> race.Member.WinBet")
-	defer log.Trace("<-- race.Member.WinBet")
-
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	bankAccount.Deposit(winnings)
 
@@ -149,9 +125,6 @@ func (m *RaceMember) WinBet(winnings int) {
 
 // WinBet is used when a member wins a bet on a race.
 func (m *RaceMember) LoseBet() {
-	log.Trace("--> race.Member.LoseBet")
-	defer log.Trace("<-- race.Member.LoseBet")
-
 	writeRaceMember(m)
 
 	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lose bet")

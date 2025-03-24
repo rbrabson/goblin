@@ -48,9 +48,6 @@ func GetConfig(guildID string) *Config {
 // read from the configuration file or decdoded, then a default configuration is
 // returned.
 func readConfigFromFile(guildID string) *Config {
-	log.Trace("--> race.readConfigFromFile")
-	defer log.Trace("<-- race.readConfigFromFile")
-
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "race", "config", configTheme+".json")
@@ -77,9 +74,6 @@ func readConfigFromFile(guildID string) *Config {
 // getDefauiltConfig creates a new race configuration for the guild. The configuration is saved to
 // the database.
 func getDefauiltConfig(guildID string) *Config {
-	log.Trace("--> race.getDefauiltConfig")
-	defer log.Trace("<-- race.getDefauiltConfig")
-
 	config := &Config{
 		GuildID:          guildID,
 		Theme:            "clash",

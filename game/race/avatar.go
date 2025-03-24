@@ -23,9 +23,6 @@ type RaceAvatar struct {
 
 // GetRaceAvatars returns the list of chracters that may be assigned to a member during a race.
 func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
-	log.Trace("--> race.GetRaceAvatars")
-	defer log.Trace("<-- race.GetRaceAvatars")
-
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
 	avatars, err := readAllRacers(filter)
 	if err != nil {
@@ -44,9 +41,6 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 // readRaceAvatarsFromFile reads the list of characters for the theme and guild from the database. If the list
 // does not exist, then an error is returned.
 func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
-	log.Trace("--> race.readRaceAvatarsFromFile")
-	defer log.Trace("<-- race.readRaceAvatarsFromFile")
-
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "race", "avatars", themeName+".json")
 	bytes, err := os.ReadFile(configFileName)
@@ -76,9 +70,6 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 // getDefaultRaceAvatars creates a new list of characters for the guild. The list is saved to
 // the database.
 func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
-	log.Trace("--> race.getDefaultRaceAvatars")
-	defer log.Trace("<-- race.getDefaultRaceAvatars")
-
 	racers := []*RaceAvatar{
 		{
 			GuildID:       guildID,
@@ -303,9 +294,6 @@ func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
 
 // calculateMovement calculates the distance a racer moves on a given turn
 func (avatar *RaceAvatar) calculateMovement(currentTurn int) int {
-	log.Trace("--> calculateMovement")
-	defer log.Trace("<-- calculateMovement")
-
 	source := rand.NewPCG(rand.Uint64(), rand.Uint64())
 	r := rand.New(source)
 	switch avatar.MovementSpeed {

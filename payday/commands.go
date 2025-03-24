@@ -9,7 +9,6 @@ import (
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/internal/format"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -29,9 +28,6 @@ var (
 
 // payday gives some credits to the player every 24 hours.
 func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> payday")
-	defer log.Trace("<-- payday")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.Response{
 			Content: "The system is shutting down.",

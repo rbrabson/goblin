@@ -60,9 +60,6 @@ var (
 
 // help sends a help message for plugin commands.
 func help(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> help")
-	log.Trace("<-- help")
-
 	resp := disgomsg.Response{
 		Content: getHelp(),
 	}
@@ -71,9 +68,6 @@ func help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // adminHelp sends a help message for administrative commands.
 func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> adminHelp")
-	log.Trace("<-- adminHelp")
-
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
 			Content: "You do not have permission to use this command.",
@@ -90,9 +84,6 @@ func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // version shows the version of bot you are running.
 func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> version")
-	defer log.Trace("<-- version")
-
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
 			Content: "You do not have permission to use this command.",
@@ -116,9 +107,6 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // getHelp gets help about commands from all plugins.
 func getHelp() string {
-	log.Trace("--> discord.getMemberHelp")
-	log.Trace("<-- discord.getMemberHelp")
-
 	var sb strings.Builder
 	log.WithFields(log.Fields{"plugins": ListPlugin()}).Debug("plugins")
 	for _, plugin := range ListPlugin() {
@@ -133,9 +121,6 @@ func getHelp() string {
 
 // getAdminHelp returns help about administrative commands for all bots.
 func getAdminHelp() string {
-	log.Trace("--> discord.getAdminHelp")
-	log.Trace("<-- discord.getAdminHelp")
-
 	var sb strings.Builder
 	for _, plugin := range ListPlugin() {
 		for _, str := range plugin.GetAdminHelp() {
@@ -148,9 +133,6 @@ func getAdminHelp() string {
 
 // serverAdmin handles server admin commands.
 func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> serverAdmin")
-	defer log.Trace("<-- serverAdmin")
-
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.Response{
 			Content: "You do not have permission to use this command.",
@@ -172,9 +154,6 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // serverShutdown prepares the server to be serverShutdown.
 func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shutdown")
-	defer log.Trace("<-- shutdown")
-
 	for _, plugin := range ListPlugin() {
 		plugin.Stop()
 	}
@@ -187,9 +166,6 @@ func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // serverStatus returns the status of the server.
 func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> status")
-	defer log.Trace("<-- status")
-
 	plugins := ListPlugin()
 	pluginStatus := make([]*discordgo.MessageEmbedField, 0, len(plugins))
 

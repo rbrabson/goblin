@@ -12,9 +12,6 @@ const (
 // readLeaderboard reads the leaderboard from the database and returns the value, if it exists, or returns nil if the
 // bank does not exist in the database
 func readLeaderboard(guildID string) *Leaderboard {
-	log.Trace("--> leaderboard.readLeaderboard")
-	defer log.Trace("<-- leaderboard.readLeaderboard")
-
 	filter := bson.M{"guild_id": guildID}
 	var lb Leaderboard
 	err := db.FindOne(LEADERBOARD_COLLECTION, filter, &lb)
@@ -28,9 +25,6 @@ func readLeaderboard(guildID string) *Leaderboard {
 
 // writeBank creates or updates the bank for a guild in the database being used by the Discord bot.
 func writeLeaderboard(lb *Leaderboard) error {
-	log.Trace("--> leaderboard.writeLeaderboard")
-	defer log.Trace("<-- leaderboard.writeLeaderboard")
-
 	// var filter bson.M
 	// if lb.ID != primitive.NilObjectID {
 	// 	filter = bson.M{"_id": lb.ID}

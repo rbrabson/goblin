@@ -16,25 +16,8 @@ type Account struct {
 	NextPayday time.Time          `json:"next_payday" bson:"next_payday"`
 }
 
-// getAccount returns the payday information for a server, creating a new one if necessary.
-func getAccount(payday *Payday, memberID string) *Account {
-	log.Trace("--> payday.getAccount")
-	defer log.Trace("<-- payday.getAccount")
-
-	account := readAccount(payday, memberID)
-
-	if account == nil {
-		account = newAccount(payday, memberID)
-	}
-
-	return account
-}
-
 // newAccount creates new payday information for a server/guild
 func newAccount(payday *Payday, memberID string) *Account {
-	log.Trace("--> payday.newAccount")
-	defer log.Trace("<-- payday.newAccount")
-
 	account := &Account{
 		MemberID: memberID,
 		GuildID:  payday.GuildID,
@@ -46,17 +29,11 @@ func newAccount(payday *Payday, memberID string) *Account {
 
 // getNextPayday returns the next payday for the user.
 func (a *Account) getNextPayday() time.Time {
-	log.Trace("--> payday.Account.getLastPayday")
-	defer log.Trace("<-- payday.Account.getLastPayday")
-
 	return a.NextPayday
 }
 
 // setNextPayday sets the next payday for the user.
 func (a *Account) setNextPayday(nextPayday time.Time) {
-	log.Trace("--> payday.Account.setNextPayday")
-	defer log.Trace("<-- payday.Account.setNextPayday")
-
 	a.NextPayday = nextPayday
 	err := writeAccount(a)
 	if err != nil {
