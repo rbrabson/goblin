@@ -53,6 +53,18 @@ func (r *Role) RemoveFromShop(s *Shop) error {
 	return item.removeFromShop(s)
 }
 
+// roleCreatechecks performs checkst to see if a role can be added to the shop.
+func roleCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
+
+	// Verify the role exists on the server
+	if role := guild.GetGuildRole(s, i.GuildID, roleName); role == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		return fmt.Errorf("Role %s not found on the server", roleName)
+	}
+
+	return createChecks(i.GuildID, roleName, ROLE)
+}
+
 // rolePurchaseChecks performs checks to see if a role can be purchased.
 func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
 	// Verify the role exists on the server

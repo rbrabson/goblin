@@ -1,7 +1,6 @@
 package shop
 
 import (
-	"fmt"
 	"slices"
 
 	log "github.com/sirupsen/logrus"
@@ -55,39 +54,5 @@ func (s *Shop) GetShopItem(name string, itemType string) *ShopItem {
 		}
 	}
 
-	return nil
-}
-
-// addShopItem adds a new item to the shop. If the item already exists, an error is returned.
-func (s *Shop) addShopItem(name string, description string, itemType string, price int, duration string, renewable bool) (*ShopItem, error) {
-	item := s.GetShopItem(name, itemType)
-	if item != nil {
-		return nil, fmt.Errorf("item already exists")
-	}
-
-	item = newShopItem(s.GuildID, name, description, itemType, price, duration, renewable)
-	if item == nil {
-		log.WithFields(log.Fields{"guild": s.GuildID, "name": name, "type": itemType}).Error("unable to write shop item to the database")
-		return nil, fmt.Errorf("unable to add item")
-	}
-	s.Items = append(s.Items, item)
-
-	log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Info("shop item added")
-	return item, nil
-}
-
-// removeShopItem removes an item from the shop. If the item does not exist, an error is returned.
-func (s *Shop) removeShopItem(name string, itemType string) error {
-	item := s.GetShopItem(name, itemType)
-	if item == nil {
-		return fmt.Errorf("item does not exist")
-	}
-
-	err := deleteShopItem(item)
-	if err != nil {
-		return fmt.Errorf("unable to remove item")
-	}
-
-	log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Info("shop item removed")
 	return nil
 }

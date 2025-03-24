@@ -250,19 +250,20 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		roleDesc = roleName + " role"
 	}
 
-	// Verify the role exists on the server
-	if role := guild.GetGuildRole(s, i.GuildID, roleName); role == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+	// Verify the role can be added to the shop
+	err := roleCreateChecks(s, i, roleName)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to perform role create checks: %s", err)
 		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Role `%s` not found on the server.", roleName),
+			Content: unicode.FirstToUpper(err.Error()),
 		}
 		resp.SendEphemeral(s, i.Interaction)
-		return
 	}
 
-	// Add the role to the shop. If it already exists, this will return an error.
+	// Add the role to the shop.
 	shop := GetShop(i.GuildID)
-	shopItem, err := shop.addShopItem(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
+	role := NewRole(i.GuildID, roleName, roleDesc, roleCost, roleDuration, roleRenewable)
+	err = role.AddToShop(shop)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("failed to add role to shop: %s", err)
 		resp := disgomsg.Response{
@@ -273,9 +274,10 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Register the component handlers for the item
+	shopItem := (*ShopItem)(role)
 	registerShopItemComponentHandlers(shopItem)
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": shopItem.Name, "roleDesc": shopItem.Description, "roleCost": shopItem.Price, "roleDuration": shopItem.Duration, "roleRenewable": shopItem.AutoRenewable}).Info("role added to shop")
+	log.WithFields(log.Fields{"role": role}).Info("role added to shop")
 	resp := disgomsg.Response{
 		Content: p.Sprintf("Role `%s` has been added to the shop.", roleName),
 	}
@@ -307,13 +309,22 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 
 	// Get the role details
-	role := options[0].Options[0]
-	roleName := role.Options[0].StringValue()
+	roleName := options[0].Options[0].Options[0].StringValue()
+
+	role := GetRole(i.GuildID, roleName)
+	if role == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found in shop")
+		resp := disgomsg.Response{
+			Content: p.Sprintf("Role `%s` not found in the shop.", roleName),
+		}
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
 
 	shop := GetShop(i.GuildID)
-	err := shop.removeShopItem(roleName, ROLE)
+	err := role.RemoveFromShop(shop)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to remove role from shop: %s", err)
+		log.WithFields(log.Fields{"guildID": role.GuildID, "roleName": role.Name}).Errorf("failed to remove role from shop: %s", err)
 		resp := disgomsg.Response{
 			Content: p.Sprintf("Failed to remove role `%s` from the shop: %s", roleName, err),
 		}
@@ -348,14 +359,14 @@ func updateShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 
-	// Get the role details
-	role := options[0].Options[0]
-	roleName := role.Options[0].StringValue()
-	roleDesc := role.Options[1].StringValue()
-	roleCost := int(role.Options[2].IntValue())
+	// Get the roleOptions details
+	roleOptions := options[0].Options[0]
+	roleName := roleOptions.Options[0].StringValue()
+	roleDesc := roleOptions.Options[1].StringValue()
+	roleCost := int(roleOptions.Options[2].IntValue())
 	var roleDuration string
-	if len(role.Options) > 3 {
-		roleDuration = role.Options[3].StringValue()
+	if len(roleOptions.Options) > 3 {
+		roleDuration = roleOptions.Options[3].StringValue()
 		_, err := disctime.ParseDuration(roleDuration)
 		if err != nil {
 			log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": roleDuration}).Errorf("Failed to parse role duration: %s", err)
@@ -367,13 +378,13 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 	var roleRenewable bool
-	if len(role.Options) > 4 {
-		roleRenewable = role.Options[4].BoolValue()
+	if len(roleOptions.Options) > 4 {
+		roleRenewable = roleOptions.Options[4].BoolValue()
 	}
 
-	item, err := readShopItem(i.GuildID, roleName, ROLE)
-	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to read role from shop: %s", err)
+	role := GetRole(i.GuildID, roleName)
+	if role == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to read role from shop")
 		resp := disgomsg.Response{
 			Content: fmt.Sprintf("Role `%s` not found in the shop.", roleName),
 		}
@@ -381,18 +392,9 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	if item == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("Role not found in shop")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Role `%s` not found in the shop.", roleName),
-		}
-		resp.SendEphemeral(s, i.Interaction)
-		return
-	}
-
-	err = item.update(roleName, roleDesc, ROLE, roleCost, roleDuration, roleRenewable)
+	err := role.Update(roleName, roleDesc, roleCost, roleDuration, roleRenewable)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("Failed to update role in shop: %s", err)
+		log.WithFields(log.Fields{"role": role}).Errorf("Failed to update role in shop: %s", err)
 		resp := disgomsg.Response{
 			Content: fmt.Sprintf("Failed to update role `%s` in the shop: %s", roleName, err),
 		}
@@ -400,7 +402,7 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Info("Role updated in shop")
+	log.WithFields(log.Fields{"role": role}).Info("Role updated in shop")
 	resp := disgomsg.Response{
 
 		Content: fmt.Sprintf("Role `%s` has been updated in the shop.", roleName),

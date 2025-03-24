@@ -133,6 +133,17 @@ func (item *ShopItem) purchase(memberID string, renew bool) (*Purchase, error) {
 	return purchase, nil
 }
 
+// createChecks performs checks to see if a role can be added to the shop.
+func createChecks(guildID string, itemName string, itemType string) error {
+	shopItem := getShopItem(guildID, itemName, itemType)
+	if shopItem != nil {
+		log.WithFields(log.Fields{"guildID": guildID, "itemName": itemName, "itemType": itemType}).Error("item already exists in the shop")
+		return fmt.Errorf("%s `%s` already exists in the shop", itemType, itemName)
+	}
+
+	return nil
+}
+
 // purchaseChecks performs checks to see if a member can purchase the shop item.
 func purchaseChecks(guildID string, memberID string, itemType string, itemName string) error {
 	purchase, _ := readPurchase(guildID, memberID, itemName, itemType)
