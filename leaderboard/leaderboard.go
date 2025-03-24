@@ -7,12 +7,12 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
-	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/disctime"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 // A Leaderboard is used to send a monthly leaderboard to the Discord server for each guild.
@@ -23,10 +23,8 @@ type Leaderboard struct {
 	LastSeason time.Time          `json:"last_season" bson:"last_season"`
 }
 
+// newLeaderboard creates a new leaderboard for the given guildID and sets the last season to the current month.
 func newLeaderboard(guildID string) *Leaderboard {
-	log.Trace("--> leaderboard.newLeaderboard")
-	defer log.Trace("<-- leaderboard.newLeaderboard")
-
 	lb := &Leaderboard{
 		GuildID:    guildID,
 		LastSeason: disctime.CurrentMonth(time.Now()),
@@ -39,9 +37,6 @@ func newLeaderboard(guildID string) *Leaderboard {
 
 // getLeaderboards returns all the leaderboards for all guilds known to the bot.
 func getLeaderboards() []*Leaderboard {
-	log.Trace("--> leaderboard.getLeaderboards")
-	defer log.Trace("<-- leaderboard.getLeaderboards")
-
 	var leaderboards []*Leaderboard
 	err := db.FindMany(LEADERBOARD_COLLECTION, bson.D{}, &leaderboards, bson.D{}, 0)
 	if err != nil {
@@ -54,9 +49,6 @@ func getLeaderboards() []*Leaderboard {
 
 // getLeaderboard returns the leaderbord for the given guild
 func getLeaderboard(guildID string) *Leaderboard {
-	log.Trace("--> leaderboard.getLeaderboard")
-	defer log.Trace("<-- leaderboard.getLeaderboard")
-
 	lb := readLeaderboard(guildID)
 	if lb == nil {
 		lb = newLeaderboard(guildID)
@@ -66,19 +58,14 @@ func getLeaderboard(guildID string) *Leaderboard {
 	return lb
 }
 
+// setChannel sets the channel ID for the leaderboard to publish the monthly leaderboard.
 func (lb *Leaderboard) setChannel(channelID string) {
-	log.Trace("--> leaderboard.setChannel")
-	defer log.Trace("<-- leaderboard.setChannel")
-
 	lb.ChannelID = channelID
 	writeLeaderboard(lb)
 }
 
 // GetCurrentRanking returns the global rankings based on the current balance.
 func (lb *Leaderboard) getCurrentLeaderboard() []*bank.Account {
-	log.Trace("--> leaderboard.getCurrentLeaderboard")
-	defer log.Trace("<-- leaderboard.getCurrentLeaderboard")
-
 	filter := bson.D{{Key: "guild_id", Value: lb.GuildID}}
 	sort := bson.D{{Key: "current_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
@@ -90,9 +77,6 @@ func (lb *Leaderboard) getCurrentLeaderboard() []*bank.Account {
 
 // getMonthlyLeaderboard returns the global rankings based on the monthly balance.
 func (lb *Leaderboard) getMonthlyLeaderboard() []*bank.Account {
-	log.Trace("--> leaderboard.getMonthlyLeaderboard")
-	defer log.Trace("<-- leaderboard.getMonthlyLeaderboard")
-
 	filter := bson.D{{Key: "guild_id", Value: lb.GuildID}}
 	sort := bson.D{{Key: "monthly_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
@@ -104,9 +88,6 @@ func (lb *Leaderboard) getMonthlyLeaderboard() []*bank.Account {
 
 // getLifetimeLeaderboard returns the global rankings based on the monthly balance.
 func (lb *Leaderboard) getLifetimeLeaderboard() []*bank.Account {
-	log.Trace("--> leaderboard.getLifetimeLeaderboard")
-	defer log.Trace("<-- leaderboard.getLifetimeLeaderboard")
-
 	filter := bson.D{{Key: "guild_id", Value: lb.GuildID}}
 	sort := bson.D{{Key: "lifetime_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
@@ -118,9 +99,6 @@ func (lb *Leaderboard) getLifetimeLeaderboard() []*bank.Account {
 
 // getMonthlyRanking returns the monthly global ranking on the server for a given player.
 func getCurrentRanking(lb *Leaderboard, account *bank.Account) int {
-	log.Trace("--> leaderboard.getCurrentyRanking")
-	defer log.Trace("<-- leaderboard.getCurrentRanking")
-
 	filter := bson.D{
 		{Key: "guild_id", Value: lb.GuildID},
 		{Key: "current_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
@@ -134,9 +112,6 @@ func getCurrentRanking(lb *Leaderboard, account *bank.Account) int {
 
 // getMonthlyRanking returns the monthly global ranking on the server for a given player.
 func getMonthlyRanking(lb *Leaderboard, account *bank.Account) int {
-	log.Trace("--> leaderboard.getMonthlyRanking")
-	defer log.Trace("<-- leaderboard.getMonthlyRanking")
-
 	filter := bson.D{
 		{Key: "guild_id", Value: lb.GuildID},
 		{Key: "monthly_balance", Value: bson.D{{Key: "$gt", Value: account.MonthlyBalance}}},
@@ -151,9 +126,6 @@ func getMonthlyRanking(lb *Leaderboard, account *bank.Account) int {
 
 // getLifetimeRanking returns the lifetime global ranking on the server for a given player.
 func getLifetimeRanking(lb *Leaderboard, account *bank.Account) int {
-	log.Trace("--> leaderboard.getLifetimeRanking")
-	defer log.Trace("<-- leaderboard.getLifetimeRanking")
-
 	filter := bson.D{
 		{Key: "guild_id", Value: lb.GuildID},
 		{Key: "lifetime_balance", Value: bson.D{{Key: "$gt", Value: account.LifetimeBalance}}},
@@ -168,9 +140,6 @@ func getLifetimeRanking(lb *Leaderboard, account *bank.Account) int {
 
 // sendMonthlyLeaderboard publishes the monthly leaderboard to the bank channel.
 func sendhMonthlyLeaderboard(lb *Leaderboard) error {
-	log.Trace("--> bank.sendMonthlyLeaderboard")
-	defer log.Trace("<-- bank.sendMonthlyLeaderboard")
-
 	// Get the top 10 accounts for this month
 	sortedAccounts := lb.getMonthlyLeaderboard()
 	leaderboardSize := min(10, len(sortedAccounts))
@@ -179,7 +148,7 @@ func sendhMonthlyLeaderboard(lb *Leaderboard) error {
 	firstOfMonth := disctime.PreviousMonth(time.Now())
 	year, month, _ := firstOfMonth.Date()
 	if lb.ChannelID != "" {
-		p := discmsg.GetPrinter(language.AmericanEnglish)
+		p := message.NewPrinter(language.AmericanEnglish)
 		embeds := formatAccounts(p, fmt.Sprintf("%s %d Top 10", month, year), sortedAccounts)
 		_, err := bot.Session.ChannelMessageSendComplex(lb.ChannelID, &discordgo.MessageSend{
 			Embeds: embeds,
@@ -196,9 +165,6 @@ func sendhMonthlyLeaderboard(lb *Leaderboard) error {
 
 // publishMonthlyLeaderboard sends the monthly leaderboard to each guild.
 func sendMonthlyLeaderboard() {
-	log.Trace("--> bank.sendMonthlyLeaderboard")
-	defer log.Trace("<-- bank.sendMonthlyLeaderboard")
-
 	// Get the last season for the banks, defaulting to the current time if there are no banks.
 	// This handles the off-chance that the server crashed and a new month starts before the
 	// server is restarted.

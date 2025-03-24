@@ -26,9 +26,6 @@ type Payday struct {
 
 // GetPayday returns the payday information for a server, creating a new one if necessary.
 func GetPayday(guildID string) *Payday {
-	log.Trace("--> payday.GetPayday")
-	defer log.Trace("<-- payday.GetPayday")
-
 	payday := readPayday(guildID)
 	if payday == nil {
 		payday = readPaydayFromFile(guildID)
@@ -39,17 +36,17 @@ func GetPayday(guildID string) *Payday {
 
 // GetAccount returns an account in the guild (server). If one doesn't exist, then nil is returned.
 func (payday *Payday) GetAccount(memberID string) *Account {
-	log.Trace("--> payday.Payday.getAccount")
-	defer log.Trace("<-- payday.Payday.getAccount")
+	account := readAccount(payday, memberID)
 
-	return getAccount(payday, memberID)
+	if account == nil {
+		account = newAccount(payday, memberID)
+	}
+
+	return account
 }
 
 // SetPaydayAmount sets the amount of credits a player deposits into their account on a given payday.
 func (payday *Payday) SetPaydayAmount(amount int) {
-	log.Trace("--> payday.SetPaydayAmount")
-	defer log.Trace("<-- payday.SetPaydayAmount")
-
 	payday.Amount = amount
 
 	writePayday(payday)
@@ -57,9 +54,6 @@ func (payday *Payday) SetPaydayAmount(amount int) {
 
 // SetPaydayFrequency sets the frequency of paydays at which a player can deposit credits into their account.
 func (payday *Payday) SetPaydayFrequency(frequency time.Duration) {
-	log.Trace("--> payday.SetPaydayFrequency")
-	defer log.Trace("<-- payday.SetPaydayFrequency")
-
 	payday.PaydayFrequency = frequency
 
 	writePayday(payday)
@@ -69,9 +63,6 @@ func (payday *Payday) SetPaydayFrequency(frequency time.Duration) {
 // If the default payday configuration file cannot be read or dedcoded, then a
 // default payday configuration is created.
 func readPaydayFromFile(guildID string) *Payday {
-	log.Trace("--> payday.readPaydayFromFile")
-	defer log.Trace("<-- payday.readPaydayFromFile")
-
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "payday", "config", configTheme+".json")
@@ -97,9 +88,6 @@ func readPaydayFromFile(guildID string) *Payday {
 
 // getDefaultPayday creates new payday information for a server/guild
 func getDefaultPayday(guildID string) *Payday {
-	log.Trace("--> payday.getDefaultPayday")
-	defer log.Trace("<-- payday.getDefaultPayday")
-
 	payday := &Payday{
 		GuildID:         guildID,
 		Amount:          DEFAULT_PAYDAY_AMOUNT,

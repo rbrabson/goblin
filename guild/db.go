@@ -13,9 +13,6 @@ const (
 // readMember reads the member from the database and returns the value, if it exists, or returns nil if the
 // member does not exist in the database
 func readMember(guildID string, memberID string) *Member {
-	log.Trace("--> guild.loadMember")
-	defer log.Trace("<-- guild.loadMember")
-
 	filter := bson.M{
 		"guild_id":  guildID,
 		"member_id": memberID,
@@ -32,9 +29,6 @@ func readMember(guildID string, memberID string) *Member {
 
 // writeMember creates or updates the member data in the database.
 func writeMember(member *Member) error {
-	log.Trace("--> guild.Member.writeMember")
-	defer log.Trace("<-- guild.Member.writeMember")
-
 	filter := bson.M{
 		"guild_id":  member.GuildID,
 		"member_id": member.MemberID,
@@ -51,9 +45,6 @@ func writeMember(member *Member) error {
 
 // readGuild gets the guild from the database and returns the value, if it exists, or returns nil if the
 func readGuild(guildID string) *Guild {
-	log.Trace("--> guild.readGuild")
-	defer log.Trace("<-- guild.readGuild")
-
 	filter := bson.M{"guild_id": guildID}
 	var guild Guild
 	err := db.FindOne(GUILD_COLLECTION, filter, &guild)
@@ -67,9 +58,6 @@ func readGuild(guildID string) *Guild {
 
 // writeGuild creates or updates the guild data in the database being used by the Discord bot.
 func writeGuild(guild *Guild) error {
-	log.Trace("--> guild.writeGuild")
-	defer log.Trace("<-- guild.writeGuild")
-
 	filter := bson.M{"guild_id": guild.GuildID}
 	err := db.UpdateOrInsert(GUILD_COLLECTION, filter, guild)
 	if err != nil {

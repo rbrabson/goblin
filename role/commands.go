@@ -5,11 +5,10 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/discmsg"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/text/language"
 )
 
 var (
@@ -67,19 +66,19 @@ var (
 
 // guildAdmin handles the guildAdmin command.
 func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.guildAdmin")
-	defer log.Trace("<-- server.guildAdmin")
-
 	if status == discord.STOPPING || status == discord.STOPPED {
-		discmsg.SendEphemeralResponse(s, i, "The system is currently shutting down.")
+		resp := disgomsg.Response{
+			Content: "The system is shutting down.",
+		}
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
-	p := discmsg.GetPrinter(language.AmericanEnglish)
-
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := p.Sprintf("You do not have permission to use this command.")
-		discmsg.SendEphemeralResponse(s, i, resp)
+		resp := disgomsg.Response{
+			Content: "You do not have permission to use this command.",
+		}
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -93,9 +92,6 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // role handles the role subcommands for the server command.
 func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.role")
-	defer log.Trace("<-- server.role")
-
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
 	case "add":
@@ -111,9 +107,6 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // addRole adds a role to the list of admin roles for the server.
 func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.addRole")
-	defer log.Trace("<-- server.addRole")
-
 	guildID := i.GuildID
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	roleName := options[0].StringValue()
@@ -125,14 +118,14 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server.AddAdminRole(roleName)
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role add")
 
-	discmsg.SendResponse(s, i, fmt.Sprintf("Role \"%s\" added", roleName))
+	resp := disgomsg.Response{
+		Content: fmt.Sprintf("Role \"%s\" added", roleName),
+	}
+	resp.Send(s, i.Interaction)
 }
 
 // removeRole removes a role from the list of admin roles for the server.
 func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.removeRole")
-	defer log.Trace("<-- server.removeRole")
-
 	guildID := i.GuildID
 	options := i.ApplicationCommandData().Options[0].Options
 	roleName := options[0].StringValue()
@@ -144,14 +137,14 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server.RemoveAdminRole(roleName)
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role remove")
 
-	discmsg.SendResponse(s, i, fmt.Sprintf("Role \"%s\" removed", roleName))
+	resp := disgomsg.Response{
+		Content: fmt.Sprintf("Role \"%s\" removed", roleName),
+	}
+	resp.Send(s, i.Interaction)
 }
 
 // listRoles lists the admin roles for the server.
 func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> server.listRoles")
-	defer log.Trace("<-- server.listRoles")
-
 	guildID := i.GuildID
 
 	// Get the server configuration
@@ -169,5 +162,8 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleList := sb.String()
 	log.WithFields(log.Fields{"guild": guildID, "roles": roleList}).Debug("/guild-admin role list")
 
-	discmsg.SendEphemeralResponse(s, i, roleList)
+	resp := disgomsg.Response{
+		Content: roleList,
+	}
+	resp.SendEphemeral(s, i.Interaction)
 }

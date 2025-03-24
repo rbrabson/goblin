@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/discmsg"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -43,9 +43,6 @@ type Bot struct {
 
 // NewBot creates a nbew Discord bot that can run Discord commands.
 func NewBot(botName string, version string, revision string) *Bot {
-	log.Trace("--> discord.NewBot")
-	defer log.Trace("<-- discord.NewBot")
-
 	// Get the bot version and revision
 	BotName = botName
 	Version = version
@@ -110,7 +107,10 @@ func NewBot(botName string, version string, revision string) *Bot {
 				h(s, i)
 			} else {
 				log.WithField("command", i.ApplicationCommandData().Name).Warn("unhandled command")
-				discmsg.SendEphemeralResponse(s, i, "Unknown command. Use `/help` to see a list of available commands.")
+				resp := disgomsg.Response{
+					Content: "Unknown command. Use `/help` to see a list of available commands.",
+				}
+				resp.SendEphemeral(s, i.Interaction)
 			}
 		case discordgo.InteractionMessageComponent:
 			if h, ok := componentHandlers[i.MessageComponentData().CustomID]; ok {
@@ -120,7 +120,10 @@ func NewBot(botName string, version string, revision string) *Bot {
 					h(s, i)
 				} else {
 					log.WithField("component", i.MessageComponentData().CustomID).Warn("unhandled component")
-					discmsg.SendEphemeralResponse(s, i, "Unknown interacton")
+					resp := disgomsg.Response{
+						Content: "Unknown component. Please try again.",
+					}
+					resp.SendEphemeral(s, i.Interaction)
 				}
 			}
 		}
@@ -139,9 +142,6 @@ func NewBot(botName string, version string, revision string) *Bot {
 // DeleteCommands deletes the current set of slash commands. This can be useful when developing
 // a new bot and the set of loaded slash commands changes.
 func (bot *Bot) DeleteCommands() {
-	log.Trace("--> discord.Bot.DeleteCommands")
-	defer log.Trace("<-- discord.Bot.DeleteCommands")
-
 	// Delete all bot commands indivdually
 	// commands, err := bot.Session.ApplicationCommands(bot.appID, bot.guildID)
 	// if err != nil {
@@ -166,9 +166,6 @@ func (bot *Bot) DeleteCommands() {
 // LoadCommands register all the commands. This implicitly will call the function added above that
 // adds the command and component handlers for each plugin.
 func (bot *Bot) LoadCommands(commands []*discordgo.ApplicationCommand) {
-	log.Trace("--> discord.Bot.LoadCommands")
-	defer log.Trace("<-- discord.Bot.LoadCommands")
-
 	log.WithFields(log.Fields{"appID": bot.appID, "guildID": bot.guildID}).Debug("load new bot commands")
 	_, err := bot.Session.ApplicationCommandBulkOverwrite(bot.appID, bot.guildID, commands)
 	if err != nil {
@@ -184,17 +181,11 @@ func (bot *Bot) LoadCommands(commands []*discordgo.ApplicationCommand) {
 // AddComponentHandler adds a component handler for the bot. This is used to handle
 // components that are not explicitly defined in the bot.
 func (bot *Bot) AddComponentHandler(key string, handler func(*discordgo.Session, *discordgo.InteractionCreate)) {
-	log.Trace("--> discord.Bot.AddComponentHandler")
-	defer log.Trace("<-- discord.Bot.AddComponentHandler")
-
 	customComponentHandlers[key] = handler
 }
 
 // removeComponentHandler removes a component handler for the bot. This is used to remove
 // components that are not explicitly defined in the bot.
 func (bot *Bot) RemoveComponentHandler(key string) {
-	log.Trace("--> discord.Bot.RemoveComponentHandler")
-	defer log.Trace("<-- discord.Bot.RemoveComponentHandler")
-
 	delete(customComponentHandlers, key)
 }

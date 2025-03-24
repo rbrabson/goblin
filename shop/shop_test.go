@@ -32,7 +32,7 @@ func TestGetShopItem(t *testing.T) {
 	setup(t)
 	defer teardown()
 
-	item := GetShopItem(GUILD_ID, "test_item_1", "role")
+	item := getShopItem(GUILD_ID, "test_item_1", "role")
 	if item == nil {
 		t.Error("GetShopItem failed to returned n existing item")
 	}
@@ -53,7 +53,7 @@ func TestRemoveShopItem(t *testing.T) {
 		return
 	}
 
-	err := testShop.RemoveShopItem(item.Name, item.Type)
+	err := item.removeFromShop(testShop)
 	if err != nil {
 		t.Error("failed to remove shop item, error:")
 	}
@@ -68,7 +68,7 @@ func TestUpdateShopItem(t *testing.T) {
 		t.Error("GetShopItem failed to returned n existing item")
 	}
 
-	err := item.UpdateShopItem("test_item_1", "description of test Item 1", "role", 200, "", false)
+	err := item.update("test_item_1", "description of test Item 1", "role", 200, "", false)
 	if err != nil {
 		t.Error("failed to update shop item, error:")
 	}
@@ -87,16 +87,18 @@ func setup(t *testing.T) {
 	var err error
 
 	testShop = GetShop(GUILD_ID)
-
-	_, err = testShop.AddShopItem("test_item_1", "description of test Item 1", "role", 100, "", false)
+	item := newShopItem(GUILD_ID, "test_item_1", "description of test Item 1", "role", 100, "", false)
+	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = testShop.AddShopItem("test_item_2", "description of test_item_2", "role", 100, "", false)
+	item = newShopItem(GUILD_ID, "test_item_2", "description of test_item_2", "role", 100, "", false)
+	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = testShop.AddShopItem("test_item_3", "description of test_item_3", "role", 100, "", false)
+	item = newShopItem(GUILD_ID, "test_item_3", "description of test_item_3", "role", 100, "", false)
+	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)
 	}

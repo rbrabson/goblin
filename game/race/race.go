@@ -76,9 +76,6 @@ type RaceParticipantPosition struct {
 
 // GetRace gets the race for the guild. If a race isn't in progress, then a new one is created.
 func GetRace(guildID string) *Race {
-	log.Trace("--> race.GetRace")
-	defer log.Trace("<-- race.GetRace")
-
 	race := currentRaces[guildID]
 	if race == nil {
 		race = newRace(guildID)
@@ -89,9 +86,6 @@ func GetRace(guildID string) *Race {
 
 // newRace creates a new race for the guild.
 func newRace(guildID string) *Race {
-	log.Trace("--> race.newRace")
-	defer log.Trace("<-- race.newRace")
-
 	config := GetConfig(guildID)
 
 	race := &Race{
@@ -115,9 +109,6 @@ func newRace(guildID string) *Race {
 // addRaceParticiapnt returns a new race participant for a member in the race. The race
 // participant is added to the race.
 func (r *Race) addRaceParticipant(member *RaceMember) *RaceParticipant {
-	log.Trace("--> race.Race.addRaceParticipant")
-	defer log.Trace("<-- race.Race.addRaceParticipant")
-
 	participant := &RaceParticipant{
 		Member: member,
 		Racer:  getRaceAvatar(r),
@@ -133,9 +124,6 @@ func (r *Race) addRaceParticipant(member *RaceMember) *RaceParticipant {
 // getRaceParticipant returns a racer for a given race. If the member isn't in the race, then
 // nil is returned.
 func (r *Race) getRaceParticipant(memberID string) *RaceParticipant {
-	log.Trace("--> race.Race.getRaceParticipant")
-	defer log.Trace("<-- race.Race.getRaceParticipant")
-
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	for _, racer := range r.Racers {
@@ -148,9 +136,6 @@ func (r *Race) getRaceParticipant(memberID string) *RaceParticipant {
 
 // getRaceBetter returns a new better for a race.
 func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
-	log.Trace("--> race.GetRaceBetter")
-	defer log.Trace("<-- race.GetRaceBetter")
-
 	raceBetter := &RaceBetter{
 		Member: member,
 		Racer:  racer,
@@ -161,9 +146,6 @@ func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 
 // addBetter adds a better for the given race.
 func (race *Race) addBetter(better *RaceBetter) error {
-	log.Trace("--> race.Race.addBetter")
-	defer log.Trace("<-- race.Race.addBetter")
-
 	race.mutex.Lock()
 	defer race.mutex.Unlock()
 
@@ -176,9 +158,6 @@ func (race *Race) addBetter(better *RaceBetter) error {
 // RunRace runs a race, calculating the results of each leg of the race and the
 // ultimate winners of the race.
 func (race *Race) RunRace(trackLength int) {
-	log.Trace("--> race.Race.RunRace")
-	defer log.Trace("<-- race.Race.RunRace")
-
 	race.mutex.Lock()
 	defer race.mutex.Unlock()
 
@@ -228,9 +207,6 @@ func (race *Race) RunRace(trackLength int) {
 
 // End ends the current race.
 func (r *Race) End() {
-	log.Trace("--> race.Race.End")
-	defer log.Trace("<-- race.Race.End")
-
 	raceLock.Lock()
 	defer raceLock.Unlock()
 
@@ -283,9 +259,6 @@ func ResetRace(guildID string) {
 
 // getRaceAvatar returns a  random race avatar to be used by a race participant.
 func getRaceAvatar(race *Race) *RaceAvatar {
-	log.Trace("--> race.getRaceAvatar")
-	defer log.Trace("<-- race.getRaceAvatar")
-
 	if len(race.raceAvatars) == 0 {
 		race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
 	}
@@ -299,9 +272,6 @@ func getRaceAvatar(race *Race) *RaceAvatar {
 
 // Move returns the new race position for a particpant based on the previous position and the current turn.
 func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantPosition {
-	log.Trace("-->race.RaceParticpant.Move")
-	defer log.Trace("<-- race.RaceParticpant.Move")
-
 	// Already done with the race
 	if previousPosition.Position <= 0 {
 		newPosition := &RaceParticipantPosition{
@@ -331,9 +301,6 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 
 // raceStartChecks checks to see if a race can be started.
 func raceStartChecks(guildID string, memberID string) error {
-	log.Trace("--> race.raceStartChecks")
-	defer log.Trace("<-- race.raceStartChecks")
-
 	config := GetConfig(guildID)
 
 	race := currentRaces[guildID]
@@ -356,9 +323,6 @@ func raceStartChecks(guildID string, memberID string) error {
 
 // raceJoinChecks checks to see if a racer is able to join the race.
 func raceJoinChecks(race *Race, memberID string) error {
-	log.Trace("--> race.raceChecks")
-	defer log.Trace("<-- race.raceChecks")
-
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitForBets)) {
 		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("race has started")
 		return ErrRaceHasStarted
@@ -384,9 +348,6 @@ func raceJoinChecks(race *Race, memberID string) error {
 
 // raceBetChecks checks to see if a better is able to place a bet on the current race.
 func raceBetChecks(race *Race, memberID string) error {
-	log.Trace("--> race.raceChecks")
-	defer log.Trace("<-- race.raceChecks")
-
 	if time.Now().Before(race.RaceStartTime.Add(race.config.WaitToStart)) {
 		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("betting has opened")
 		return ErrBettingNotOpened
@@ -408,9 +369,6 @@ func raceBetChecks(race *Race, memberID string) error {
 
 // calculateWinngins calculates the earnings for the racers that wins, places and shows.
 func calculateWinnings(race *Race, lastLeg *RaceLeg) {
-	log.Trace("--> race.calculateWinnings")
-	defer log.Trace("<-- race.calculateWinnings")
-
 	source := rand.NewPCG(rand.Uint64(), rand.Uint64())
 	r := rand.New(source)
 	// sort the participants in the final race leg

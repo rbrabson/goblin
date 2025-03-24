@@ -7,15 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/disctime"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 const (
@@ -40,9 +40,6 @@ type Purchase struct {
 
 // GetAllRoles returns all the purchases made by a member in the guild.
 func GetAllPurchases(guildID string, memberID string) []*Purchase {
-	log.Trace("--> shop.GetAllPurchases")
-	defer log.Trace("<-- shop.GetAllPurchases")
-
 	purchases, err := readPurchases(guildID, memberID)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "error": err}).Error("unable to read purchases from the database")
@@ -87,8 +84,6 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 // GetPurchase returns the purchase made by a member in the guild for the given item name.
 // If the purchase does not exist, nil is returned.
 func GetPurchase(guildID string, memberID string, itemName string, itemType string) *Purchase {
-	log.Trace("--> shop.GetPurchase")
-	defer log.Trace("<-- shop.GetPurchase")
 	purchase, err := readPurchase(guildID, memberID, itemName, itemType)
 	if err != nil {
 		return nil
@@ -99,10 +94,7 @@ func GetPurchase(guildID string, memberID string, itemName string, itemType stri
 // PurchaseItem creates a new Purchase with the given guild ID, member ID, and a purchasable
 // shop item.
 func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
-	log.Trace("--> shop.PurchaseItem")
-	defer log.Trace("<-- shop.PurchaseItem")
-
-	p := discmsg.GetPrinter(language.AmericanEnglish)
+	p := message.NewPrinter(language.AmericanEnglish)
 
 	bankAccount := bank.GetAccount(guildID, memberID)
 	err := bankAccount.WithdrawFromCurrentOnly(item.Price)
@@ -135,7 +127,10 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 	config := GetConfig(guildID)
 	if config.ModChannelID != "" {
 		guildMember := guild.GetMember(guildID, memberID)
-		discmsg.SendMessage(bot.Session, config.ModChannelID, p.Sprintf("`%s` (id=%s) purchased %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price), nil, nil)
+		msg := disgomsg.Message{
+			Content: p.Sprintf("`%s` (id=%s) purchased %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price),
+		}
+		msg.Send(bot.Session, config.ModChannelID)
 	}
 
 	return purchase, nil
@@ -144,9 +139,6 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purcha
 // Determine if a purchase has expired. This marks the purchase as expired and undoes the effects of the purchase
 // if it has expired.
 func (p *Purchase) HasExpired() bool {
-	log.Trace("--> shop.Purchase.HasExpired")
-	defer log.Trace("<-- shop.Purchase.HasExpired")
-
 	if p.IsExpired {
 		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase has already been marked as expired")
 		return true
@@ -190,8 +182,11 @@ func (p *Purchase) HasExpired() bool {
 		config := GetConfig(p.GuildID)
 		if config.ModChannelID != "" {
 			guildMember := guild.GetMember(p.GuildID, p.MemberID)
-			printer := discmsg.GetPrinter(language.AmericanEnglish)
-			discmsg.SendMessage(bot.Session, config.ModChannelID, printer.Sprintf("`%s` (id=%s) had their purchase of %s `%s` expire", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name), nil, nil)
+			printer := message.NewPrinter(language.AmericanEnglish)
+			msg := disgomsg.Message{
+				Content: printer.Sprintf("`%s` (id=%s) had their purchase of %s `%s` expire", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name),
+			}
+			msg.Send(bot.Session, config.ModChannelID)
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase has expired")
 		} else {
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("no mod channel configured to notify of expired purchase")
@@ -205,9 +200,6 @@ func (p *Purchase) HasExpired() bool {
 
 // Return the purchase to the shop.
 func (p *Purchase) Return() error {
-	log.Trace("--> shop.Purchase.Return")
-	defer log.Trace("<-- shop.Purchase.Return")
-
 	bankAccount := bank.GetAccount(p.GuildID, p.MemberID)
 	err := bankAccount.DepositToCurrentOnly(p.Item.Price)
 	if err != nil {
@@ -224,9 +216,11 @@ func (p *Purchase) Return() error {
 	config := GetConfig(p.GuildID)
 	if config.ModChannelID != "" {
 		guildMember := guild.GetMember(p.GuildID, p.MemberID)
-		printer := discmsg.GetPrinter(language.AmericanEnglish)
-		discmsg.SendMessage(bot.Session, config.ModChannelID, printer.Sprintf("`%s` (id=%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name), nil, nil)
-
+		printer := message.NewPrinter(language.AmericanEnglish)
+		msg := disgomsg.Message{
+			Content: printer.Sprintf("`%s` (id=%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name),
+		}
+		msg.Send(bot.Session, config.ModChannelID)
 	}
 
 	return nil
@@ -234,9 +228,6 @@ func (p *Purchase) Return() error {
 
 // Update updates the purchase with the given autoRenew value.
 func (p *Purchase) Update(autoRenew bool) error {
-	log.Trace("--> shop.Purchase.Update")
-	defer log.Trace("<-- shop.Purchase.Update")
-
 	if p.AutoRenew == autoRenew {
 		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase already has the same autoRenew value")
 		return fmt.Errorf("purchase already has the same autoRenew value")
@@ -255,9 +246,6 @@ func (p *Purchase) Update(autoRenew bool) error {
 
 // checkForExpiredPurchases checks once a day to see if any purchases that may be expired have expired.
 func checkForExpiredPurchases() {
-	log.Trace("--> shop.checkForExpiredPurchases")
-	defer log.Trace("<-- shop.checkForExpiredPurchases")
-
 	for {
 		filter := bson.D{
 			{Key: "is_expired", Value: false},
@@ -279,46 +267,6 @@ func checkForExpiredPurchases() {
 		log.WithFields(log.Fields{"tomorrow": tomorrow}).Trace("waiting until tomorrow to check for expired purchases")
 		time.Sleep(time.Until(tomorrow))
 	}
-}
-
-// rolePurchaseChecks performs checks to see if a role can be purchased.
-func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
-	log.Trace("--> shop.rolePurchaseChecks")
-	defer log.Trace("<-- shop.rolePurchaseChecks")
-
-	// Verify the role exists on the server
-	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
-	if guildRole == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
-		return fmt.Errorf("role `%s` not found on the server", roleName)
-	}
-
-	// Make sure the member doesn't already have the role
-	if guild.MemberHasRole(s, i.GuildID, i.Member.User.ID, guildRole) {
-		return fmt.Errorf("you already have the `%s` role", roleName)
-	}
-
-	// Make sure the role is still available in the shop
-	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
-	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
-		return fmt.Errorf("role `%s` not found in the shop", roleName)
-	}
-
-	// Make sure the role hasn't already been purchased
-	purchase, _ := readPurchase(i.GuildID, i.Member.User.ID, roleName, ROLE)
-	if purchase != nil && !purchase.IsExpired {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Debug("role already purchased")
-		return fmt.Errorf("you have already purchased role `%s`", roleName)
-	}
-
-	// Make sure the member has sufficient funds to purchase the role
-	bankAccount := bank.GetAccount(i.GuildID, i.Member.User.ID)
-	if bankAccount.CurrentBalance < shopItem.Price {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID}).Debug("insufficient funds")
-		return fmt.Errorf("you do not have enough credits to purchase the `%s` role", roleName)
-	}
-	return nil
 }
 
 // String returns a string representation of the purchase.

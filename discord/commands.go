@@ -5,10 +5,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/text/language"
 
+	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/discmsg"
 	"github.com/rbrabson/goblin/internal/unicode"
 )
 
@@ -61,51 +60,53 @@ var (
 
 // help sends a help message for plugin commands.
 func help(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> help")
-	log.Trace("<-- help")
-
-	discmsg.SendEphemeralResponse(s, i, getHelp())
+	resp := disgomsg.Response{
+		Content: getHelp(),
+	}
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // adminHelp sends a help message for administrative commands.
 func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> adminHelp")
-	log.Trace("<-- adminHelp")
-
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		p := discmsg.GetPrinter(language.AmericanEnglish)
-		resp := p.Sprintf("You do not have permission to use this command.")
-		discmsg.SendEphemeralResponse(s, i, resp)
+		resp := disgomsg.Response{
+			Content: "You do not have permission to use this command.",
+		}
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
-	discmsg.SendEphemeralResponse(s, i, getAdminHelp())
+	resp := disgomsg.Response{
+		Content: getAdminHelp(),
+	}
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // version shows the version of bot you are running.
 func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> version")
-	defer log.Trace("<-- version")
-
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		p := discmsg.GetPrinter(language.AmericanEnglish)
-		resp := p.Sprintf("You do not have permission to use this command.")
-		discmsg.SendEphemeralResponse(s, i, resp)
+		resp := disgomsg.Response{
+			Content: "You do not have permission to use this command.",
+		}
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if Revision == "" {
-		discmsg.SendEphemeralResponse(s, i, "You are running "+BotName+" version "+Version+".")
+		resp := disgomsg.Response{
+			Content: "You are running " + BotName + " version " + Version + ".",
+		}
+		resp.SendEphemeral(s, i.Interaction)
 	} else {
-		discmsg.SendEphemeralResponse(s, i, "You are running "+BotName+" version "+Version+"-"+Revision+".")
+		resp := disgomsg.Response{
+			Content: "You are running " + BotName + " version " + Version + "-" + Revision + ".",
+		}
+		resp.SendEphemeral(s, i.Interaction)
 	}
 }
 
 // getHelp gets help about commands from all plugins.
 func getHelp() string {
-	log.Trace("--> discord.getMemberHelp")
-	log.Trace("<-- discord.getMemberHelp")
-
 	var sb strings.Builder
 	log.WithFields(log.Fields{"plugins": ListPlugin()}).Debug("plugins")
 	for _, plugin := range ListPlugin() {
@@ -120,9 +121,6 @@ func getHelp() string {
 
 // getAdminHelp returns help about administrative commands for all bots.
 func getAdminHelp() string {
-	log.Trace("--> discord.getAdminHelp")
-	log.Trace("<-- discord.getAdminHelp")
-
 	var sb strings.Builder
 	for _, plugin := range ListPlugin() {
 		for _, str := range plugin.GetAdminHelp() {
@@ -135,13 +133,11 @@ func getAdminHelp() string {
 
 // serverAdmin handles server admin commands.
 func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> serverAdmin")
-	defer log.Trace("<-- serverAdmin")
-
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		p := discmsg.GetPrinter(language.AmericanEnglish)
-		resp := p.Sprintf("You do not have permission to use this command.")
-		discmsg.SendEphemeralResponse(s, i, resp)
+		resp := disgomsg.Response{
+			Content: "You do not have permission to use this command.",
+		}
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -158,21 +154,18 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // serverShutdown prepares the server to be serverShutdown.
 func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> shutdown")
-	defer log.Trace("<-- shutdown")
-
 	for _, plugin := range ListPlugin() {
 		plugin.Stop()
 	}
 
-	discmsg.SendResponse(s, i, "Stopping all bot services.")
+	resp := disgomsg.Response{
+		Content: "Shutting down all bot services.",
+	}
+	resp.Send(s, i.Interaction)
 }
 
 // serverStatus returns the status of the server.
 func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("--> status")
-	defer log.Trace("<-- status")
-
 	plugins := ListPlugin()
 	pluginStatus := make([]*discordgo.MessageEmbedField, 0, len(plugins))
 

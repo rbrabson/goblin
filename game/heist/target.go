@@ -32,9 +32,6 @@ type Target struct {
 
 // GetTargets returns the list of targets for the server
 func GetTargets(guildID string, theme string) []*Target {
-	log.Trace("--> heist.GetTargets")
-	defer log.Trace("<-- heist.GetTargets")
-
 	targets, _ := readTargets(guildID, theme)
 	if targets == nil {
 		targets = readTargetsFromFIle(guildID)
@@ -51,9 +48,6 @@ func GetTargets(guildID string, theme string) []*Target {
 // StealFromValut removes the given amount from the vault of the target.
 // If the amount is greater than the vault, the vault is set to 0.
 func (t *Target) StealFromValut(amount int) {
-	log.Trace("--> heist.Target.StealFromValut")
-	defer log.Trace("<-- heist.Target.StealFromValut")
-
 	if amount <= 0 {
 		log.WithField("amount", amount).Debug("nothing stolen from the vault")
 		return
@@ -74,9 +68,6 @@ func (t *Target) StealFromValut(amount int) {
 
 // getAllTargets returns all targets that match the filter.
 func getAllTargets(filter bson.D) []*Target {
-	log.Trace("--> heist.getAllTargets")
-	defer log.Trace("<-- heist.getAllTargets")
-
 	allTargets, _ := readAllTargets(filter)
 
 	return allTargets
@@ -86,9 +77,6 @@ func getAllTargets(filter bson.D) []*Target {
 // crew members. If no target matches the criteria, then the target with the maximum crew size
 // is used.
 func getTarget(targets []*Target, crewSize int) *Target {
-	log.Trace("--> heist.getTarget")
-	defer log.Trace("<-- heist.getTarget")
-
 	var target *Target
 	for _, possible := range targets {
 		if possible.CrewSize >= crewSize {
@@ -184,9 +172,6 @@ func newTarget(guildID string, theme string, name string, maxCrewSize int, succe
 
 // Resets all vaults in a guild to the maximum amount.
 func ResetVaultsToMaximumValue(guildID string) {
-	log.Trace("--> heist.ResetVaultsToMaximumValue")
-	defer log.Trace("<-- heist.ResetVaultsToMaximumValue")
-
 	filter := bson.D{{Key: "guild_id", Value: guildID}}
 	targets := getAllTargets(filter)
 	for _, target := range targets {

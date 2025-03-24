@@ -17,9 +17,6 @@ type Config struct {
 // GetConfig reads the configuration from the database. If the config does not exist,
 // then one is created.
 func GetConfig(guildID string) *Config {
-	log.Trace("--> shop.GetConfig")
-	defer log.Trace("<-- shop.GetConfig")
-
 	config, _ := readConfig(guildID)
 	if config == nil {
 		config = newConfig(guildID)
@@ -30,9 +27,6 @@ func GetConfig(guildID string) *Config {
 
 // newConfig creates a new configuration for the given guild ID and writes it to the database.
 func newConfig(guildID string) *Config {
-	log.Trace("--> shop.newConfig")
-	defer log.Trace("<-- shop.newConfig")
-
 	config := &Config{
 		ID:      primitive.NewObjectID(),
 		GuildID: guildID,
@@ -44,9 +38,6 @@ func newConfig(guildID string) *Config {
 
 // SetChannel sets the channel to which to publish the shop items
 func (c *Config) SetChannel(channelID string) {
-	log.Trace("--> shop.Config.SetChannel")
-	defer log.Trace("<-- shop.Config.SetChannel")
-
 	if c.ChannelID != channelID {
 		c.ChannelID = channelID
 		c.MessageID = ""
@@ -57,9 +48,6 @@ func (c *Config) SetChannel(channelID string) {
 
 // SetModChannel sets the channel to which to publish the shop purchases and expirations.
 func (c *Config) SetModChannel(channelID string) {
-	log.Trace("--> shop.Config.SetModChannel")
-	defer log.Trace("<-- shop.Config.SetModChannel")
-
 	if c.ModChannelID != channelID {
 		c.ModChannelID = channelID
 		writeConfig(c)
@@ -69,9 +57,6 @@ func (c *Config) SetModChannel(channelID string) {
 
 // SetMessageID saves the interaction used to publish the shop items.
 func (c *Config) SetMessageID(messageID string) {
-	log.Trace("--> shop.Config.SetMessageID")
-	defer log.Trace("<-- shop.Config.SetMessageID")
-
 	if c.MessageID != messageID {
 		c.MessageID = messageID
 		writeConfig(c)

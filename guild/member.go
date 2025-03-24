@@ -18,17 +18,17 @@ type Member struct {
 
 // GetMember returns a member in the guild (server). If one doesnt' exist, then one is created with a blank name.
 func GetMember(guildID string, memberID string) *Member {
-	log.Trace("--> guild.GetMember")
-	defer log.Trace("<-- guild.GetMember")
+	member := readMember(guildID, memberID)
 
-	return getMember(guildID, memberID)
+	if member == nil {
+		member = newMember(guildID, memberID)
+	}
+
+	return member
 }
 
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(userName string, displayName string) *Member {
-	log.Trace("--> guild.Member.SetName")
-	defer log.Trace("<-- guild.Member.SetName")
-
 	var name string
 	if displayName != "" {
 		name = displayName
@@ -46,25 +46,8 @@ func (member *Member) SetName(userName string, displayName string) *Member {
 	return member
 }
 
-// getMember returns a member in the guild (server). If one doesn't exist, then one is created with a blank name.
-func getMember(guildID string, memberID string) *Member {
-	log.Trace("--> guild.getMember")
-	defer log.Trace("<-- guild.getMember")
-
-	member := readMember(guildID, memberID)
-
-	if member == nil {
-		member = newMember(guildID, memberID)
-	}
-
-	return member
-}
-
 // newMember creates a new member in the guild (server).
 func newMember(guildID string, memberID string) *Member {
-	log.Trace("--> guild.newMember")
-	defer log.Trace("<-- guild.newMember")
-
 	member := &Member{
 		MemberID: memberID,
 		GuildID:  guildID,

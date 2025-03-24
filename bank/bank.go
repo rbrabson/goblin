@@ -28,9 +28,6 @@ type Bank struct {
 
 // GetBank returns the bank for the specified build. If the bank does not exist, then one is created.
 func GetBank(guildID string) *Bank {
-	log.Trace("--> bank.GetBank")
-	defer log.Trace("<-- bank.GetBank")
-
 	bank := readBank(guildID)
 	if bank == nil {
 		bank = readBankFromFile(guildID)
@@ -41,9 +38,6 @@ func GetBank(guildID string) *Bank {
 
 // readBankFromFile creates a new bank for the given guild.
 func readBankFromFile(guildID string) *Bank {
-	log.Trace("--> bank.readBankFromFile")
-	defer log.Trace("<-- bank.readBankFromFile")
-
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "bank", "config", configTheme+".json")
@@ -71,9 +65,6 @@ func readBankFromFile(guildID string) *Bank {
 // This is used when no default bank config file is found, or when
 // the default bank config file is invalid.
 func getDefaultBank(guildID string) *Bank {
-	log.Trace("--> bank.getDefaultBank")
-	defer log.Trace("<-- bank.getDefaultBank")
-
 	bank := &Bank{
 		GuildID:        guildID,
 		Name:           DEFAULT_BANK_NAME,
@@ -88,9 +79,6 @@ func getDefaultBank(guildID string) *Bank {
 
 // SetDefaultBalance sets the default balance for the bank.
 func (b *Bank) SetDefaultBalance(balance int) {
-	log.Trace("--> bank.Bank.SetDefaultBalance")
-	defer log.Trace("<-- bank.Bank.SetDefaultBalance")
-
 	if balance != b.DefaultBalance {
 		b.DefaultBalance = balance
 		writeBank(b)
@@ -100,9 +88,6 @@ func (b *Bank) SetDefaultBalance(balance int) {
 
 // SetName sets the name of the bank.
 func (b *Bank) SetName(name string) {
-	log.Trace("--> bank.Bank.SetName")
-	defer log.Trace("<-- bank.Bank.SetName")
-
 	if name != b.Name {
 		b.Name = name
 		writeBank(b)
@@ -112,9 +97,6 @@ func (b *Bank) SetName(name string) {
 
 // SetCurrency sets the currency used by the bank.
 func (b *Bank) SetCurrency(currency string) {
-	log.Trace("--> bank.Bank.SetCurrency")
-	defer log.Trace("<-- bank.Bank.SetCurrency")
-
 	if currency != b.Currency {
 		b.Currency = currency
 		writeBank(b)
