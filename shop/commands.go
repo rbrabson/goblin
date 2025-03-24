@@ -635,7 +635,8 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
-	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
+	role := GetRole(i.GuildID, roleName)
+	shopItem := (*ShopItem)(role)
 	sendConfirmationMessage(s, i, shopItem)
 	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("purchase of role initiated")
 }
@@ -693,8 +694,8 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	}
 
 	// Purchase the role
-	shopItem := GetShopItem(i.GuildID, roleName, ROLE)
-	purchase, err := shopItem.Purchase(i.Member.User.ID, false)
+	role := GetRole(i.GuildID, roleName)
+	purchase, err := role.Purchase(i.Member.User.ID, false)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
 		resp := disgomsg.Response{

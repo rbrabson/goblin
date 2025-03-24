@@ -8,10 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const (
-	ROLE = "role"
-)
-
 // The shop for a guild. The shop contains all items available for purchase.
 type Shop struct {
 	GuildID string      // Guild (server) for the shop
