@@ -44,7 +44,6 @@ func GetShop(guildID string) *Shop {
 	slices.SortFunc(shop.Items, shopItemCmp)
 
 	return shop
-
 }
 
 // GetShopItems finds an item in the shop. If the item does not exist then nil is returned.
