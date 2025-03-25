@@ -88,7 +88,7 @@ func getDefauiltConfig(guildID string) *Config {
 		MinPrizeAmount:   750,
 		WaitBetweenRaces: time.Second * 60,
 		WaitForBets:      time.Second * 30,
-		WaitToStart:      time.Second * 30,
+		WaitToStart:      time.Second * 45,
 	}
 
 	writeConfig(config)
