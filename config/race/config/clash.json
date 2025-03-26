@@ -12,5 +12,5 @@
     "track": "•   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   ",
     "wait_between_races": 60000000000,
     "wait_for_bets": 30000000000,
-    "wait_to_start": 30000000000
+    "wait_to_start": 45000000000
 }

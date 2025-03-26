@@ -323,7 +323,7 @@ func raceStartChecks(guildID string, memberID string) error {
 
 // raceJoinChecks checks to see if a racer is able to join the race.
 func raceJoinChecks(race *Race, memberID string) error {
-	if time.Now().After(race.RaceStartTime.Add(race.config.WaitForBets)) {
+	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
 		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("race has started")
 		return ErrRaceHasStarted
 	}

@@ -108,6 +108,9 @@ func (h *Heist) AddCrewMember(member *HeistMember) error {
 
 // Start runs the heist and returns the results of the heist.
 func (h *Heist) Start() (*HeistResult, error) {
+	heistLock.Lock()
+	defer heistLock.Unlock()
+
 	if len(h.Crew) < 2 {
 		log.WithFields(log.Fields{"guild": h.GuildID}).Error("not enough members to start heist")
 		return nil, ErrNotEnoughMembers{*h.theme}
