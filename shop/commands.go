@@ -327,7 +327,7 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Verify the custom command can be added to the shop
-	err := customCommandCreateChecks(s, i, "Custom Command")
+	err := customCommandCreateChecks(s, i, CUSTOM_COMMAND_NAME)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID}).Errorf("failed to perform custom command create checks: %s", err)
 		resp := disgomsg.Response{
