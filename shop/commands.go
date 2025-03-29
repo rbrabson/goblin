@@ -77,6 +77,19 @@ var (
 								},
 							},
 						},
+						{
+							Name:        "command",
+							Description: "Adds a purchasable custom command to the shop.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionInteger,
+									Name:        "cost",
+									Description: "The cost of the custom command.",
+									Required:    true,
+								},
+							},
+						},
 					},
 				},
 				{
@@ -214,6 +227,8 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch options[0].Options[0].Name {
 	case "role":
 		addRoleToShop(s, i)
+	case "command":
+		addCommandToShop(s, i)
 	default:
 		resp := disgomsg.Response{
 			Content: fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name),
@@ -295,6 +310,52 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"role": role}).Info("role added to shop")
 	resp := disgomsg.Response{
 		Content: p.Sprintf("Role `%s` has been added to the shop.", roleName),
+	}
+	resp.Send(s, i.Interaction)
+}
+
+// addCommandToShop adds a custom command to the shop.
+func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// Get the options for the custom command to be added
+	var commandCost int
+	options := i.ApplicationCommandData().Options
+	for _, option := range options[0].Options[0].Options {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "option": option}).Trace("processing option")
+		if option.Name == "cost" {
+			commandCost = int(option.IntValue())
+		}
+	}
+
+	// Verify the custom command can be added to the shop
+	err := customCommandCreateChecks(s, i, "Custom Command")
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID}).Errorf("failed to perform custom command create checks: %s", err)
+		resp := disgomsg.Response{
+			Content: unicode.FirstToUpper(err.Error()),
+		}
+		resp.SendEphemeral(s, i.Interaction)
+	}
+
+	// Add the custom command to the shop.
+	shop := GetShop(i.GuildID)
+	command := NewCustomCommand(i.GuildID, commandCost)
+	err = command.AddToShop(shop)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "commandCost": commandCost}).Errorf("failed to add custom command to shop: %s", err)
+		resp := disgomsg.Response{
+			Content: fmt.Sprintf("Failed to add custom command to the shop: %s", err),
+		}
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	// Register the component handlers for the item
+	shopItem := (*ShopItem)(command)
+	registerShopItemComponentHandlers(shopItem)
+
+	log.WithFields(log.Fields{"command": command}).Info("custom command added to shop")
+	resp := disgomsg.Response{
+		Content: "Custom command has been added to the shop.",
 	}
 	resp.Send(s, i.Interaction)
 }

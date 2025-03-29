@@ -177,7 +177,13 @@ func (p *Purchase) HasExpired() bool {
 		} else {
 			msg = fmt.Sprintf("Your purchase of %s `%s` has expired", p.Item.Type, p.Item.Name)
 		}
-		SendMessageToUser(bot.Session, p.MemberID, msg)
+		dm := disgomsg.Message{
+			Content: msg,
+		}
+		err := dm.Send(bot.Session, p.MemberID)
+		if err != nil {
+			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to send direct message about expired purchase")
+		}
 
 		config := GetConfig(p.GuildID)
 		if config.ModChannelID != "" {
