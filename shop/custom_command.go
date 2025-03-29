@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	CUSTOM_COMMAND = "custom_command"
+	CUSTOM_COMMAND             = "custom_command"
+	CUSTOM_COMMAND_NAME        = "Custom Command"
+	CUSTOM_COMMAND_DESCRIPTION = "Custom command that may be used on this server"
 )
 
 // CustomCommand represents a custom command item in the shop.
@@ -22,7 +24,7 @@ func GetCustomCommand(guildID string, name string) *CustomCommand {
 
 // NewCustomCommand creates a new command for the shop.
 func NewCustomCommand(guildID string, price int) *CustomCommand {
-	item := newShopItem(guildID, "Custom Command", "Custom command that may be used on this server", CUSTOM_COMMAND, price, "", false)
+	item := newShopItem(guildID, CUSTOM_COMMAND_NAME, CUSTOM_COMMAND_DESCRIPTION, CUSTOM_COMMAND, price, "", false)
 	command := (*CustomCommand)(item)
 	return command
 }
