@@ -29,7 +29,7 @@ func TestNewPurchase(t *testing.T) {
 	defer teardown()
 
 	item := testShop.GetShopItem("test_item_1", "role")
-	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item, false)
+	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item, PURCHASED, false)
 	if err != nil {
 		t.Errorf("NewPurchase failed to create a new purchase, error: %s", err)
 	}
@@ -41,7 +41,7 @@ func TestGetAllPurchases(t *testing.T) {
 	defer teardown()
 
 	item1 := testShop.GetShopItem("test_item_1", "role")
-	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item1, false)
+	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item1, PURCHASED, false)
 	if err != nil {
 		t.Errorf("NewPurchase failed to create a new purchase, error: %s", err)
 		return
@@ -50,7 +50,7 @@ func TestGetAllPurchases(t *testing.T) {
 	log.WithField("purchases", purchases).Debug("purchases")
 
 	item2 := testShop.GetShopItem("test_item_2", "role")
-	purchase, err = PurchaseItem(GUILD_ID, MEMBER_ID, item2, false)
+	purchase, err = PurchaseItem(GUILD_ID, MEMBER_ID, item2, PURCHASED, false)
 	if err != nil {
 		t.Errorf("NewPurchase failed to create a new purchase, error: %s", err)
 		return
@@ -72,7 +72,7 @@ func TestUpdatePurchase(t *testing.T) {
 	defer teardown()
 
 	item := testShop.GetShopItem("test_item_1", "role")
-	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item, false)
+	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item, PURCHASED, false)
 	if err != nil {
 		t.Errorf("NewPurchase failed to create a new purchase, error: %s", err)
 		return

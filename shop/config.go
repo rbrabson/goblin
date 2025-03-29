@@ -7,11 +7,12 @@ import (
 
 // Config represents the configuration for the shop in a guild.
 type Config struct {
-	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID      string             `json:"guild_id" bson:"guild_id"`
-	ChannelID    string             `json:"channel_id" bson:"channel_id"`
-	MessageID    string             `json:"message_id" bson:"message_id"`
-	ModChannelID string             `json:"mod_channel_id" bson:"mod_channel_id"`
+	ID             primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID        string             `json:"guild_id" bson:"guild_id"`
+	ChannelID      string             `json:"channel_id" bson:"channel_id"`
+	MessageID      string             `json:"message_id" bson:"message_id"`
+	ModChannelID   string             `json:"mod_channel_id" bson:"mod_channel_id"`
+	NotificationID string             `json:"notification_id" bson:"notification_id"`
 }
 
 // GetConfig reads the configuration from the database. If the config does not exist,
@@ -52,6 +53,15 @@ func (c *Config) SetModChannel(channelID string) {
 		c.ModChannelID = channelID
 		writeConfig(c)
 		log.WithFields(log.Fields{"guildID": c.GuildID, "channel": channelID}).Debug("set shop mod channel")
+	}
+}
+
+// SetModChannel sets the channel to which to publish the shop purchases and expirations.
+func (c *Config) SetNotificationID(id string) {
+	if c.NotificationID != id {
+		c.NotificationID = id
+		writeConfig(c)
+		log.WithFields(log.Fields{"guildID": c.GuildID, "member": id}).Debug("set shop notification ID")
 	}
 }
 

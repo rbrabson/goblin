@@ -93,7 +93,7 @@ func GetPurchase(guildID string, memberID string, itemName string, itemType stri
 
 // PurchaseItem creates a new Purchase with the given guild ID, member ID, and a purchasable
 // shop item.
-func PurchaseItem(guildID, memberID string, item *ShopItem, renew bool) (*Purchase, error) {
+func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew bool) (*Purchase, error) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	bankAccount := bank.GetAccount(guildID, memberID)

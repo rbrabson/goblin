@@ -37,7 +37,7 @@ func (cc *CustomCommand) Update(name string, description string, price int, dura
 // Purchase allows a member to purchase the command from the shop.
 func (cc *CustomCommand) Purchase(memberID string, renew bool) (*Purchase, error) {
 	item := ShopItem(*cc)
-	return item.purchase(memberID, renew)
+	return item.purchase(memberID, PENDING, renew)
 }
 
 // AddToShop adds the command to the shop. If the command already exists, an error is returned.

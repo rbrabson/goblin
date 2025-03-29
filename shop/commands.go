@@ -126,6 +126,19 @@ var (
 					},
 				},
 				{
+					Name:        "notification-id",
+					Description: "Sets the member to which to notify when a purchase requires additional action.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionChannel,
+							Name:        "id",
+							Description: "The ID of the member to notify when a purchase requires additional action.",
+							Required:    true,
+						},
+					},
+				},
+				{
 					Name:        "publish",
 					Description: "Publishes the shop items in the shop channel.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -183,6 +196,8 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		setShopChannel(s, i)
 	case "mod-channel":
 		setShopModChannel(s, i)
+	case "member-id":
+		setNotificationID(s, i)
 	case "publish":
 		refreshShop(s, i)
 	default:
@@ -453,6 +468,28 @@ func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.Response{
 		Content: fmt.Sprintf("Shop mod channel set to <#%s>", channelID),
+	}
+	resp.Send(s, i.Interaction)
+}
+
+// setNotificationID sets the ID of the member to nofify when a purchase requires additional actions.
+func setNotificationID(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	options := i.ApplicationCommandData().Options
+	memberID := options[0].Options[0].ChannelValue(s).ID
+	_, err := s.State.Channel(memberID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": memberID}).Error("failed to get member from state")
+		resp := disgomsg.Response{
+			Content: fmt.Sprintf("Failed to get member ID %s: %s", memberID, err),
+		}
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+	config := GetConfig(i.GuildID)
+	config.SetNotificationID(memberID)
+
+	resp := disgomsg.Response{
+		Content: fmt.Sprintf("Shop notification ID to <#%s>", memberID),
 	}
 	resp.Send(s, i.Interaction)
 }
