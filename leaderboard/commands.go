@@ -2,9 +2,11 @@ package leaderboard
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/olekukonko/tablewriter"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
@@ -223,7 +225,7 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 // formatAccounts formats the leaderboard to be sent to a Discord server
-func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
+func newFormatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Type:   discordgo.EmbedTypeRich,
@@ -274,6 +276,56 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 			Value:  value,
 			Inline: false,
 		})
+	}
+
+	return embeds
+}
+
+// formatAccounts formats the leaderboard to be sent to a Discord server
+func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
+	var tableBuffer strings.Builder
+	table := tablewriter.NewWriter(&tableBuffer)
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(true)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetTablePadding("\t")
+	table.SetNoWhiteSpace(true)
+	table.SetHeader([]string{"#", "Name", "Balance"})
+
+	// A bit of a hack, but good enough....
+	for i, account := range accounts {
+		member := guild.GetMember(accounts[0].GuildID, account.MemberID)
+		var balance int
+		switch title {
+		case string(CurrentLeaderboard):
+			balance = account.CurrentBalance
+		case string(MonthlyLeaderboard):
+			balance = account.MonthlyBalance
+		case string(LifetimeLeaderboard):
+			balance = account.LifetimeBalance
+		default:
+			balance = account.MonthlyBalance
+		}
+		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
+		table.Append(data)
+	}
+	table.Render()
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Type:  discordgo.EmbedTypeRich,
+			Title: title,
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Value: p.Sprintf("```\n%s```\n", tableBuffer.String()),
+				},
+			},
+		},
 	}
 
 	return embeds
