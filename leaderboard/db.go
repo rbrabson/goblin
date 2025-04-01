@@ -25,12 +25,6 @@ func readLeaderboard(guildID string) *Leaderboard {
 
 // writeBank creates or updates the bank for a guild in the database being used by the Discord bot.
 func writeLeaderboard(lb *Leaderboard) error {
-	// var filter bson.M
-	// if lb.ID != primitive.NilObjectID {
-	// 	filter = bson.M{"_id": lb.ID}
-	// } else {
-	// 	filter = bson.M{"guild_id": server.GuildID}
-	// }
 	filter := bson.M{"guild_id": lb.GuildID}
 
 	err := db.UpdateOrInsert(LEADERBOARD_COLLECTION, filter, lb)

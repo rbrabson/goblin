@@ -83,7 +83,7 @@ func TestHeistChecks(t *testing.T) {
 	defer heist.End()
 
 	member := getHeistMember(GUILD_ID, "abcdef")
-	member.guildMember.SetName("Crew Member 1", "")
+	member.guildMember.SetName("Crew Member 1", "", "")
 	err = heistChecks(heist, member)
 	if err != nil {
 		t.Errorf("Got %s", err.Error())
@@ -101,7 +101,7 @@ func TestStartHeist(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	organizer := guild.GetMember(GUILD_ID, ORGANIZER_ID).SetName("Organizer", "")
+	organizer := guild.GetMember(GUILD_ID, ORGANIZER_ID).SetName("Organizer", "", "")
 	if organizer == nil {
 		t.Errorf("Expected organizer, got nil")
 		return
@@ -118,7 +118,7 @@ func TestStartHeist(t *testing.T) {
 	defer heist.End()
 
 	member := getHeistMember(GUILD_ID, "abcdef")
-	member.guildMember.SetName("Crew Member 1", "")
+	member.guildMember.SetName("Crew Member 1", "", "")
 	heist.AddCrewMember(member)
 
 	res, err := heist.Start()

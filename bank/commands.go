@@ -201,7 +201,7 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	m := guild.GetMember(i.GuildID, member.User.ID).SetName(i.User.Username, i.Member.DisplayName())
+	m := guild.GetMember(i.GuildID, member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	account := GetAccount(i.GuildID, id)
 
 	account.SetBalance(amount)

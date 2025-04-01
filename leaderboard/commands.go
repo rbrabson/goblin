@@ -2,11 +2,9 @@ package leaderboard
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/olekukonko/tablewriter"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
@@ -195,7 +193,7 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // sendLeaderboard is a utility function that sends an economy leaderboard to Discord.
 func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title LeaderboardType, accounts []*bank.Account) {
 	// Make sure the guild member's name is updated
-	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
+	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	embeds := formatAccounts(p, string(title), accounts)
@@ -226,24 +224,19 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // formatAccounts formats the leaderboard to be sent to a Discord server
 func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
-	var tableBuffer strings.Builder
-	table := tablewriter.NewWriter(&tableBuffer)
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
-	table.SetTablePadding("\t")
-	table.SetNoWhiteSpace(true)
-	table.SetHeader([]string{"#", "Name", "Balance"})
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Type:   discordgo.EmbedTypeRich,
+			Title:  title,
+			Fields: make([]*discordgo.MessageEmbedField, 0, len(accounts)),
+		},
+	}
+	embed := embeds[0]
 
-	// A bit of a hack, but good enough....
+	sb := strings.Builder{}
 	for i, account := range accounts {
-		member := guild.GetMember(accounts[0].GuildID, account.MemberID)
+		sb.Reset()
+		member := guild.GetMember(account.GuildID, account.MemberID)
 		var balance int
 		switch title {
 		case string(CurrentLeaderboard):
@@ -255,20 +248,32 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 		default:
 			balance = account.MonthlyBalance
 		}
-		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
-		table.Append(data)
-	}
-	table.Render()
-	embeds := []*discordgo.MessageEmbed{
-		{
-			Type:  discordgo.EmbedTypeRich,
-			Title: title,
-			Fields: []*discordgo.MessageEmbedField{
-				{
-					Value: p.Sprintf("```\n%s```\n", tableBuffer.String()),
-				},
-			},
-		},
+
+		sb.WriteString(p.Sprintf("Rank %d", i+1))
+		switch i {
+		case 0:
+			sb.WriteString(" 🥇")
+		case 1:
+			sb.WriteString(" 🥈")
+		case 2:
+			sb.WriteString(" 🥉")
+		}
+		sb.WriteString(p.Sprintf(" - %s", member.Name))
+		name := sb.String()
+
+		sb.Reset()
+		sb.WriteString(p.Sprintf("Balance: %d\n", balance))
+		sb.WriteString(p.Sprintf("Tag: <@%s>\n", member.MemberID))
+		if member.UserName != "" {
+			sb.WriteString(p.Sprintf("Username: %s\n", member.UserName))
+		}
+		value := sb.String()
+
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   name,
+			Value:  value,
+			Inline: false,
+		})
 	}
 
 	return embeds
