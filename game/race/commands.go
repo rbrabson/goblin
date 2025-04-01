@@ -237,7 +237,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// All is good, add the member to the race
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
-	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
+	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	race.addRaceParticipant(raceMember)
 	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("joined the race")
 	resp := disgomsg.Response{
@@ -263,7 +263,7 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(lang)
 
 	// Update the member's name in the guild.
-	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
+	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 
@@ -386,7 +386,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Add to the list of betters
-	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
+	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	better := getRaceBetter(raceMember, raceParticipant)
 	race.addBetter(better)
 	p := message.NewPrinter(language.AmericanEnglish)

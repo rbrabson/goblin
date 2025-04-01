@@ -195,7 +195,7 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // sendLeaderboard is a utility function that sends an economy leaderboard to Discord.
 func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title LeaderboardType, accounts []*bank.Account) {
 	// Make sure the guild member's name is updated
-	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
+	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	embeds := formatAccounts(p, string(title), accounts)
@@ -222,6 +222,63 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content: p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank),
 	}
 	resp.SendEphemeral(s, i.Interaction)
+}
+
+// formatAccounts formats the leaderboard to be sent to a Discord server
+func newFormatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Type:   discordgo.EmbedTypeRich,
+			Title:  title,
+			Fields: make([]*discordgo.MessageEmbedField, 0, len(accounts)),
+		},
+	}
+	embed := embeds[0]
+
+	sb := strings.Builder{}
+	for i, account := range accounts {
+		sb.Reset()
+		member := guild.GetMember(account.GuildID, account.MemberID)
+		var balance int
+		switch title {
+		case string(CurrentLeaderboard):
+			balance = account.CurrentBalance
+		case string(MonthlyLeaderboard):
+			balance = account.MonthlyBalance
+		case string(LifetimeLeaderboard):
+			balance = account.LifetimeBalance
+		default:
+			balance = account.MonthlyBalance
+		}
+
+		sb.WriteString(p.Sprintf("Rank %d", i+1))
+		switch i {
+		case 0:
+			sb.WriteString(" 🥇")
+		case 1:
+			sb.WriteString(" 🥈")
+		case 2:
+			sb.WriteString(" 🥉")
+		}
+		sb.WriteString(p.Sprintf(" - %s", member.Name))
+		name := sb.String()
+
+		sb.Reset()
+		sb.WriteString(p.Sprintf("Balance: %d\n", balance))
+		sb.WriteString(p.Sprintf("Tag: <@%s>\n", member.MemberID))
+		if member.UserName != "" {
+			sb.WriteString(p.Sprintf("Username: %s\n", member.UserName))
+		}
+		value := sb.String()
+
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   name,
+			Value:  value,
+			Inline: false,
+		})
+	}
+
+	return embeds
 }
 
 // formatAccounts formats the leaderboard to be sent to a Discord server
