@@ -72,7 +72,6 @@ func NewBot(botName string, version string, revision string) *Bot {
 
 	db = mongo.NewDatabase()
 	guild.SetDB(db)
-	guild.SetSesion(bot.Session)
 	for _, plugin := range ListPlugin() {
 		plugin.Initialize(bot, db)
 		log.WithFields(log.Fields{"plugin": plugin.GetName()}).Info("initialized plugin")

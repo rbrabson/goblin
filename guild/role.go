@@ -11,16 +11,11 @@ import (
 
 var (
 	db *mongo.MongoDB
-	s  *discordgo.Session
 )
 
 // Sets the database to be used by the role package.
 func SetDB(database *mongo.MongoDB) {
 	db = database
-}
-
-func SetSesion(session *discordgo.Session) {
-	s = session
 }
 
 // GetAdminRoles returns the list of admin roles for a given guild.
