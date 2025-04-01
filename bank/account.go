@@ -122,7 +122,7 @@ func newAccount(guildID string, memberID string) *Account {
 
 // String returns a string representation of the account.
 func (account *Account) String() string {
-	return fmt.Sprintf("Account{ID: %s, GuildID: %s, MemberID: %s, Balance: %d, MonthlyBalance: %d, LifetimeBalance: %d}",
+	return fmt.Sprintf("Account{ID: %s, GuildID: %s, MemberID: %s, CurrentBalance: %d, MonthlyBalance: %d, LifetimeBalance: %d}",
 		account.ID.Hex(),
 		account.GuildID,
 		account.MemberID,

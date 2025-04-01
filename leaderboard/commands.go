@@ -15,6 +15,14 @@ import (
 	"golang.org/x/text/message"
 )
 
+type LeaderboardType string
+
+const (
+	CurrentLeaderboard  LeaderboardType = "Current Leaderboard"
+	MonthlyLeaderboard  LeaderboardType = "Monthly Leaderboard"
+	LifetimeLeaderboard LeaderboardType = "Lifetime Leaderboard"
+)
+
 var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"lb-admin": leaderboardAdmin,
@@ -146,21 +154,21 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func currentLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getCurrentLeaderboard()
-	sendLeaderboard(s, i, "Current Leaderboard", leaderboard)
+	sendLeaderboard(s, i, CurrentLeaderboard, leaderboard)
 }
 
 // monthlyLeaderboard returns the top ranked accounts for the current months.
 func monthlyLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getMonthlyLeaderboard()
-	sendLeaderboard(s, i, "Monthly Leaderboard", leaderboard)
+	sendLeaderboard(s, i, MonthlyLeaderboard, leaderboard)
 }
 
 // lifetimeLeaderboard returns the top ranked accounts for the lifetime of the server.
 func lifetimeLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getLifetimeLeaderboard()
-	sendLeaderboard(s, i, "Lifetime Leaderboard", leaderboard)
+	sendLeaderboard(s, i, LifetimeLeaderboard, leaderboard)
 }
 
 // setLeaderboardChannel sets the server channel to which the monthly leaderboard is published.
@@ -185,12 +193,12 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 // sendLeaderboard is a utility function that sends an economy leaderboard to Discord.
-func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title string, accounts []*bank.Account) {
+func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title LeaderboardType, accounts []*bank.Account) {
 	// Make sure the guild member's name is updated
 	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.DisplayName())
 
 	p := message.NewPrinter(language.AmericanEnglish)
-	embeds := formatAccounts(p, title, accounts)
+	embeds := formatAccounts(p, string(title), accounts)
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -238,14 +246,14 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 		member := guild.GetMember(accounts[0].GuildID, account.MemberID)
 		var balance int
 		switch title {
-		case "Current Leaderboard":
+		case string(CurrentLeaderboard):
 			balance = account.CurrentBalance
-		case "Monthly Leaderboard":
+		case string(MonthlyLeaderboard):
 			balance = account.MonthlyBalance
-		case "Lifetime Leaderboard":
+		case string(LifetimeLeaderboard):
 			balance = account.LifetimeBalance
 		default:
-			balance = account.CurrentBalance
+			balance = account.MonthlyBalance
 		}
 		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
 		table.Append(data)

@@ -35,7 +35,7 @@ func Start() {
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	bot = b
 	db = d
-	go sendMonthlyLeaderboard()
+	go sendAllMonthlyLeaderboards()
 }
 
 // Stop stops the leaderboard. This is called when the bot is shutting down.
