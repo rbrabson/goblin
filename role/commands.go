@@ -69,18 +69,16 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
-			disgomsg.WithInteraction(i.Interaction),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You do not have permission to use this command."),
-			disgomsg.WithInteraction(i.Interaction),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -122,9 +120,8 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" added", roleName)),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // removeRole removes a role from the list of admin roles for the server.
@@ -142,9 +139,8 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" removed", roleName)),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // listRoles lists the admin roles for the server.
@@ -168,7 +164,6 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(roleList),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 }

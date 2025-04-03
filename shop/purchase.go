@@ -129,9 +129,8 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 		guildMember := guild.GetMember(guildID, memberID)
 		msg := disgomsg.NewMessage(
 			disgomsg.WithContent(p.Sprintf("`%s` (id=%s) purchased %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price)),
-			disgomsg.WithChannelID(config.ModChannelID),
 		)
-		msg.Send(bot.Session)
+		msg.Send(bot.Session, config.ModChannelID)
 	}
 
 	return purchase, nil
@@ -192,9 +191,8 @@ func (p *Purchase) HasExpired() bool {
 			printer := message.NewPrinter(language.AmericanEnglish)
 			msg := disgomsg.NewMessage(
 				disgomsg.WithContent(printer.Sprintf("`%s` (id=%s) had their purchase of %s `%s` expire", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name)),
-				disgomsg.WithChannelID(config.ModChannelID),
 			)
-			msg.Send(bot.Session)
+			msg.Send(bot.Session, config.ModChannelID)
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase has expired")
 		} else {
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("no mod channel configured to notify of expired purchase")
@@ -227,9 +225,8 @@ func (p *Purchase) Return() error {
 		printer := message.NewPrinter(language.AmericanEnglish)
 		msg := disgomsg.NewMessage(
 			disgomsg.WithContent(printer.Sprintf("`%s` (id=%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name)),
-			disgomsg.WithChannelID(config.ModChannelID),
 		)
-		msg.Send(bot.Session)
+		msg.Send(bot.Session, config.ModChannelID)
 	}
 
 	return nil

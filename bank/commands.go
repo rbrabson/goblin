@@ -110,18 +110,16 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
-			disgomsg.WithInteraction(i.Interaction),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You do not have permission to use this command."),
-			disgomsg.WithInteraction(i.Interaction),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -147,9 +145,8 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
-			disgomsg.WithInteraction(i.Interaction),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -176,9 +173,8 @@ func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(content),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // setAccountBalance sets the balance of the account for the member of the guild to the specified amount
@@ -201,8 +197,8 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("An account with that ID does not exist."),
-			disgomsg.WithInteraction(i.Interaction))
-		resp.SendEphemeral(s)
+		)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -220,8 +216,8 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Account balance for %s was set to %d", m.Name, account.CurrentBalance)),
-		disgomsg.WithInteraction(i.Interaction))
-	resp.Send(s)
+	)
+	resp.Send(s, i.Interaction)
 }
 
 // setDefaultBalance sets the default balance for bank for the guild (server).
@@ -247,9 +243,8 @@ func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank default balance was set to %d", bank.DefaultBalance)),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // setBankName sets the name of the bank for the guild (server).
@@ -275,9 +270,8 @@ func setBankName(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank name was set to %s", bank.Name)),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // setBankCurrency sets the name of the currency used by the bank for the guild (server).
@@ -303,8 +297,8 @@ func setBankCurrency(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank currency was set to %s", bank.Currency)),
-		disgomsg.WithInteraction(i.Interaction))
-	resp.Send(s)
+	)
+	resp.Send(s, i.Interaction)
 }
 
 // getBankInfo gets information about the bank for the guild (server).
@@ -320,6 +314,6 @@ func getBankInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(content),
-		disgomsg.WithInteraction(i.Interaction))
-	resp.SendEphemeral(s)
+	)
+	resp.SendEphemeral(s, i.Interaction)
 }

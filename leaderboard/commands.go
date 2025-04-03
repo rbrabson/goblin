@@ -82,18 +82,16 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
-			disgomsg.WithInteraction(i.Interaction),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You do not have permission to use this command."),
-			disgomsg.WithInteraction(i.Interaction),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -110,9 +108,8 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
-			disgomsg.WithInteraction(i.Interaction),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
@@ -139,10 +136,9 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	default:
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Invalid command: "+options[0].Name),
-			disgomsg.WithInteraction(i.Interaction),
+			disgomsg.WithContent("Invalid command: " + options[0].Name),
 		)
-		resp.SendEphemeral(s)
+		resp.SendEphemeral(s, i.Interaction)
 	}
 }
 
@@ -175,9 +171,8 @@ func setLeaderboardChannel(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Channel ID for the monthly leaderboard set to %s.", channelID)),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.Send(s)
+	resp.Send(s, i.Interaction)
 }
 
 // getLeaderboardInfo returns the leaderboard configuration for the server.
@@ -185,9 +180,8 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Channel ID for the monthly leaderboard is %s.", lb.ChannelID)),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // sendLeaderboard is a utility function that sends an economy leaderboard to Discord.
@@ -218,9 +212,8 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank)),
-		disgomsg.WithInteraction(i.Interaction),
 	)
-	resp.SendEphemeral(s)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // formatAccounts formats the leaderboard to be sent to a Discord server
