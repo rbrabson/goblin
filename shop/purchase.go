@@ -127,10 +127,11 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 	config := GetConfig(guildID)
 	if config.ModChannelID != "" {
 		guildMember := guild.GetMember(guildID, memberID)
-		msg := disgomsg.Message{
-			Content: p.Sprintf("`%s` (id=%s) purchased %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price),
-		}
-		msg.Send(bot.Session, config.ModChannelID)
+		msg := disgomsg.NewMessage(
+			disgomsg.WithContent(p.Sprintf("`%s` (id=%s) purchased %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price)),
+			disgomsg.WithChannelID(config.ModChannelID),
+		)
+		msg.Send(bot.Session)
 	}
 
 	return purchase, nil
@@ -177,9 +178,9 @@ func (p *Purchase) HasExpired() bool {
 		} else {
 			msg = fmt.Sprintf("Your purchase of %s `%s` has expired", p.Item.Type, p.Item.Name)
 		}
-		dm := disgomsg.Message{
-			Content: msg,
-		}
+		dm := disgomsg.NewDirectMessage(
+			disgomsg.WithContent(msg),
+		)
 		err := dm.Send(bot.Session, p.MemberID)
 		if err != nil {
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to send direct message about expired purchase")
@@ -189,10 +190,11 @@ func (p *Purchase) HasExpired() bool {
 		if config.ModChannelID != "" {
 			guildMember := guild.GetMember(p.GuildID, p.MemberID)
 			printer := message.NewPrinter(language.AmericanEnglish)
-			msg := disgomsg.Message{
-				Content: printer.Sprintf("`%s` (id=%s) had their purchase of %s `%s` expire", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name),
-			}
-			msg.Send(bot.Session, config.ModChannelID)
+			msg := disgomsg.NewMessage(
+				disgomsg.WithContent(printer.Sprintf("`%s` (id=%s) had their purchase of %s `%s` expire", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name)),
+				disgomsg.WithChannelID(config.ModChannelID),
+			)
+			msg.Send(bot.Session)
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase has expired")
 		} else {
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("no mod channel configured to notify of expired purchase")
@@ -223,10 +225,11 @@ func (p *Purchase) Return() error {
 	if config.ModChannelID != "" {
 		guildMember := guild.GetMember(p.GuildID, p.MemberID)
 		printer := message.NewPrinter(language.AmericanEnglish)
-		msg := disgomsg.Message{
-			Content: printer.Sprintf("`%s` (id=%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name),
-		}
-		msg.Send(bot.Session, config.ModChannelID)
+		msg := disgomsg.NewMessage(
+			disgomsg.WithContent(printer.Sprintf("`%s` (id=%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name)),
+			disgomsg.WithChannelID(config.ModChannelID),
+		)
+		msg.Send(bot.Session)
 	}
 
 	return nil

@@ -80,18 +80,20 @@ var (
 // leaderboardAdmin updates the leaderboardAdmin channel.
 func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := disgomsg.Response{
-			Content: "You do not have permission to use this command.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You do not have permission to use this command."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -106,10 +108,11 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // leaderboard handles the leaderboard commands.
 func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -135,10 +138,11 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			rank(s, i)
 		}
 	default:
-		resp := disgomsg.Response{
-			Content: "Invalid command: " + options[0].Name,
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("Invalid command: "+options[0].Name),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 	}
 }
 
@@ -169,19 +173,21 @@ func setLeaderboardChannel(s *discordgo.Session, i *discordgo.InteractionCreate)
 	channelID := i.ApplicationCommandData().Options[0].Options[0].StringValue()
 	lb.setChannel(channelID)
 
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("Channel ID for the monthly leaderboard set to %s.", lb.ChannelID),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Channel ID for the monthly leaderboard set to %s.", channelID)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // getLeaderboardInfo returns the leaderboard configuration for the server.
 func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("channel ID for the monthly leaderboard is %s.", lb.ChannelID),
-	}
-	resp.SendEphemeral(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Channel ID for the monthly leaderboard is %s.", lb.ChannelID)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.SendEphemeral(s)
 }
 
 // sendLeaderboard is a utility function that sends an economy leaderboard to Discord.
@@ -210,10 +216,11 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lifetimeRank := getLifetimeRanking(lb, account)
 
 	p := message.NewPrinter(language.AmericanEnglish)
-	resp := disgomsg.Response{
-		Content: p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank),
-	}
-	resp.SendEphemeral(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.SendEphemeral(s)
 }
 
 // formatAccounts formats the leaderboard to be sent to a Discord server

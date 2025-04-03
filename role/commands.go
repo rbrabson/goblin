@@ -67,18 +67,20 @@ var (
 // guildAdmin handles the guildAdmin command.
 func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := disgomsg.Response{
-			Content: "You do not have permission to use this command.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You do not have permission to use this command."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -118,10 +120,11 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server.AddAdminRole(roleName)
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role add")
 
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("Role \"%s\" added", roleName),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" added", roleName)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // removeRole removes a role from the list of admin roles for the server.
@@ -137,10 +140,11 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server.RemoveAdminRole(roleName)
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role remove")
 
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("Role \"%s\" removed", roleName),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" removed", roleName)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // listRoles lists the admin roles for the server.
@@ -162,8 +166,9 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleList := sb.String()
 	log.WithFields(log.Fields{"guild": guildID, "roles": roleList}).Debug("/guild-admin role list")
 
-	resp := disgomsg.Response{
-		Content: roleList,
-	}
-	resp.SendEphemeral(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(roleList),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.SendEphemeral(s)
 }

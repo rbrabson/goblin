@@ -107,10 +107,11 @@ func NewBot(botName string, version string, revision string) *Bot {
 				h(s, i)
 			} else {
 				log.WithField("command", i.ApplicationCommandData().Name).Warn("unhandled command")
-				resp := disgomsg.Response{
-					Content: "Unknown command. Use `/help` to see a list of available commands.",
-				}
-				resp.SendEphemeral(s, i.Interaction)
+				resp := disgomsg.NewResponse(
+					disgomsg.WithContent("Unknown command. Use `/help` to see a list of available commands."),
+					disgomsg.WithInteraction(i.Interaction),
+				)
+				resp.SendEphemeral(s)
 			}
 		case discordgo.InteractionMessageComponent:
 			if h, ok := componentHandlers[i.MessageComponentData().CustomID]; ok {
@@ -120,10 +121,10 @@ func NewBot(botName string, version string, revision string) *Bot {
 					h(s, i)
 				} else {
 					log.WithField("component", i.MessageComponentData().CustomID).Warn("unhandled component")
-					resp := disgomsg.Response{
-						Content: "Unknown component. Please try again.",
-					}
-					resp.SendEphemeral(s, i.Interaction)
+					resp := disgomsg.NewResponse(
+						disgomsg.WithContent("Unknown component. Please try again."),
+						disgomsg.WithInteraction(i.Interaction))
+					resp.SendEphemeral(s)
 				}
 			}
 		}

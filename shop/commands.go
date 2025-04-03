@@ -182,18 +182,20 @@ var (
 // shopAdmin routes the shop admin commands to the proper handers.
 func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := disgomsg.Response{
-			Content: "You do not have permission to use this command.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You do not have permission to use this command."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -214,10 +216,11 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "publish":
 		refreshShop(s, i)
 	default:
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Command `%s` is not recognized.", options[0].Name),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Command `%s` is not recognized.", options[0].Name)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 	}
 }
 
@@ -230,10 +233,11 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "command":
 		addCommandToShop(s, i)
 	default:
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 	}
 
 	config := GetConfig(i.GuildID)
@@ -266,10 +270,11 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			_, err := disctime.ParseDuration(roleDuration)
 			if err != nil {
 				log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": option.StringValue()}).Errorf("Failed to parse role duration: %s", err)
-				resp := disgomsg.Response{
-					Content: fmt.Sprintf("Invalid duration: %s", err.Error()),
-				}
-				resp.SendEphemeral(s, i.Interaction)
+				resp := disgomsg.NewResponse(
+					disgomsg.WithContent(fmt.Sprintf("Invalid duration: %s", err.Error())),
+					disgomsg.WithInteraction(i.Interaction),
+				)
+				resp.SendEphemeral(s)
 				return
 			}
 		case "renewable":
@@ -284,10 +289,11 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := roleCreateChecks(s, i, roleName)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to perform role create checks: %s", err)
-		resp := disgomsg.Response{
-			Content: unicode.FirstToUpper(err.Error()),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 	}
 
 	// Add the role to the shop.
@@ -296,10 +302,11 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err = role.AddToShop(shop)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDesc": roleDesc, "roleCost": roleCost, "roleDuration": roleDuration, "roleRenewable": roleRenewable}).Errorf("failed to add role to shop: %s", err)
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Failed to add role `%s` to the shop: %s", roleName, err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to add role `%s` to the shop: %s", roleName, err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -308,10 +315,11 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	registerShopItemComponentHandlers(shopItem)
 
 	log.WithFields(log.Fields{"role": role}).Info("role added to shop")
-	resp := disgomsg.Response{
-		Content: p.Sprintf("Role `%s` has been added to the shop.", roleName),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Role `%s` has been added to the shop.", roleName)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // addCommandToShop adds a custom command to the shop.
@@ -330,10 +338,11 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := customCommandCreateChecks(s, i, CUSTOM_COMMAND_NAME)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID}).Errorf("failed to perform custom command create checks: %s", err)
-		resp := disgomsg.Response{
-			Content: unicode.FirstToUpper(err.Error()),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 	}
 
 	// Add the custom command to the shop.
@@ -342,10 +351,11 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err = command.AddToShop(shop)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "commandCost": commandCost}).Errorf("failed to add custom command to shop: %s", err)
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Failed to add custom command to the shop: %s", err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to add custom command to the shop: %s", err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -354,10 +364,11 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	registerShopItemComponentHandlers(shopItem)
 
 	log.WithFields(log.Fields{"command": command}).Info("custom command added to shop")
-	resp := disgomsg.Response{
-		Content: "Custom command has been added to the shop.",
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent("Custom command has been added to the shop."),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // removeShopItem routes the remove shop item commands to the proper handers.
@@ -371,10 +382,11 @@ func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	default:
 		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
 		log.Warn(msg)
-		resp := disgomsg.Response{
-			Content: msg,
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(msg),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 	}
 }
 
@@ -390,10 +402,11 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	role := GetRole(i.GuildID, roleName)
 	if role == nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found in shop")
-		resp := disgomsg.Response{
-			Content: p.Sprintf("Role `%s` not found in the shop.", roleName),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Role `%s` not found in the shop.", roleName)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -401,20 +414,22 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := role.RemoveFromShop(shop)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": role.GuildID, "roleName": role.Name}).Errorf("failed to remove role from shop: %s", err)
-		resp := disgomsg.Response{
-			Content: p.Sprintf("Failed to remove role `%s` from the shop: %s", roleName, err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Failed to remove role `%s` from the shop: %s", roleName, err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 	config := GetConfig(i.GuildID)
 	publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
 
 	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Info("role removed from shop")
-	resp := disgomsg.Response{
-		Content: p.Sprintf("Role `%s` has been removed from the shop.", roleName),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Role `%s` has been removed from the shop.", roleName)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // updateShopItem routes the update shop item commands to the proper handers.
@@ -424,10 +439,11 @@ func updateShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "role":
 		updateRoleInShop(s, i)
 	default:
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 	}
 }
 
@@ -446,10 +462,11 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		_, err := disctime.ParseDuration(roleDuration)
 		if err != nil {
 			log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": roleDuration}).Errorf("Failed to parse role duration: %s", err)
-			resp := disgomsg.Response{
-				Content: fmt.Sprintf("Invalid duration: %s", err.Error()),
-			}
-			resp.SendEphemeral(s, i.Interaction)
+			resp := disgomsg.NewResponse(
+				disgomsg.WithContent(fmt.Sprintf("Invalid duration: %s", err.Error())),
+				disgomsg.WithInteraction(i.Interaction),
+			)
+			resp.SendEphemeral(s)
 			return
 		}
 	}
@@ -461,29 +478,31 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	role := GetRole(i.GuildID, roleName)
 	if role == nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to read role from shop")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Role `%s` not found in the shop.", roleName),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Role `%s` not found in the shop.", roleName)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
 	err := role.Update(roleName, roleDesc, roleCost, roleDuration, roleRenewable)
 	if err != nil {
 		log.WithFields(log.Fields{"role": role}).Errorf("Failed to update role in shop: %s", err)
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Failed to update role `%s` in the shop: %s", roleName, err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to update role `%s` in the shop: %s", roleName, err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
 	log.WithFields(log.Fields{"role": role}).Info("Role updated in shop")
-	resp := disgomsg.Response{
-
-		Content: fmt.Sprintf("Role `%s` has been updated in the shop.", roleName),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Role `%s` has been updated in the shop.", roleName)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // setShopChannel sets the channel to which to publish the shop items.
@@ -494,10 +513,11 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	_, err := s.State.Channel(channelID)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "channelID": channelID}).Error("failed to get channel from state")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Failed to get channel %s: %s", channelID, err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to get channel %s: %s", channelID, err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 	config := GetConfig(i.GuildID)
@@ -505,10 +525,11 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config.SetChannel(channelID)
 	config.SetMessageID(messageID)
 
-	resp := disgomsg.Response{
-		Content: p.Sprintf("Shop channel set to <#%s>", channelID),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Shop channel set to <#%s>", channelID)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // setShopModChannel sets the channel to which to publish the shop items.
@@ -518,19 +539,21 @@ func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	_, err := s.State.Channel(channelID)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "channelID": channelID}).Error("failed to get mod channel from state")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Failed to get mod channel %s: %s", channelID, err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to get mod channel %s: %s", channelID, err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 	config := GetConfig(i.GuildID)
 	config.SetModChannel(channelID)
 
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("Shop mod channel set to <#%s>", channelID),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Shop mod channel set to <#%s>", channelID)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // setNotificationID sets the ID of the member to nofify when a purchase requires additional actions.
@@ -540,55 +563,61 @@ func setNotificationID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	_, err := s.State.Channel(memberID)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": memberID}).Error("failed to get member from state")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Failed to get member ID %s: %s", memberID, err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to get member %s: %s", memberID, err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 	config := GetConfig(i.GuildID)
 	config.SetNotificationID(memberID)
 
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("Shop notification ID to <#%s>", memberID),
-	}
-	resp.Send(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Shop notification ID set to <@%s>", memberID)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.Send(s)
 }
 
 // refreshShop refreshes the shop items in the shop channel.
 func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := GetConfig(i.GuildID)
 	if config.ChannelID == "" {
-		resp := disgomsg.Response{
-			Content: "No shop channel set. Use `/shop-admin channel` to set the shop channel.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("No shop channel set. Use `/shop-admin channel` to set the shop channel."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 	messageID, err := publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "channelID": config.ChannelID}).Error("failed to publish shop")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Failed to publish shop: %s", err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to publish shop: %s", err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 	config.SetMessageID(messageID)
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("Shop items refreshed and published to <#%s>", config.ChannelID),
-	}
-	resp.SendEphemeral(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Shop items refreshed and published to <#%s>", config.ChannelID)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.SendEphemeral(s)
 	log.WithFields(log.Fields{"guildID": i.GuildID}).Info("shop refreshed")
 }
 
 // shop routes the shop commands to the proper handers.
 func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -597,10 +626,11 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "purchases":
 		listPurchasesFromShop(s, i)
 	default:
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Command `\\shop\\%s` is not recognized.", options[0].Name),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 	}
 }
 
@@ -612,10 +642,11 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	if len(purchases) == 0 {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID}).Debug("no purchases found")
-		resp := disgomsg.Response{
-			Content: "You haven't made any purchases from the shop!",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You haven't made any purchases from the shop!"),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -656,10 +687,11 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 // initiatePurchase is used to buy an item from the shop using a button in the shop channel.
 func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -672,10 +704,11 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		initiatePurchaseOfRoleFromShop(s, i, itemName)
 	default:
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("unknown item type")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Unknown item type `%s`", itemType),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Unknown item type `%s`", itemType)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 }
@@ -686,10 +719,11 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	// Make sure the member can purchase the role
 	err := rolePurchaseChecks(s, i, roleName)
 	if err != nil {
-		resp := disgomsg.Response{
-			Content: unicode.FirstToUpper(err.Error()),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -703,10 +737,11 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 // It is called when the member confirms the purchase using a "Buy" button.
 func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -719,10 +754,11 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		completePurchaseOfRoleFromShop(s, i, itemName)
 	default:
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("unknown item type")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Unknown item type `%s`", itemType),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Unknown item type `%s`", itemType)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 }
@@ -735,10 +771,11 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	// Make sure the member can purchase the role
 	err := rolePurchaseChecks(s, i, roleName)
 	if err != nil {
-		resp := disgomsg.Response{
-			Content: unicode.FirstToUpper(err.Error()),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -747,10 +784,11 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	purchase, err := role.Purchase(i.Member.User.ID, false)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase role")
-		resp := disgomsg.Response{
-			Content: unicode.FirstToUpper(err.Error()),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
@@ -759,18 +797,20 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	if err != nil {
 		purchase.Return()
 		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "memberID": i.Member.User.ID, "error": err}).Error("failed to assign role")
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("Failed to assign role `%s` to you: %s", roleName, err),
-		}
-		resp.SendEphemeral(s, i.Interaction)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Failed to assign role `%s` to you: %s", roleName, err)),
+			disgomsg.WithInteraction(i.Interaction),
+		)
+		resp.SendEphemeral(s)
 		return
 	}
 
 	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("role purchased")
-	resp := disgomsg.Response{
-		Content: p.Sprintf("Role `%s` has been purchased and assigned to you.", roleName),
-	}
-	resp.SendEphemeral(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Role `%s` has been purchased and assigned to you.", roleName)),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.SendEphemeral(s)
 
 }
 
@@ -813,11 +853,12 @@ func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreat
 		},
 	}
 
-	resp := disgomsg.Response{
-		Components: components,
-		Embeds:     embeds,
-	}
-	resp.SendEphemeral(s, i.Interaction)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithComponents(components),
+		disgomsg.WithEmbeds(embeds),
+		disgomsg.WithInteraction(i.Interaction),
+	)
+	resp.SendEphemeral(s)
 }
 
 // publishShop publishes the shop items to the channel.
@@ -869,11 +910,13 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 	}
 
 	if messageID != "" {
-		msg := disgomsg.Message{
-			Components: components,
-			Embeds:     embeds,
-		}
-		err := msg.WithChannelID(channelID).WithMessageID(messageID).Edit(s)
+		msg := disgomsg.NewMessage(
+			disgomsg.WithComponents(components),
+			disgomsg.WithEmbeds(embeds),
+			disgomsg.WithChannelID(channelID),
+			disgomsg.WithMessageID(messageID),
+		)
+		err := msg.Edit(s)
 		if err != nil {
 			log.WithFields(log.Fields{"guildID": guildID, "channelID": channelID, "messageID": messageID}).Error("failed to edit shop items")
 			messageID = ""
@@ -881,11 +924,12 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		log.WithFields(log.Fields{"guildID": guildID, "channelID": channelID, "messageID": messageID}).Info("shop items updated")
 	}
 	if messageID == "" {
-		msg := disgomsg.Message{
-			Components: components,
-			Embeds:     embeds,
-		}
-		msg.Send(s, channelID)
+		msg := disgomsg.NewMessage(
+			disgomsg.WithComponents(components),
+			disgomsg.WithEmbeds(embeds),
+			disgomsg.WithChannelID(channelID),
+		)
+		msg.Send(s)
 	}
 
 	log.WithFields(log.Fields{"guildID": guildID, "numItems": len(items)}).Info("shop items published")
