@@ -623,7 +623,8 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 	for i, purchase := range purchases {
 		sb := strings.Builder{}
 		sb.WriteString(p.Sprintf("Description: %s\n", purchase.Item.Description))
-		sb.WriteString(p.Sprintf("Price: %d", purchase.Item.Price))
+		sb.WriteString(p.Sprintf("Price: %d\n", purchase.Item.Price))
+		sb.WriteString(p.Sprintf("Purchased on: %s", purchase.PurchasedOn.Format("02 Jan 2006")))
 		switch {
 		case purchase.ExpiresOn.IsZero():
 			// NO-OP
@@ -834,8 +835,12 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		sb.WriteString(p.Sprintf("Description: %s\n", item.Description))
 		sb.WriteString(p.Sprintf("Cost: %d", item.Price))
 		if item.Duration != "" {
-			duration, _ := disctime.ParseDuration(item.Duration)
+			duration, err := disctime.ParseDuration(item.Duration)
+			if err != nil {
+				log.WithFields(log.Fields{"guildID": guildID, "itemName": item.Name, "itemDuration": item.Duration}).Errorf("failed to parse item duration: %s", err)
+			}
 			sb.WriteString(p.Sprintf("\nDuration: %s", disctime.FormatDuration(duration)))
+			log.WithFields(log.Fields{"guildID": guildID, "itemName": item.Name, "itemDuration": item.Duration, "duration": duration, "formattedDuration": disctime.FormatDuration(duration)}).Info("item duration")
 			// sb.WriteString(p.Sprintf("\nAuto-Rewable: %t", item.AutoRenewable))
 		}
 		if len(shopItems)+1 < len(items) && len(shopItems)+1 < MAX_SHOP_ITEMS_DISPLAYED {
@@ -877,6 +882,9 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		if err != nil {
 			log.WithFields(log.Fields{"guildID": guildID, "channelID": channelID, "messageID": messageID}).Error("failed to edit shop items")
 			messageID = ""
+			config := GetConfig(guildID)
+			config.MessageID = messageID
+			writeConfig(config)
 		}
 		log.WithFields(log.Fields{"guildID": guildID, "channelID": channelID, "messageID": messageID}).Info("shop items updated")
 	}
@@ -885,7 +893,14 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 			disgomsg.WithComponents(components),
 			disgomsg.WithEmbeds(embeds),
 		)
-		msg.Send(s, channelID)
+		msgID, err := msg.Send(s, channelID)
+		if err != nil {
+			log.WithFields(log.Fields{"guildID": guildID, "channelID": channelID}).Error("failed to publish shop items")
+			return "", err
+		}
+		config := GetConfig(guildID)
+		config.MessageID = msgID
+		writeConfig(config)
 	}
 
 	log.WithFields(log.Fields{"guildID": guildID, "numItems": len(items)}).Info("shop items published")

@@ -73,3 +73,15 @@ func (c *Config) SetMessageID(messageID string) {
 		log.WithFields(log.Fields{"guildID": c.GuildID, "messageID": messageID}).Debug("set shop message ID")
 	}
 }
+
+// String returns a string representation of the config.
+func (c *Config) String() string {
+	return "Config{" +
+		"ID: " + c.ID.Hex() +
+		", GuildID: " + c.GuildID +
+		", ChannelID: " + c.ChannelID +
+		", MessageID: " + c.MessageID +
+		", ModChannelID: " + c.ModChannelID +
+		", NotificationID: " + c.NotificationID +
+		"}"
+}

@@ -46,12 +46,16 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 		return nil
 	}
 
+	for _, purchase := range purchases {
+		purchase.HasExpired()
+	}
+
 	purchaseCmp := func(a, b *Purchase) int {
 		// Sort expired purchases to the bottom of the purchases
-		if a.HasExpired() && !b.HasExpired() {
+		if a.IsExpired && !a.IsExpired {
 			return 1
 		}
-		if !a.HasExpired() && b.HasExpired() {
+		if !a.IsExpired && b.IsExpired {
 			return -1
 		}
 
@@ -180,7 +184,7 @@ func (p *Purchase) HasExpired() bool {
 		dm := disgomsg.NewDirectMessage(
 			disgomsg.WithContent(msg),
 		)
-		err := dm.Send(bot.Session, p.MemberID)
+		_, _, err := dm.Send(bot.Session, p.MemberID)
 		if err != nil {
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to send direct message about expired purchase")
 		}

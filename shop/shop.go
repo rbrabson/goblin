@@ -1,6 +1,7 @@
 package shop
 
 import (
+	"cmp"
 	"slices"
 
 	log "github.com/sirupsen/logrus"
@@ -27,19 +28,10 @@ func GetShop(guildID string) *Shop {
 	}
 
 	shopItemCmp := func(a, b *ShopItem) int {
-		if a.Type < b.Type {
-			return -1
-		}
-		if a.Type > b.Type {
-			return 1
-		}
-		if a.Name < b.Name {
-			return -1
-		}
-		if a.Name > b.Name {
-			return 1
-		}
-		return 0
+		return cmp.Or(
+			cmp.Compare(a.Type, b.Type),
+			cmp.Compare(a.Name, b.Name),
+		)
 	}
 	slices.SortFunc(shop.Items, shopItemCmp)
 
