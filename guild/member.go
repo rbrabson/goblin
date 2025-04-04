@@ -1,6 +1,7 @@
 package guild
 
 import (
+	"cmp"
 	"fmt"
 	"strings"
 
@@ -29,12 +30,7 @@ func GetMember(guildID string, memberID string) *Member {
 
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(userName string, displayName string) *Member {
-	var name string
-	if displayName != "" {
-		name = displayName
-	} else {
-		name = userName
-	}
+	name := cmp.Or(displayName, userName)
 	name = strings.Trim(name, "# ")
 
 	if member.Name != name {
