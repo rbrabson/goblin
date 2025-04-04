@@ -24,6 +24,9 @@ var (
 // Plugin is the plugin for the banking system used by the bot
 type Plugin struct{}
 
+// Ensure the plugin implements the Plugin interface
+var _ discord.Plugin = (*Plugin)(nil)
+
 // creates and registers the plugin for the banking system
 func Start() {
 	plugin = &Plugin{}
