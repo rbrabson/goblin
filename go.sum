@@ -23,8 +23,8 @@ github.com/olekukonko/tablewriter v0.0.5 h1:P2Ga83D34wi1o9J6Wh1mRuqd4mF/x/lgBS7N
 github.com/olekukonko/tablewriter v0.0.5/go.mod h1:hPp6KlRPjbx+hW8ykQs1w3UBbZlj6HuIJcUGPhkA7kY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/rbrabson/disgomsg v0.11.0 h1:QmC0QTamXQf3Wm0oZpuP7ngTFsjTvFvLLnkIJxdc70k=
-github.com/rbrabson/disgomsg v0.11.0/go.mod h1:yscoFfiIsjqmiCXGVhkeYbVqz34T2S2o0yro/XJdu7s=
+github.com/rbrabson/disgomsg v0.12.0 h1:S727ermXFVW/B9RUb/rbVlYcO1Sb++XBV3VU4XY0D70=
+github.com/rbrabson/disgomsg v0.12.0/go.mod h1:yscoFfiIsjqmiCXGVhkeYbVqz34T2S2o0yro/XJdu7s=
 github.com/rbrabson/disgopage v0.2.1 h1:MXbWSQffTOsMubgdsY1aiLPDCG73YkuK/xjQmm8UwnQ=
 github.com/rbrabson/disgopage v0.2.1/go.mod h1:5g3Yct8rrCpKTyQfZwIW0bnaVeoFCXq0ZQftjb+X1XU=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=

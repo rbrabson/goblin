@@ -47,7 +47,7 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string, renew b
 	dm := disgomsg.NewDirectMessage(
 		disgomsg.WithContent("Test Message"),
 	)
-	_, _, err = dm.Send(s, memberID)
+	_, err = dm.Send(s, memberID)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "memberID": memberID}).WithError(err).Error("failed to send direct message")
 		purchase.Return()

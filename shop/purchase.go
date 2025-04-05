@@ -184,7 +184,7 @@ func (p *Purchase) HasExpired() bool {
 		dm := disgomsg.NewDirectMessage(
 			disgomsg.WithContent(msg),
 		)
-		_, _, err := dm.Send(bot.Session, p.MemberID)
+		_, err := dm.Send(bot.Session, p.MemberID)
 		if err != nil {
 			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to send direct message about expired purchase")
 		}
