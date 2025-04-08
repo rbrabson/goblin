@@ -522,7 +522,8 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	account := bank.GetAccount(i.GuildID, heistMember.MemberID)
 	account.Withdraw(heist.config.HeistCost)
 
-	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
+	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+	heist.interaction = i
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("You have joined the %s at a cost of %d credits.", heist.theme.Heist, heist.config.HeistCost)),

@@ -1,7 +1,6 @@
 package guild
 
 import (
-	"cmp"
 	"fmt"
 	"strings"
 
@@ -41,12 +40,21 @@ func GetMember(guildID string, memberID string) *Member {
 }
 
 // SetName updates the name of the member as known on this guild (server).
-func (member *Member) SetName(userName string, displayName string) *Member {
-	name := cmp.Or(displayName, userName)
-	name = strings.Trim(name, "# ")
-
-	if member.Name != name {
-		member.Name = name
+func (member *Member) SetName(username string, nickname string, globalname string) *Member {
+	if member.UserName != username || member.NickName != nickname || member.GlobalName != globalname {
+		var name string
+		switch {
+		case globalname != "":
+			name = globalname
+		case nickname != "":
+			name = nickname
+		default:
+			name = username
+		}
+		member.Name = strings.Trim(name, "# ")
+		member.UserName = username
+		member.NickName = nickname
+		member.GlobalName = globalname
 		writeMember(member)
 		log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID, "name": member.Name}).Debug("set member name")
 	}
