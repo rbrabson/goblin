@@ -194,7 +194,7 @@ func readMember(guildID string, memberID string) (*Member, error) {
 	var member *Member
 	err := db.FindOne(MEMBER_COLLECTION, filter, &member)
 	if err != nil {
-		log.WithFields(log.Fields{"filter": filter, "error": err}).Error("unable to read shop member from the datrabase")
+		log.WithFields(log.Fields{"filter": filter, "error": err}).Debug("unable to read shop member from the datrabase")
 		return nil, err
 	}
 	log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Debug("read shop member from the database")
@@ -215,7 +215,7 @@ func writeMember(member *Member) error {
 		log.WithFields(log.Fields{"item": member, "error": err}).Error("unable to save shop member to the database")
 		return err
 	}
-	log.WithFields(log.Fields{"item": member, "filter": filter}).Debug("write the shop member to the database")
+	log.WithFields(log.Fields{"item": member, "filter": filter}).Info("write the shop member to the database")
 
 	return nil
 }
@@ -233,7 +233,7 @@ func deleteMember(member *Member) error {
 		log.WithFields(log.Fields{"item": member, "error": err}).Error("unable to delete shop member from the database")
 		return err
 	}
-	log.WithFields(log.Fields{"item": member, "filter": filter}).Debug("delete the shop member from the database")
+	log.WithFields(log.Fields{"item": member, "filter": filter}).Info("delete the shop member from the database")
 
 	return nil
 }

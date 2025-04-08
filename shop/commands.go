@@ -568,7 +568,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": memberID}).Info("member banned from shop")
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(p.Sprintf("The ban for member <@%s> from the shop has been removed.", memberID)),
+		disgomsg.WithContent(p.Sprintf("The ban from the shop for member <@%s> has been removed.", memberID)),
 	)
 	resp.Send(s, i.Interaction)
 }
