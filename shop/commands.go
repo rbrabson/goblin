@@ -481,12 +481,43 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp.Send(s, i.Interaction)
 }
 
-// removeRoleFromShop removes a role from the shop.
+// removeCommandFromShop removes a custom command from the shop.
 func removeCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	options := i.ApplicationCommandData().Options
+
+	// Get the role details
+	commandName := options[0].Options[0].Options[0].StringValue()
+
+	command := GetCustomCommand(i.GuildID, commandName)
+	if command == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName}).Error("custom command not found in shop")
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Custom command `%s` not found in the shop.", commandName)),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	shop := GetShop(i.GuildID)
+	err := command.RemoveFromShop(shop)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": command.GuildID, "commandName": command.Name}).Errorf("failed to remove custom command from shop: %s", err)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Failed to remove custom command `%s` from the shop: %s", commandName, err)),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+	config := GetConfig(i.GuildID)
+	publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName}).Info("custom command removed from shop")
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent("Command not implemented"),
+		disgomsg.WithContent(p.Sprintf("Custom command `%s` has been removed from the shop.", commandName)),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	resp.Send(s, i.Interaction)
 }
 
 // updateShopItem routes the update shop item commands to the proper handers.
