@@ -779,8 +779,6 @@ func heistMessage(s *discordgo.Session, heist *Heist, member *HeistMember, actio
 		return err
 	}
 
-	log.Error("**** UPDATED HEIST MESSAGE ***")
-
 	return nil
 }
 
