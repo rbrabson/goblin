@@ -77,19 +77,19 @@ var (
 								},
 							},
 						},
-						{
-							Name:        "command",
-							Description: "Adds a purchasable custom command to the shop.",
-							Type:        discordgo.ApplicationCommandOptionSubCommand,
-							Options: []*discordgo.ApplicationCommandOption{
-								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "cost",
-									Description: "The cost of the custom command.",
-									Required:    true,
-								},
-							},
-						},
+						// {
+						// 	Name:        "command",
+						// 	Description: "Adds a purchasable custom command to the shop.",
+						// 	Type:        discordgo.ApplicationCommandOptionSubCommand,
+						// 	Options: []*discordgo.ApplicationCommandOption{
+						// 		{
+						// 			Type:        discordgo.ApplicationCommandOptionInteger,
+						// 			Name:        "cost",
+						// 			Description: "The cost of the custom command.",
+						// 			Required:    true,
+						// 		},
+						// 	},
+						// },
 					},
 				},
 				{
@@ -109,6 +109,32 @@ var (
 									Required:    true,
 								},
 							},
+						},
+					},
+				},
+				{
+					Name:        "ban",
+					Description: "Bans a member from the shop.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionUser,
+							Name:        "id",
+							Description: "The ID of the member to ban from the shop.",
+							Required:    true,
+						},
+					},
+				},
+				{
+					Name:        "unban",
+					Description: "Removes the ban of a member from the shop.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionUser,
+							Name:        "id",
+							Description: "The ID of the member to have the ban from the shop removed.",
+							Required:    true,
 						},
 					},
 				},
@@ -205,6 +231,10 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		removeShopItem(s, i)
 	case "update":
 		updateShopItem(s, i)
+	case "ban":
+		banMember(s, i)
+	case "unban":
+		unbanMember(s, i)
 	case "channel":
 		setShopChannel(s, i)
 	case "mod-channel":
@@ -485,6 +515,64 @@ func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp.Send(s, i.Interaction)
 }
 
+// banMember bans a member from the shop.
+func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	options := i.ApplicationCommandData().Options
+	memberID := options[0].Options[0].UserValue(s).ID
+
+	member := GetMember(i.GuildID, memberID)
+	err := member.AddRestriction(SHOP_BAN)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": memberID}).Errorf("failed to ban member from shop: %s", err)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to ban member <@%s> from shop: %s", memberID, err)),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+	} else {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": memberID}).Info("member banned from shop")
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Member <@%s> has been banned from the shop.", memberID)),
+		)
+		resp.Send(s, i.Interaction)
+	}
+}
+
+// unbanMember unbans a member from the shop.
+func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	options := i.ApplicationCommandData().Options
+	memberID := options[0].Options[0].UserValue(s).ID
+
+	member, err := getMember(i.GuildID, memberID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": memberID, "error": err}).Warn("shop member not found in the database")
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Member <@%s> is not banned from the shop.", memberID)),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	err = member.RemoveRestriction(SHOP_BAN)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": memberID}).Errorf("failed to ban member from shop: %s", err)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Failed to ban member <@%s> from shop: %s", memberID, err)),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": memberID}).Info("member banned from shop")
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("the ban for member <@%s> from the shop has been removed.", memberID)),
+	)
+	resp.Send(s, i.Interaction)
+}
+
 // setShopChannel sets the channel to which to publish the shop items.
 func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
@@ -661,6 +749,17 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
+	}
+
+	member, err := readMember(i.GuildID, i.Member.User.ID)
+	if err == nil {
+		if member.HasRestriction(SHOP_BAN) {
+			resp := disgomsg.NewResponse(
+				disgomsg.WithContent("You have been banned from the shop."),
+			)
+			resp.SendEphemeral(s, i.Interaction)
+			return
+		}
 	}
 
 	strs := strings.Split(i.Interaction.MessageComponentData().CustomID, ":")

@@ -100,6 +100,11 @@ func GetPurchase(guildID string, memberID string, itemName string, itemType stri
 func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew bool) (*Purchase, error) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
+	member, _ := readMember(guildID, memberID)
+	if member != nil && member.HasRestriction(SHOP_BAN) {
+		return nil, errors.New(p.Sprintf("you are banned from using the shop"))
+	}
+
 	bankAccount := bank.GetAccount(guildID, memberID)
 	err := bankAccount.WithdrawFromCurrentOnly(item.Price)
 	if err != nil {
