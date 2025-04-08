@@ -334,12 +334,12 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	account.Withdraw(heist.config.HeistCost)
 
-	heistMessage(s, i, heist, heist.Organizer, "plan")
+	heistMessage(s, heist, heist.Organizer, "plan")
 
 	waitForHeistToStart(s, i, heist)
 
 	if len(heist.Crew) < 2 {
-		heistMessage(s, i, heist, heist.Organizer, "cancel")
+		heistMessage(s, heist, heist.Organizer, "cancel")
 		p := message.NewPrinter(language.AmericanEnglish)
 		msg := disgomsg.NewMessage(
 			disgomsg.WithContent(p.Sprintf("The %s was cancelled due to lack of interest.", heist.theme.Heist)),
@@ -357,7 +357,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	mute.MuteChannel()
 	defer mute.UnmuteChannel()
 
-	err = heistMessage(s, i, heist, heist.Organizer, "start")
+	err = heistMessage(s, heist, heist.Organizer, "start")
 	if err != nil {
 		log.WithError(err).Error("Unable to mark the heist message as started")
 	}
@@ -380,7 +380,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	msg.Send(s, i.ChannelID)
 
 	time.Sleep(3 * time.Second)
-	heistMessage(s, i, heist, heist.Organizer, "start")
+	heistMessage(s, heist, heist.Organizer, "start")
 
 	sendHeistResults(s, i, res)
 
@@ -401,7 +401,7 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 		}
 		time.Sleep(timeToWait)
 		log.WithFields(log.Fields{"guild": heist.GuildID, "startTiime": heist.StartTime, "until": time.Until(heist.StartTime.Add(heist.config.WaitTime))}).Trace("waiting for the heist to start")
-		heistMessage(s, i, heist, heist.Organizer, "update")
+		heistMessage(s, heist, heist.Organizer, "update")
 	}
 }
 
@@ -491,7 +491,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	h := currentHeists[i.GuildID]
 	alertTimes[i.GuildID] = time.Now().Add(h.config.PoliceAlert)
 	heistLock.Unlock()
-	heistMessage(s, i, h, h.Organizer, "ended")
+	heistMessage(s, h, h.Organizer, "ended")
 }
 
 // joinHeist attempts to join a heist that is being planned
@@ -523,14 +523,13 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	account.Withdraw(heist.config.HeistCost)
 
 	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
-	heist.interaction = i
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("You have joined the %s at a cost of %d credits.", heist.theme.Heist, heist.config.HeistCost)),
 	)
 	resp.SendEphemeral(s, i.Interaction)
 
-	heistMessage(s, heist.interaction, heist, heistMember, "join")
+	heistMessage(s, heist, heistMember, "join")
 }
 
 // playerStats shows a player's heist stats
@@ -699,7 +698,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // heistMessage sends the main command used to plan, join and leave a heist. It also handles the case where
 // the heist starts, disabling the buttons to join/leave/cancel the heist.
-func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist, member *HeistMember, action string) error {
+func heistMessage(s *discordgo.Session, heist *Heist, member *HeistMember, action string) error {
 	var status string
 	var buttonDisabled bool
 	switch action {
@@ -770,7 +769,7 @@ func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *H
 		}},
 	}
 	emptymsg := ""
-	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+	_, err := s.InteractionResponseEdit(heist.interaction.Interaction, &discordgo.WebhookEdit{
 		Embeds:     &embeds,
 		Components: &components,
 		Content:    &emptymsg,
@@ -779,6 +778,8 @@ func heistMessage(s *discordgo.Session, i *discordgo.InteractionCreate, heist *H
 		log.WithFields(log.Fields{"error": err, "guild": member.GuildID}).Error("unable to send the heist message")
 		return err
 	}
+
+	log.Error("**** UPDATED HEIST MESSAGE ***")
 
 	return nil
 }
@@ -803,7 +804,7 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	heistMessage(s, i, heist, heist.Organizer, "cancel")
+	heistMessage(s, heist, heist.Organizer, "cancel")
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("The %s has been reset", heist.theme.Heist)),

@@ -99,7 +99,7 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("System is shutting down"),
 		)
-		resp.Send(s, i.Interaction)
+		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
