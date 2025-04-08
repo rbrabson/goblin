@@ -335,6 +335,7 @@ func raceJoinChecks(race *Race, memberID string) error {
 
 	if len(race.Racers) >= race.config.MaxNumRacers {
 		log.WithFields(log.Fields{"guild_id": race.GuildID, "maxNumRacers": race.config.MaxNumRacers, "numRacers": len(race.Racers)}).Warn("too many racers already joined")
+		return ErrRaceAlreadyFull
 	}
 
 	for _, r := range race.Racers {

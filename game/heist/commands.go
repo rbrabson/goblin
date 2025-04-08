@@ -327,7 +327,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent("Planning a " + theme.Heist + " heist..."),
 	)
 	resp.Send(s, i.Interaction)
-	heist.Organizer.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
+	heist.Organizer.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	heist.interaction = i
 
 	// The organizer has to pay a fee to plan the heist.
@@ -507,7 +507,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	heistMember := getHeistMember(i.GuildID, i.Member.User.ID)
-	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
+	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	err := heist.AddCrewMember(heistMember)
 	if err != nil {
 		resp := disgomsg.NewResponse(
@@ -538,7 +538,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	theme := GetTheme(i.GuildID)
 	player := getHeistMember(i.GuildID, i.Member.User.ID)
-	player.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
+	player.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
 
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
@@ -629,7 +629,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	initiatingHeistMember := getHeistMember(i.GuildID, i.Member.User.ID)
-	initiatingHeistMember.guildMember.SetName(i.Member.User.Username, i.Member.DisplayName())
+	initiatingHeistMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 
 	var resp disgomsg.Response

@@ -20,6 +20,7 @@ var (
 	ErrRaceAlreadyInProgress = errors.New("you can't start a new race as one is already in progress")
 	ErrRaceHasStarted        = errors.New("the race has already started")
 	ErrRacerNotFound         = errors.New("the racer was not found")
+	ErrRaceAlreadyFull       = errors.New("the race is already full")
 )
 
 // The maximum number of race members have already joined the race.
