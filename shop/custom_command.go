@@ -1,14 +1,15 @@
 package shop
 
 import (
-	"fmt"
-
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
 	log "github.com/sirupsen/logrus"
 )
 
 const (
-	CUSTOM_COMMAND = "custom_command"
+	CUSTOM_COMMAND             = "custom_command"
+	CUSTOM_COMMAND_NAME        = "Custom Command"
+	CUSTOM_COMMAND_DESCRIPTION = "Custom command that may be used on this server"
 )
 
 // CustomCommand represents a custom command item in the shop.
@@ -22,8 +23,8 @@ func GetCustomCommand(guildID string, name string) *CustomCommand {
 }
 
 // NewCustomCommand creates a new command for the shop.
-func NewCustomCommand(guildID string, name string, description string, price int, duration string, autoRenewable bool) *CustomCommand {
-	item := newShopItem(guildID, name, description, CUSTOM_COMMAND, price, duration, autoRenewable)
+func NewCustomCommand(guildID string, price int) *CustomCommand {
+	item := newShopItem(guildID, CUSTOM_COMMAND_NAME, CUSTOM_COMMAND_DESCRIPTION, CUSTOM_COMMAND, price, "", false)
 	command := (*CustomCommand)(item)
 	return command
 }
@@ -35,9 +36,25 @@ func (cc *CustomCommand) Update(name string, description string, price int, dura
 }
 
 // Purchase allows a member to purchase the command from the shop.
-func (cc *CustomCommand) Purchase(memberID string, renew bool) (*Purchase, error) {
+func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string, renew bool) (*Purchase, error) {
 	item := ShopItem(*cc)
-	return item.purchase(memberID, renew)
+	purchase, err := item.purchase(memberID, PENDING, renew)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "memberID": memberID, "renew": renew}).WithError(err).Error("failed to purchase command")
+		return nil, err
+	}
+
+	dm := disgomsg.NewDirectMessage(
+		disgomsg.WithContent("Test Message"),
+	)
+	_, err = dm.Send(s, memberID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "memberID": memberID}).WithError(err).Error("failed to send direct message")
+		purchase.Return()
+		return nil, err
+	}
+
+	return purchase, nil
 }
 
 // AddToShop adds the command to the shop. If the command already exists, an error is returned.
@@ -55,22 +72,4 @@ func (cc *CustomCommand) RemoveFromShop(s *Shop) error {
 // customCommandCreateChecks performs checkst to see if a custom command can be added to the shop.
 func customCommandCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, commandName string) error {
 	return createChecks(i.GuildID, commandName, CUSTOM_COMMAND)
-}
-
-// customCommandPurchaseChecks performs checks to see if a custom command can be purchased.
-func customCommandPurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, commandName string) error {
-	// Make sure the command is still available in the shop
-	shopItem := getShopItem(i.GuildID, commandName, CUSTOM_COMMAND)
-	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName}).Error("failed to read command from shop")
-		return fmt.Errorf("command `%s` not found in the shop", commandName)
-	}
-
-	// Make common checks for all purchases
-	err := purchaseChecks(i.GuildID, i.Member.User.ID, CUSTOM_COMMAND, commandName)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -123,8 +123,8 @@ func (item *ShopItem) removeFromShop(s *Shop) error {
 
 // purchase purchases the shop item for the given member. If the purchase is successful, a purchase
 // object is returned. If the purchase fails, an error is returned.
-func (item *ShopItem) purchase(memberID string, renew bool) (*Purchase, error) {
-	purchase, err := PurchaseItem(item.GuildID, memberID, item, renew)
+func (item *ShopItem) purchase(memberID string, status string, renew bool) (*Purchase, error) {
+	purchase, err := PurchaseItem(item.GuildID, memberID, item, status, renew)
 	if err != nil {
 		log.WithFields(log.Fields{"guild": item.GuildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to create purchase")
 		return nil, err

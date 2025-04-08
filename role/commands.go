@@ -67,17 +67,17 @@ var (
 // guildAdmin handles the guildAdmin command.
 func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := disgomsg.Response{
-			Content: "You do not have permission to use this command.",
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You do not have permission to use this command."),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -118,9 +118,9 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server.AddAdminRole(roleName)
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role add")
 
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("Role \"%s\" added", roleName),
-	}
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" added", roleName)),
+	)
 	resp.Send(s, i.Interaction)
 }
 
@@ -137,9 +137,9 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server.RemoveAdminRole(roleName)
 	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role remove")
 
-	resp := disgomsg.Response{
-		Content: fmt.Sprintf("Role \"%s\" removed", roleName),
-	}
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" removed", roleName)),
+	)
 	resp.Send(s, i.Interaction)
 }
 
@@ -162,8 +162,8 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	roleList := sb.String()
 	log.WithFields(log.Fields{"guild": guildID, "roles": roleList}).Debug("/guild-admin role list")
 
-	resp := disgomsg.Response{
-		Content: roleList,
-	}
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(roleList),
+	)
 	resp.SendEphemeral(s, i.Interaction)
 }

@@ -60,47 +60,47 @@ var (
 
 // help sends a help message for plugin commands.
 func help(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	resp := disgomsg.Response{
-		Content: getHelp(),
-	}
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(getHelp()),
+	)
 	resp.SendEphemeral(s, i.Interaction)
 }
 
 // adminHelp sends a help message for administrative commands.
 func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := disgomsg.Response{
-			Content: "You do not have permission to use this command.",
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You do not have permission to use this command."),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
-	resp := disgomsg.Response{
-		Content: getAdminHelp(),
-	}
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(getAdminHelp()),
+	)
 	resp.SendEphemeral(s, i.Interaction)
 }
 
 // version shows the version of bot you are running.
 func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := disgomsg.Response{
-			Content: "You do not have permission to use this command.",
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You do not have permission to use this command."),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if Revision == "" {
-		resp := disgomsg.Response{
-			Content: "You are running " + BotName + " version " + Version + ".",
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You are running " + BotName + " version " + Version + "."),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 	} else {
-		resp := disgomsg.Response{
-			Content: "You are running " + BotName + " version " + Version + "-" + Revision + ".",
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You are running " + BotName + " version " + Version + "." + Revision + "."),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 	}
 }
@@ -134,9 +134,9 @@ func getAdminHelp() string {
 // serverAdmin handles server admin commands.
 func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := disgomsg.Response{
-			Content: "You do not have permission to use this command.",
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You do not have permission to use this command."),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -158,9 +158,9 @@ func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		plugin.Stop()
 	}
 
-	resp := disgomsg.Response{
-		Content: "Shutting down all bot services.",
-	}
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent("Shutting down all bot services."),
+	)
 	resp.Send(s, i.Interaction)
 }
 
@@ -169,7 +169,18 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	plugins := ListPlugin()
 	pluginStatus := make([]*discordgo.MessageEmbedField, 0, len(plugins))
 
+	botStatus := "Running"
 	for _, plugin := range plugins {
+		switch plugin.Status() {
+		case RUNNING:
+			botStatus = "Running"
+		case STOPPING:
+			botStatus = "Stopping"
+		case STOPPED:
+			if botStatus != "Stopping" {
+				botStatus = "Stopped"
+			}
+		}
 		pluginStatus = append(pluginStatus, &discordgo.MessageEmbedField{
 			Name:   unicode.FirstToUpper(plugin.GetName()),
 			Value:  plugin.Status().String(),
@@ -178,6 +189,10 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:       "Server Status",
+			Description: botStatus,
+		},
 		{
 			Title:  "Plugin Status",
 			Fields: pluginStatus,

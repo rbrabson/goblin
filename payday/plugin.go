@@ -25,6 +25,9 @@ var (
 // Plugin is the plugin for the payday system used by the bot
 type Plugin struct{}
 
+// Ensure the plugin implements the Plugin interface
+var _ discord.Plugin = (*Plugin)(nil)
+
 // Start creates and registers the plugin for the payday system
 func Start() {
 	plugin = &Plugin{}

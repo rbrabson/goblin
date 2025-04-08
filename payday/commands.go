@@ -1,7 +1,6 @@
 package payday
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -29,9 +28,9 @@ var (
 // payday gives some credits to the player every 24 hours.
 func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.Response{
-			Content: "The system is shutting down.",
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -42,9 +41,9 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if paydayAccount.getNextPayday().After(time.Now()) {
 		remainingTime := time.Until(paydayAccount.NextPayday)
-		resp := disgomsg.Response{
-			Content: fmt.Sprintf("You can't get another payday yet. You need to wait %s.", format.Duration(remainingTime)),
-		}
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("You can't get another payday yet. You need to wait %s.", format.Duration(remainingTime))),
+		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -54,8 +53,8 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	paydayAccount.setNextPayday(time.Now().Add(payday.PaydayFrequency))
 
-	resp := disgomsg.Response{
-		Content: p.Sprintf("You deposited your check of %d into your bank account. You now have %d credits.", payday.Amount, account.CurrentBalance),
-	}
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("You deposited your check of %d into your bank account. You now have %d credits.", payday.Amount, account.CurrentBalance)),
+	)
 	resp.SendEphemeral(s, i.Interaction)
 }

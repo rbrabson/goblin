@@ -7,11 +7,12 @@ import (
 
 // Config represents the configuration for the shop in a guild.
 type Config struct {
-	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID      string             `json:"guild_id" bson:"guild_id"`
-	ChannelID    string             `json:"channel_id" bson:"channel_id"`
-	MessageID    string             `json:"message_id" bson:"message_id"`
-	ModChannelID string             `json:"mod_channel_id" bson:"mod_channel_id"`
+	ID             primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID        string             `json:"guild_id" bson:"guild_id"`
+	ChannelID      string             `json:"channel_id" bson:"channel_id"`
+	MessageID      string             `json:"message_id" bson:"message_id"`
+	ModChannelID   string             `json:"mod_channel_id" bson:"mod_channel_id"`
+	NotificationID string             `json:"notification_id" bson:"notification_id"`
 }
 
 // GetConfig reads the configuration from the database. If the config does not exist,
@@ -55,6 +56,15 @@ func (c *Config) SetModChannel(channelID string) {
 	}
 }
 
+// SetModChannel sets the channel to which to publish the shop purchases and expirations.
+func (c *Config) SetNotificationID(id string) {
+	if c.NotificationID != id {
+		c.NotificationID = id
+		writeConfig(c)
+		log.WithFields(log.Fields{"guildID": c.GuildID, "member": id}).Debug("set shop notification ID")
+	}
+}
+
 // SetMessageID saves the interaction used to publish the shop items.
 func (c *Config) SetMessageID(messageID string) {
 	if c.MessageID != messageID {
@@ -62,4 +72,16 @@ func (c *Config) SetMessageID(messageID string) {
 		writeConfig(c)
 		log.WithFields(log.Fields{"guildID": c.GuildID, "messageID": messageID}).Debug("set shop message ID")
 	}
+}
+
+// String returns a string representation of the config.
+func (c *Config) String() string {
+	return "Config{" +
+		"ID: " + c.ID.Hex() +
+		", GuildID: " + c.GuildID +
+		", ChannelID: " + c.ChannelID +
+		", MessageID: " + c.MessageID +
+		", ModChannelID: " + c.ModChannelID +
+		", NotificationID: " + c.NotificationID +
+		"}"
 }

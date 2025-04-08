@@ -43,12 +43,16 @@ func GetMember(guildID string, memberID string) *Member {
 func (member *Member) SetName(username string, nickname string, globalname string) *Member {
 	if member.UserName != username || member.NickName != nickname || member.GlobalName != globalname {
 		var name string
-		if globalname != "" {
+		switch {
+		case globalname != "":
 			name = globalname
-		} else {
+		case nickname != "":
 			name = nickname
+		default:
+			name = username
 		}
 		member.Name = strings.Trim(name, "# ")
+		member.UserName = username
 		member.NickName = nickname
 		member.GlobalName = globalname
 		writeMember(member)

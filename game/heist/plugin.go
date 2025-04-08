@@ -24,6 +24,9 @@ var (
 // Plugin is the plugin for the heist game
 type Plugin struct{}
 
+// Ensure the plugin implements the Plugin interface
+var _ discord.Plugin = (*Plugin)(nil)
+
 // Start creates and registers the plugin for the heist game
 func Start() {
 	plugin = &Plugin{}

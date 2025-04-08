@@ -38,7 +38,7 @@ func (r *Role) Update(name string, description string, price int, duration strin
 // Purchase allows a member to purchase the role from the shop.
 func (r *Role) Purchase(memberID string, renew bool) (*Purchase, error) {
 	item := ShopItem(*r)
-	return item.purchase(memberID, renew)
+	return item.purchase(memberID, PURCHASED, renew)
 }
 
 // AddToShop adds the role to the shop. If the role already exists, an error is returned.

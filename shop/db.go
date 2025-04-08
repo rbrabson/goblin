@@ -10,6 +10,7 @@ const (
 	CONFIG_COLLECTION    = "shop_configs"
 	SHOP_ITEM_COLLECTION = "shop_items"
 	PURCHASE_COLLECTION  = "shop_purchases"
+	MEMBER_COLLECTION    = "shop_members"
 )
 
 // readConfig reads the configuration from the database. If the config does not exist, it returns nil.
@@ -183,6 +184,56 @@ func deletePurchase(purchase *Purchase) error {
 		return err
 	}
 	log.WithFields(log.Fields{"purchase": purchase}).Debug("delete the purchase from the database")
+
+	return nil
+}
+
+// readMember reads the member from the database.
+func readMember(guildID string, memberID string) (*Member, error) {
+	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}}
+	var member *Member
+	err := db.FindOne(MEMBER_COLLECTION, filter, &member)
+	if err != nil {
+		log.WithFields(log.Fields{"filter": filter, "error": err}).Debug("unable to read shop member from the datrabase")
+		return nil, err
+	}
+	log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Debug("read shop member from the database")
+
+	return member, nil
+}
+
+// writeMember writes the member to the database.
+func writeMember(member *Member) error {
+	var filter bson.D
+	if member.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: member.ID}}
+	} else {
+		filter = bson.D{{Key: "guild_id", Value: member.GuildID}, {Key: "member_id", Value: member.MemberID}}
+	}
+	err := db.UpdateOrInsert(MEMBER_COLLECTION, filter, member)
+	if err != nil {
+		log.WithFields(log.Fields{"item": member, "error": err}).Error("unable to save shop member to the database")
+		return err
+	}
+	log.WithFields(log.Fields{"item": member, "filter": filter}).Info("write the shop member to the database")
+
+	return nil
+}
+
+// deleteShopItem deletes the shop item from the database.
+func deleteMember(member *Member) error {
+	var filter bson.D
+	if member.ID != primitive.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: member.ID}}
+	} else {
+		filter = bson.D{{Key: "guild_id", Value: member.GuildID}, {Key: "member_id", Value: member.MemberID}}
+	}
+	err := db.Delete(MEMBER_COLLECTION, filter)
+	if err != nil {
+		log.WithFields(log.Fields{"item": member, "error": err}).Error("unable to delete shop member from the database")
+		return err
+	}
+	log.WithFields(log.Fields{"item": member, "filter": filter}).Info("delete the shop member from the database")
 
 	return nil
 }
