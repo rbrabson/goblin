@@ -77,19 +77,31 @@ var (
 								},
 							},
 						},
-						// {
-						// 	Name:        "command",
-						// 	Description: "Adds a purchasable custom command to the shop.",
-						// 	Type:        discordgo.ApplicationCommandOptionSubCommand,
-						// 	Options: []*discordgo.ApplicationCommandOption{
-						// 		{
-						// 			Type:        discordgo.ApplicationCommandOptionInteger,
-						// 			Name:        "cost",
-						// 			Description: "The cost of the custom command.",
-						// 			Required:    true,
-						// 		},
-						// 	},
-						// },
+						{
+							Name:        "command",
+							Description: "Adds a purchasable custom command to the shop.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "name",
+									Description: "The name of the role that may be purchased.",
+									Required:    true,
+								},
+								{
+									Type:        discordgo.ApplicationCommandOptionInteger,
+									Name:        "cost",
+									Description: "The cost of the role.",
+									Required:    true,
+								},
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "description",
+									Description: "The description of the role that may be purchased.",
+									Required:    false,
+								},
+							},
+						},
 					},
 				},
 				{
@@ -106,6 +118,19 @@ var (
 									Type:        discordgo.ApplicationCommandOptionString,
 									Name:        "name",
 									Description: "The name of the role to be removed.",
+									Required:    true,
+								},
+							},
+						},
+						{
+							Name:        "command",
+							Description: "Adds a purchasable custom command to the shop.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "name",
+									Description: "The name of the role that may be purchased.",
 									Required:    true,
 								},
 							},
@@ -348,16 +373,23 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Get the options for the custom command to be added
 	var commandCost int
+	var commandName string
+	var commandDescription string
 	options := i.ApplicationCommandData().Options
 	for _, option := range options[0].Options[0].Options {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "option": option}).Trace("processing option")
-		if option.Name == "cost" {
+		switch option.Name {
+		case "cost":
 			commandCost = int(option.IntValue())
+		case "name":
+			commandName = option.StringValue()
+		case "description":
+			commandDescription = option.StringValue()
 		}
 	}
 
 	// Verify the custom command can be added to the shop
-	err := customCommandCreateChecks(s, i, CUSTOM_COMMAND_NAME)
+	err := customCommandCreateChecks(s, i, commandName)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID}).Errorf("failed to perform custom command create checks: %s", err)
 		resp := disgomsg.NewResponse(
@@ -368,7 +400,7 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Add the custom command to the shop.
 	shop := GetShop(i.GuildID)
-	command := NewCustomCommand(i.GuildID, commandCost)
+	command := NewCustomCommand(i.GuildID, commandName, commandDescription, commandCost)
 	err = command.AddToShop(shop)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "commandCost": commandCost}).Errorf("failed to add custom command to shop: %s", err)
@@ -398,6 +430,8 @@ func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch options[0].Options[0].Name {
 	case "role":
 		removeRoleFromShop(s, i)
+	case "command":
+		removeCommandFromShop(s, i)
 	default:
 		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
 		log.Warn(msg)
@@ -445,6 +479,14 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(p.Sprintf("Role `%s` has been removed from the shop.", roleName)),
 	)
 	resp.Send(s, i.Interaction)
+}
+
+// removeRoleFromShop removes a role from the shop.
+func removeCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent("Command not implemented"),
+	)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // updateShopItem routes the update shop item commands to the proper handers.
