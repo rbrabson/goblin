@@ -1,6 +1,8 @@
 package shop
 
 import (
+	"fmt"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
 	log "github.com/sirupsen/logrus"
@@ -23,8 +25,11 @@ func GetCustomCommand(guildID string, name string) *CustomCommand {
 }
 
 // NewCustomCommand creates a new command for the shop.
-func NewCustomCommand(guildID string, price int) *CustomCommand {
-	item := newShopItem(guildID, CUSTOM_COMMAND_NAME, CUSTOM_COMMAND_DESCRIPTION, CUSTOM_COMMAND, price, "", false)
+func NewCustomCommand(guildID string, name string, description string, price int) *CustomCommand {
+	if description == "" {
+		description = fmt.Sprintf("Custom command `%s`", name)
+	}
+	item := newShopItem(guildID, name, description, CUSTOM_COMMAND, price, "", false)
 	command := (*CustomCommand)(item)
 	return command
 }
@@ -70,6 +75,6 @@ func (cc *CustomCommand) RemoveFromShop(s *Shop) error {
 }
 
 // customCommandCreateChecks performs checkst to see if a custom command can be added to the shop.
-func customCommandCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, commandName string) error {
-	return createChecks(i.GuildID, commandName, CUSTOM_COMMAND)
+func customCommandCreateChecks(guildID string, commandName string) error {
+	return createChecks(guildID, commandName, CUSTOM_COMMAND)
 }

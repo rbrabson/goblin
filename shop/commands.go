@@ -77,19 +77,31 @@ var (
 								},
 							},
 						},
-						// {
-						// 	Name:        "command",
-						// 	Description: "Adds a purchasable custom command to the shop.",
-						// 	Type:        discordgo.ApplicationCommandOptionSubCommand,
-						// 	Options: []*discordgo.ApplicationCommandOption{
-						// 		{
-						// 			Type:        discordgo.ApplicationCommandOptionInteger,
-						// 			Name:        "cost",
-						// 			Description: "The cost of the custom command.",
-						// 			Required:    true,
-						// 		},
-						// 	},
-						// },
+						{
+							Name:        "command",
+							Description: "Adds a purchasable custom command to the shop.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "name",
+									Description: "The name of the custom command.",
+									Required:    true,
+								},
+								{
+									Type:        discordgo.ApplicationCommandOptionInteger,
+									Name:        "cost",
+									Description: "The cost of the custom command.",
+									Required:    true,
+								},
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "description",
+									Description: "The description of the custom command.",
+									Required:    false,
+								},
+							},
+						},
 					},
 				},
 				{
@@ -106,6 +118,19 @@ var (
 									Type:        discordgo.ApplicationCommandOptionString,
 									Name:        "name",
 									Description: "The name of the role to be removed.",
+									Required:    true,
+								},
+							},
+						},
+						{
+							Name:        "command",
+							Description: "Adds a purchasable custom command to the shop.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionString,
+									Name:        "name",
+									Description: "The name of the custom command.",
 									Required:    true,
 								},
 							},
@@ -258,7 +283,7 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "role":
 		addRoleToShop(s, i)
 	case "command":
-		addCommandToShop(s, i)
+		addCustomCommandToShop(s, i)
 	default:
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)),
@@ -344,22 +369,29 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp.Send(s, i.Interaction)
 }
 
-// addCommandToShop adds a custom command to the shop.
-func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// addCustomCommandToShop adds a custom command to the shop.
+func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Get the options for the custom command to be added
+	var commandName string
 	var commandCost int
+	var commandDescription string
 	options := i.ApplicationCommandData().Options
 	for _, option := range options[0].Options[0].Options {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "option": option}).Trace("processing option")
-		if option.Name == "cost" {
+		switch option.Name {
+		case "name":
+			commandName = option.StringValue()
+		case "cost":
 			commandCost = int(option.IntValue())
+		case "description":
+			commandDescription = option.StringValue()
 		}
 	}
 
 	// Verify the custom command can be added to the shop
-	err := customCommandCreateChecks(s, i, CUSTOM_COMMAND_NAME)
+	err := customCommandCreateChecks(i.GuildID, commandName)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID}).Errorf("failed to perform custom command create checks: %s", err)
+		log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName, "error": err}).Error("failed to perform custom command create checks")
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
@@ -368,12 +400,12 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Add the custom command to the shop.
 	shop := GetShop(i.GuildID)
-	command := NewCustomCommand(i.GuildID, commandCost)
+	command := NewCustomCommand(i.GuildID, commandName, commandDescription, commandCost)
 	err = command.AddToShop(shop)
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "commandCost": commandCost}).Errorf("failed to add custom command to shop: %s", err)
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("Failed to add custom command to the shop: %s", err)),
+			disgomsg.WithContent(fmt.Sprintf("Failed to add custom command `%s` to the shop: %s", commandName, err)),
 		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
@@ -385,7 +417,7 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	log.WithFields(log.Fields{"command": command}).Info("custom command added to shop")
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent("Custom command has been added to the shop."),
+		disgomsg.WithContent(fmt.Sprintf("Custom command `%s` has been added to the shop.", commandName)),
 	)
 	resp.Send(s, i.Interaction)
 }
@@ -398,6 +430,8 @@ func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch options[0].Options[0].Name {
 	case "role":
 		removeRoleFromShop(s, i)
+	case "command":
+		removeCustomCommandFromShop(s, i)
 	default:
 		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
 		log.Warn(msg)
@@ -443,6 +477,45 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Info("role removed from shop")
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Role `%s` has been removed from the shop.", roleName)),
+	)
+	resp.Send(s, i.Interaction)
+}
+
+// removeCustomCommandFromShop removes a custom command from the shop.
+func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	options := i.ApplicationCommandData().Options
+
+	// Get the custom command details
+	commandName := options[0].Options[0].Options[0].StringValue()
+
+	command := GetCustomCommand(i.GuildID, commandName)
+	if command == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName}).Error("custom command not found in shop")
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Custom command `%s` not found in the shop.", commandName)),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	shop := GetShop(i.GuildID)
+	err := command.RemoveFromShop(shop)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": command.GuildID, "commandName": command.Name}).Errorf("failed to remove custom command from shop: %s", err)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(p.Sprintf("Failed to remove custom command `%s` from the shop: %s", commandName, err)),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+	config := GetConfig(i.GuildID)
+	publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName}).Info("custom command removed from shop")
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Custom command `%s` has been removed from the shop.", commandName)),
 	)
 	resp.Send(s, i.Interaction)
 }
