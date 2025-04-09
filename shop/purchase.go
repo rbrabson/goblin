@@ -116,7 +116,7 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 		GuildID:     guildID,
 		MemberID:    memberID,
 		Item:        item,
-		Status:      PURCHASED,
+		Status:      status,
 		PurchasedOn: time.Now(),
 	}
 	if item.AutoRenewable {

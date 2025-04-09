@@ -41,16 +41,30 @@ func (cc *CustomCommand) Update(name string, description string, price int, dura
 }
 
 // Purchase allows a member to purchase the command from the shop.
-func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string, renew bool) (*Purchase, error) {
+func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purchase, error) {
 	item := ShopItem(*cc)
-	purchase, err := item.purchase(memberID, PENDING, renew)
+	purchase, err := item.purchase(memberID, PENDING, false)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "memberID": memberID, "renew": renew}).WithError(err).Error("failed to purchase command")
+		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "memberID": memberID}).WithError(err).Error("failed to purchase custom command")
 		return nil, err
 	}
 
+	config := GetConfig(cc.GuildID)
+
+	// Notify ModMail
 	dm := disgomsg.NewDirectMessage(
-		disgomsg.WithContent("Test Message"),
+		disgomsg.WithContent(fmt.Sprintf("Purchase of custom command `%s` has been initiated. Please contact <@%s> to complete the purchase.", cc.Name, config.NotificationID)),
+	)
+	_, err = dm.Send(s, config.NotificationID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "notificationID": config.NotificationID}).WithError(err).Error("failed to send notification message")
+		purchase.Return()
+		return nil, err
+	}
+
+	// Notify the member
+	dm = disgomsg.NewDirectMessage(
+		disgomsg.WithContent(fmt.Sprintf("Purchase of custom command `%s` has been initiated. Please contact <@%s> to complete the purchase.", cc.Name, config.NotificationID)),
 	)
 	_, err = dm.Send(s, memberID)
 	if err != nil {
@@ -77,4 +91,22 @@ func (cc *CustomCommand) RemoveFromShop(s *Shop) error {
 // customCommandCreateChecks performs checkst to see if a custom command can be added to the shop.
 func customCommandCreateChecks(guildID string, commandName string) error {
 	return createChecks(guildID, commandName, CUSTOM_COMMAND)
+}
+
+// customCommandPurchaseChecks performs checks to see if a role can be purchased.
+func customCommandPurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, commandName string) error {
+	// Make sure the role is still available in the shop
+	shopItem := getShopItem(i.GuildID, commandName, ROLE)
+	if shopItem == nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName}).Error("failed to read custom command from shop")
+		return fmt.Errorf("custom command `%s` not found in the shop", commandName)
+	}
+
+	// Make common checks for all purchases
+	err := purchaseChecks(i.GuildID, i.Member.User.ID, CUSTOM_COMMAND, commandName)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
