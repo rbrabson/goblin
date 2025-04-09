@@ -1,10 +1,106 @@
 {
-    "heist": "raid",
-    "jail": "resting",
-    "oob": "running on gems",
-    "police": "Enemy CC Troops",
-    "sentence": "nap",
-    "vault": "village",
+  "escaped_messages": [
+      {
+        "message": "%s brought a few healers to keep themself alive <:Healer:1346563687137280081>, +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s brought a rage spell to the raid <:Rage_Spell:1346564340257656832>, +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s remembered to request CC troops before attacking. +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s used Royal Cloak <:Archer_Queen:1346562884720922707>. +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s used Iron Fist <:Barbarian_King:1346562986810146826>. +25 <:Gold:1346583263598219297>",
+        "bonus_amount": 25,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s took out a corner builder hut <:Builder_Hut:1346578230836199455>. +50 <:Gold:1346583263598219297>.",
+        "bonus_amount": 50,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s boosted the training barracks <:Gems:1346582782276665406>. +50 <:Gold:1346583263598219297>",
+        "bonus_amount": 50,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s lured defending CC troops. +50 <:Gold:1346583263598219297>",
+        "bonus_amount": 50,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s built a funnel correctly. +100 <:Gold:1346583263598219297>",
+        "bonus_amount": 100,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s used a power potion on the clan. +100 <:Gold:1346583263598219297>",
+        "bonus_amount": 100,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s dropped a heal on a known Giant Bomb location <:Healing_Spell:1346563716740808847>. +100 <:Gold:1346583263598219297>",
+        "bonus_amount": 100,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s successfully scouted the top base. +100 <:Gold:1346583263598219297>",
+        "bonus_amount": 100,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s managed to take out the Town Hall. +150 <:Gold:1346583263598219297>",
+        "bonus_amount": 150,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s got every last drop of Dark Elixir <:Dark_Elixer:1346583810434928771>. +250 <:Gold:1346583263598219297>",
+        "bonus_amount": 250,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s three starred a base with barch <:Barbarian:1346563008968654963> <:Sneaky_Archer:1346564629815492699>. +250 <:Gold:1346583263598219297>",
+        "bonus_amount": 250,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s cast Eternal Tome <:Grand_Warden:1346563596058103962>. +250 <:Gold:1346583263598219297>",
+        "bonus_amount": 250,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s HOG RIIIIIIIIDDEEEER <:Hog_Rider:1346563786408071239>. +500 <:Gold:1346583263598219297>",
+        "bonus_amount": 500,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s scored a six pack <:Shark_Hi:1346592211638292591>. +1,000 <:Gold:1346583263598219297>",
+        "bonus_amount": 1000,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s 3 starred the top base in War without use of Heroes. +1,500 <:Gold:1346583263598219297>",
+        "bonus_amount": 1500,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s found a gem box <:Gems:1346582782276665406>. +2,500 <:Gold:1346583263598219297>",
+        "bonus_amount": 2500,
+        "result": "Escaped"
+      }
+    ],
     "apprehended_messages": [
       {
         "message": "%s stepped onto a spring trap.",
@@ -195,8 +291,6 @@
         "result": "Apprehended"
       }
     ],
-    "bail": "heal",
-    "crew": "clan",
     "died_messages": [
       {
         "message": "%s forgot funnel and was singled out by an archer tower. (death) <:Toombstone:1346597374054633554>",
@@ -243,106 +337,12 @@
         "result": "Dead"
       }
     ],
-    "escaped_messages": [
-      {
-        "message": "%s brought a few healers to keep themself alive <:Healer:1346563687137280081>, +25 <:Gold:1346583263598219297>",
-        "bonus_amount": 25,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s brought a rage spell to the raid <:Rage_Spell:1346564340257656832>, +25 <:Gold:1346583263598219297>",
-        "bonus_amount": 25,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s remembered to request CC troops before attacking. +25 <:Gold:1346583263598219297>",
-        "bonus_amount": 25,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s used Royal Cloak <:Archer_Queen:1346562884720922707>. +25 <:Gold:1346583263598219297>",
-        "bonus_amount": 25,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s used Iron Fist <:Barbarian_King:1346562986810146826>. +25 <:Gold:1346583263598219297>",
-        "bonus_amount": 25,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s took out a corner builder hut <:Builder_Hut:1346578230836199455>. +50 <:Gold:1346583263598219297>.",
-        "bonus_amount": 50,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s boosted the training barracks <:Gems:1346582782276665406>. +50 <:Gold:1346583263598219297>",
-        "bonus_amount": 50,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s lured defending CC troops. +50 <:Gold:1346583263598219297>",
-        "bonus_amount": 50,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s built a funnel correctly. +100 <:Gold:1346583263598219297>",
-        "bonus_amount": 100,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s used a power potion on the clan. +100 <:Gold:1346583263598219297>",
-        "bonus_amount": 100,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s dropped a heal on a known Giant Bomb location <:Healing_Spell:1346563716740808847>. +100 <:Gold:1346583263598219297>",
-        "bonus_amount": 100,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s successfully scouted the top base. +100 <:Gold:1346583263598219297>",
-        "bonus_amount": 100,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s managed to take out the Town Hall. +150 <:Gold:1346583263598219297>",
-        "bonus_amount": 150,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s got every last drop of Dark Elixir <:Dark_Elixer:1346583810434928771>. +250 <:Gold:1346583263598219297>",
-        "bonus_amount": 250,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s three starred a base with barch <:Barbarian:1346563008968654963> <:Sneaky_Archer:1346564629815492699>. +250 <:Gold:1346583263598219297>",
-        "bonus_amount": 250,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s cast Eternal Tome <:Grand_Warden:1346563596058103962>. +250 <:Gold:1346583263598219297>",
-        "bonus_amount": 250,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s HOG RIIIIIIIIDDEEEER <:Hog_Rider:1346563786408071239>. +500 <:Gold:1346583263598219297>",
-        "bonus_amount": 500,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s scored a six pack <:Shark_Hi:1346592211638292591>. +1,000 <:Gold:1346583263598219297>",
-        "bonus_amount": 1000,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s 3 starred the top base in War without use of Heroes. +1,500 <:Gold:1346583263598219297>",
-        "bonus_amount": 1500,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s found a gem box <:Gems:1346582782276665406>. +2,500 <:Gold:1346583263598219297>",
-        "bonus_amount": 2500,
-        "result": "Escaped"
-      }
-    ]
+    "bail": "heal",
+    "crew": "clan",
+    "heist": "raid",
+    "jail": "resting",
+    "oob": "running on gems",
+    "police": "Enemy CC Troops",
+    "sentence": "nap",
+    "vault": "village"
   }
