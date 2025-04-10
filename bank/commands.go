@@ -1,13 +1,13 @@
 package bank
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -136,7 +136,9 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "info":
 		getBankInfo(s, i)
 	default:
-		log.WithFields(log.Fields{"command": options[0].Name}).Warn("unknown bank-admin command")
+		sslog.Warn("unknown bank-admin command",
+			slog.String("command", options[0].Name),
+		)
 	}
 }
 
@@ -155,7 +157,9 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "account":
 		account(s, i)
 	default:
-		log.WithFields(log.Fields{"command": options[0].Name}).Warn("unknown bank command")
+		sslog.Warn("unknown bank command",
+			slog.String("command", options[0].Name),
+		)
 	}
 }
 
@@ -207,12 +211,12 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	account.SetBalance(amount)
 
-	log.WithFields(log.Fields{
-		"guild":   i.GuildID,
-		"account": member.User.ID,
-		"mName":   m.Name,
-		"balance": amount,
-	}).Debug("/bank-admin set account")
+	sslog.Debug("/bank-admin set account",
+		slog.String("guildID", i.GuildID),
+		slog.String("memberID", member.User.ID),
+		slog.String("memberName", m.Name),
+		slog.Int("balance", amount),
+	)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Account balance for %s was set to %d", m.Name, account.CurrentBalance)),
@@ -236,10 +240,10 @@ func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	bank := GetBank(i.GuildID)
 	bank.SetDefaultBalance(balance)
 
-	log.WithFields(log.Fields{
-		"guild":   i.GuildID,
-		"balance": balance,
-	}).Debug("/bank-admin balance")
+	sslog.Debug("/bank-admin balance",
+		slog.String("guildID", i.GuildID),
+		slog.Int("balance", balance),
+	)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank default balance was set to %d", bank.DefaultBalance)),
@@ -263,10 +267,10 @@ func setBankName(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	bank := GetBank(i.GuildID)
 	bank.SetName(name)
 
-	log.WithFields(log.Fields{
-		"guild": i.GuildID,
-		"name":  name,
-	}).Debug("bank-admin name")
+	sslog.Debug("bank-admin name",
+		slog.String("guildID", i.GuildID),
+		slog.String("name", name),
+	)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank name was set to %s", bank.Name)),
@@ -290,10 +294,10 @@ func setBankCurrency(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	bank := GetBank(i.GuildID)
 	bank.SetCurrency(currency)
 
-	log.WithFields(log.Fields{
-		"guild": i.GuildID,
-		"name":  currency,
-	}).Debug("/bank-admin currency")
+	sslog.Debug("/bank-admin currency",
+		slog.String("guildID", i.GuildID),
+		slog.String("currency", currency),
+	)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank currency was set to %s", bank.Currency)),

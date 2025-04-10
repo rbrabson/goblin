@@ -41,16 +41,16 @@ func GetMember(guildID string, memberID string) *Member {
 
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(username string, nickname string, globalname string) *Member {
-	if member.UserName != username || member.NickName != nickname || member.GlobalName != globalname {
-		var name string
-		switch {
-		case nickname != "":
-			name = nickname
-		case globalname != "":
-			name = globalname
-		default:
-			name = username
-		}
+	var name string
+	switch {
+	case nickname != "":
+		name = nickname
+	case globalname != "":
+		name = globalname
+	default:
+		name = username
+	}
+	if member.Name != name || member.UserName != username || member.NickName != nickname || member.GlobalName != globalname {
 		member.Name = strings.Trim(name, "# ")
 		member.UserName = username
 		member.NickName = nickname

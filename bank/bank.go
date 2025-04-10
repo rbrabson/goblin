@@ -3,10 +3,11 @@ package bank
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rbrabson/goblin/internal/logger"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,6 +16,10 @@ const (
 	DEFAULT_BANK_NAME = "Treasury"
 	DEFAULT_CURRENCY  = "Coins"
 	DEFAULT_BALANCE   = 20000
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 // A Bank is the repository for all bank accounts for a given guild (server).
@@ -43,20 +48,27 @@ func readBankFromFile(guildID string) *Bank {
 	configFileName := filepath.Join(configDir, "bank", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to read default bank config")
+		sslog.Error("failed to read default bank config",
+			slog.String("error", err.Error()),
+		)
 		return getDefaultBank(guildID)
 	}
 
 	bank := &Bank{}
 	err = json.Unmarshal(bytes, bank)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to unmarshal default bank config")
+		sslog.Error("failed to unmarshal default bank config",
+			slog.String("file", configFileName),
+			slog.String("error", err.Error()),
+		)
 		return getDefaultBank(guildID)
 	}
 	bank.GuildID = guildID
 
 	writeBank(bank)
-	log.WithField("guild", bank.GuildID).Info("create new bank")
+	sslog.Info("create new bank",
+		slog.String("guildID", bank.GuildID),
+	)
 
 	return bank
 }
@@ -72,7 +84,9 @@ func getDefaultBank(guildID string) *Bank {
 		DefaultBalance: DEFAULT_BALANCE,
 	}
 	writeBank(bank)
-	log.WithField("guild", bank.GuildID).Info("create new bank")
+	sslog.Info("create new bank",
+		slog.String("guildID", bank.GuildID),
+	)
 
 	return bank
 }
@@ -82,7 +96,10 @@ func (b *Bank) SetDefaultBalance(balance int) {
 	if balance != b.DefaultBalance {
 		b.DefaultBalance = balance
 		writeBank(b)
-		log.WithFields(log.Fields{"guild": b.GuildID, "balance": b.DefaultBalance}).Info("set default balance")
+		sslog.Info("set default balance",
+			slog.String("guildID", b.GuildID),
+			slog.Int("balance", b.DefaultBalance),
+		)
 	}
 }
 
@@ -91,7 +108,10 @@ func (b *Bank) SetName(name string) {
 	if name != b.Name {
 		b.Name = name
 		writeBank(b)
-		log.WithFields(log.Fields{"guild": b.GuildID, "name": b.Name}).Info("set bank name")
+		sslog.Info("set bank name",
+			slog.String("name", b.Name),
+			slog.String("guildID", b.GuildID),
+		)
 	}
 }
 
@@ -100,7 +120,10 @@ func (b *Bank) SetCurrency(currency string) {
 	if currency != b.Currency {
 		b.Currency = currency
 		writeBank(b)
-		log.WithFields(log.Fields{"guild": b.GuildID, "currency": b.Currency}).Info("set currency")
+		sslog.Info("set currency",
+			slog.String("guildID", b.GuildID),
+			slog.String("currency", b.Currency),
+		)
 	}
 }
 

@@ -85,19 +85,19 @@ var (
 								{
 									Type:        discordgo.ApplicationCommandOptionString,
 									Name:        "name",
-									Description: "The name of the role that may be purchased.",
+									Description: "The name of the custom command.",
 									Required:    true,
 								},
 								{
 									Type:        discordgo.ApplicationCommandOptionInteger,
 									Name:        "cost",
-									Description: "The cost of the role.",
+									Description: "The cost of the custom command.",
 									Required:    true,
 								},
 								{
 									Type:        discordgo.ApplicationCommandOptionString,
 									Name:        "description",
-									Description: "The description of the role that may be purchased.",
+									Description: "The description of the custom command.",
 									Required:    false,
 								},
 							},
@@ -130,7 +130,7 @@ var (
 								{
 									Type:        discordgo.ApplicationCommandOptionString,
 									Name:        "name",
-									Description: "The name of the role that may be purchased.",
+									Description: "The name of the custom command.",
 									Required:    true,
 								},
 							},
@@ -254,8 +254,6 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		addShopItem(s, i)
 	case "delete":
 		removeShopItem(s, i)
-	case "update":
-		updateShopItem(s, i)
 	case "ban":
 		banMember(s, i)
 	case "unban":
@@ -283,7 +281,7 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "role":
 		addRoleToShop(s, i)
 	case "command":
-		addCommandToShop(s, i)
+		addCustomCommandToShop(s, i)
 	default:
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)),
@@ -369,9 +367,10 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp.Send(s, i.Interaction)
 }
 
-// addCommandToShop adds a custom command to the shop.
-func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// addCustomCommandToShop adds a custom command to the shop.
+func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Get the options for the custom command to be added
+	var commandName string
 	var commandCost int
 	var commandName string
 	var commandDescription string
@@ -383,15 +382,17 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			commandCost = int(option.IntValue())
 		case "name":
 			commandName = option.StringValue()
+		case "cost":
+			commandCost = int(option.IntValue())
 		case "description":
 			commandDescription = option.StringValue()
 		}
 	}
 
 	// Verify the custom command can be added to the shop
-	err := customCommandCreateChecks(s, i, commandName)
+	err := customCommandCreateChecks(i.GuildID, commandName)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID}).Errorf("failed to perform custom command create checks: %s", err)
+		log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName, "error": err}).Error("failed to perform custom command create checks")
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
@@ -405,7 +406,7 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "commandCost": commandCost}).Errorf("failed to add custom command to shop: %s", err)
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("Failed to add custom command to the shop: %s", err)),
+			disgomsg.WithContent(fmt.Sprintf("Failed to add custom command `%s` to the shop: %s", commandName, err)),
 		)
 		resp.SendEphemeral(s, i.Interaction)
 		return
@@ -417,7 +418,7 @@ func addCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	log.WithFields(log.Fields{"command": command}).Info("custom command added to shop")
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent("Custom command has been added to the shop."),
+		disgomsg.WithContent(fmt.Sprintf("Custom command `%s` has been added to the shop.", commandName)),
 	)
 	resp.Send(s, i.Interaction)
 }
@@ -431,7 +432,7 @@ func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "role":
 		removeRoleFromShop(s, i)
 	case "command":
-		removeCommandFromShop(s, i)
+		removeCustomCommandFromShop(s, i)
 	default:
 		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
 		log.Warn(msg)
@@ -481,13 +482,13 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp.Send(s, i.Interaction)
 }
 
-// removeCommandFromShop removes a custom command from the shop.
-func removeCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// removeCustomCommandFromShop removes a custom command from the shop.
+func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	options := i.ApplicationCommandData().Options
 
-	// Get the role details
+	// Get the custom command details
 	commandName := options[0].Options[0].Options[0].StringValue()
 
 	command := GetCustomCommand(i.GuildID, commandName)
@@ -516,74 +517,6 @@ func removeCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 	log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName}).Info("custom command removed from shop")
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Custom command `%s` has been removed from the shop.", commandName)),
-	)
-	resp.Send(s, i.Interaction)
-}
-
-// updateShopItem routes the update shop item commands to the proper handers.
-func updateShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	options := i.ApplicationCommandData().Options
-	switch options[0].Options[0].Name {
-	case "role":
-		updateRoleInShop(s, i)
-	default:
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)),
-		)
-		resp.SendEphemeral(s, i.Interaction)
-	}
-}
-
-// updateRoleInShop updates a role in the shop.
-func updateRoleInShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	options := i.ApplicationCommandData().Options
-
-	// Get the roleOptions details
-	roleOptions := options[0].Options[0]
-	roleName := roleOptions.Options[0].StringValue()
-	roleDesc := roleOptions.Options[1].StringValue()
-	roleCost := int(roleOptions.Options[2].IntValue())
-	var roleDuration string
-	if len(roleOptions.Options) > 3 {
-		roleDuration = roleOptions.Options[3].StringValue()
-		_, err := disctime.ParseDuration(roleDuration)
-		if err != nil {
-			log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName, "roleDuration": roleDuration}).Errorf("Failed to parse role duration: %s", err)
-			resp := disgomsg.NewResponse(
-				disgomsg.WithContent(fmt.Sprintf("Invalid duration: %s", err.Error())),
-			)
-			resp.SendEphemeral(s, i.Interaction)
-			return
-		}
-	}
-	var roleRenewable bool
-	if len(roleOptions.Options) > 4 {
-		roleRenewable = roleOptions.Options[4].BoolValue()
-	}
-
-	role := GetRole(i.GuildID, roleName)
-	if role == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Errorf("failed to read role from shop")
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("Role `%s` not found in the shop.", roleName)),
-		)
-		resp.SendEphemeral(s, i.Interaction)
-		return
-	}
-
-	err := role.Update(roleName, roleDesc, roleCost, roleDuration, roleRenewable)
-	if err != nil {
-		log.WithFields(log.Fields{"role": role}).Errorf("Failed to update role in shop: %s", err)
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("Failed to update role `%s` in the shop: %s", roleName, err)),
-		)
-		resp.SendEphemeral(s, i.Interaction)
-		return
-	}
-
-	log.WithFields(log.Fields{"role": role}).Info("Role updated in shop")
-	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(fmt.Sprintf("Role `%s` has been updated in the shop.", roleName)),
 	)
 	resp.Send(s, i.Interaction)
 }
@@ -842,6 +775,8 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch itemType {
 	case ROLE:
 		initiatePurchaseOfRoleFromShop(s, i, itemName)
+	case CUSTOM_COMMAND:
+		initiatePurchaseOfCustomCommandFromShop(s, i, itemName)
 	default:
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("unknown item type")
 		resp := disgomsg.NewResponse(
@@ -871,6 +806,25 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": roleName}).Info("purchase of role initiated")
 }
 
+// initiatePurchaseOfCustomCommandFromShop initiates the purchases of a custom command from the shop.
+// The member will be prompted to confirm the purchase.
+func initiatePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, commandName string) {
+	// Make sure the member can purchase the role
+	err := customCommandPurchaseChecks(s, i, commandName)
+	if err != nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	command := GetCustomCommand(i.GuildID, commandName)
+	shopItem := (*ShopItem)(command)
+	sendConfirmationMessage(s, i, shopItem)
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "commandName": commandName}).Info("purchase of custom command initiated")
+}
+
 // completePurchase is used to finalize the purchase of an item from the shop.
 // It is called when the member confirms the purchase using a "Buy" button.
 func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -889,6 +843,8 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch itemType {
 	case ROLE:
 		completePurchaseOfRoleFromShop(s, i, itemName)
+	case CUSTOM_COMMAND:
+		completePurchaseOfCustomCommandFromShop(s, i, itemName)
 	default:
 		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "itemType": itemType, "itemName": itemName}).Error("unknown item type")
 		resp := disgomsg.NewResponse(
@@ -943,7 +899,40 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 		disgomsg.WithContent(p.Sprintf("Role `%s` has been purchased and assigned to you.", roleName)),
 	)
 	resp.SendEphemeral(s, i.Interaction)
+}
 
+// Complete the purchase of a custom command from the shop. This is called after the purchase has been confirmed by
+// the member.
+func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, commandName string) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	// Make sure the member can purchase the role
+	err := customCommandPurchaseChecks(s, i, commandName)
+	if err != nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	// Purchase the custom command
+	command := GetCustomCommand(i.GuildID, commandName)
+	_, err = command.Purchase(s, i.Member.User.ID)
+	if err != nil {
+		log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName, "memberID": i.Member.User.ID, "error": err}).Errorf("failed to purchase custom command")
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+		)
+		resp.SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "roleName": commandName}).Info("role purchased")
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Custom command `%s` has been purchased.", commandName)),
+	)
+	resp.SendEphemeral(s, i.Interaction)
 }
 
 // sendConfirmationMessage sends a message to the member to confirm the purchase of an item from the shop.
@@ -1079,8 +1068,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 	return messageID, nil
 }
 
-// getShopButtons returns the buttons for the shop items, which may be used to
-// purchase items in the shop.
+// getShopButtons returns the buttons for the shop items, which may be used to purchase items in the shop.
 func getShopButtons(shop *Shop) []discordgo.ActionsRow {
 	buttonsPerRow := 5
 	rows := make([]discordgo.ActionsRow, 0, len(shop.Items)/buttonsPerRow)
