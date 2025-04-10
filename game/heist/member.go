@@ -2,10 +2,10 @@ package heist
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/rbrabson/goblin/guild"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -72,7 +72,10 @@ func newHeistMember(guildID string, memberID string) *HeistMember {
 		Status:        FREE,
 	}
 	writeMember(member)
-	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID}).Debug("create heist member")
+	sslog.Debug("create heist member",
+		slog.String("guildID", member.GuildID),
+		slog.String("memberID", member.MemberID),
+	)
 
 	return member
 }
@@ -93,20 +96,20 @@ func (member *HeistMember) Apprehended() {
 	member.BailCost = bailCost
 
 	writeMember(member)
-	log.WithFields(log.Fields{
-		"bail":          member.BailCost,
-		"criminalLevel": member.CriminalLevel,
-		"deathTimer":    member.DeathTimer,
-		"guild":         member.GuildID,
-		"jailCounter":   member.JailCounter,
-		"member":        member.MemberID,
-		"sentence":      member.Sentence,
-		"spree":         member.Spree,
-		"status":        member.Status,
-		"timer":         member.JailTimer,
-		"totalDeaths":   member.Deaths,
-		"totalJail":     member.TotalJail,
-	}).Debug("heist member apprehended")
+	sslog.Debug("heist member apprehended",
+		"bail", member.BailCost,
+		"criminalLevel", member.CriminalLevel,
+		"deathTimer", member.DeathTimer,
+		"guild", member.GuildID,
+		"jailCounter", member.JailCounter,
+		"member", member.MemberID,
+		"sentence", member.Sentence,
+		"spree", member.Spree,
+		"status", member.Status,
+		"timer", member.JailTimer,
+		"totalDeaths", member.Deaths,
+		"totalJail", member.TotalJail,
+	)
 }
 
 // Died updates the member when they die during a heist.
@@ -123,20 +126,20 @@ func (member *HeistMember) Died() {
 
 	writeMember(member)
 
-	log.WithFields(log.Fields{
-		"bail":          member.BailCost,
-		"criminalLevel": member.CriminalLevel,
-		"deathTimer":    member.DeathTimer,
-		"guild":         member.GuildID,
-		"jailCounter":   member.JailCounter,
-		"member":        member.MemberID,
-		"sentence":      member.Sentence,
-		"spree":         member.Spree,
-		"status":        member.Status,
-		"timer":         member.JailTimer,
-		"totalDeaths":   member.Deaths,
-		"totalJail":     member.TotalJail,
-	}).Debug("heist member died")
+	sslog.Debug("heist member died",
+		"bail", member.BailCost,
+		"criminalLevel", member.CriminalLevel,
+		"deathTimer", member.DeathTimer,
+		"guild", member.GuildID,
+		"jailCounter", member.JailCounter,
+		"member", member.MemberID,
+		"sentence", member.Sentence,
+		"spree", member.Spree,
+		"status", member.Status,
+		"timer", member.JailTimer,
+		"totalDeaths", member.Deaths,
+		"totalJail", member.TotalJail,
+	)
 }
 
 // Escaped updates the member when they successfully escape during a heist.
@@ -144,7 +147,20 @@ func (member *HeistMember) Escaped() {
 	member.Spree++
 	writeMember(member)
 
-	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID}).Debug("escaped from jail")
+	sslog.Debug("heist member escaped",
+		"bail", member.BailCost,
+		"criminalLevel", member.CriminalLevel,
+		"deathTimer", member.DeathTimer,
+		"guild", member.GuildID,
+		"jailCounter", member.JailCounter,
+		"member", member.MemberID,
+		"sentence", member.Sentence,
+		"spree", member.Spree,
+		"status", member.Status,
+		"timer", member.JailTimer,
+		"totalDeaths", member.Deaths,
+		"totalJail", member.TotalJail,
+	)
 }
 
 // UpdateStatus updates the status of the member based on the current time. If the member is in jail
@@ -169,29 +185,29 @@ func (member *HeistMember) UpdateStatus() {
 // ClearJailAndDeathStatus is called when a player is released from jail or rises from the grave.
 func (member *HeistMember) ClearJailAndDeathStatus() {
 	if member.Status == DEAD {
-		log.WithFields(log.Fields{
-			"guildID":     member.GuildID,
-			"memberID":    member.MemberID,
-			"bail":        member.BailCost,
-			"deathTimer":  member.DeathTimer,
-			"jailCounter": member.JailCounter,
-			"jailTimer":   member.JailTimer,
-			"sentence":    member.Sentence,
-			"spree":       member.Spree,
-			"status":      member.Status,
-		}).Debug("heist member risen from the grave")
+		sslog.Debug("heist member risen from the grave",
+			"guildID", member.GuildID,
+			"memberID", member.MemberID,
+			"bail", member.BailCost,
+			"deathTimer", member.DeathTimer,
+			"jailCounter", member.JailCounter,
+			"jailTimer", member.JailTimer,
+			"sentence", member.Sentence,
+			"spree", member.Spree,
+			"status", member.Status,
+		)
 	} else if member.Status == APPREHENDED || member.Status == OOB {
-		log.WithFields(log.Fields{
-			"guildID":     member.GuildID,
-			"memberID":    member.MemberID,
-			"bail":        member.BailCost,
-			"deathTimer":  member.DeathTimer,
-			"jailCounter": member.JailCounter,
-			"jailTimer":   member.JailTimer,
-			"sentence":    member.Sentence,
-			"spree":       member.Spree,
-			"status":      member.Status,
-		}).Debug("heist member released from jail")
+		sslog.Debug("heist member released from jail",
+			"guildID", member.GuildID,
+			"memberID", member.MemberID,
+			"bail", member.BailCost,
+			"deathTimer", member.DeathTimer,
+			"jailCounter", member.JailCounter,
+			"jailTimer", member.JailTimer,
+			"sentence", member.Sentence,
+			"spree", member.Spree,
+			"status", member.Status,
+		)
 	}
 
 	member.BailCost = 0

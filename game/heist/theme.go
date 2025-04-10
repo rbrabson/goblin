@@ -3,11 +3,11 @@ package heist
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/rbrabson/goblin/internal/emoji"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -51,10 +51,13 @@ func GetThemeNames(guildID string) ([]string, error) {
 func GetThemes(guildID string) []*Theme {
 	themes, err := readAllThemes(guildID)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "error": err}).Warn("unable to read themes")
+		sslog.Warn("unable to read themes",
+			slog.String("guildID", guildID),
+			slog.String("error", err.Error()),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": guildID, "themes": len(themes)}).Trace("read all themes")
+
 	return themes
 }
 
@@ -63,15 +66,21 @@ func GetTheme(guildID string) *Theme {
 	config := GetConfig(guildID)
 	theme, err := readTheme(guildID, config.Theme)
 	if err == nil && theme != nil {
-		log.WithFields(log.Fields{"guild": guildID, "theme": theme.Name}).Trace("read theme")
 		return theme
 	}
-	log.WithFields(log.Fields{"guild": guildID, "error": err}).Warn("unable to read theme")
+	sslog.Error("unable to read theme",
+		slog.String("guildID", guildID),
+		slog.String("error", err.Error()),
+	)
+	// The theme was not found in the DB, so create the default theme and use that
 
 	// The theme was found in the DB, so create the default theme and use that
 	theme = readThemeFromFile(guildID)
 	writeTheme(theme)
-	log.WithFields(log.Fields{"guild": guildID, "theme": theme.Name}).Debug("created default theme")
+	sslog.Debug("created default theme",
+		slog.String("guildID", guildID),
+		slog.String("theme", theme.Name),
+	)
 
 	return theme
 }
@@ -84,20 +93,32 @@ func readThemeFromFile(guildID string) *Theme {
 	configFileName := filepath.Join(configDir, "heist", "themes", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to read default theme")
+		sslog.Error("failed to read default theme",
+			slog.String("guildID", guildID),
+			slog.String("file", configFileName),
+			slog.String("error", err.Error()),
+		)
 		return getDefauiltTheme(guildID)
 	}
 
 	theme := &Theme{}
 	err = json.Unmarshal(bytes, theme)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to unmarshal default theme")
+		sslog.Error("failed to unmarshal default theme",
+			slog.String("guildID", guildID),
+			slog.String("file", configFileName),
+			slog.String("data", string(bytes)),
+			slog.String("error", err.Error()),
+		)
 		return getDefauiltTheme(guildID)
 	}
 	theme.GuildID = guildID
 	theme.Name = configTheme
 
-	log.WithField("guild", theme.GuildID).Info("create new theme")
+	sslog.Info("create new theme",
+		slog.String("guildID", theme.GuildID),
+		slog.String("theme", theme.Name),
+	)
 
 	return theme
 }
