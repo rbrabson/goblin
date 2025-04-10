@@ -372,11 +372,14 @@ func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate
 	// Get the options for the custom command to be added
 	var commandName string
 	var commandCost int
+	var commandName string
 	var commandDescription string
 	options := i.ApplicationCommandData().Options
 	for _, option := range options[0].Options[0].Options {
 		log.WithFields(log.Fields{"guildID": i.GuildID, "option": option}).Trace("processing option")
 		switch option.Name {
+		case "cost":
+			commandCost = int(option.IntValue())
 		case "name":
 			commandName = option.StringValue()
 		case "cost":
