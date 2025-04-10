@@ -2,12 +2,12 @@ package race
 
 import (
 	"encoding/json"
+	"log/slog"
 	"math/rand/v2"
 	"os"
 	"path/filepath"
 
 	"github.com/rbrabson/goblin/internal/emoji"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,7 +26,12 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
 	avatars, err := readAllRacers(filter)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "error": err}).Warn("unable to read racers")
+		sslog.Warn("unable to read racers",
+			slog.String("guildID", guildID),
+			slog.String("theme", themeName),
+			slog.String("error", err.Error()),
+		)
+		// If the list of characters does not exist, then create a new list.
 		return readRaceAvatarsFromFile(guildID, themeName)
 	}
 
@@ -34,7 +39,11 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 		avatars[i], avatars[j] = avatars[j], avatars[i]
 	})
 
-	log.WithFields(log.Fields{"guild": guildID, "theme": themeName, "count": len(avatars)}).Debug("read racers")
+	sslog.Debug("read racers",
+		slog.String("guildID", guildID),
+		slog.String("theme", themeName),
+		slog.Int("count", len(avatars)),
+	)
 	return avatars
 }
 
@@ -45,14 +54,24 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 	configFileName := filepath.Join(configDir, "race", "avatars", themeName+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to read default race avatars")
+		sslog.Error("failed to read default race avatars",
+			slog.String("guildID", guildID),
+			slog.String("theme", themeName),
+			slog.String("file", configFileName),
+			slog.String("error", err.Error()),
+		)
 		return getDefaultRaceAvatars(guildID)
 	}
 
 	var avatars []*RaceAvatar
 	err = json.Unmarshal(bytes, &avatars)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to unmarshal default race avatars")
+		sslog.Error("failed to unmarshal default race avatars",
+			slog.String("guildID", guildID),
+			slog.String("theme", themeName),
+			slog.String("file", configFileName),
+			slog.String("data", string(bytes)),
+			slog.String("error", err.Error()))
 		return getDefaultRaceAvatars(guildID)
 	}
 
@@ -62,7 +81,11 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 		writeRacer(avatar)
 	}
 
-	log.WithField("guild", guildID).Info("create new race avatars")
+	sslog.Info("create new race avatars",
+		slog.String("guildID", guildID),
+		slog.String("theme", themeName),
+		slog.Int("count", len(avatars)),
+	)
 
 	return avatars
 }
@@ -287,7 +310,10 @@ func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
 		writeRacer(racer)
 	}
 
-	log.WithFields(log.Fields{"guild": guildID, "count": len(racers)}).Info("created new racers")
+	sslog.Info("created new racers",
+		slog.String("guildID", guildID),
+		slog.Int("count", len(racers)),
+	)
 
 	return racers
 }

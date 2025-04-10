@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/internal/logger"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -14,6 +15,10 @@ var (
 	lastRaceTimes = make(map[string]time.Time)
 	currentRaces  = make(map[string]*Race)
 	raceLock      = sync.Mutex{}
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 // Race represents a race that is currently in progress.

@@ -3,6 +3,7 @@ package race
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"sync"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -85,7 +85,11 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "reset":
 		resetRace(s, i)
 	default:
-		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID, "command": options[0].Name}).Error("unknown command")
+		sslog.Error("unknown command",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.String("command", options[0].Name),
+		)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Command is unknown"),
 		)
@@ -114,7 +118,11 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("Command is unknown"),
 		)
 		resp.Send(s, i.Interaction)
-		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID, "command": options[0].Name}).Error("unknown command")
+		sslog.Error("unknown command",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.String("command", options[0].Name),
+		)
 	}
 }
 
@@ -151,7 +159,10 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer race.End()
 
 	raceMessage(s, race, "start")
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("race started")
+	sslog.Info("race started",
+		slog.String("guiildID", i.GuildID),
+		slog.String("memberID", i.Member.User.ID),
+	)
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
@@ -160,17 +171,26 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	raceMessage(s, race, "betting")
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "racers": len(race.Racers)}).Info("waiting for bets")
+	sslog.Info("waiting for bets",
+		slog.String("guildID", i.GuildID),
+		slog.Int("racers", len(race.Racers)),
+	)
 	waitForBetsToBePlaced(s, race)
 
 	raceMessage(s, race, "started")
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "betsPlaced": len(race.Betters)}).Info("race starting")
+	sslog.Info("race starting",
+		slog.String("guildID", i.GuildID),
+		slog.Int("racers", len(race.Racers)),
+		slog.Int("betsPlaced", len(race.Betters)),
+	)
 
 	race.RunRace(len([]rune(race.config.Track)))
 	sendRace(s, race)
 
 	raceMessage(s, race, "ended")
-	log.WithFields(log.Fields{"guild_id": i.GuildID}).Info("race ended")
+	sslog.Info("race ended",
+		slog.String("guildID", i.GuildID),
+	)
 
 	sendRaceResults(s, i.ChannelID, race)
 	removeRaceButtons(race)
@@ -189,7 +209,10 @@ func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 		time.Sleep(timeToWait)
 		err := raceMessage(s, race, "update")
 		if err != nil {
-			log.WithError(err).Error("Unable to update the time for the race message")
+			sslog.Error("Unable to update the time for the race message",
+				slog.String("guildID", race.GuildID),
+				slog.String("error", err.Error()),
+			)
 		}
 	}
 }
@@ -206,7 +229,10 @@ func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
 		time.Sleep(timeToWait)
 		err := raceMessage(s, race, "betting")
 		if err != nil {
-			log.WithError(err).Error("unable to update the time for the race message")
+			sslog.Error("unable to update the time for the race message",
+				slog.String("guildID", race.GuildID),
+				slog.String("error", err.Error()),
+			)
 		}
 	}
 }
@@ -218,7 +244,10 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	race := currentRaces[i.GuildID]
 	if race == nil {
-		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
+		sslog.Warn("no race is planned",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+		)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("No race is planned"),
 		)
@@ -239,18 +268,29 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
 	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	race.addRaceParticipant(raceMember)
-	log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).Info("joined the race")
+	sslog.Info("joined the race",
+		slog.String("guildID", i.GuildID),
+		slog.String("memberID", i.Member.User.ID),
+	)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent("You have joined the race"),
 	)
 	err = resp.SendEphemeral(s, i.Interaction)
 	if err != nil {
-		log.WithFields(log.Fields{"guild_id": i.GuildID, "user_id": i.Member.User.ID}).WithError(err).Error("unable to send joined race message")
+		sslog.Error("unable to send joined race message",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.String("error", err.Error()),
+		)
 	}
 
 	err = raceMessage(s, race, "join")
 	if err != nil {
-		log.WithError(err).Error("Unable to update the race message")
+		sslog.Error("Unable to update the race message",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.String("error", err.Error()),
+		)
 	}
 }
 
@@ -333,21 +373,26 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.WithError(err).Error("Unable to send the player stats to Discord")
+		sslog.Error("Unable to send the player stats to Discord",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.String("name", guildMember.Name),
+			slog.String("error", err.Error()),
+		)
 	}
 }
 
 // betOnRace processes a bet placed by a member on the race.
 func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	log.Trace("---> race.betOnRace")
-	defer log.Trace("<--- race.betOnRace")
-
 	raceLock.Lock()
 	defer raceLock.Unlock()
 
 	race := currentRaces[i.GuildID]
 	if race == nil {
-		log.WithFields(log.Fields{"guild_id": i.GuildID}).Warn("no race is planned")
+		sslog.Warn("no race is planned",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+		)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("No race is planned"),
 		)
@@ -376,7 +421,10 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceParticipant := getCurrentRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
 	err = raceMember.PlaceBet(race.config.BetAmount)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID}).Error("unable to withdraw bet amount")
+		sslog.Error("unable to withdraw bet amount",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.String("error", err.Error()))
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Insufficiient funds in your bank account to place a bet"),
 		)
@@ -394,7 +442,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	)
 	resp.SendEphemeral(s, i.Interaction)
 
-	log.WithFields(log.Fields{"guildID": i.GuildID, "memberID": i.Member.User.ID, "racer": raceParticipant.Member.guildMember.Name}).Info("you have placed a bet")
+	sslog.Info("you have placed a bet",
+		slog.String("guildID", i.GuildID),
+		slog.String("memberID", i.Member.User.ID),
+		slog.String("racer", raceParticipant.Member.guildMember.Name),
+	)
 }
 
 // getRaceButtons returns the buttons for the racers, which may be used to
@@ -423,11 +475,6 @@ func getRaceButtons(race *Race) []discordgo.ActionsRow {
 
 		row := discordgo.ActionsRow{Components: buttons}
 		rows = append(rows, row)
-		log.WithFields(log.Fields{
-			"numRacers": len(race.Racers),
-			"buttons":   len(buttons),
-			"row":       len(rows),
-		}).Trace("Race Buttons")
 	}
 
 	return rows
@@ -444,14 +491,12 @@ func getRaceButton(rp *RaceParticipant) *raceButton {
 	if buttons == nil {
 		buttons = make(map[string]*raceButton)
 		raceButtons[rp.Member.GuildID] = buttons
-		log.WithFields(log.Fields{"guild_id": rp.Member.GuildID}).Trace("created new button list")
 	}
 
 	// Add a new button to the guild's button list
 	label := fmt.Sprintf("%s:%s", rp.Member.GuildID, rp.Member.MemberID)
 	button := buttons[label]
 	if button != nil {
-		log.WithFields(log.Fields{"guild_id": rp.Member.GuildID, "member_id": rp.Member.MemberID, "label": label}).Trace("found existing button")
 		return button
 	}
 
@@ -461,11 +506,13 @@ func getRaceButton(rp *RaceParticipant) *raceButton {
 	}
 	buttons[button.label] = button
 
-	log.WithFields(log.Fields{"guild_id": rp.Member.GuildID, "member_id": rp.Member.MemberID, "lable": button.label}).Trace("created new button")
-
 	// Register the component handler for the button
 	bot.AddComponentHandler(button.label, betOnRace)
-	log.WithFields(log.Fields{"guild_id": rp.Member.GuildID, "member_id": rp.Member.MemberID, "label": button.label}).Debug("registered button component handler")
+	sslog.Debug("registered button component handler",
+		slog.String("guildID", rp.Member.GuildID),
+		slog.String("memberID", rp.Member.MemberID),
+		slog.String("label", button.label),
+	)
 
 	return button
 }
@@ -479,10 +526,12 @@ func removeRaceButtons(race *Race) {
 	buttons := raceButtons[race.GuildID]
 	for key := range buttons {
 		bot.RemoveComponentHandler(key)
-		log.WithFields(log.Fields{"guild_id": race.GuildID, "label": key}).Debug("removed button component handler")
+		sslog.Debug("removed button component handler",
+			slog.String("guildID", race.GuildID),
+			slog.String("label", key),
+		)
 	}
 	raceButtons[race.GuildID] = make(map[string]*raceButton)
-	log.WithFields(log.Fields{"guild_id": race.GuildID}).Trace("removed all buttons for the guild")
 }
 
 // raceMessage sends the main command used to start and join the race. It also handles the case where
@@ -511,7 +560,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 		msg = "Not enough players entered the race, so it was cancelled."
 	default:
 		errMsg := fmt.Sprintf("Unrecognized action: %s", action)
-		log.Error(errMsg)
+		sslog.Error(errMsg)
 		return errors.New(errMsg)
 	}
 
@@ -599,17 +648,27 @@ func sendRace(s *discordgo.Session, race *Race) {
 	track := getCurrentTrack(race.RaceLegs[0], race.config)
 	message, err := s.ChannelMessageSend(channelID, fmt.Sprintf("%s\n", track))
 	if err != nil {
-		log.WithError(err).Error("failed to send message at the start of the race")
+		sslog.Error("failed to send message at the start of the race",
+			slog.String("guildID", race.GuildID),
+			slog.String("channelID", channelID),
+			slog.String("error", err.Error()),
+		)
 		return
 	}
 
-	log.Debug("preparing to send race legs")
+	sslog.Debug("preparing to send race legs",
+		slog.String("guildID", race.GuildID),
+	)
 	for _, raceLeg := range race.RaceLegs {
 		time.Sleep(2 * time.Second)
 		track = getCurrentTrack(raceLeg, race.config)
 		_, err = s.ChannelMessageEdit(channelID, message.ID, fmt.Sprintf("%s\n", track))
 		if err != nil {
-			log.WithError(err).Error("Failed to update race message")
+			sslog.Error("failed to update race message",
+				slog.String("guildID", race.GuildID),
+				slog.String("channelID", channelID),
+				slog.String("error", err.Error()),
+			)
 		}
 	}
 }
@@ -703,8 +762,6 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 
 // getRacer takes a custom button ID and returns the corresponding racer.
 func getCurrentRaceParticipant(race *Race, customID string) *RaceParticipant {
-	log.WithFields(log.Fields{"guild_id": race.GuildID, "customID": customID}).Trace("getting race participant for button")
-
 	raceButtonMutex.Lock()
 	defer raceButtonMutex.Unlock()
 
