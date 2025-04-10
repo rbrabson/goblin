@@ -44,10 +44,10 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 	if member.UserName != username || member.NickName != nickname || member.GlobalName != globalname {
 		var name string
 		switch {
-		case globalname != "":
-			name = globalname
 		case nickname != "":
 			name = nickname
+		case globalname != "":
+			name = globalname
 		default:
 			name = username
 		}
