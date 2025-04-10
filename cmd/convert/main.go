@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
-	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/internal/convert"
-	log "github.com/sirupsen/logrus"
+	"github.com/rbrabson/goblin/internal/logger"
 )
 
 const (
@@ -16,34 +16,11 @@ const (
 
 var (
 	from_dir *os.File
+	sslog    = logger.GetLogger()
 )
-
-// setLogLevel sets the logging level. If the LOG_LEVEL environment variable isn't set or the value
-// isn't recognized, logging defaults to the `debug` level
-func setLogLevel() {
-	switch strings.ToLower(os.Getenv("LOG_LEVEL")) {
-	case "panic":
-		log.SetLevel(log.PanicLevel)
-	case "fatal":
-		log.SetLevel(log.FatalLevel)
-	case "error":
-		log.SetLevel(log.ErrorLevel)
-	case "warn":
-		log.SetLevel(log.WarnLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "debug":
-		log.SetLevel(log.DebugLevel)
-	case "trace":
-		log.SetLevel(log.TraceLevel)
-	default:
-		log.SetLevel(log.DebugLevel)
-	}
-}
 
 func main() {
 	godotenv.Load(".env")
-	setLogLevel()
 
 	args := os.Args[1:]
 	if len(args) < 1 {
@@ -53,46 +30,41 @@ func main() {
 	var err error
 	from_dir, err = os.Open(args[0])
 	if err != nil {
-		log.Fatal(err)
+		sslog.Error("failed to open directory", slog.String("directory", args[0]), slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	fileNames, err := listFiles(from_dir)
 	if err != nil {
-		log.Fatal(err)
+		sslog.Error("failed to list files", slog.String("directory", from_dir.Name()), slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	outDir := from_dir.Name() + "/" + "converted"
 	convert.Intialize(GUILD_ID, outDir)
 
-	fmt.Println("Starting conversion")
+	sslog.Info("Starting conversion", slog.String("output_directory", outDir))
 	for _, fileName := range fileNames {
 		fullFileName := from_dir.Name() + "/" + fileName
 		switch fileName {
 		case "heist.economy.json":
 			convert.ConvertEconomy(fullFileName)
 		case "heist.heist.json":
-			fmt.Println("heist")
+			sslog.Info("Processing heist", slog.String("file", fullFileName))
 		case "heist.mode.json":
-			fmt.Println("mode")
+			sslog.Info("Processing mode", slog.String("file", fullFileName))
 		case "heist.payday.json":
-			fmt.Println("payday")
+			sslog.Info("Processing payday", slog.String("file", fullFileName))
 		case "heist.race.json":
 			convert.ConvertRaces(fullFileName)
 		case "heist.reminder.json":
-			fmt.Println("reminder")
+			sslog.Info("Processing reminder", slog.String("file", fullFileName))
 		case "heist.target.json":
-			fmt.Println("target")
+			sslog.Info("Processing target", slog.String("file", fullFileName))
 		case "heist.theme.json":
-			fmt.Println("theme")
+			sslog.Info("Processing theme", slog.String("file", fullFileName))
 		}
 	}
-
-	// fileName := from_dir.Name() + "/" + fileNames[0]
-	// b := readFile(fileName)
-	// out := asArray(b)
-	// x := out[0]["characters"]
-	// raceModel := asMap(x)
-	// convertRaceModel(raceModel)
 }
 
 // listFiles lists the files in a directory

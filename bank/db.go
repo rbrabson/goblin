@@ -1,7 +1,8 @@
 package bank
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,7 +18,9 @@ func ResetMonthlyBalances() {
 	update := bson.M{"monthly_balance": 0}
 	err := db.UpdateMany(ACCOUNT_COLLECTION, filter, update)
 	if err != nil {
-		log.WithError(err).Error("unable to reset monthly balances for all accounts")
+		sslog.Error("unable to reset monthly balances for all accounts",
+			slog.String("error", err.Error()),
+		)
 	}
 }
 
@@ -28,10 +31,15 @@ func readBank(guildID string) *Bank {
 	var bank Bank
 	err := db.FindOne(BANK_COLLECTION, filter, &bank)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID}).Debug("bank not found in the database")
+		sslog.Debug("bank not found in the database",
+			slog.String("guildID", guildID),
+			slog.String("error", err.Error()),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": bank.GuildID}).Debug("read bank from the database")
+	sslog.Debug("read bank from the database",
+		slog.String("guildID", guildID),
+	)
 	return &bank
 }
 
@@ -40,10 +48,15 @@ func writeBank(bank *Bank) error {
 	filter := bson.M{"guild_id": bank.GuildID}
 	err := db.UpdateOrInsert(BANK_COLLECTION, filter, bank)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": bank.GuildID}).Error("unable to save bank to the database")
+		sslog.Error("unable to save bank to the database",
+			slog.String("guildID", bank.GuildID),
+			slog.String("error", err.Error()),
+		)
 		return err
 	}
-	log.WithFields(log.Fields{"guild": bank.GuildID}).Debug("save bank to the database")
+	sslog.Debug("save bank to the database",
+		slog.String("guildID", bank.GuildID),
+	)
 
 	return nil
 }
@@ -53,10 +66,16 @@ func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit 
 	var accounts []*Account
 	err := db.FindMany(ACCOUNT_COLLECTION, filter, &accounts, sortBy, limit)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID}).Error("unable to read accounts from the database")
+		sslog.Error("unable to read accounts from the database",
+			slog.String("guildID", guildID),
+			slog.String("error", err.Error()),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": guildID, "count": len(accounts)}).Debug("read accounts from the database")
+	sslog.Debug("read accounts from the database",
+		slog.String("guildID", guildID),
+		slog.Int("count", len(accounts)),
+	)
 
 	return accounts
 }
@@ -68,10 +87,17 @@ func readAccount(guildID string, memberID string) *Account {
 	var account Account
 	err := db.FindOne(ACCOUNT_COLLECTION, filter, &account)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Debug("account not found in the database")
+		sslog.Debug("account not found in the database",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.String("error", err.Error()),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID}).Debug("read account from the database")
+	sslog.Debug("read account from the database",
+		slog.String("guildID", guildID),
+		slog.String("memberID", memberID),
+	)
 
 	return &account
 }
@@ -86,10 +112,17 @@ func writeAccount(account *Account) error {
 	}
 	err := db.UpdateOrInsert(ACCOUNT_COLLECTION, filter, account)
 	if err != nil {
-		log.WithFields(log.Fields{"account": account, "error": err}).Error("unable to save bank account to the database")
+		sslog.Error("unable to save bank account to the database",
+			slog.String("guildID", account.GuildID),
+			slog.String("memberID", account.MemberID),
+			slog.String("error", err.Error()),
+		)
 		return err
 	}
-	log.WithFields(log.Fields{"account": account}).Debug("save bank account to the database")
+	sslog.Debug("save bank account to the database",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+	)
 
 	return nil
 }

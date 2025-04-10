@@ -2,11 +2,10 @@ package bank
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // An Account represents the "bank" account for a given user. This keeps track of the
@@ -44,7 +43,12 @@ func (account *Account) Deposit(amt int) error {
 	account.LifetimeBalance += amt
 
 	err := writeAccount(account)
-	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amt}).Info("deposit into account")
+	sslog.Info("deposit into account",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+		slog.Int("balance", account.CurrentBalance),
+		slog.Int("amount", amt),
+	)
 	return err
 }
 
@@ -53,14 +57,24 @@ func (account *Account) DepositToCurrentOnly(amt int) error {
 	account.CurrentBalance += amt
 
 	err := writeAccount(account)
-	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amt}).Info("deposit into account")
+	sslog.Info("deposit into current account",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+		slog.Int("balance", account.CurrentBalance),
+		slog.Int("amount", amt),
+	)
 	return err
 }
 
 // Withdraw deducts the amount from the balance of the account
 func (account *Account) Withdraw(amt int) error {
 	if amt > account.CurrentBalance {
-		log.WithFields(log.Fields{"guild": account.GuildID, "member": account.GuildID, "balance": account.CurrentBalance, "amount": amt}).Warn("insufficient funds for withdrawl")
+		sslog.Warn("insufficient funds for withdrawl",
+			slog.String("guildID", account.GuildID),
+			slog.String("memberID", account.MemberID),
+			slog.Int("balance", account.CurrentBalance),
+			slog.Int("amount", amt),
+		)
 		return ErrInsufficentFunds
 	}
 	account.CurrentBalance -= amt
@@ -68,21 +82,36 @@ func (account *Account) Withdraw(amt int) error {
 	account.LifetimeBalance -= amt
 
 	err := writeAccount(account)
-	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amt}).Info("withdraw from account")
+	sslog.Info("withdraw from account",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+		slog.Int("balance", account.CurrentBalance),
+		slog.Int("amount", amt),
+	)
 	return err
 }
 
 // WithdrawFromCurrentOnly deducts the amount from the current balance of the account. This
 // is useful for transactions that should not affect the monthly or lifetime balance.
-func (account *Account) WithdrawFromCurrentOnly(amount int) error {
-	if amount > account.CurrentBalance {
-		log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amount}).Warn("insufficient funds for withdrawal")
+func (account *Account) WithdrawFromCurrentOnly(amt int) error {
+	if amt > account.CurrentBalance {
+		sslog.Warn("insufficient funds for withdrawal",
+			slog.String("guildID", account.GuildID),
+			slog.String("memberID", account.MemberID),
+			slog.Int("balance", account.CurrentBalance),
+			slog.Int("amount", amt),
+		)
 		return ErrInsufficentFunds
 	}
-	account.CurrentBalance -= amount
+	account.CurrentBalance -= amt
 
 	err := writeAccount(account)
-	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance, "amount": amount}).Info("withdraw from account")
+	sslog.Info("withdraw from account",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+		slog.Int("balance", account.CurrentBalance),
+		slog.Int("amount", amt),
+	)
 	return err
 }
 
@@ -100,7 +129,11 @@ func (account *Account) SetBalance(balance int) error {
 	}
 
 	err := writeAccount(account)
-	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID, "balance": account.CurrentBalance}).Info("set account balance")
+	sslog.Info("set account balance",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+		slog.Int("balance", account.CurrentBalance),
+	)
 	return err
 }
 
@@ -115,7 +148,10 @@ func newAccount(guildID string, memberID string) *Account {
 		CreatedAt:       time.Now(),
 	}
 	writeAccount(account)
-	log.WithFields(log.Fields{"guild": bank.GuildID, "member": memberID}).Info("created new bank account")
+	sslog.Info("created new bank account",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+	)
 
 	return account
 }
