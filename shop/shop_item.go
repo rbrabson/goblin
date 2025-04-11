@@ -45,7 +45,7 @@ func newShopItem(guildID string, name string, description string, itemType strin
 
 	err := writeShopItem(item)
 	if err != nil {
-		sslog.Error("unable to write shop item to the database",
+		slog.Error("unable to write shop item to the database",
 			slog.String("guild", guildID),
 			slog.String("name", name),
 			slog.String("type", itemType),
@@ -54,7 +54,7 @@ func newShopItem(guildID string, name string, description string, itemType strin
 		return nil
 	}
 
-	sslog.Info("new shop item created",
+	slog.Info("new shop item created",
 		slog.String("guild", guildID),
 		slog.String("name", name),
 		slog.String("type", itemType),
@@ -66,7 +66,7 @@ func newShopItem(guildID string, name string, description string, itemType strin
 // update updates the shop item with the given name and type. If the item does not exist, an error is returned.
 func (item *ShopItem) update(name string, description string, itemType string, price int, duration string, autoRenewable bool) error {
 	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price && duration == item.Duration && autoRenewable == item.AutoRenewable {
-		sslog.Warn("no change to the shop item",
+		slog.Warn("no change to the shop item",
 			slog.String("guild", item.GuildID),
 			slog.String("name", item.Name),
 			slog.String("type", item.Type),
@@ -83,7 +83,7 @@ func (item *ShopItem) update(name string, description string, itemType string, p
 
 	err := writeShopItem(item)
 	if err != nil {
-		sslog.Error("unable to update shop item to the database",
+		slog.Error("unable to update shop item to the database",
 			slog.String("guild", item.GuildID),
 			slog.String("name", item.Name),
 			slog.String("type", item.Type),
@@ -91,7 +91,7 @@ func (item *ShopItem) update(name string, description string, itemType string, p
 		)
 		return fmt.Errorf("unable to add item")
 	}
-	sslog.Info("shop item updated",
+	slog.Info("shop item updated",
 		slog.String("guild", item.GuildID),
 		slog.String("name", item.Name),
 		slog.String("type", item.Type),
@@ -108,7 +108,7 @@ func (item *ShopItem) addToShop(s *Shop) error {
 
 	err := writeShopItem(item)
 	if err != nil {
-		sslog.Error("unable to write shop item to the database",
+		slog.Error("unable to write shop item to the database",
 			slog.String("guild", item.GuildID),
 			slog.String("name", item.Name),
 			slog.String("type", item.Type),
@@ -118,7 +118,7 @@ func (item *ShopItem) addToShop(s *Shop) error {
 	}
 
 	s.Items = append(s.Items, item)
-	sslog.Info("shop item added to shop",
+	slog.Info("shop item added to shop",
 		slog.String("guild", item.GuildID),
 		slog.String("name", item.Name),
 		slog.String("type", item.Type),
@@ -137,7 +137,7 @@ func (item *ShopItem) removeFromShop(s *Shop) error {
 	// Remove the item from the database
 	err := deleteShopItem(item)
 	if err != nil {
-		sslog.Error("unable to remove shop item from the database",
+		slog.Error("unable to remove shop item from the database",
 			slog.String("guild", item.GuildID),
 			slog.String("name", item.Name),
 			slog.String("type", item.Type),
@@ -154,7 +154,7 @@ func (item *ShopItem) removeFromShop(s *Shop) error {
 		}
 	}
 
-	sslog.Info("shop item removed from shop",
+	slog.Info("shop item removed from shop",
 		slog.String("guild", item.GuildID),
 		slog.String("name", item.Name),
 		slog.String("type", item.Type),
@@ -167,7 +167,7 @@ func (item *ShopItem) removeFromShop(s *Shop) error {
 func (item *ShopItem) purchase(memberID string, status string, renew bool) (*Purchase, error) {
 	purchase, err := PurchaseItem(item.GuildID, memberID, item, status, renew)
 	if err != nil {
-		sslog.Error("unable to create purchase",
+		slog.Error("unable to create purchase",
 			slog.String("guild", item.GuildID),
 			slog.String("member", memberID),
 			slog.String("item", item.Name),
@@ -183,7 +183,7 @@ func (item *ShopItem) purchase(memberID string, status string, renew bool) (*Pur
 func createChecks(guildID string, itemName string, itemType string) error {
 	shopItem := getShopItem(guildID, itemName, itemType)
 	if shopItem != nil {
-		sslog.Error("item already exists in the shop",
+		slog.Error("item already exists in the shop",
 			slog.String("guild", guildID),
 			slog.String("name", itemName),
 			slog.String("type", itemType),
@@ -198,7 +198,7 @@ func createChecks(guildID string, itemName string, itemType string) error {
 func purchaseChecks(guildID string, memberID string, itemType string, itemName string) error {
 	purchase, _ := readPurchase(guildID, memberID, itemName, itemType)
 	if purchase != nil && !purchase.IsExpired {
-		sslog.Debug("item already purchased",
+		slog.Debug("item already purchased",
 			slog.String("guild", guildID),
 			slog.String("member", memberID),
 			slog.String("name", itemName),
@@ -211,7 +211,7 @@ func purchaseChecks(guildID string, memberID string, itemType string, itemName s
 	item := getShopItem(guildID, itemName, itemType)
 	bankAccount := bank.GetAccount(guildID, memberID)
 	if bankAccount.CurrentBalance < item.Price {
-		sslog.Debug("insufficient funds to purchase item",
+		slog.Debug("insufficient funds to purchase item",
 			slog.String("guild", guildID),
 			slog.String("name", itemName),
 			slog.String("type", itemType),

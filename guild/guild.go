@@ -8,17 +8,12 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/rbrabson/goblin/internal/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
 	DEFAULT_ADMIN_ROLES = []string{"Admin", "Admins", "Administrator", "Mod", "Mods", "Moderator"}
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 // Guild is the configuration for a guild (guild).
@@ -33,11 +28,11 @@ func GetAllGuilds() []*Guild {
 	guilds := make([]*Guild, 0)
 	err := db.FindMany(GUILD_COLLECTION, bson.M{}, &guilds, bson.M{}, 0)
 	if err != nil {
-		sslog.Error("failed to get all guilds")
+		slog.Error("failed to get all guilds")
 		return nil
 	}
 
-	sslog.Debug("all guilds",
+	slog.Debug("all guilds",
 		slog.Int("numGuilds", len(guilds)),
 	)
 	return guilds
@@ -61,7 +56,7 @@ func readGuildFromFile(guildID string) *Guild {
 	configFileName := filepath.Join(configDir, "guild", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		sslog.Error("failed to read default guild config",
+		slog.Error("failed to read default guild config",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.Any("error", err),
@@ -72,7 +67,7 @@ func readGuildFromFile(guildID string) *Guild {
 	guild := &Guild{}
 	err = json.Unmarshal(bytes, guild)
 	if err != nil {
-		sslog.Error("failed to unmarshal default guild config",
+		slog.Error("failed to unmarshal default guild config",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.Any("error", err),
@@ -83,7 +78,7 @@ func readGuildFromFile(guildID string) *Guild {
 	guild.GuildID = guildID
 
 	writeGuild(guild)
-	sslog.Info("create new guild",
+	slog.Info("create new guild",
 		slog.String("guildID", guild.GuildID),
 		slog.String("file", configFileName),
 	)
@@ -105,7 +100,7 @@ func getDefaultGuild(guildID string) *Guild {
 // AddAdminRole adds a role to the list of admin roles for the guild.
 func (guild *Guild) AddAdminRole(roleName string) {
 	if slices.Contains(guild.AdminRoles, roleName) {
-		sslog.Warn("role already exists",
+		slog.Warn("role already exists",
 			slog.String("guildID", guild.GuildID),
 			slog.String("roleName", roleName),
 			"adminRoles", guild.AdminRoles,
@@ -115,7 +110,7 @@ func (guild *Guild) AddAdminRole(roleName string) {
 
 	guild.AdminRoles = append(guild.AdminRoles, roleName)
 	writeGuild(guild)
-	sslog.Info("adde role",
+	slog.Info("adde role",
 		slog.String("guildID", guild.GuildID),
 		slog.String("roleName", roleName),
 	)
@@ -128,14 +123,14 @@ func (guild *Guild) RemoveAdminRole(roleName string) {
 		if role == roleName {
 			guild.AdminRoles = append(guild.AdminRoles[:i], guild.AdminRoles[i+1:]...)
 			writeGuild(guild)
-			sslog.Info("removed admin role",
+			slog.Info("removed admin role",
 				slog.String("guildID", guild.GuildID),
 				slog.String("roleName", roleName),
 			)
 			return
 		}
 	}
-	sslog.Warn("role not found",
+	slog.Warn("role not found",
 		slog.String("guildID", guild.GuildID),
 		slog.String("roleName", roleName),
 	)

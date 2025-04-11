@@ -317,7 +317,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			roleDuration = strings.ToUpper(option.StringValue())
 			_, err := disctime.ParseDuration(roleDuration)
 			if err != nil {
-				sslog.Error("Failed to parse role duration",
+				slog.Error("Failed to parse role duration",
 					slog.String("guildID", i.GuildID),
 					slog.String("roleName", roleName),
 					slog.String("roleDuration", roleDuration),
@@ -340,7 +340,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Verify the role can be added to the shop
 	err := roleCreateChecks(s, i, roleName)
 	if err != nil {
-		sslog.Error("failed to perform role create checks",
+		slog.Error("failed to perform role create checks",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
 			slog.Any("error", err),
@@ -356,7 +356,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	role := NewRole(i.GuildID, roleName, roleDesc, roleCost, roleDuration, roleRenewable)
 	err = role.AddToShop(shop)
 	if err != nil {
-		sslog.Error("failed to add role to shop",
+		slog.Error("failed to add role to shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
 			slog.Any("error", err),
@@ -372,7 +372,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	shopItem := (*ShopItem)(role)
 	registerShopItemComponentHandlers(shopItem)
 
-	sslog.Info("role added to shop",
+	slog.Info("role added to shop",
 		slog.String("guildID", i.GuildID),
 		slog.String("roleName", roleName),
 	)
@@ -403,7 +403,7 @@ func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate
 	// Verify the custom command can be added to the shop
 	err := customCommandCreateChecks(i.GuildID, commandName)
 	if err != nil {
-		sslog.Error("failed to perform custom command create checks",
+		slog.Error("failed to perform custom command create checks",
 			slog.String("guildID", i.GuildID),
 			slog.String("commandName", commandName),
 			slog.Any("error", err),
@@ -419,7 +419,7 @@ func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate
 	command := NewCustomCommand(i.GuildID, commandName, commandDescription, commandCost)
 	err = command.AddToShop(shop)
 	if err != nil {
-		sslog.Error("failed to add custom command to shop",
+		slog.Error("failed to add custom command to shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("commandName", commandName),
 			slog.Any("error", err),
@@ -435,7 +435,7 @@ func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate
 	shopItem := (*ShopItem)(command)
 	registerShopItemComponentHandlers(shopItem)
 
-	sslog.Info("custom command added to shop",
+	slog.Info("custom command added to shop",
 		slog.String("guildID", i.GuildID),
 		slog.String("commandName", commandName),
 	)
@@ -457,7 +457,7 @@ func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		removeCustomCommandFromShop(s, i)
 	default:
 		msg := p.Sprint("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)
-		sslog.Warn(msg)
+		slog.Warn(msg)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(msg),
 		)
@@ -476,7 +476,7 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	role := GetRole(i.GuildID, roleName)
 	if role == nil {
-		sslog.Error("role not found in shop",
+		slog.Error("role not found in shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
 		)
@@ -490,7 +490,7 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	shop := GetShop(i.GuildID)
 	err := role.RemoveFromShop(shop)
 	if err != nil {
-		sslog.Error("failed to remove role from shop",
+		slog.Error("failed to remove role from shop",
 			slog.String("guildID", role.GuildID),
 			slog.String("roleName", role.Name),
 			slog.Any("error", err),
@@ -504,7 +504,7 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := GetConfig(i.GuildID)
 	publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
 
-	sslog.Info("role removed from shop",
+	slog.Info("role removed from shop",
 		slog.String("guildID", i.GuildID),
 		slog.String("roleName", roleName),
 	)
@@ -525,7 +525,7 @@ func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionC
 
 	command := GetCustomCommand(i.GuildID, commandName)
 	if command == nil {
-		sslog.Error("custom command not found in shop",
+		slog.Error("custom command not found in shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("commandName", commandName),
 		)
@@ -539,7 +539,7 @@ func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionC
 	shop := GetShop(i.GuildID)
 	err := command.RemoveFromShop(shop)
 	if err != nil {
-		sslog.Error("failed to remove custom command from shop",
+		slog.Error("failed to remove custom command from shop",
 			slog.String("guildID", command.GuildID),
 			slog.String("commandName", command.Name),
 			slog.Any("error", err),
@@ -553,7 +553,7 @@ func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionC
 	config := GetConfig(i.GuildID)
 	publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
 
-	sslog.Info("custom command removed from shop",
+	slog.Info("custom command removed from shop",
 		slog.String("guildID", i.GuildID),
 		slog.String("commandName", commandName),
 	)
@@ -573,7 +573,7 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	member := GetMember(i.GuildID, memberID)
 	err := member.AddRestriction(SHOP_BAN)
 	if err != nil {
-		sslog.Error("failed to ban member from shop",
+		slog.Error("failed to ban member from shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
@@ -583,7 +583,7 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 		resp.SendEphemeral(s, i.Interaction)
 	} else {
-		sslog.Info("member banned from shop",
+		slog.Info("member banned from shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", memberID),
 		)
@@ -603,7 +603,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	member, err := getMember(i.GuildID, memberID)
 	if err != nil {
-		sslog.Warn("shop member not found in the database",
+		slog.Warn("shop member not found in the database",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
@@ -617,7 +617,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err = member.RemoveRestriction(SHOP_BAN)
 	if err != nil {
-		sslog.Error("failed to ban member from shop",
+		slog.Error("failed to ban member from shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
@@ -629,7 +629,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	sslog.Info("member banned from shop",
+	slog.Info("member banned from shop",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", memberID),
 	)
@@ -646,7 +646,7 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	channelID := options[0].Options[0].ChannelValue(s).ID
 	_, err := s.State.Channel(channelID)
 	if err != nil {
-		sslog.Error("failed to get channel from state",
+		slog.Error("failed to get channel from state",
 			slog.String("guildID", i.GuildID),
 			slog.String("channelID", channelID),
 			slog.Any("error", err),
@@ -674,7 +674,7 @@ func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	channelID := options[0].Options[0].ChannelValue(s).ID
 	_, err := s.State.Channel(channelID)
 	if err != nil {
-		sslog.Error("failed to get mod channel from state",
+		slog.Error("failed to get mod channel from state",
 			slog.String("guildID", i.GuildID),
 			slog.String("channelID", channelID),
 			slog.Any("error", err),
@@ -700,7 +700,7 @@ func setNotificationID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	memberID := options[0].Options[0].ChannelValue(s).ID
 	_, err := s.State.Channel(memberID)
 	if err != nil {
-		sslog.Error("failed to get member from state",
+		slog.Error("failed to get member from state",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
@@ -732,7 +732,7 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	messageID, err := publishShop(s, i.GuildID, config.ChannelID, config.MessageID)
 	if err != nil {
-		sslog.Error("failed to publish shop",
+		slog.Error("failed to publish shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("channelID", config.ChannelID),
 			slog.Any("error", err),
@@ -748,7 +748,7 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(fmt.Sprintf("Shop items refreshed and published to <#%s>", config.ChannelID)),
 	)
 	resp.SendEphemeral(s, i.Interaction)
-	sslog.Info("shop refreshed",
+	slog.Info("shop refreshed",
 		slog.String("guildID", i.GuildID),
 	)
 }
@@ -782,7 +782,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 	purchases := GetAllPurchases(i.GuildID, i.Member.User.ID)
 
 	if len(purchases) == 0 {
-		sslog.Debug("no purchases found",
+		slog.Debug("no purchases found",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
 		)
@@ -821,7 +821,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	err := paginator.CreateInteractionResponse(s, i, "Purchases", embedFields, true)
 	if err != nil {
-		sslog.Error("unable to send shop purchases",
+		slog.Error("unable to send shop purchases",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
 			slog.Any("error", err),
@@ -829,7 +829,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 
-	sslog.Debug("shop purchases listed",
+	slog.Debug("shop purchases listed",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 	)
@@ -866,7 +866,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case CUSTOM_COMMAND:
 		initiatePurchaseOfCustomCommandFromShop(s, i, itemName)
 	default:
-		sslog.Error("unknown item type",
+		slog.Error("unknown item type",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
 			slog.String("itemType", itemType),
@@ -896,7 +896,7 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	role := GetRole(i.GuildID, roleName)
 	shopItem := (*ShopItem)(role)
 	sendConfirmationMessage(s, i, shopItem)
-	sslog.Info("purchase of role initiated",
+	slog.Info("purchase of role initiated",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 		slog.String("roleName", roleName),
@@ -919,7 +919,7 @@ func initiatePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 	command := GetCustomCommand(i.GuildID, commandName)
 	shopItem := (*ShopItem)(command)
 	sendConfirmationMessage(s, i, shopItem)
-	sslog.Info("purchase of custom command initiated",
+	slog.Info("purchase of custom command initiated",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 		slog.String("commandName", commandName),
@@ -947,7 +947,7 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case CUSTOM_COMMAND:
 		completePurchaseOfCustomCommandFromShop(s, i, itemName)
 	default:
-		sslog.Error("unknown item type",
+		slog.Error("unknown item type",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
 			slog.String("itemType", itemType),
@@ -980,7 +980,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	role := GetRole(i.GuildID, roleName)
 	purchase, err := role.Purchase(i.Member.User.ID, false)
 	if err != nil {
-		sslog.Error("failed to purchase role",
+		slog.Error("failed to purchase role",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
 			slog.String("roleName", roleName),
@@ -997,7 +997,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	err = guild.AssignRole(s, i.GuildID, i.Member.User.ID, roleName)
 	if err != nil {
 		purchase.Return()
-		sslog.Error("failed to assign role",
+		slog.Error("failed to assign role",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
 			slog.String("roleName", roleName),
@@ -1010,7 +1010,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
-	sslog.Info("role purchased",
+	slog.Info("role purchased",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 		slog.String("roleName", roleName),
@@ -1040,7 +1040,7 @@ func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 	command := GetCustomCommand(i.GuildID, commandName)
 	_, err = command.Purchase(s, i.Member.User.ID)
 	if err != nil {
-		sslog.Error("failed to purchase custom command",
+		slog.Error("failed to purchase custom command",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
 			slog.String("commandName", commandName),
@@ -1053,7 +1053,7 @@ func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 		return
 	}
 
-	sslog.Info("role purchased",
+	slog.Info("role purchased",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 		slog.String("commandName", commandName),
@@ -1127,7 +1127,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		if item.Duration != "" {
 			duration, err := disctime.ParseDuration(item.Duration)
 			if err != nil {
-				sslog.Error("failed to parse item duration",
+				slog.Error("failed to parse item duration",
 					slog.String("guildID", guildID),
 					slog.String("itemName", item.Name),
 					slog.String("itemDuration", item.Duration),
@@ -1135,7 +1135,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 				)
 			}
 			sb.WriteString(p.Sprintf("\nDuration: %s", disctime.FormatDuration(duration)))
-			sslog.Info("item duration",
+			slog.Info("item duration",
 				slog.String("guildID", guildID),
 				slog.String("itemName", item.Name),
 				slog.String("itemDuration", item.Duration),
@@ -1154,7 +1154,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		shopItems = append(shopItems, embed)
 
 		if len(shopItems) == MAX_SHOP_ITEMS_DISPLAYED {
-			sslog.Warn("maximum number of shop items reached",
+			slog.Warn("maximum number of shop items reached",
 				slog.String("guildID", guildID),
 				slog.Int("numItems", len(shopItems)),
 			)
@@ -1183,7 +1183,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		)
 		err := msg.WithChannelID(channelID).WithMessageID(messageID).Edit(s)
 		if err != nil {
-			sslog.Error("failed to edit shop items",
+			slog.Error("failed to edit shop items",
 				slog.String("guildID", guildID),
 				slog.String("channelID", channelID),
 				slog.String("messageID", messageID),
@@ -1194,7 +1194,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 			config.MessageID = messageID
 			writeConfig(config)
 		}
-		sslog.Info("shop items updated",
+		slog.Info("shop items updated",
 			slog.String("guildID", guildID),
 			slog.String("channelID", channelID),
 			slog.String("messageID", messageID),
@@ -1208,7 +1208,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		)
 		msgID, err := msg.Send(s, channelID)
 		if err != nil {
-			sslog.Error("failed to publish shop items",
+			slog.Error("failed to publish shop items",
 				slog.String("guildID", guildID),
 				slog.String("channelID", channelID),
 				slog.Any("error", err),
@@ -1220,7 +1220,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		writeConfig(config)
 	}
 
-	sslog.Info("shop items published",
+	slog.Info("shop items published",
 		slog.String("guildID", guildID),
 		slog.String("channelID", channelID),
 		slog.String("messageID", messageID),

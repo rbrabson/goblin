@@ -21,7 +21,7 @@ func readMember(guildID string, memberID string) *Member {
 	var member Member
 	err := db.FindOne(MEMBER_COLLECTION, filter, &member)
 	if err != nil {
-		sslog.Debug("guild member not found in the database",
+		slog.Debug("guild member not found in the database",
 			slog.String("guildID", guildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
@@ -39,7 +39,7 @@ func writeMember(member *Member) error {
 	}
 	err := db.UpdateOrInsert(MEMBER_COLLECTION, filter, member)
 	if err != nil {
-		sslog.Error("unable to create or update guild in the database",
+		slog.Error("unable to create or update guild in the database",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
 			slog.Any("error", err),
@@ -47,7 +47,7 @@ func writeMember(member *Member) error {
 		return err
 	}
 
-	sslog.Debug("write guild member to the database",
+	slog.Debug("write guild member to the database",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 		slog.String("name", member.Name),
@@ -61,7 +61,7 @@ func readGuild(guildID string) *Guild {
 	var guild Guild
 	err := db.FindOne(GUILD_COLLECTION, filter, &guild)
 	if err != nil {
-		sslog.Debug("guild not found in the database",
+		slog.Debug("guild not found in the database",
 			slog.String("guildID", guildID),
 			slog.Any("error", err),
 		)
@@ -75,13 +75,13 @@ func writeGuild(guild *Guild) error {
 	filter := bson.M{"guild_id": guild.GuildID}
 	err := db.UpdateOrInsert(GUILD_COLLECTION, filter, guild)
 	if err != nil {
-		sslog.Error("unable to save guild to the database",
+		slog.Error("unable to save guild to the database",
 			slog.String("guildID", guild.GuildID),
 			slog.Any("error", err),
 		)
 		return err
 	}
-	sslog.Debug("save guild to the database",
+	slog.Debug("save guild to the database",
 		slog.String("guildID", guild.GuildID),
 	)
 

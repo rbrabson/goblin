@@ -26,7 +26,7 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
 	avatars, err := readAllRacers(filter)
 	if err != nil {
-		sslog.Warn("unable to read racers",
+		slog.Warn("unable to read racers",
 			slog.String("guildID", guildID),
 			slog.String("theme", themeName),
 			slog.Any("error", err),
@@ -39,7 +39,7 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 		avatars[i], avatars[j] = avatars[j], avatars[i]
 	})
 
-	sslog.Debug("read racers",
+	slog.Debug("read racers",
 		slog.String("guildID", guildID),
 		slog.String("theme", themeName),
 		slog.Int("count", len(avatars)),
@@ -54,7 +54,7 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 	configFileName := filepath.Join(configDir, "race", "avatars", themeName+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		sslog.Error("failed to read default race avatars",
+		slog.Error("failed to read default race avatars",
 			slog.String("guildID", guildID),
 			slog.String("theme", themeName),
 			slog.String("file", configFileName),
@@ -66,7 +66,7 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 	var avatars []*RaceAvatar
 	err = json.Unmarshal(bytes, &avatars)
 	if err != nil {
-		sslog.Error("failed to unmarshal default race avatars",
+		slog.Error("failed to unmarshal default race avatars",
 			slog.String("guildID", guildID),
 			slog.String("theme", themeName),
 			slog.String("file", configFileName),
@@ -81,7 +81,7 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 		writeRacer(avatar)
 	}
 
-	sslog.Info("create new race avatars",
+	slog.Info("create new race avatars",
 		slog.String("guildID", guildID),
 		slog.String("theme", themeName),
 		slog.Int("count", len(avatars)),
@@ -310,7 +310,7 @@ func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
 		writeRacer(racer)
 	}
 
-	sslog.Info("created new racers",
+	slog.Info("created new racers",
 		slog.String("guildID", guildID),
 		slog.Int("count", len(racers)),
 	)

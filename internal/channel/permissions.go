@@ -4,13 +4,8 @@ import (
 	"log/slog"
 
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/logger"
 
 	"github.com/bwmarrin/discordgo"
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 // Mute is used for muting and unmuting a channel on a server
@@ -26,7 +21,7 @@ type Mute struct {
 func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute {
 	channel, err := s.Channel(i.ChannelID)
 	if err != nil {
-		sslog.Error("error getting channel to mute",
+		slog.Error("error getting channel to mute",
 			slog.String("guildID", i.GuildID),
 			slog.String("channelID", i.ChannelID),
 			slog.Any("error", err),
@@ -34,7 +29,7 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 		return nil
 	}
 	if channel == nil {
-		sslog.Error("channel to mute is is nil",
+		slog.Error("channel to mute is is nil",
 			slog.String("guildID", i.GuildID),
 			slog.String("channelID", i.ChannelID),
 		)
@@ -67,13 +62,13 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 // MuteChannel sets the channel so that `@everyone`	 can't send messages to the channel.
 func (c *Mute) MuteChannel() {
 	if c == nil {
-		sslog.Error("channelMute is nil")
+		slog.Error("channelMute is nil")
 		return
 	}
 	mute := int64(discordgo.PermissionSendMessages)
 	allowFlagsNoSend := c.everyonePermissions.Allow & mute
 	denyFlagsNoSend := c.everyonePermissions.Deny ^ mute
-	sslog.Debug("muting the channel",
+	slog.Debug("muting the channel",
 		slog.String("guildID", c.i.GuildID),
 		slog.String("channelID", c.i.ChannelID),
 		slog.Int64("currentAllow", c.everyonePermissions.Allow),
@@ -84,13 +79,13 @@ func (c *Mute) MuteChannel() {
 	)
 	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allowFlagsNoSend, denyFlagsNoSend)
 	if err != nil {
-		sslog.Warn("failed to mute the channel",
+		slog.Warn("failed to mute the channel",
 			slog.String("guildID", c.i.GuildID),
 			slog.String("channelID", c.i.ChannelID),
 			slog.Any("error", err),
 		)
 	} else {
-		sslog.Debug("muted the channel",
+		slog.Debug("muted the channel",
 			slog.String("guildID", c.i.GuildID),
 			slog.String("channelID", c.i.ChannelID),
 		)
@@ -100,25 +95,25 @@ func (c *Mute) MuteChannel() {
 // UnmuteChannel resets the permissions for `@everyone` to what they were before the channel was muted.
 func (c *Mute) UnmuteChannel() {
 	if c == nil {
-		sslog.Error("channelMute is nil")
+		slog.Error("channelMute is nil")
 		return
 	}
 	if c.everyoneID != "" {
 		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, c.everyonePermissions.Allow, c.everyonePermissions.Deny)
 		if err != nil {
-			sslog.Warn("failed to unmute the channel",
+			slog.Warn("failed to unmute the channel",
 				slog.String("guildID", c.i.GuildID),
 				slog.String("channelID", c.i.ChannelID),
 				slog.Any("error", err),
 			)
 			return
 		}
-		sslog.Debug("reset the channel permissions",
+		slog.Debug("reset the channel permissions",
 			slog.String("guildID", c.i.GuildID),
 			slog.String("channelID", c.i.ChannelID),
 		)
 	} else {
-		sslog.Error("permissions unknown; not possible to un-mute the channel",
+		slog.Error("permissions unknown; not possible to un-mute the channel",
 			slog.String("guildID", c.i.GuildID),
 			slog.String("channelID", c.i.ChannelID),
 		)

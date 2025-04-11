@@ -45,7 +45,7 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 	}
 
 	writeRaceMember(member)
-	sslog.Info("new race member",
+	slog.Info("new race member",
 		slog.String("guildID", guildID),
 		slog.String("memberID", memberID),
 	)
@@ -62,7 +62,7 @@ func (m *RaceMember) WinRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	sslog.Info("won race",
+	slog.Info("won race",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("winnings", amount),
@@ -78,7 +78,7 @@ func (m *RaceMember) PlaceInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	sslog.Info("placed in race",
+	slog.Info("placed in race",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("winnings", amount),
@@ -94,7 +94,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	sslog.Info("showed in race",
+	slog.Info("showed in race",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("winnings", amount),
@@ -106,7 +106,7 @@ func (m *RaceMember) LoseRace() {
 	m.RacesLost++
 	writeRaceMember(m)
 
-	sslog.Info("lost race",
+	slog.Info("lost race",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 	)
@@ -123,8 +123,8 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 	m.BetsMade++
 	m.TotalEarnings -= betAmount
 
-	sslog.Info("placed bet")
-	sslog.Info("placed bet",
+	slog.Info("placed bet")
+	slog.Info("placed bet",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("betAmount", betAmount),
@@ -143,7 +143,7 @@ func (m *RaceMember) WinBet(winnings int) {
 	m.TotalEarnings += winnings
 	writeRaceMember(m)
 
-	sslog.Info("won bet",
+	slog.Info("won bet",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("winnings", winnings),
@@ -154,7 +154,7 @@ func (m *RaceMember) WinBet(winnings int) {
 func (m *RaceMember) LoseBet() {
 	writeRaceMember(m)
 
-	sslog.Info("lost bet",
+	slog.Info("lost bet",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 	)

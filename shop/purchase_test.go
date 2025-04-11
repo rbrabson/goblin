@@ -17,7 +17,7 @@ const (
 func init() {
 	err := godotenv.Load("../.env_test")
 	if err != nil {
-		sslog.Error("Error loading .env file")
+		slog.Error("Error loading .env file")
 		os.Exit(1)
 	}
 	db = mongo.NewDatabase()
@@ -48,7 +48,7 @@ func TestGetAllPurchases(t *testing.T) {
 		return
 	}
 	purchases = append(purchases, purchase)
-	sslog.Debug("purchases",
+	slog.Debug("purchases",
 		slog.Any("purchases", purchases),
 	)
 
@@ -59,12 +59,12 @@ func TestGetAllPurchases(t *testing.T) {
 		return
 	}
 	purchases = append(purchases, purchase)
-	sslog.Debug("purchases",
+	slog.Debug("purchases",
 		slog.Any("purchases", purchases),
 	)
 
 	locPurchases := GetAllPurchases(GUILD_ID, MEMBER_ID)
-	sslog.Info("Purchases from DB", slog.Any("purcahses", locPurchases))
+	slog.Info("Purchases from DB", slog.Any("purcahses", locPurchases))
 	if len(locPurchases) != 2 {
 		t.Errorf("GetAllPurchases failed to return all purchases, expected 2, got %d", len(locPurchases))
 		t.Errorf("purchases: %v", locPurchases)

@@ -16,6 +16,7 @@ var (
 func init() {
 	godotenv.Load(".env")
 	initializeLogger()
+	slog.SetDefault(sslog)
 }
 
 // initializeLogger sets the logging level. If the LOG_LEVEL environment variable isn't set or the value

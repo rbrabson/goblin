@@ -136,7 +136,7 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "info":
 		getBankInfo(s, i)
 	default:
-		sslog.Warn("unknown bank-admin command",
+		slog.Warn("unknown bank-admin command",
 			slog.String("command", options[0].Name),
 		)
 	}
@@ -157,7 +157,7 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "account":
 		account(s, i)
 	default:
-		sslog.Warn("unknown bank command",
+		slog.Warn("unknown bank command",
 			slog.String("command", options[0].Name),
 		)
 	}
@@ -211,7 +211,7 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	account.SetBalance(amount)
 
-	sslog.Debug("/bank-admin set account",
+	slog.Debug("/bank-admin set account",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", member.User.ID),
 		slog.String("memberName", m.Name),
@@ -240,7 +240,7 @@ func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	bank := GetBank(i.GuildID)
 	bank.SetDefaultBalance(balance)
 
-	sslog.Debug("/bank-admin balance",
+	slog.Debug("/bank-admin balance",
 		slog.String("guildID", i.GuildID),
 		slog.Int("balance", balance),
 	)
@@ -267,7 +267,7 @@ func setBankName(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	bank := GetBank(i.GuildID)
 	bank.SetName(name)
 
-	sslog.Debug("bank-admin name",
+	slog.Debug("bank-admin name",
 		slog.String("guildID", i.GuildID),
 		slog.String("name", name),
 	)
@@ -294,7 +294,7 @@ func setBankCurrency(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	bank := GetBank(i.GuildID)
 	bank.SetCurrency(currency)
 
-	sslog.Debug("/bank-admin currency",
+	slog.Debug("/bank-admin currency",
 		slog.String("guildID", i.GuildID),
 		slog.String("currency", currency),
 	)

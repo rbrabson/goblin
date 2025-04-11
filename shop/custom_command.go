@@ -45,7 +45,7 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purch
 	item := ShopItem(*cc)
 	purchase, err := item.purchase(memberID, PENDING, false)
 	if err != nil {
-		sslog.Error("failed to purchase custom command",
+		slog.Error("failed to purchase custom command",
 			slog.String("guildID", cc.GuildID),
 			slog.String("commandName", cc.Name),
 			slog.String("memberID", memberID),
@@ -62,7 +62,7 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purch
 	)
 	_, err = dm.Send(s, config.NotificationID)
 	if err != nil {
-		sslog.Error("failed to send notification message",
+		slog.Error("failed to send notification message",
 			slog.String("guildID", cc.GuildID),
 			slog.String("commandName", cc.Name),
 			slog.String("notificationID", config.NotificationID),
@@ -78,7 +78,7 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purch
 	)
 	_, err = dm.Send(s, memberID)
 	if err != nil {
-		sslog.Error("failed to send direct message",
+		slog.Error("failed to send direct message",
 			slog.String("guildID", cc.GuildID),
 			slog.String("commandName", cc.Name),
 			slog.String("memberID", memberID),
@@ -113,7 +113,7 @@ func customCommandPurchaseChecks(guildID string, memberID string, commandName st
 	// Make sure the role is still available in the shop
 	shopItem := getShopItem(guildID, commandName, ROLE)
 	if shopItem == nil {
-		sslog.Error("failed to read custom command from shop",
+		slog.Error("failed to read custom command from shop",
 			slog.String("guildID", guildID),
 			slog.String("commandName", commandName),
 		)

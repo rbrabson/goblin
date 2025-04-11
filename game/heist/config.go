@@ -59,7 +59,7 @@ func readConfigFromFile(guildID string) *Config {
 	configFileName := filepath.Join(configDir, "heist", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		sslog.Error("failed to read default heist config",
+		slog.Error("failed to read default heist config",
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
@@ -69,7 +69,7 @@ func readConfigFromFile(guildID string) *Config {
 	config := &Config{}
 	err = json.Unmarshal(bytes, config)
 	if err != nil {
-		sslog.Error("failed to unmarshal default heist config",
+		slog.Error("failed to unmarshal default heist config",
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
@@ -78,7 +78,7 @@ func readConfigFromFile(guildID string) *Config {
 	config.GuildID = guildID
 
 	writeConfig(config)
-	sslog.Info("create new heist config",
+	slog.Info("create new heist config",
 		slog.String("guildID", config.GuildID),
 	)
 

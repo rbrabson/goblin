@@ -21,13 +21,13 @@ func readConfig(guildID string) *Config {
 	var config Config
 	err := db.FindOne(CONFIG_COLLECTION, filter, &config)
 	if err != nil {
-		sslog.Debug("heist configuration not found in the database",
+		slog.Debug("heist configuration not found in the database",
 			slog.String("guildID", guildID),
 			slog.Any("error", err),
 		)
 		return nil
 	}
-	sslog.Debug("read heist configuration from the database",
+	slog.Debug("read heist configuration from the database",
 		slog.String("guildID", guildID),
 	)
 
@@ -52,14 +52,14 @@ func readMember(guildID string, memberID string) *HeistMember {
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	err := db.FindOne(HEIST_MEMBER_COLLECTION, filter, &heistMember)
 	if err != nil {
-		sslog.Debug("heist member not found in the database",
+		slog.Debug("heist member not found in the database",
 			slog.String("guildID", guildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
 		)
 		return nil
 	}
-	sslog.Debug("read heist member from the database",
+	slog.Debug("read heist member from the database",
 		slog.String("guildID", guildID),
 		slog.String("memberID", memberID),
 	)
@@ -76,7 +76,7 @@ func writeMember(member *HeistMember) {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
 	db.UpdateOrInsert(HEIST_MEMBER_COLLECTION, filter, member)
-	sslog.Debug("write heist member to the database",
+	slog.Debug("write heist member to the database",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)
@@ -88,7 +88,7 @@ func readAllTargets(filter bson.D) ([]*Target, error) {
 	sort := bson.D{{Key: "crew_size", Value: 1}}
 	err := db.FindMany(TARGET_COLLECTION, filter, &targets, sort, 0)
 	if err != nil {
-		sslog.Error("unable to read targets",
+		slog.Error("unable to read targets",
 			slog.Any("error", err),
 			"filter", filter,
 		)
@@ -104,7 +104,7 @@ func readTargets(guildID string, theme string) ([]*Target, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: theme}}
 	err := db.FindMany(TARGET_COLLECTION, filter, &targets, bson.D{}, 0)
 	if err != nil {
-		sslog.Error("unable to read targets",
+		slog.Error("unable to read targets",
 			slog.String("guildID", guildID),
 			slog.String("theme", theme),
 			slog.Any("error", err),
@@ -125,7 +125,7 @@ func writeTarget(target *Target) {
 	}
 
 	db.UpdateOrInsert(TARGET_COLLECTION, filter, target)
-	sslog.Debug("create or update target",
+	slog.Debug("create or update target",
 		slog.String("guild", target.GuildID),
 		slog.String("target", target.Name),
 		slog.String("theme", target.Theme),
@@ -138,7 +138,7 @@ func readAllThemes(guildID string) ([]*Theme, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}}
 	err := db.FindMany(THEME_COLLECTION, filter, &themes, bson.D{}, 0)
 	if err != nil {
-		sslog.Error("unable to read themes",
+		slog.Error("unable to read themes",
 			slog.String("guildID", guildID),
 			slog.Any("error", err),
 		)
@@ -154,7 +154,7 @@ func readTheme(guildID string, themeName string) (*Theme, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "name", Value: themeName}}
 	err := db.FindOne(THEME_COLLECTION, filter, &theme)
 	if err != nil {
-		sslog.Error("unable to read themes",
+		slog.Error("unable to read themes",
 			slog.String("guild", guildID),
 			slog.String("theme", themeName),
 			slog.Any("error", err),
@@ -174,7 +174,7 @@ func writeTheme(theme *Theme) {
 		filter = bson.M{"guild_id": theme.GuildID, "name": theme.Name}
 	}
 	db.UpdateOrInsert(THEME_COLLECTION, filter, theme)
-	sslog.Debug("write theme to the database",
+	slog.Debug("write theme to the database",
 		slog.String("guild", theme.GuildID),
 		slog.String("theme", theme.Name),
 	)

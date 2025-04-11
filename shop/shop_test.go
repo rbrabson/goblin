@@ -22,7 +22,7 @@ var (
 func init() {
 	err := godotenv.Load("../.env_test")
 	if err != nil {
-		sslog.Error("Error loading .env file")
+		slog.Error("Error loading .env file")
 		os.Exit(1)
 	}
 	db = mongo.NewDatabase()
@@ -106,18 +106,18 @@ func setup(t *testing.T) {
 }
 
 func teardown() {
-	sslog.Info("teardown: deleting items", slog.Int("count", len(testShop.Items)))
+	slog.Info("teardown: deleting items", slog.Int("count", len(testShop.Items)))
 	for _, item := range testShop.Items {
 		err := deleteShopItem(item)
 		if err != nil {
-			sslog.Error(err.Error())
+			slog.Error(err.Error())
 		}
 	}
-	sslog.Info("teardown: deleting purchases", slog.Int("count", len(purchases)))
+	slog.Info("teardown: deleting purchases", slog.Int("count", len(purchases)))
 	for _, purchase := range purchases {
 		err := deletePurchase(purchase)
 		if err != nil {
-			sslog.Error(err.Error())
+			slog.Error(err.Error())
 		}
 	}
 }

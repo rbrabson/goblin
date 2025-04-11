@@ -58,7 +58,7 @@ func roleCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, role
 
 	// Verify the role exists on the server
 	if role := guild.GetGuildRole(s, i.GuildID, roleName); role == nil {
-		sslog.Error("role not found on server",
+		slog.Error("role not found on server",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
 		)
@@ -73,7 +73,7 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 	// Verify the role exists on the server
 	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
 	if guildRole == nil {
-		sslog.Error("role not found on server",
+		slog.Error("role not found on server",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
 		)
@@ -88,7 +88,7 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 	// Make sure the role is still available in the shop
 	shopItem := getShopItem(i.GuildID, roleName, ROLE)
 	if shopItem == nil {
-		sslog.Error("failed to read role from shop",
+		slog.Error("failed to read role from shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
 		)

@@ -24,12 +24,10 @@ var (
 	Revision string = "test"
 )
 
-var (
-	sslog = logger.GetLogger()
-)
-
 // Main Discord game bot
 func main() {
+	sslog := logger.GetLogger()
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		sslog.Warn("unable to load .env_test file", slog.Any("error", err))
