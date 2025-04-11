@@ -2,9 +2,9 @@ package payday
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -37,10 +37,18 @@ func (a *Account) setNextPayday(nextPayday time.Time) {
 	a.NextPayday = nextPayday
 	err := writeAccount(a)
 	if err != nil {
-		log.WithFields(log.Fields{"account": a, "error": err}).Error("unable to save account to the database")
+		sslog.Error("unable to save account to the database",
+			slog.String("guildID", a.GuildID),
+			slog.String("memberID", a.MemberID),
+			slog.Any("error", err),
+		)
 		return
 	}
-	log.WithFields(log.Fields{"account": a}).Debug("set next payday")
+	sslog.Debug("set next payday",
+		slog.String("guildID", a.GuildID),
+		slog.String("memberID", a.MemberID),
+		slog.Time("nextPayday", a.NextPayday),
+	)
 }
 
 // String returns a string representation of the Account.

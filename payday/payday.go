@@ -3,17 +3,22 @@ package payday
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rbrabson/goblin/internal/logger"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
 	DEFAULT_PAYDAY_AMOUNT    = 5000
 	DEFAULT_PAYDAY_FREQUENCY = time.Duration(23 * time.Hour)
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 // Payday is the daily payment for members of a guild (server).
@@ -68,20 +73,29 @@ func readPaydayFromFile(guildID string) *Payday {
 	configFileName := filepath.Join(configDir, "payday", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to read default payday config")
+		sslog.Error("failed to read default payday config",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
 		return getDefaultPayday(guildID)
 	}
 
 	payday := &Payday{}
 	err = json.Unmarshal(bytes, payday)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to unmarshal default payday config")
+		sslog.Error("failed to unmarshal default payday config",
+			slog.String("guildID", guildID),
+			slog.String("file", configFileName),
+			slog.Any("error", err),
+		)
 		return getDefaultPayday(guildID)
 	}
 	payday.GuildID = guildID
 
 	writePayday(payday)
-	log.WithField("guild", payday.GuildID).Info("create new payday config")
+	sslog.Info("create new payday config",
+		slog.String("guildID", payday.GuildID),
+	)
 
 	return payday
 }
@@ -94,7 +108,9 @@ func getDefaultPayday(guildID string) *Payday {
 		PaydayFrequency: DEFAULT_PAYDAY_FREQUENCY,
 	}
 	writePayday(payday)
-	log.WithFields(log.Fields{"payday": payday}).Debug("created new payday")
+	sslog.Debug("created new payday",
+		slog.String("guildID", payday.GuildID),
+	)
 
 	return payday
 }
