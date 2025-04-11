@@ -212,7 +212,7 @@ func vaultUpdater() {
 		for _, target := range getAllTargets(filter) {
 			recoverAmount := int(float64(target.VaultMax) * VAULT_RECOVER_PERCENT)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
-			slog.Info("vault updater: update vault",
+			slog.Info("vault updater",
 				slog.String("guildID", target.GuildID),
 				slog.String("target", target.Name),
 				slog.Int("old", target.Vault),
