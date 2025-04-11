@@ -424,7 +424,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sslog.Error("unable to withdraw bet amount",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
-			slog.String("error", err.Error()))
+			slog.Any("error", err))
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Insufficiient funds in your bank account to place a bet"),
 		)

@@ -32,7 +32,7 @@ var (
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		sslog.Warn("unable to load .env_test file", slog.String("error", err.Error()))
+		sslog.Warn("unable to load .env_test file", slog.Any("error", err))
 	}
 
 	// Start the plugins
@@ -47,7 +47,7 @@ func main() {
 	bot := discord.NewBot(BotName, Version, Revision)
 	err = bot.Session.Open()
 	if err != nil {
-		sslog.Error("unable to create Discord bot", slog.String("error", err.Error()))
+		sslog.Error("unable to create Discord bot", slog.Any("error", err))
 		os.Exit(1)
 	}
 	defer bot.Session.Close()
@@ -61,6 +61,6 @@ func main() {
 	// Close down the bot's session to Discord
 	err = bot.Session.Close()
 	if err != nil {
-		sslog.Error("failed to gracefully close the Discord session", slog.String("error", err.Error()))
+		sslog.Error("failed to gracefully close the Discord session", slog.Any("error", err))
 	}
 }

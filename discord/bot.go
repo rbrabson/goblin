@@ -176,7 +176,7 @@ func (bot *Bot) DeleteCommands() {
 	sslog.Debug("deleting old bot commands")
 	_, err := bot.Session.ApplicationCommandBulkOverwrite(bot.appID, bot.guildID, nil)
 	if err != nil {
-		sslog.Error("failed to delete old commands", slog.String("error", err.Error()))
+		sslog.Error("failed to delete old commands", slog.Any("error", err))
 		os.Exit(1)
 	}
 	sslog.Debug("old bot commands deleted")

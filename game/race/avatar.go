@@ -71,7 +71,7 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 			slog.String("theme", themeName),
 			slog.String("file", configFileName),
 			slog.String("data", string(bytes)),
-			slog.String("error", err.Error()))
+			slog.Any("error", err))
 		return getDefaultRaceAvatars(guildID)
 	}
 
