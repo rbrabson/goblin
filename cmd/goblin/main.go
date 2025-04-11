@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -30,7 +31,10 @@ func main() {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		slog.Warn("unable to load .env_test file", slog.Any("error", err))
+		slog.LogAttrs(context.Background(), slog.LevelError,
+			"unable to load .env_test file",
+			slog.Any("error", err),
+		)
 	}
 
 	// Start the plugins
@@ -45,7 +49,10 @@ func main() {
 	bot := discord.NewBot(BotName, Version, Revision)
 	err = bot.Session.Open()
 	if err != nil {
-		slog.Error("unable to create Discord bot", slog.Any("error", err))
+		slog.LogAttrs(context.Background(), slog.LevelError,
+			"unable to create Discord bot",
+			slog.Any("error", err),
+		)
 		os.Exit(1)
 	}
 	defer bot.Session.Close()
@@ -53,12 +60,17 @@ func main() {
 	// Wait for the user to cancel the program
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	slog.Info("Press Ctrl+C to exit")
+	slog.LogAttrs(context.Background(), slog.LevelInfo,
+		"Press Ctrl+C to exit",
+	)
 	<-sc
 
 	// Close down the bot's session to Discord
 	err = bot.Session.Close()
 	if err != nil {
-		slog.Error("failed to gracefully close the Discord session", slog.Any("error", err))
+		slog.LogAttrs(context.Background(), slog.LevelError,
+			"failed to gracefully close the Discord session",
+			slog.Any("error", err),
+		)
 	}
 }
