@@ -109,19 +109,19 @@ func customCommandCreateChecks(guildID string, commandName string) error {
 }
 
 // customCommandPurchaseChecks performs checks to see if a role can be purchased.
-func customCommandPurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, commandName string) error {
+func customCommandPurchaseChecks(guildID string, memberID string, commandName string) error {
 	// Make sure the role is still available in the shop
-	shopItem := getShopItem(i.GuildID, commandName, ROLE)
+	shopItem := getShopItem(guildID, commandName, ROLE)
 	if shopItem == nil {
 		sslog.Error("failed to read custom command from shop",
-			slog.String("guildID", i.GuildID),
+			slog.String("guildID", guildID),
 			slog.String("commandName", commandName),
 		)
 		return fmt.Errorf("custom command `%s` not found in the shop", commandName)
 	}
 
 	// Make common checks for all purchases
-	err := purchaseChecks(i.GuildID, i.Member.User.ID, CUSTOM_COMMAND, commandName)
+	err := purchaseChecks(guildID, memberID, CUSTOM_COMMAND, commandName)
 	if err != nil {
 		return err
 	}

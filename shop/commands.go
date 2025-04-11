@@ -907,7 +907,7 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 // The member will be prompted to confirm the purchase.
 func initiatePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionCreate, commandName string) {
 	// Make sure the member can purchase the role
-	err := customCommandPurchaseChecks(s, i, commandName)
+	err := customCommandPurchaseChecks(i.GuildID, i.Member.User.ID, commandName)
 	if err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -1027,7 +1027,7 @@ func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	// Make sure the member can purchase the role
-	err := customCommandPurchaseChecks(s, i, commandName)
+	err := customCommandPurchaseChecks(i.GuildID, i.Member.User.ID, commandName)
 	if err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
