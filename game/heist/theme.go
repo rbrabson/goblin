@@ -53,7 +53,7 @@ func GetThemes(guildID string) []*Theme {
 	if err != nil {
 		sslog.Warn("unable to read themes",
 			slog.String("guildID", guildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -70,7 +70,7 @@ func GetTheme(guildID string) *Theme {
 	}
 	sslog.Error("unable to read theme",
 		slog.String("guildID", guildID),
-		slog.String("error", err.Error()),
+		slog.Any("error", err),
 	)
 	// The theme was not found in the DB, so create the default theme and use that
 
@@ -96,7 +96,7 @@ func readThemeFromFile(guildID string) *Theme {
 		sslog.Error("failed to read default theme",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefauiltTheme(guildID)
 	}
@@ -108,7 +108,7 @@ func readThemeFromFile(guildID string) *Theme {
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.String("data", string(bytes)),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefauiltTheme(guildID)
 	}

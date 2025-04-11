@@ -56,7 +56,7 @@ func readConfigFromFile(guildID string) *Config {
 		sslog.Error("failed to read default race config",
 			slog.String("guildID", guildID),
 			slog.String("theme", configTheme),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		// If the configuration file does not exist, then create a new configuration.
 		return getDefauiltConfig(guildID)
@@ -69,7 +69,7 @@ func readConfigFromFile(guildID string) *Config {
 			slog.String("guildID", guildID),
 			slog.String("theme", configTheme),
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefauiltConfig(guildID)
 	}

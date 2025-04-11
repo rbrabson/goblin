@@ -215,7 +215,7 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err != nil {
 		sslog.Error("failed to send server status",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return
 	}

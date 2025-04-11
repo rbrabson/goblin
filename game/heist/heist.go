@@ -85,7 +85,7 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 		sslog.Debug("heist checks failed",
 			slog.String("guilIDd", guildID),
 			slog.String("memberID", memberID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil, err
 	}

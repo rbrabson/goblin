@@ -22,7 +22,7 @@ func readConfig(guildID string) *Config {
 	if err != nil {
 		sslog.Debug("race configuration not found in the database",
 			slog.String("guildID", guildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -46,7 +46,7 @@ func writeConfig(config *Config) {
 	if err != nil {
 		sslog.Error("failed to write the race configuration to the database",
 			slog.String("guildID", config.GuildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 }
@@ -61,7 +61,7 @@ func readRaceMember(guildID string, memberID string) *RaceMember {
 		sslog.Debug("race member not found in the database",
 			slog.String("guildID", guildID),
 			slog.String("memberID", memberID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -95,7 +95,7 @@ func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 	err := db.FindMany(RACER_COLLECTION, filter, &racers, sort, 0)
 	if err != nil || len(racers) == 0 {
 		sslog.Warn("unable to read racers",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"filter", filter,
 		)
 		if err != nil {

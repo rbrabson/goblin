@@ -211,7 +211,7 @@ func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 		if err != nil {
 			sslog.Error("Unable to update the time for the race message",
 				slog.String("guildID", race.GuildID),
-				slog.String("error", err.Error()),
+				slog.Any("error", err),
 			)
 		}
 	}
@@ -231,7 +231,7 @@ func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
 		if err != nil {
 			sslog.Error("unable to update the time for the race message",
 				slog.String("guildID", race.GuildID),
-				slog.String("error", err.Error()),
+				slog.Any("error", err),
 			)
 		}
 	}
@@ -280,7 +280,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sslog.Error("unable to send joined race message",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 
@@ -289,7 +289,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sslog.Error("Unable to update the race message",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 }
@@ -377,7 +377,7 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
 			slog.String("name", guildMember.Name),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 }
@@ -651,7 +651,7 @@ func sendRace(s *discordgo.Session, race *Race) {
 		sslog.Error("failed to send message at the start of the race",
 			slog.String("guildID", race.GuildID),
 			slog.String("channelID", channelID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return
 	}
@@ -667,7 +667,7 @@ func sendRace(s *discordgo.Session, race *Race) {
 			sslog.Error("failed to update race message",
 				slog.String("guildID", race.GuildID),
 				slog.String("channelID", channelID),
-				slog.String("error", err.Error()),
+				slog.Any("error", err),
 			)
 		}
 	}

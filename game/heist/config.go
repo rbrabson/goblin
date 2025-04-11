@@ -61,7 +61,7 @@ func readConfigFromFile(guildID string) *Config {
 	if err != nil {
 		sslog.Error("failed to read default heist config",
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefaultConfig(guildID)
 	}
@@ -71,7 +71,7 @@ func readConfigFromFile(guildID string) *Config {
 	if err != nil {
 		sslog.Error("failed to unmarshal default heist config",
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefaultConfig(guildID)
 	}

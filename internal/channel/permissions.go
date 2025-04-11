@@ -29,7 +29,7 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 		sslog.Error("error getting channel to mute",
 			slog.String("guildID", i.GuildID),
 			slog.String("channelID", i.ChannelID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -87,7 +87,7 @@ func (c *Mute) MuteChannel() {
 		sslog.Warn("failed to mute the channel",
 			slog.String("guildID", c.i.GuildID),
 			slog.String("channelID", c.i.ChannelID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	} else {
 		sslog.Debug("muted the channel",
@@ -109,7 +109,7 @@ func (c *Mute) UnmuteChannel() {
 			sslog.Warn("failed to unmute the channel",
 				slog.String("guildID", c.i.GuildID),
 				slog.String("channelID", c.i.ChannelID),
-				slog.String("error", err.Error()),
+				slog.Any("error", err),
 			)
 			return
 		}

@@ -61,7 +61,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {
 		sslog.Error("failed to create the bot",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		os.Exit(1)
 	}
@@ -200,7 +200,7 @@ func (bot *Bot) LoadCommands(commands []*discordgo.ApplicationCommand) {
 		sslog.Error("failed to load bot commands",
 			slog.String("appID", bot.appID),
 			slog.String("guildID", bot.guildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"commands", commands,
 		)
 		os.Exit(1)

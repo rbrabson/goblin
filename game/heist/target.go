@@ -114,7 +114,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 		sslog.Error("failed to read default targets",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefaultTargets(guildID)
 	}
@@ -126,7 +126,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.String("targets", string(bytes)),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefaultTargets(guildID)
 	}

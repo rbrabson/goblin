@@ -64,7 +64,7 @@ func readGuildFromFile(guildID string) *Guild {
 		sslog.Error("failed to read default guild config",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefaultGuild(guildID)
 	}
@@ -75,7 +75,7 @@ func readGuildFromFile(guildID string) *Guild {
 		sslog.Error("failed to unmarshal default guild config",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			slog.String("config", string(bytes)),
 		)
 		return getDefaultGuild(guildID)

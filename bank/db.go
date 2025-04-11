@@ -19,7 +19,7 @@ func ResetMonthlyBalances() {
 	err := db.UpdateMany(ACCOUNT_COLLECTION, filter, update)
 	if err != nil {
 		sslog.Error("unable to reset monthly balances for all accounts",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 }
@@ -33,7 +33,7 @@ func readBank(guildID string) *Bank {
 	if err != nil {
 		sslog.Debug("bank not found in the database",
 			slog.String("guildID", guildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -50,7 +50,7 @@ func writeBank(bank *Bank) error {
 	if err != nil {
 		sslog.Error("unable to save bank to the database",
 			slog.String("guildID", bank.GuildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return err
 	}
@@ -68,7 +68,7 @@ func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit 
 	if err != nil {
 		sslog.Error("unable to read accounts from the database",
 			slog.String("guildID", guildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -90,7 +90,7 @@ func readAccount(guildID string, memberID string) *Account {
 		sslog.Debug("account not found in the database",
 			slog.String("guildID", guildID),
 			slog.String("memberID", memberID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -115,7 +115,7 @@ func writeAccount(account *Account) error {
 		sslog.Error("unable to save bank account to the database",
 			slog.String("guildID", account.GuildID),
 			slog.String("memberID", account.MemberID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return err
 	}

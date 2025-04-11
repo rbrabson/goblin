@@ -23,7 +23,7 @@ func readConfig(guildID string) *Config {
 	if err != nil {
 		sslog.Debug("heist configuration not found in the database",
 			slog.String("guildID", guildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -55,7 +55,7 @@ func readMember(guildID string, memberID string) *HeistMember {
 		sslog.Debug("heist member not found in the database",
 			slog.String("guildID", guildID),
 			slog.String("memberID", memberID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -89,7 +89,7 @@ func readAllTargets(filter bson.D) ([]*Target, error) {
 	err := db.FindMany(TARGET_COLLECTION, filter, &targets, sort, 0)
 	if err != nil {
 		sslog.Error("unable to read targets",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"filter", filter,
 		)
 		return nil, err
@@ -107,7 +107,7 @@ func readTargets(guildID string, theme string) ([]*Target, error) {
 		sslog.Error("unable to read targets",
 			slog.String("guildID", guildID),
 			slog.String("theme", theme),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func readAllThemes(guildID string) ([]*Theme, error) {
 	if err != nil {
 		sslog.Error("unable to read themes",
 			slog.String("guildID", guildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func readTheme(guildID string, themeName string) (*Theme, error) {
 		sslog.Error("unable to read themes",
 			slog.String("guild", guildID),
 			slog.String("theme", themeName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil, err
 	}

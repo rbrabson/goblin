@@ -24,7 +24,7 @@ func readMember(guildID string, memberID string) *Member {
 		sslog.Debug("guild member not found in the database",
 			slog.String("guildID", guildID),
 			slog.String("memberID", memberID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -42,7 +42,7 @@ func writeMember(member *Member) error {
 		sslog.Error("unable to create or update guild in the database",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return err
 	}
@@ -63,7 +63,7 @@ func readGuild(guildID string) *Guild {
 	if err != nil {
 		sslog.Debug("guild not found in the database",
 			slog.String("guildID", guildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -77,7 +77,7 @@ func writeGuild(guild *Guild) error {
 	if err != nil {
 		sslog.Error("unable to save guild to the database",
 			slog.String("guildID", guild.GuildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return err
 	}

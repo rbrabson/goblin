@@ -315,7 +315,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
 		sslog.Warn("unable to create the heist",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -366,7 +366,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		sslog.Error("unable to mark the heist message as started",
 			slog.String("guildID", heist.GuildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 
@@ -374,7 +374,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		sslog.Error("unable to start the heist",
 			slog.String("guildID", heist.GuildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -644,7 +644,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sslog.Error("unable to send the player stats to Discord",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 }
@@ -682,7 +682,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			sslog.Error("unable to send the bail message",
 				slog.String("guildID", i.GuildID),
 				slog.String("memberID", i.Member.User.ID),
-				slog.String("error", err.Error()),
+				slog.Any("error", err),
 			)
 			return
 		}
@@ -811,7 +811,7 @@ func heistMessage(s *discordgo.Session, heist *Heist, member *HeistMember, actio
 		sslog.Error("unable to send the heist message",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return err
 	}
@@ -916,7 +916,7 @@ func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		sslog.Warn("Unable to get the themes",
 			slog.String("guildID", i.GuildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 
@@ -946,7 +946,7 @@ func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sslog.Error("Unable to send list of themes to the user for `list themes`",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 }
@@ -1155,7 +1155,7 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sslog.Error("unable to send a response for `config info`",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 }

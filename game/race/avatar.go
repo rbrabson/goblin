@@ -29,7 +29,7 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 		sslog.Warn("unable to read racers",
 			slog.String("guildID", guildID),
 			slog.String("theme", themeName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		// If the list of characters does not exist, then create a new list.
 		return readRaceAvatarsFromFile(guildID, themeName)
@@ -58,7 +58,7 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 			slog.String("guildID", guildID),
 			slog.String("theme", themeName),
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefaultRaceAvatars(guildID)
 	}

@@ -47,7 +47,7 @@ func NewDatabase() *MongoDB {
 	m.Client, err = mongo.Connect(ctx, m.clientOpts)
 	if err != nil {
 		sslog.Error("unable to connect to the MongoDB database",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil
 	}
@@ -56,7 +56,7 @@ func NewDatabase() *MongoDB {
 	err = m.Client.Ping(ctx, nil)
 	if err != nil {
 		sslog.Error("unable to ping the MongoDB database",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		err = nil
 	}
@@ -80,7 +80,7 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 	if err != nil {
 		sslog.Error("Failed to read the collection",
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil, ErrCollectionNotAccessable
 	}
@@ -96,7 +96,7 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 	if err != nil {
 		sslog.Error("error getting IDs for the collection",
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return nil, ErrCollectionNotAccessable
 	}
@@ -132,7 +132,7 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 		sslog.Debug("unable to find the document",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return err
 	}
@@ -144,7 +144,7 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 		sslog.Error("unable to decode the documents",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"data", data,
 		)
 		return ErrInvalidDocument
@@ -185,7 +185,7 @@ func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interf
 		sslog.Error("unable to decode the document",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"data", data,
 		)
 		return ErrInvalidDocument
@@ -233,7 +233,7 @@ func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data int
 	if err != nil {
 		sslog.Error("unable to insert or update the document the collection",
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"filter", filter,
 			"data", data,
 		)
@@ -263,7 +263,7 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 	if err != nil {
 		sslog.Error("Failed to read the collection",
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"filter", filter,
 		)
 		return 0, ErrCollectionNotAccessable
@@ -291,7 +291,7 @@ func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
 	if err != nil {
 		sslog.Error("unable to delete the document",
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"filter", filter,
 		)
 		return err
@@ -325,7 +325,7 @@ func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
 	if err != nil {
 		sslog.Error("unable to delete the document",
 			slog.String("collection", collectionName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 			"filter", filter,
 		)
 		return err
@@ -352,7 +352,7 @@ func (m *MongoDB) Close() error {
 	defer cancel()
 	if err := m.Client.Disconnect(ctx); err != nil {
 		sslog.Error("unable to close the mongo database client",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return err
 	}
@@ -367,7 +367,7 @@ func (m *MongoDB) getCollection(ctx context.Context, collectionName string) (*mo
 		m.Client, err = mongo.Connect(ctx, m.clientOpts)
 		if err != nil {
 			sslog.Error("unable to connect to the MongoDB database",
-				slog.String("error", err.Error()),
+				slog.Any("error", err),
 			)
 			return nil, err
 		}
