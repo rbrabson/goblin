@@ -53,7 +53,7 @@ func NewDatabase() *MongoDB {
 		slog.Error("unable to ping the MongoDB database",
 			slog.Any("error", err),
 		)
-		err = nil
+		return nil
 	}
 
 	return m
