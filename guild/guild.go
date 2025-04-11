@@ -3,17 +3,22 @@ package guild
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rbrabson/goblin/internal/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
 	DEFAULT_ADMIN_ROLES = []string{"Admin", "Admins", "Administrator", "Mod", "Mods", "Moderator"}
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 // Guild is the configuration for a guild (guild).
@@ -28,11 +33,13 @@ func GetAllGuilds() []*Guild {
 	guilds := make([]*Guild, 0)
 	err := db.FindMany(GUILD_COLLECTION, bson.M{}, &guilds, bson.M{}, 0)
 	if err != nil {
-		log.Error("failed to get all guilds")
+		sslog.Error("failed to get all guilds")
 		return nil
 	}
 
-	log.WithField("guilds", len(guilds)).Debug("all guilds")
+	sslog.Debug("all guilds",
+		slog.Int("numGuilds", len(guilds)),
+	)
 	return guilds
 }
 
@@ -43,7 +50,6 @@ func GetGuild(guildID string) *Guild {
 		guild = readGuildFromFile(guildID)
 	}
 
-	log.Tracef("Guild: %v", guild)
 	return guild
 }
 
@@ -55,20 +61,32 @@ func readGuildFromFile(guildID string) *Guild {
 	configFileName := filepath.Join(configDir, "guild", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to read default guild config")
+		sslog.Error("failed to read default guild config",
+			slog.String("guildID", guildID),
+			slog.String("file", configFileName),
+			slog.String("error", err.Error()),
+		)
 		return getDefaultGuild(guildID)
 	}
 
 	guild := &Guild{}
 	err = json.Unmarshal(bytes, guild)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to unmarshal default guild config")
+		sslog.Error("failed to unmarshal default guild config",
+			slog.String("guildID", guildID),
+			slog.String("file", configFileName),
+			slog.String("error", err.Error()),
+			slog.String("config", string(bytes)),
+		)
 		return getDefaultGuild(guildID)
 	}
 	guild.GuildID = guildID
 
 	writeGuild(guild)
-	log.WithField("guild", guild.GuildID).Info("create new guild")
+	sslog.Info("create new guild",
+		slog.String("guildID", guild.GuildID),
+		slog.String("file", configFileName),
+	)
 
 	return guild
 }
@@ -87,13 +105,21 @@ func getDefaultGuild(guildID string) *Guild {
 // AddAdminRole adds a role to the list of admin roles for the guild.
 func (guild *Guild) AddAdminRole(roleName string) {
 	if slices.Contains(guild.AdminRoles, roleName) {
-		log.WithFields(log.Fields{"roleName": roleName, "adminRoles": guild.AdminRoles}).Warn("role already exists")
+		sslog.Warn("role already exists",
+			slog.String("guildID", guild.GuildID),
+			slog.String("roleName", roleName),
+			"adminRoles", guild.AdminRoles,
+		)
 		return
 	}
 
 	guild.AdminRoles = append(guild.AdminRoles, roleName)
 	writeGuild(guild)
-	log.WithFields(log.Fields{"roleName": roleName, "adminRoles": guild.AdminRoles}).Info("added admin role")
+	sslog.Info("adde role",
+		slog.String("guildID", guild.GuildID),
+		slog.String("roleName", roleName),
+	)
+
 }
 
 // RemoveAdminRole removes a role from the list of admin roles for the guild.
@@ -102,11 +128,18 @@ func (guild *Guild) RemoveAdminRole(roleName string) {
 		if role == roleName {
 			guild.AdminRoles = append(guild.AdminRoles[:i], guild.AdminRoles[i+1:]...)
 			writeGuild(guild)
-			log.WithFields(log.Fields{"roleName": roleName, "adminRoles": guild.AdminRoles}).Info("removed admin role")
+			sslog.Info("removed admin role",
+				slog.String("guildID", guild.GuildID),
+				slog.String("roleName", roleName),
+			)
 			return
 		}
 	}
-	log.WithFields(log.Fields{"roleName": roleName, "adminRoles": guild.AdminRoles}).Warn("role not found")
+	sslog.Warn("role not found",
+		slog.String("guildID", guild.GuildID),
+		slog.String("roleName", roleName),
+	)
+
 }
 
 // GetAdminRoles returns the list of admin roles for the guild.

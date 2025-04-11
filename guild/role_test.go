@@ -1,11 +1,11 @@
 package guild
 
 import (
+	"os"
 	"testing"
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -16,7 +16,8 @@ const (
 func init() {
 	err := godotenv.Load("../.env_test")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		sslog.Error("Error loading .env file")
+		os.Exit(1)
 	}
 	db = mongo.NewDatabase()
 }

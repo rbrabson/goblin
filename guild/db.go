@@ -1,7 +1,8 @@
 package guild
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -20,10 +21,13 @@ func readMember(guildID string, memberID string) *Member {
 	var member Member
 	err := db.FindOne(MEMBER_COLLECTION, filter, &member)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Debug("guild member not found in the database")
+		sslog.Debug("guild member not found in the database",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.String("error", err.Error()),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID, "name": member.Name}).Debug("read guild member from the database")
 	return &member
 }
 
@@ -35,11 +39,19 @@ func writeMember(member *Member) error {
 	}
 	err := db.UpdateOrInsert(MEMBER_COLLECTION, filter, member)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID}).Error("unable to create or update guild in the database")
+		sslog.Error("unable to create or update guild in the database",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.String("error", err.Error()),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID, "name": member.Name}).Debug("write guild member to the database")
+	sslog.Debug("write guild member to the database",
+		slog.String("guildID", member.GuildID),
+		slog.String("memberID", member.MemberID),
+		slog.String("name", member.Name),
+	)
 	return nil
 }
 
@@ -49,10 +61,12 @@ func readGuild(guildID string) *Guild {
 	var guild Guild
 	err := db.FindOne(GUILD_COLLECTION, filter, &guild)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID}).Debug("guild not found in the database")
+		sslog.Debug("guild not found in the database",
+			slog.String("guildID", guildID),
+			slog.String("error", err.Error()),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": guild}).Debug("read guild from the database")
 	return &guild
 }
 
@@ -61,10 +75,15 @@ func writeGuild(guild *Guild) error {
 	filter := bson.M{"guild_id": guild.GuildID}
 	err := db.UpdateOrInsert(GUILD_COLLECTION, filter, guild)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guild.GuildID}).Error("unable to save guild to the database")
+		sslog.Error("unable to save guild to the database",
+			slog.String("guildID", guild.GuildID),
+			slog.String("error", err.Error()),
+		)
 		return err
 	}
-	log.WithFields(log.Fields{"guild": guild.GuildID}).Info("save guild to the database")
+	sslog.Debug("save guild to the database",
+		slog.String("guildID", guild.GuildID),
+	)
 
 	return nil
 }
