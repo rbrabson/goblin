@@ -90,7 +90,7 @@ func readAllTargets(filter bson.D) ([]*Target, error) {
 	if err != nil {
 		slog.Error("unable to read targets",
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return nil, err
 	}

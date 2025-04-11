@@ -96,7 +96,7 @@ func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 	if err != nil || len(racers) == 0 {
 		slog.Warn("unable to read racers",
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		if err != nil {
 			return nil, err

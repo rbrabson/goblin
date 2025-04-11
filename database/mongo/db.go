@@ -140,7 +140,7 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"data", data,
+			slog.Any("data", data),
 		)
 		return ErrInvalidDocument
 	}
@@ -164,7 +164,7 @@ func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interf
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
 			slog.String("error", res.Err().Error()),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return res.Err()
 	}
@@ -181,7 +181,7 @@ func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interf
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"data", data,
+			slog.Any("data", data),
 		)
 		return ErrInvalidDocument
 	}
@@ -204,8 +204,8 @@ func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data
 		slog.Error("unable to insert or update the document the collection",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
-			"filter", filter,
-			"data", data,
+			slog.Any("filter", filter),
+			slog.Any("data", data),
 		)
 		return err
 	}
@@ -229,15 +229,15 @@ func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data int
 		slog.Error("unable to insert or update the document the collection",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"filter", filter,
-			"data", data,
+			slog.Any("filter", filter),
+			slog.Any("data", data),
 		)
 		return err
 	}
 	slog.Debug("updated document in the collection",
 		slog.String("collection", collectionName),
-		"filter", filter,
-		"data", data,
+		slog.Any("filter", filter),
+		slog.Any("data", data),
 	)
 
 	return nil
@@ -259,14 +259,14 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 		slog.Error("Failed to read the collection",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return 0, ErrCollectionNotAccessable
 	}
 	slog.Debug("count",
 		slog.String("collection", collectionName),
 		slog.Int64("count", count),
-		"filter", filter,
+		slog.Any("filter", filter),
 	)
 
 	return int(count), nil
@@ -287,20 +287,20 @@ func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
 		slog.Error("unable to delete the document",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return err
 	}
 	if res.DeletedCount == 0 {
 		slog.Warn("document not found",
 			slog.String("collection", collectionName),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 	}
 	slog.Debug("deleted document",
 		slog.String("collection", collectionName),
 		slog.Int64("count", res.DeletedCount),
-		"filter", filter,
+		slog.Any("filter", filter),
 	)
 
 	return nil
@@ -321,7 +321,7 @@ func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
 		slog.Error("unable to delete the document",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return err
 	}
@@ -329,13 +329,13 @@ func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
 		slog.Warn("document not found",
 			slog.String("collection", collectionName),
 			slog.Int64("count", res.DeletedCount),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 	}
 	slog.Debug("deleted document",
 		slog.String("collection", collectionName),
 		slog.Int64("count", res.DeletedCount),
-		"filter", filter,
+		slog.Any("filter", filter),
 	)
 
 	return nil
