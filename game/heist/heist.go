@@ -153,8 +153,8 @@ func (h *Heist) Start() (*HeistResult, error) {
 		chance := r.IntN(100) + 1
 		slog.Debug("heist results",
 			slog.String("member", guildMember.Name),
-			slog.Int("Chance", chance),
-			slog.Int("SuccessRate", successRate),
+			slog.Int("chance", chance),
+			slog.Int("successRate", successRate),
 		)
 		if chance <= successRate {
 			index := r.IntN(len(goodResults))
@@ -207,9 +207,9 @@ func (h *Heist) Start() (*HeistResult, error) {
 
 	// If at least one member escaped, then calculate the credits to distributed.
 	slog.Debug("heist results",
-		slog.Int("Escaped", len(results.Escaped)),
-		slog.Int("Apprehended", len(results.Apprehended)),
-		slog.Int("Died", len(results.Dead)),
+		slog.Int("escaped", len(results.Escaped)),
+		slog.Int("apprehended", len(results.Apprehended)),
+		slog.Int("died", len(results.Dead)),
 	)
 	if len(results.Escaped) > 0 {
 		calculateCredits(results)

@@ -26,15 +26,6 @@ func GetMember(guildID string, memberID string) *Member {
 	if member == nil {
 		member = newMember(guildID, memberID)
 	}
-	// if member.UserName == "" || member.Name == "" {
-	// 	guildMember, err := s.GuildMember(guildID, memberID)
-	// 	if err != nil {
-	// 		slog.WithFields(slog.Fields{"guild": guildID, "member": memberID, "error": err}).Error("failed to get guild member")
-	// 		return member
-	// 	}
-	// 	member.SetName(guildMember.User.Username, guildMember.Nick, guildMember.User.GlobalName)
-	// 	slog.WithFields(slog.Fields{"guild": guildID, "member": memberID, "nickname": guildMember.Nick, "username": guildMember.User.Username, "userid": guildMember.User.ID, "globalname": guildMember.User.GlobalName}).Debug("updated member")
-	// }
 
 	return member
 }

@@ -406,9 +406,9 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 	waitTime := heist.StartTime.Add(heist.config.WaitTime)
 	slog.Debug("wait for heist to start",
 		slog.String("guildID", heist.GuildID),
-		"waitTime", waitTime,
-		"configWaitTime", heist.config.WaitTime,
-		"currentTime", time.Now(),
+		slog.Time("waitTime", waitTime),
+		slog.Duration("configWaitTime", heist.config.WaitTime),
+		slog.Time("currentTime", time.Now()),
 	)
 	for !time.Now().After(waitTime) {
 		maximumWait := time.Until(waitTime)
@@ -416,8 +416,8 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 		if timeToWait < 0 {
 			slog.Debug("wait for the heist to start is over",
 				slog.String("guildID", heist.GuildID),
-				"maximumWait", maximumWait,
-				"timeToWait", timeToWait,
+				slog.Duration("maximumWait", maximumWait),
+				slog.Duration("timeToWait", timeToWait),
 			)
 			break
 		}

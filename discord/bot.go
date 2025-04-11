@@ -196,7 +196,7 @@ func (bot *Bot) LoadCommands(commands []*discordgo.ApplicationCommand) {
 			slog.String("appID", bot.appID),
 			slog.String("guildID", bot.guildID),
 			slog.Any("error", err),
-			"commands", commands,
+			slog.Any("commands", commands),
 		)
 		os.Exit(1)
 

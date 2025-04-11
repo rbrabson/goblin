@@ -109,7 +109,7 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func getHelp() string {
 	var sb strings.Builder
 	slog.Debug("plugins",
-		"plugins", ListPlugin(),
+		slog.Any("plugins", ListPlugin()),
 	)
 	for _, plugin := range ListPlugin() {
 		slog.Debug("plugin",
@@ -220,6 +220,6 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	slog.Debug("send server status",
-		"embeds", embeds,
+		slog.Any("embeds", embeds),
 	)
 }

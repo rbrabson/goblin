@@ -103,7 +103,7 @@ func (guild *Guild) AddAdminRole(roleName string) {
 		slog.Warn("role already exists",
 			slog.String("guildID", guild.GuildID),
 			slog.String("roleName", roleName),
-			"adminRoles", guild.AdminRoles,
+			slog.Any("adminRoles", guild.AdminRoles),
 		)
 		return
 	}
