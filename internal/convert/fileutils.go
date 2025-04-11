@@ -3,16 +3,22 @@ package convert
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
+
+	"github.com/rbrabson/goblin/internal/logger"
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 // readFile gets the contents of a file
 func readFile(fileName string) []byte {
 	out, err := os.ReadFile(fileName)
 	if err != nil {
-		log.Fatal(err)
+		sslog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	return out
@@ -29,7 +35,8 @@ func asArray(bytes []byte) []map[string]interface{} {
 func asMap(elements interface{}) map[string]interface{} {
 	bytes, err := json.Marshal(elements)
 	if err != nil {
-		log.Fatal(err)
+		sslog.Error(err.Error())
+		os.Exit(1)
 	}
 	var out map[string]interface{}
 	json.Unmarshal(bytes, &out)
@@ -49,7 +56,8 @@ func asTime(element interface{}) time.Time {
 	mapElement := asMap(element)
 	bytes, err := json.Marshal(mapElement["$date"])
 	if err != nil {
-		log.Fatal(err)
+		sslog.Error(err.Error())
+		os.Exit(1)
 	}
 	var out time.Time
 	json.Unmarshal(bytes, &out)

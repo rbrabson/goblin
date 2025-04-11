@@ -2,11 +2,11 @@ package heist
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -59,20 +59,28 @@ func readConfigFromFile(guildID string) *Config {
 	configFileName := filepath.Join(configDir, "heist", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to read default heist config")
+		sslog.Error("failed to read default heist config",
+			slog.String("file", configFileName),
+			slog.Any("error", err),
+		)
 		return getDefaultConfig(guildID)
 	}
 
 	config := &Config{}
 	err = json.Unmarshal(bytes, config)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to unmarshal default heist config")
+		sslog.Error("failed to unmarshal default heist config",
+			slog.String("file", configFileName),
+			slog.Any("error", err),
+		)
 		return getDefaultConfig(guildID)
 	}
 	config.GuildID = guildID
 
 	writeConfig(config)
-	log.WithField("guild", config.GuildID).Info("create new heist config")
+	sslog.Info("create new heist config",
+		slog.String("guildID", config.GuildID),
+	)
 
 	return config
 }

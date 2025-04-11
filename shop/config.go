@@ -1,7 +1,8 @@
 package shop
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -43,7 +44,10 @@ func (c *Config) SetChannel(channelID string) {
 		c.ChannelID = channelID
 		c.MessageID = ""
 		writeConfig(c)
-		log.WithFields(log.Fields{"guildID": c.GuildID, "channel": channelID}).Debug("set shop channel")
+		sslog.Debug("set shop channel",
+			slog.String("guildID", c.GuildID),
+			slog.String("channel", channelID),
+		)
 	}
 }
 
@@ -52,7 +56,10 @@ func (c *Config) SetModChannel(channelID string) {
 	if c.ModChannelID != channelID {
 		c.ModChannelID = channelID
 		writeConfig(c)
-		log.WithFields(log.Fields{"guildID": c.GuildID, "channel": channelID}).Debug("set shop mod channel")
+		sslog.Debug("set shop mod channel",
+			slog.String("guildID", c.GuildID),
+			slog.String("channel", channelID),
+		)
 	}
 }
 
@@ -61,7 +68,10 @@ func (c *Config) SetNotificationID(id string) {
 	if c.NotificationID != id {
 		c.NotificationID = id
 		writeConfig(c)
-		log.WithFields(log.Fields{"guildID": c.GuildID, "member": id}).Debug("set shop notification ID")
+		sslog.Debug("set shop notification ID",
+			slog.String("guildID", c.GuildID),
+			slog.String("member", id),
+		)
 	}
 }
 
@@ -70,7 +80,10 @@ func (c *Config) SetMessageID(messageID string) {
 	if c.MessageID != messageID {
 		c.MessageID = messageID
 		writeConfig(c)
-		log.WithFields(log.Fields{"guildID": c.GuildID, "messageID": messageID}).Debug("set shop message ID")
+		sslog.Debug("set shop message ID",
+			slog.String("guildID", c.GuildID),
+			slog.String("messageID", messageID),
+		)
 	}
 }
 

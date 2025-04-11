@@ -49,7 +49,7 @@ func readBankFromFile(guildID string) *Bank {
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		sslog.Error("failed to read default bank config",
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefaultBank(guildID)
 	}
@@ -59,7 +59,7 @@ func readBankFromFile(guildID string) *Bank {
 	if err != nil {
 		sslog.Error("failed to unmarshal default bank config",
 			slog.String("file", configFileName),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 		return getDefaultBank(guildID)
 	}

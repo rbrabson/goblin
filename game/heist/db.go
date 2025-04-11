@@ -1,7 +1,8 @@
 package heist
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,10 +21,15 @@ func readConfig(guildID string) *Config {
 	var config Config
 	err := db.FindOne(CONFIG_COLLECTION, filter, &config)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "error": err}).Debug("heist configuration not found in the database")
+		sslog.Debug("heist configuration not found in the database",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": guildID}).Debug("read heist configuration from the database")
+	sslog.Debug("read heist configuration from the database",
+		slog.String("guildID", guildID),
+	)
 
 	return &config
 }
@@ -46,10 +52,17 @@ func readMember(guildID string, memberID string) *HeistMember {
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	err := db.FindOne(HEIST_MEMBER_COLLECTION, filter, &heistMember)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Debug("heist member not found in the database")
+		sslog.Debug("heist member not found in the database",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": heistMember.GuildID, "member": heistMember.MemberID}).Debug("read heist member from the database")
+	sslog.Debug("read heist member from the database",
+		slog.String("guildID", guildID),
+		slog.String("memberID", memberID),
+	)
 
 	return &heistMember
 }
@@ -63,7 +76,10 @@ func writeMember(member *HeistMember) {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
 	db.UpdateOrInsert(HEIST_MEMBER_COLLECTION, filter, member)
-	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID}).Debug("write heist member to the database")
+	sslog.Debug("write heist member to the database",
+		slog.String("guildID", member.GuildID),
+		slog.String("memberID", member.MemberID),
+	)
 }
 
 // readAllTargets loads the targets that may be used in heists for all guilds
@@ -72,11 +88,12 @@ func readAllTargets(filter bson.D) ([]*Target, error) {
 	sort := bson.D{{Key: "crew_size", Value: 1}}
 	err := db.FindMany(TARGET_COLLECTION, filter, &targets, sort, 0)
 	if err != nil {
-		log.WithError(err).Error("unable to read targets")
+		sslog.Error("unable to read targets",
+			slog.Any("error", err),
+			"filter", filter,
+		)
 		return nil, err
 	}
-
-	log.WithField("targets", targets).Trace("load targets")
 
 	return targets, nil
 }
@@ -87,11 +104,13 @@ func readTargets(guildID string, theme string) ([]*Target, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: theme}}
 	err := db.FindMany(TARGET_COLLECTION, filter, &targets, bson.D{}, 0)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read targets")
+		sslog.Error("unable to read targets",
+			slog.String("guildID", guildID),
+			slog.String("theme", theme),
+			slog.Any("error", err),
+		)
 		return nil, err
 	}
-
-	log.WithFields(log.Fields{"guild": guildID, "targets": targets}).Trace("load targets")
 
 	return targets, nil
 }
@@ -106,7 +125,11 @@ func writeTarget(target *Target) {
 	}
 
 	db.UpdateOrInsert(TARGET_COLLECTION, filter, target)
-	log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Theme}).Debug("create or update target")
+	sslog.Debug("create or update target",
+		slog.String("guild", target.GuildID),
+		slog.String("target", target.Name),
+		slog.String("theme", target.Theme),
+	)
 }
 
 // readAllThemes loads all available themes for a guild
@@ -115,11 +138,12 @@ func readAllThemes(guildID string) ([]*Theme, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}}
 	err := db.FindMany(THEME_COLLECTION, filter, &themes, bson.D{}, 0)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "error": err}).Error("unable to read themes")
+		sslog.Error("unable to read themes",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
 		return nil, err
 	}
-
-	log.WithFields(log.Fields{"guild": guildID, "themes": len(themes)}).Trace("read targets")
 
 	return themes, nil
 }
@@ -130,11 +154,13 @@ func readTheme(guildID string, themeName string) (*Theme, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "name", Value: themeName}}
 	err := db.FindOne(THEME_COLLECTION, filter, &theme)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "themeName": themeName, "error": err}).Error("unable to read themes")
+		sslog.Error("unable to read themes",
+			slog.String("guild", guildID),
+			slog.String("theme", themeName),
+			slog.Any("error", err),
+		)
 		return nil, err
 	}
-
-	log.WithFields(log.Fields{"guild": guildID, "theme": theme.Name}).Trace("read targets")
 
 	return &theme, nil
 }
@@ -148,5 +174,8 @@ func writeTheme(theme *Theme) {
 		filter = bson.M{"guild_id": theme.GuildID, "name": theme.Name}
 	}
 	db.UpdateOrInsert(THEME_COLLECTION, filter, theme)
-	log.WithFields(log.Fields{"guild": theme.GuildID, "theme": theme.Name}).Debug("write theme to the database")
+	sslog.Debug("write theme to the database",
+		slog.String("guild", theme.GuildID),
+		slog.String("theme", theme.Name),
+	)
 }

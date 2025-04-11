@@ -1,10 +1,16 @@
 package channel
 
 import (
+	"log/slog"
+
 	"github.com/rbrabson/goblin/guild"
-	log "github.com/sirupsen/logrus"
+	"github.com/rbrabson/goblin/internal/logger"
 
 	"github.com/bwmarrin/discordgo"
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 // Mute is used for muting and unmuting a channel on a server
@@ -20,11 +26,18 @@ type Mute struct {
 func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute {
 	channel, err := s.Channel(i.ChannelID)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "error": err}).Error("error getting channel to mute")
+		sslog.Error("error getting channel to mute",
+			slog.String("guildID", i.GuildID),
+			slog.String("channelID", i.ChannelID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
 	if channel == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID}).Error("channel to mute is is nil")
+		sslog.Error("channel to mute is is nil",
+			slog.String("guildID", i.GuildID),
+			slog.String("channelID", i.ChannelID),
+		)
 		return nil
 	}
 
@@ -54,35 +67,60 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 // MuteChannel sets the channel so that `@everyone`	 can't send messages to the channel.
 func (c *Mute) MuteChannel() {
 	if c == nil {
-		log.Error("channelMute is nil")
+		sslog.Error("channelMute is nil")
 		return
 	}
 	mute := int64(discordgo.PermissionSendMessages)
 	allowFlagsNoSend := c.everyonePermissions.Allow & mute
 	denyFlagsNoSend := c.everyonePermissions.Deny ^ mute
-	log.WithFields(log.Fields{"guildID": c.i.GuildID, "currentAllow": c.everyonePermissions.Allow, "currentDeny": c.everyonePermissions.Deny, "allow": allowFlagsNoSend, "deny": denyFlagsNoSend, "mute": mute}).Debug("muting the channel")
+	sslog.Debug("muting the channel",
+		slog.String("guildID", c.i.GuildID),
+		slog.String("channelID", c.i.ChannelID),
+		slog.Int64("currentAllow", c.everyonePermissions.Allow),
+		slog.Int64("currentDeny", c.everyonePermissions.Deny),
+		slog.Int64("allow", allowFlagsNoSend),
+		slog.Int64("deny", denyFlagsNoSend),
+		slog.Int64("mute", mute),
+	)
 	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allowFlagsNoSend, denyFlagsNoSend)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID, "error": err}).Warning("failed to mute the channel")
+		sslog.Warn("failed to mute the channel",
+			slog.String("guildID", c.i.GuildID),
+			slog.String("channelID", c.i.ChannelID),
+			slog.Any("error", err),
+		)
 	} else {
-		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID}).Debug("muted the channel")
+		sslog.Debug("muted the channel",
+			slog.String("guildID", c.i.GuildID),
+			slog.String("channelID", c.i.ChannelID),
+		)
 	}
 }
 
 // UnmuteChannel resets the permissions for `@everyone` to what they were before the channel was muted.
 func (c *Mute) UnmuteChannel() {
 	if c == nil {
-		log.Error("channelMute is nil")
+		sslog.Error("channelMute is nil")
 		return
 	}
 	if c.everyoneID != "" {
 		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, c.everyonePermissions.Allow, c.everyonePermissions.Deny)
 		if err != nil {
-			log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID, "error": err}).Warning("failed to unmute the channel")
+			sslog.Warn("failed to unmute the channel",
+				slog.String("guildID", c.i.GuildID),
+				slog.String("channelID", c.i.ChannelID),
+				slog.Any("error", err),
+			)
 			return
 		}
-		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID}).Debug("reset the channel permissions")
+		sslog.Debug("reset the channel permissions",
+			slog.String("guildID", c.i.GuildID),
+			slog.String("channelID", c.i.ChannelID),
+		)
 	} else {
-		log.WithFields(log.Fields{"guildID": c.i.GuildID, "channelID": c.i.ChannelID}).Error("permissions unknown; not possible to un-mute the channel")
+		sslog.Error("permissions unknown; not possible to un-mute the channel",
+			slog.String("guildID", c.i.GuildID),
+			slog.String("channelID", c.i.ChannelID),
+		)
 	}
 }

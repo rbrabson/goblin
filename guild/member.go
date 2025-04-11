@@ -2,9 +2,9 @@ package guild
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,11 +29,11 @@ func GetMember(guildID string, memberID string) *Member {
 	// if member.UserName == "" || member.Name == "" {
 	// 	guildMember, err := s.GuildMember(guildID, memberID)
 	// 	if err != nil {
-	// 		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "error": err}).Error("failed to get guild member")
+	// 		sslog.WithFields(sslog.Fields{"guild": guildID, "member": memberID, "error": err}).Error("failed to get guild member")
 	// 		return member
 	// 	}
 	// 	member.SetName(guildMember.User.Username, guildMember.Nick, guildMember.User.GlobalName)
-	// 	log.WithFields(log.Fields{"guild": guildID, "member": memberID, "nickname": guildMember.Nick, "username": guildMember.User.Username, "userid": guildMember.User.ID, "globalname": guildMember.User.GlobalName}).Debug("updated member")
+	// 	sslog.WithFields(sslog.Fields{"guild": guildID, "member": memberID, "nickname": guildMember.Nick, "username": guildMember.User.Username, "userid": guildMember.User.ID, "globalname": guildMember.User.GlobalName}).Debug("updated member")
 	// }
 
 	return member
@@ -56,7 +56,11 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 		member.NickName = nickname
 		member.GlobalName = globalname
 		writeMember(member)
-		log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID, "name": member.Name}).Debug("set member name")
+		sslog.Debug("set member name",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.String("name", member.Name),
+		)
 	}
 
 	return member
@@ -69,7 +73,10 @@ func newMember(guildID string, memberID string) *Member {
 		GuildID:  guildID,
 	}
 	writeMember(member)
-	log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Info("created new member")
+	sslog.Info("created new member",
+		slog.String("guildID", member.GuildID),
+		slog.String("memberID", member.MemberID),
+	)
 
 	return member
 }

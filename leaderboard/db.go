@@ -1,7 +1,8 @@
 package leaderboard
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -16,7 +17,10 @@ func readLeaderboard(guildID string) *Leaderboard {
 	var lb Leaderboard
 	err := db.FindOne(LEADERBOARD_COLLECTION, filter, &lb)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID}).Debug("leaderboard not found in the database")
+		sslog.Debug("leaderboard not found in the database",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
 
@@ -29,10 +33,15 @@ func writeLeaderboard(lb *Leaderboard) error {
 
 	err := db.UpdateOrInsert(LEADERBOARD_COLLECTION, filter, lb)
 	if err != nil {
-		log.WithField("guild", lb.GuildID).Error("unable to save leaderboard to the database")
+		sslog.Error("unable to save leaderboard to the database",
+			slog.String("guildID", lb.GuildID),
+			slog.Any("error", err),
+		)
 		return err
 	}
-	log.WithField("guild", lb.GuildID).Debug("save leaderboard to the database")
+	sslog.Debug("save leaderboard to the database",
+		slog.String("guildID", lb.GuildID),
+	)
 
 	return nil
 }

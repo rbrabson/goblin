@@ -1,12 +1,13 @@
 package shop
 
 import (
+	"log/slog"
+	"os"
 	"testing"
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/database/mongo"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -16,9 +17,9 @@ const (
 func init() {
 	err := godotenv.Load("../.env_test")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		sslog.Error("Error loading .env file")
+		os.Exit(1)
 	}
-	log.SetLevel(log.DebugLevel)
 	db = mongo.NewDatabase()
 	bank.SetDB(db)
 	testShop = GetShop(GUILD_ID)
@@ -47,7 +48,9 @@ func TestGetAllPurchases(t *testing.T) {
 		return
 	}
 	purchases = append(purchases, purchase)
-	log.WithField("purchases", purchases).Debug("purchases")
+	sslog.Debug("purchases",
+		slog.Any("purchases", purchases),
+	)
 
 	item2 := testShop.GetShopItem("test_item_2", "role")
 	purchase, err = PurchaseItem(GUILD_ID, MEMBER_ID, item2, PURCHASED, false)
@@ -56,10 +59,12 @@ func TestGetAllPurchases(t *testing.T) {
 		return
 	}
 	purchases = append(purchases, purchase)
-	log.WithField("purchases", purchases).Error("purchases")
+	sslog.Debug("purchases",
+		slog.Any("purchases", purchases),
+	)
 
 	locPurchases := GetAllPurchases(GUILD_ID, MEMBER_ID)
-	log.Infof("Purchases from DB: %v", locPurchases)
+	sslog.Info("Purchases from DB", slog.Any("purcahses", locPurchases))
 	if len(locPurchases) != 2 {
 		t.Errorf("GetAllPurchases failed to return all purchases, expected 2, got %d", len(locPurchases))
 		t.Errorf("purchases: %v", locPurchases)

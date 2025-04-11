@@ -2,12 +2,12 @@ package race
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -53,20 +53,33 @@ func readConfigFromFile(guildID string) *Config {
 	configFileName := filepath.Join(configDir, "race", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to read default race config")
+		sslog.Error("failed to read default race config",
+			slog.String("guildID", guildID),
+			slog.String("theme", configTheme),
+			slog.Any("error", err),
+		)
+		// If the configuration file does not exist, then create a new configuration.
 		return getDefauiltConfig(guildID)
 	}
 
 	config := &Config{}
 	err = json.Unmarshal(bytes, config)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to unmarshal default race config")
+		sslog.Error("failed to unmarshal default race config",
+			slog.String("guildID", guildID),
+			slog.String("theme", configTheme),
+			slog.String("file", configFileName),
+			slog.Any("error", err),
+		)
 		return getDefauiltConfig(guildID)
 	}
 	config.GuildID = guildID
 
 	writeConfig(config)
-	log.WithField("guild", config.GuildID).Info("create new race config")
+	sslog.Info("create new race config",
+		slog.String("guildID", guildID),
+		slog.String("theme", configTheme),
+	)
 
 	return config
 }
@@ -92,7 +105,10 @@ func getDefauiltConfig(guildID string) *Config {
 	}
 
 	writeConfig(config)
-	log.WithFields(log.Fields{"guild": guildID}).Info("race configuration created")
+	sslog.Info("race configuration created",
+		slog.String("guildID", guildID),
+		slog.String("theme", config.Theme),
+	)
 
 	return config
 }

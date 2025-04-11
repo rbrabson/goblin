@@ -1,9 +1,9 @@
 package race
 
 import (
+	"log/slog"
+	"os"
 	"testing"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
@@ -13,10 +13,10 @@ import (
 func init() {
 	err := godotenv.Load("../../.env_test")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		sslog.Error("Error loading .env file")
+		os.Exit(1)
 	}
 	db = mongo.NewDatabase()
-	log.SetLevel(log.DebugLevel)
 }
 
 func TestGetRacers(t *testing.T) {
@@ -48,13 +48,13 @@ func TestCalculateMovement(t *testing.T) {
 	racer := racers[0]
 
 	movement := racer.calculateMovement(1)
-	log.Info("movement: ", movement)
+	sslog.Info("movement", slog.Int("movement", movement))
 
 	movement = racer.calculateMovement(2)
-	log.Info("movement: ", movement)
+	sslog.Info("movement", slog.Int("movement", movement))
 
 	movement = racer.calculateMovement(3)
-	log.Info("movement: ", movement)
+	sslog.Info("movement", slog.Int("movement", movement))
 
 	filter := bson.M{"guild_id": "123", "theme": "clash"}
 	err := db.Delete(RACER_COLLECTION, filter)

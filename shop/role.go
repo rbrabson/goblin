@@ -2,10 +2,10 @@ package shop
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/guild"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -58,7 +58,10 @@ func roleCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, role
 
 	// Verify the role exists on the server
 	if role := guild.GetGuildRole(s, i.GuildID, roleName); role == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		sslog.Error("role not found on server",
+			slog.String("guildID", i.GuildID),
+			slog.String("roleName", roleName),
+		)
 		return fmt.Errorf("Role %s not found on the server", roleName)
 	}
 
@@ -70,7 +73,10 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 	// Verify the role exists on the server
 	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
 	if guildRole == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("role not found on server")
+		sslog.Error("role not found on server",
+			slog.String("guildID", i.GuildID),
+			slog.String("roleName", roleName),
+		)
 		return fmt.Errorf("role `%s` not found on the server", roleName)
 	}
 
@@ -82,7 +88,10 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 	// Make sure the role is still available in the shop
 	shopItem := getShopItem(i.GuildID, roleName, ROLE)
 	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "roleName": roleName}).Error("failed to read role from shop")
+		sslog.Error("failed to read role from shop",
+			slog.String("guildID", i.GuildID),
+			slog.String("roleName", roleName),
+		)
 		return fmt.Errorf("role `%s` not found in the shop", roleName)
 	}
 

@@ -1,7 +1,8 @@
 package payday
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -19,10 +20,15 @@ func readPayday(guildID string) *Payday {
 	var payday *Payday
 	err := db.FindOne(PAYDAY_COLLECTION, filter, &payday)
 	if err != nil {
-		log.WithField("guild", guildID).Debug("payday not found in the database")
+		sslog.Debug("payday not found in the database",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
-	log.WithField("guild", payday.GuildID).Debug("read payday from the database")
+	sslog.Debug("read payday from the database",
+		slog.String("guildID", payday.GuildID),
+	)
 
 	return payday
 }
@@ -34,10 +40,15 @@ func writePayday(payday *Payday) error {
 
 	err := db.UpdateOrInsert(PAYDAY_COLLECTION, filter, payday)
 	if err != nil {
-		log.WithField("guild", payday.GuildID).Error("unable to save payday to the database")
+		sslog.Error("unable to save payday to the database",
+			slog.String("guildID", payday.GuildID),
+			slog.Any("error", err),
+		)
 		return err
 	}
-	log.WithField("guild", payday.GuildID).Debug("save payday to the database")
+	sslog.Debug("save payday to the database",
+		slog.String("guildID", payday.GuildID),
+	)
 	return nil
 }
 
@@ -47,10 +58,17 @@ func readAccount(payday *Payday, accountID string) *Account {
 	var account *Account
 	err := db.FindOne(PAYDAY_ACCOUNT_COLLECTION, filter, &account)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": payday.GuildID, "member": accountID}).Debug("payday account not found in the database")
+		sslog.Debug("payday account not found in the database",
+			slog.String("guildID", payday.GuildID),
+			slog.String("memberID", accountID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID}).Debug("read payday account from the database")
+	sslog.Debug("read payday account from the database",
+		slog.String("guildID", payday.GuildID),
+		slog.String("memberID", accountID),
+	)
 	account.GuildID = payday.GuildID
 
 	return account
@@ -60,17 +78,24 @@ func readAccount(payday *Payday, accountID string) *Account {
 func writeAccount(account *Account) error {
 	var filter bson.M
 	if account.ID != primitive.NilObjectID {
-		log.WithFields(log.Fields{"account": account}).Debug("writing account with ID")
 		filter = bson.M{"_id": account.ID}
 	} else {
-		log.WithFields(log.Fields{"account": account}).Debug("writing account without ID")
 		filter = bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}
 	}
 	err := db.UpdateOrInsert(PAYDAY_ACCOUNT_COLLECTION, filter, account)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": account.GuildID, "member": account.MemberID}).Debug("unable to write payday account to the database")
+		sslog.Debug("unable to write payday account to the database",
+			slog.String("guildID", account.GuildID),
+			slog.String("memberID", account.MemberID),
+			slog.Any("filter", filter),
+			slog.Any("error", err),
+		)
 		return err
 	}
 
+	sslog.Debug("wrote payday account to the database",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+	)
 	return nil
 }

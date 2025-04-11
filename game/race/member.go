@@ -2,10 +2,10 @@ package race
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -45,7 +45,10 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 	}
 
 	writeRaceMember(member)
-	log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Info("new race member")
+	sslog.Info("new race member",
+		slog.String("guildID", guildID),
+		slog.String("memberID", memberID),
+	)
 
 	return member
 }
@@ -59,7 +62,11 @@ func (m *RaceMember) WinRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("won race")
+	sslog.Info("won race",
+		slog.String("guildID", m.GuildID),
+		slog.String("memberID", m.MemberID),
+		slog.Int("winnings", amount),
+	)
 }
 
 // PlaceInRace is called when the race member places (comes in 2nd) in a race.
@@ -71,7 +78,11 @@ func (m *RaceMember) PlaceInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("placed in race")
+	sslog.Info("placed in race",
+		slog.String("guildID", m.GuildID),
+		slog.String("memberID", m.MemberID),
+		slog.Int("winnings", amount),
+	)
 }
 
 // ShowInRace is called when the race member shows (comes in 3rd) in a race.
@@ -83,7 +94,11 @@ func (m *RaceMember) ShowInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": amount}).Info("showed in race")
+	sslog.Info("showed in race",
+		slog.String("guildID", m.GuildID),
+		slog.String("memberID", m.MemberID),
+		slog.Int("winnings", amount),
+	)
 }
 
 // LoseRace is called when the race member fails to win, place or show in a race.
@@ -91,7 +106,10 @@ func (m *RaceMember) LoseRace() {
 	m.RacesLost++
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lost race")
+	sslog.Info("lost race",
+		slog.String("guildID", m.GuildID),
+		slog.String("memberID", m.MemberID),
+	)
 }
 
 // PlaceBet is used to place a bet on a member of a race.
@@ -105,7 +123,12 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 	m.BetsMade++
 	m.TotalEarnings -= betAmount
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "betAmount": betAmount}).Info("placed bet")
+	sslog.Info("placed bet")
+	sslog.Info("placed bet",
+		slog.String("guildID", m.GuildID),
+		slog.String("memberID", m.MemberID),
+		slog.Int("betAmount", betAmount),
+	)
 
 	return nil
 }
@@ -120,14 +143,21 @@ func (m *RaceMember) WinBet(winnings int) {
 	m.TotalEarnings += winnings
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID, "winnings": winnings}).Info("win bet")
+	sslog.Info("won bet",
+		slog.String("guildID", m.GuildID),
+		slog.String("memberID", m.MemberID),
+		slog.Int("winnings", winnings),
+	)
 }
 
 // WinBet is used when a member wins a bet on a race.
 func (m *RaceMember) LoseBet() {
 	writeRaceMember(m)
 
-	log.WithFields(log.Fields{"guild": m.GuildID, "member": m.MemberID}).Info("lose bet")
+	sslog.Info("lost bet",
+		slog.String("guildID", m.GuildID),
+		slog.String("memberID", m.MemberID),
+	)
 }
 
 func (m *RaceMember) String() string {

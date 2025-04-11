@@ -1,10 +1,10 @@
 package discord
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/guild"
@@ -108,9 +108,13 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // getHelp gets help about commands from all plugins.
 func getHelp() string {
 	var sb strings.Builder
-	log.WithFields(log.Fields{"plugins": ListPlugin()}).Debug("plugins")
+	sslog.Debug("plugins",
+		"plugins", ListPlugin(),
+	)
 	for _, plugin := range ListPlugin() {
-		log.WithFields(log.Fields{"plugin": plugin.GetName()}).Debug("plugin")
+		sslog.Debug("plugin",
+			slog.String("plugin", plugin.GetName()),
+		)
 		for _, str := range plugin.GetHelp() {
 			sb.WriteString(str)
 		}
@@ -148,7 +152,9 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "status":
 		serverStatus(s, i)
 	default:
-		log.WithFields(log.Fields{"subCommand": subCommand}).Error("unknown subcommand")
+		sslog.Error("unknown subcommand",
+			slog.String("subCommand", subCommand.Name),
+		)
 	}
 }
 
@@ -208,8 +214,12 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Error("failed to send server status")
+		sslog.Error("failed to send server status",
+			slog.Any("error", err),
+		)
 		return
 	}
-	log.WithFields(log.Fields{"embeds": embeds}).Debug("send server status")
+	sslog.Debug("send server status",
+		"embeds", embeds,
+	)
 }

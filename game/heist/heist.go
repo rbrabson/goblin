@@ -2,6 +2,7 @@ package heist
 
 import (
 	"fmt"
+	"log/slog"
 	"math"
 	"math/rand/v2"
 	"slices"
@@ -10,13 +11,17 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
-	log "github.com/sirupsen/logrus"
+	"github.com/rbrabson/goblin/internal/logger"
 )
 
 var (
 	alertTimes    = make(map[string]time.Time)
 	currentHeists = make(map[string]*Heist)
 	heistLock     = sync.Mutex{}
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 // Heist is a heist that is being planned, is in progress, or has completed
@@ -77,7 +82,11 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 
 	err := heistChecks(heist, organizer)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "organizer": memberID, "error": err}).Debug("heist checks failed")
+		sslog.Debug("heist checks failed",
+			slog.String("guilIDd", guildID),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
 		return nil, err
 	}
 
@@ -85,7 +94,10 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 	heist.Crew = append(heist.Crew, organizer)
 	currentHeists[guildID] = heist
 
-	log.WithFields(log.Fields{"guild": guildID, "organizer": memberID}).Debug("create heist")
+	sslog.Debug("create heist",
+		slog.String("guilIDd", guildID),
+		slog.String("memberID", memberID),
+	)
 
 	return heist, nil
 }
@@ -102,7 +114,10 @@ func (h *Heist) AddCrewMember(member *HeistMember) error {
 
 	member.heist = h
 	h.Crew = append(h.Crew, member)
-	log.WithFields(log.Fields{"guild": h.GuildID, "member": member.MemberID}).Debug("member joined heist")
+	sslog.Debug("member joined heist",
+		slog.String("guilIDd", member.GuildID),
+		slog.String("memberID", member.MemberID),
+	)
 	return nil
 }
 
@@ -112,7 +127,9 @@ func (h *Heist) Start() (*HeistResult, error) {
 	defer heistLock.Unlock()
 
 	if len(h.Crew) < 2 {
-		log.WithFields(log.Fields{"guild": h.GuildID}).Error("not enough members to start heist")
+		sslog.Error("not enough members to start heist",
+			slog.String("guilIDd", h.GuildID),
+		)
 		return nil, ErrNotEnoughMembers{*h.theme}
 	}
 
@@ -131,7 +148,6 @@ func (h *Heist) Start() (*HeistResult, error) {
 	goodResults = append(goodResults, h.theme.EscapedMessages...)
 	badResults = append(badResults, h.theme.ApprehendedMessages...)
 	badResults = append(badResults, h.theme.DiedMessages...)
-	log.WithFields(log.Fields{"guild": h.GuildID, "goodResults": len(goodResults), "badResults": len(badResults)}).Trace("set good and bad result messages")
 
 	successRate := calculateSuccessRate(h, target)
 
@@ -140,7 +156,11 @@ func (h *Heist) Start() (*HeistResult, error) {
 	for _, crewMember := range h.Crew {
 		guildMember := crewMember.guildMember
 		chance := r.IntN(100) + 1
-		log.WithFields(log.Fields{"Player": guildMember.Name, "Chance": chance, "SuccessRate": successRate}).Debug("Heist Results")
+		sslog.Debug("heist results",
+			slog.String("member", guildMember.Name),
+			slog.Int("Chance", chance),
+			slog.Int("SuccessRate", successRate),
+		)
 		if chance <= successRate {
 			index := r.IntN(len(goodResults))
 			goodResult := goodResults[index]
@@ -148,8 +168,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 			updatedResults = append(updatedResults, goodResults[:index]...)
 			goodResults = append(updatedResults, goodResults[index+1:]...)
 			if len(goodResults) == 0 {
-				goodResults := append(goodResults, h.theme.EscapedMessages...)
-				log.WithFields(log.Fields{"guild": h.GuildID, "goodResults": len(goodResults), "badResults": len(badResults)}).Trace("reset good result messages")
+				goodResults = append(goodResults, h.theme.EscapedMessages...)
 			}
 
 			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
@@ -171,7 +190,6 @@ func (h *Heist) Start() (*HeistResult, error) {
 			if len(badResults) == 0 {
 				badResults = append(badResults, h.theme.ApprehendedMessages...)
 				badResults = append(badResults, h.theme.DiedMessages...)
-				log.WithFields(log.Fields{"guild": h.GuildID, "goodResults": len(goodResults), "badResults": len(badResults)}).Trace("reset bad result messages")
 			}
 
 			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
@@ -193,7 +211,11 @@ func (h *Heist) Start() (*HeistResult, error) {
 	}
 
 	// If at least one member escaped, then calculate the credits to distributed.
-	log.WithFields(log.Fields{"Escaped": len(results.Escaped), "Apprehended": len(results.Apprehended), "Died": len(results.Dead)}).Debug("heist results")
+	sslog.Debug("heist results",
+		slog.Int("Escaped", len(results.Escaped)),
+		slog.Int("Apprehended", len(results.Apprehended)),
+		slog.Int("Died", len(results.Dead)),
+	)
 	if len(results.Escaped) > 0 {
 		calculateCredits(results)
 	}
@@ -208,7 +230,9 @@ func (h *Heist) End() {
 	delete(currentHeists, h.GuildID)
 	alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
 
-	log.WithFields(log.Fields{"guild": h.GuildID}).Debug("heist ended")
+	sslog.Debug("heist ended",
+		slog.String("guildID", h.GuildID),
+	)
 }
 
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.
@@ -218,7 +242,10 @@ func heistChecks(h *Heist, member *HeistMember) error {
 	if slices.ContainsFunc(h.Crew, func(m *HeistMember) bool {
 		return m.MemberID == member.MemberID
 	}) {
-		log.WithFields(log.Fields{"guild": h.GuildID, "member": member.MemberID}).Debug("member already joined heist")
+		sslog.Debug("member already joined heist",
+			slog.String("guildID", h.GuildID),
+			slog.String("memberID", member.MemberID),
+		)
 		return ErrAlreadyJoinedHieist
 	}
 
@@ -253,8 +280,13 @@ func heistChecks(h *Heist, member *HeistMember) error {
 // member of the heist crew.
 func calculateSuccessRate(heist *Heist, target *Target) int {
 	bonus := calculateBonusRate(heist, target)
-	successChance := int(math.Round(target.Success)) + bonus
-	log.WithFields(log.Fields{"BonusRate": bonus, "TargetSuccess": math.Round(target.Success), "SuccessChance": successChance}).Debug("Success Rate")
+	targetSuccess := int(math.Round(target.Success))
+	successChance := targetSuccess + bonus
+	sslog.Debug("success rate",
+		slog.Int("bunusRate", bonus),
+		slog.Int("targetSuccess", targetSuccess),
+		slog.Int("successChance", successChance),
+	)
 	return successChance
 }
 
@@ -263,7 +295,11 @@ func calculateSuccessRate(heist *Heist, target *Target) int {
 // the bonus amount.
 func calculateBonusRate(heist *Heist, target *Target) int {
 	percent := 100 * len(heist.Crew) / target.CrewSize
-	log.WithField("percent", percent).Debug("percentage for calculating success bonus")
+	sslog.Debug("percentage for calculating success bonus",
+		slog.Int("crewSize", len(heist.Crew)),
+		slog.Int("targetCrewSize", target.CrewSize),
+		slog.Int("percent", percent),
+	)
 	if percent <= 20 {
 		return 0
 	}
@@ -293,7 +329,13 @@ func calculateCredits(results *HeistResult) {
 
 	results.TotalStolen = 0
 	// Caculate a "base amount". Those who escape get 2x those who don't. So Divide the
-	log.WithFields(log.Fields{"Target": results.Target.Name, "Vault": results.Target.Vault, "Survivors": numSurvived, "Base Credits": baseStolen}).Debug("Looted")
+	sslog.Debug("looted",
+
+		slog.String("target", results.Target.Name),
+		slog.Int("vault", results.Target.Vault),
+		slog.Int("survivors", numSurvived),
+		slog.Int("base", baseStolen),
+	)
 	for _, heistMemberResult := range results.Escaped {
 		heistMemberResult.StolenCredits = 2 * baseStolen
 		results.TotalStolen += heistMemberResult.StolenCredits
@@ -302,7 +344,11 @@ func calculateCredits(results *HeistResult) {
 		heistMemberResult.StolenCredits = baseStolen
 		results.TotalStolen += heistMemberResult.StolenCredits
 	}
-	log.WithFields(log.Fields{"Guild": results.Target.GuildID, "Target": results.Target.Name, "TotalStolen": results.TotalStolen}).Debug("total stolen")
+	sslog.Debug("total stolen",
+		slog.String("guildID", results.Target.GuildID),
+		slog.String("target", results.Target.Name),
+		slog.Int("totalStolen", results.TotalStolen),
+	)
 }
 
 // String returns a string representation of the Heist.

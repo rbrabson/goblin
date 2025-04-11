@@ -2,6 +2,7 @@ package heist
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -19,7 +20,6 @@ import (
 	"github.com/rbrabson/goblin/internal/channel"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -314,7 +314,9 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		log.WithError(err).Warn("unable to create the heist")
+		sslog.Warn("unable to create the heist",
+			slog.Any("error", err),
+		)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
@@ -345,7 +347,10 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(p.Sprintf("The %s was cancelled due to lack of interest.", heist.theme.Heist)),
 		)
 		msg.Send(s, i.ChannelID)
-		log.WithFields(log.Fields{"guild": heist.GuildID, "heist": heist.theme.Heist}).Info("Heist cancelled due to lack of interest")
+		sslog.Info("Heist cancelled due to lack of interest",
+			slog.String("guild", heist.GuildID),
+			slog.String("heist", heist.theme.Heist),
+		)
 		heistLock.Lock()
 		defer heistLock.Unlock()
 		delete(currentHeists, heist.GuildID)
@@ -359,12 +364,18 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err = heistMessage(s, heist, heist.Organizer, "start")
 	if err != nil {
-		log.WithError(err).Error("Unable to mark the heist message as started")
+		sslog.Error("unable to mark the heist message as started",
+			slog.String("guildID", heist.GuildID),
+			slog.Any("error", err),
+		)
 	}
 
 	res, err := heist.Start()
 	if err != nil {
-		log.WithError(err).Error("unable to start the heist")
+		sslog.Error("unable to start the heist",
+			slog.String("guildID", heist.GuildID),
+			slog.Any("error", err),
+		)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
@@ -372,7 +383,9 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	log.Debug("heist is starting")
+	sslog.Debug("heist is starting",
+		slog.String("guildID", heist.GuildID),
+	)
 	p := message.NewPrinter(language.AmericanEnglish)
 	msg := disgomsg.NewMessage(
 		disgomsg.WithContent(p.Sprintf("The %s is starting with %d members.", heist.theme.Heist, len(heist.Crew))),
@@ -391,16 +404,24 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) {
 	// Wait for the heist to be ready to start
 	waitTime := heist.StartTime.Add(heist.config.WaitTime)
-	log.WithFields(log.Fields{"guild": heist.GuildID, "waitTime": waitTime, "configWaitTime": heist.config.WaitTime, "currentTime": time.Now()}).Debug("wait for heist to start")
+	sslog.Debug("wait for heist to start",
+		slog.String("guildID", heist.GuildID),
+		"waitTime", waitTime,
+		"configWaitTime", heist.config.WaitTime,
+		"currentTime", time.Now(),
+	)
 	for !time.Now().After(waitTime) {
 		maximumWait := time.Until(waitTime)
 		timeToWait := min(maximumWait, time.Duration(5*time.Second))
 		if timeToWait < 0 {
-			log.WithFields(log.Fields{"guild": heist.GuildID, "maximumWait": maximumWait, "timeToWait": timeToWait}).Debug("wait for the heist to start is over")
+			sslog.Debug("wait for the heist to start is over",
+				slog.String("guildID", heist.GuildID),
+				"maximumWait", maximumWait,
+				"timeToWait", timeToWait,
+			)
 			break
 		}
 		time.Sleep(timeToWait)
-		log.WithFields(log.Fields{"guild": heist.GuildID, "startTiime": heist.StartTime, "until": time.Until(heist.StartTime.Add(heist.config.WaitTime))}).Trace("waiting for the heist to start")
 		heistMessage(s, heist, heist.Organizer, "update")
 	}
 }
@@ -410,7 +431,9 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	p := message.NewPrinter(language.AmericanEnglish)
 	theme := GetTheme(i.GuildID)
 
-	log.Debug("Hitting " + res.Target.Name)
+	sslog.Debug("hitting "+res.Target.Name,
+		slog.String("guildID", i.GuildID),
+	)
 	msg := p.Sprintf("The %s has decided to hit **%s**.", theme.Crew, res.Target.Name)
 	s.ChannelMessageSend(i.ChannelID, msg)
 	time.Sleep(3 * time.Second)
@@ -483,7 +506,12 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 		if len(res.Escaped) > 0 && result.StolenCredits != 0 {
 			account := bank.GetAccount(i.GuildID, result.Player.MemberID)
 			account.Deposit(result.StolenCredits + result.BonusCredits)
-			log.WithFields(log.Fields{"Member": account.MemberID, "Stolen": result.StolenCredits, "Bonus": result.BonusCredits}).Debug("heist Loot")
+			sslog.Debug("heist Loot",
+				slog.String("guildID", i.GuildID),
+				slog.String("memberID", account.MemberID),
+				slog.Int("stolen", result.StolenCredits),
+				slog.Int("bonus", result.BonusCredits),
+			)
 		}
 	}
 
@@ -613,7 +641,11 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.WithError(err).Error("unable to send the player stats to Discord")
+		sslog.Error("unable to send the player stats to Discord",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
 	}
 }
 
@@ -647,7 +679,11 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 		err := resp.SendEphemeral(s, i.Interaction)
 		if err != nil {
-			log.WithError(err).Error("unable to send the bail message")
+			sslog.Error("unable to send the bail message",
+				slog.String("guildID", i.GuildID),
+				slog.String("memberID", i.Member.User.ID),
+				slog.Any("error", err),
+			)
 			return
 		}
 	}
@@ -660,17 +696,14 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			msg = fmt.Sprintf("%s is not in jail", heistMember.guildMember.Name)
 		}
 		resp.WithContent(msg).Edit(s)
-		log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Trace("member is not in jail")
 		return
 	}
 
 	if heistMember.RemainingJailTime() <= 0 {
 		if heistMember.MemberID == i.Member.User.ID {
 			resp.WithContent("You have already served your sentence.").Edit(s)
-			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.MemberID}).Trace("member already served sentence")
 		} else {
 			resp.WithContent(fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name)).Edit(s)
-			log.WithFields(log.Fields{"guild": i.GuildID, "member": heistMember.guildMember.Name}).Trace("member already served sentence")
 		}
 		heistMember.ClearJailAndDeathStatus()
 		return
@@ -775,7 +808,11 @@ func heistMessage(s *discordgo.Session, heist *Heist, member *HeistMember, actio
 		Content:    &emptymsg,
 	})
 	if err != nil {
-		log.WithFields(log.Fields{"error": err, "guild": member.GuildID}).Error("unable to send the heist message")
+		sslog.Error("unable to send the heist message",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.Any("error", err),
+		)
 		return err
 	}
 
@@ -877,7 +914,10 @@ func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	themes, err := GetThemeNames(i.GuildID)
 	if err != nil {
-		log.Warning("Unable to get the themes, error:", err)
+		sslog.Warn("Unable to get the themes",
+			slog.String("guildID", i.GuildID),
+			slog.Any("error", err),
+		)
 	}
 
 	embeds := []*discordgo.MessageEmbed{
@@ -903,7 +943,11 @@ func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.WithError(err).Error("Unable to send list of themes to the user for `list themes`")
+		sslog.Error("Unable to send list of themes to the user for `list themes`",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
 	}
 }
 
@@ -927,7 +971,9 @@ func setTheme(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	theme := GetTheme(i.GuildID)
 	config.Theme = theme.Name
-	log.Debug("Now using theme ", config.Theme)
+	sslog.Debug("now using theme ",
+		slog.String("theme", config.Theme),
+	)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent("Theme `" + themeName + "` is now being used."),
@@ -1106,6 +1152,10 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.WithError(err).Error("unable to send a response for `config info`")
+		sslog.Error("unable to send a response for `config info`",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
 	}
 }

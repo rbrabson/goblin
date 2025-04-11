@@ -1,7 +1,8 @@
 package race
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -19,10 +20,16 @@ func readConfig(guildID string) *Config {
 	var config Config
 	err := db.FindOne(RACE_CONFIG_COLLECTION, filter, &config)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "error": err}).Debug("race configuration not found in the database")
+		sslog.Debug("race configuration not found in the database",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": guildID}).Debug("read race configuration from the database")
+	sslog.Debug("read race configuration from the database",
+		slog.String("guildID", guildID),
+		slog.String("config", config.Theme),
+	)
 
 	return &config
 }
@@ -37,7 +44,10 @@ func writeConfig(config *Config) {
 	}
 	err := db.UpdateOrInsert(RACE_CONFIG_COLLECTION, filter, config)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": config.GuildID, "error": err}).Error("failed to write the race configuration to the database")
+		sslog.Error("failed to write the race configuration to the database",
+			slog.String("guildID", config.GuildID),
+			slog.Any("error", err),
+		)
 	}
 }
 
@@ -48,10 +58,17 @@ func readRaceMember(guildID string, memberID string) *RaceMember {
 	var member RaceMember
 	err := db.FindOne(RACE_MEMBER_COLLECTION, filter, &member)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "error": err}).Debug("race member not found in the database")
+		sslog.Debug("race member not found in the database",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
-	log.WithFields(log.Fields{"guild": guildID, "member": memberID}).Debug("read race member from the database")
+	sslog.Debug("read race member from the database",
+		slog.String("guildID", guildID),
+		slog.String("memberID", memberID),
+	)
 
 	return &member
 }
@@ -65,7 +82,10 @@ func writeRaceMember(member *RaceMember) {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
 	db.UpdateOrInsert(RACE_MEMBER_COLLECTION, filter, member)
-	log.WithFields(log.Fields{"guild": member.GuildID, "member": member.MemberID}).Debug("write race member to the database")
+	sslog.Debug("write race member to the database",
+		slog.String("guildID", member.GuildID),
+		slog.String("memberID", member.MemberID),
+	)
 }
 
 // readAllRaces loads the racers that may be used in racers that match the filter criteria.
@@ -74,14 +94,15 @@ func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 	sort := bson.D{{Key: "crew_size", Value: 1}}
 	err := db.FindMany(RACER_COLLECTION, filter, &racers, sort, 0)
 	if err != nil || len(racers) == 0 {
-		log.WithError(err).Warn("unable to read racers")
+		sslog.Warn("unable to read racers",
+			slog.Any("error", err),
+			"filter", filter,
+		)
 		if err != nil {
 			return nil, err
 		}
 		return nil, ErrNoRacersFound
 	}
-
-	log.WithField("racers", racers).Trace("load racers")
 
 	return racers, nil
 }
@@ -96,5 +117,8 @@ func writeRacer(racer *RaceAvatar) {
 	}
 
 	db.UpdateOrInsert(RACER_COLLECTION, filter, racer)
-	log.WithFields(log.Fields{"guild": racer.GuildID, "theme": racer.Theme}).Debug("create or update race avatar")
+	sslog.Debug("create or update race avatar",
+		slog.String("guildID", racer.GuildID),
+		slog.String("theme", racer.Theme),
+	)
 }

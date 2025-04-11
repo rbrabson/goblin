@@ -1,12 +1,13 @@
 package shop
 
 import (
+	"log/slog"
+	"os"
 	"testing"
 
 	"github.com/joho/godotenv"
 
 	"github.com/rbrabson/goblin/database/mongo"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -21,9 +22,9 @@ var (
 func init() {
 	err := godotenv.Load("../.env_test")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		sslog.Error("Error loading .env file")
+		os.Exit(1)
 	}
-	log.SetLevel(log.DebugLevel)
 	db = mongo.NewDatabase()
 	testShop = GetShop(GUILD_ID)
 }
@@ -105,18 +106,18 @@ func setup(t *testing.T) {
 }
 
 func teardown() {
-	log.Infof("teardown: deleting %d items", len(testShop.Items))
+	sslog.Info("teardown: deleting items", slog.Int("count", len(testShop.Items)))
 	for _, item := range testShop.Items {
 		err := deleteShopItem(item)
 		if err != nil {
-			log.Error(err)
+			sslog.Error(err.Error())
 		}
 	}
-	log.Infof("teardown: deleting %d purchases", len(purchases))
+	sslog.Info("teardown: deleting purchases", slog.Int("count", len(purchases)))
 	for _, purchase := range purchases {
 		err := deletePurchase(purchase)
 		if err != nil {
-			log.Error(err)
+			sslog.Error(err.Error())
 		}
 	}
 }

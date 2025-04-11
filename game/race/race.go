@@ -1,19 +1,24 @@
 package race
 
 import (
+	"log/slog"
 	"math/rand/v2"
 	"sort"
 	"sync"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	log "github.com/sirupsen/logrus"
+	"github.com/rbrabson/goblin/internal/logger"
 )
 
 var (
 	lastRaceTimes = make(map[string]time.Time)
 	currentRaces  = make(map[string]*Race)
 	raceLock      = sync.Mutex{}
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 // Race represents a race that is currently in progress.
@@ -101,7 +106,9 @@ func newRace(guildID string) *Race {
 	race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
 
 	currentRaces[guildID] = race
-	log.WithFields(log.Fields{"guild": guildID}).Info("new race")
+	sslog.Info("new race",
+		slog.String("guildID", guildID),
+	)
 
 	return race
 }
@@ -150,7 +157,10 @@ func (race *Race) addBetter(better *RaceBetter) error {
 	defer race.mutex.Unlock()
 
 	race.Betters = append(race.Betters, better)
-	log.WithFields(log.Fields{"guild": race.GuildID, "better": better.Member.MemberID}).Debug("add better to current race")
+	sslog.Debug("add better to current race",
+		slog.String("guildID", race.GuildID),
+		slog.String("memberID", better.Member.MemberID),
+	)
 
 	return nil
 }
@@ -176,7 +186,11 @@ func (race *Race) RunRace(trackLength int) {
 	previousLeg := raceLeg
 
 	// Run the race until all racers cross the finish line
-	log.WithFields(log.Fields{"guildID": race.GuildID, "numRacers": len(race.Racers), "trackLength": trackLength}).Debug("starting race")
+	sslog.Debug("starting race",
+		slog.String("guildID", race.GuildID),
+		slog.Int("numRacers", len(race.Racers)),
+		slog.Int("trackLength", trackLength),
+	)
 	turn := 0
 	stillRacing := true
 	for stillRacing {
@@ -199,7 +213,6 @@ func (race *Race) RunRace(trackLength int) {
 
 		race.RaceLegs = append(race.RaceLegs, newRaceLeg)
 		previousLeg = newRaceLeg
-		log.WithFields(log.Fields{"guildID": race.GuildID, "turn": turn}).Trace("completed race leg")
 	}
 
 	calculateWinnings(race, previousLeg)
@@ -220,7 +233,10 @@ func (r *Race) End() {
 	delete(currentRaces, r.GuildID)
 
 	if r.RaceResult != nil && len(r.Racers) >= r.config.MinNumRacers {
-		log.WithFields(log.Fields{"guild": r.GuildID, "racers": len(r.Racers)}).Info("processing race results")
+		sslog.Info("processing race results",
+			slog.String("guildID", r.GuildID),
+			slog.Int("numRacers", len(r.Racers)),
+		)
 		for _, racer := range r.Racers {
 			switch {
 			case r.RaceResult.Win != nil && racer.Member.MemberID == r.RaceResult.Win.Participant.Member.MemberID:
@@ -234,7 +250,11 @@ func (r *Race) End() {
 			}
 		}
 
-		log.WithFields(log.Fields{"guild": r.GuildID, "betters": len(r.Betters)}).Info("processing race bets")
+		sslog.Info("processing race bets",
+			slog.String("guildID", r.GuildID),
+			slog.Int("numBetters", len(r.Betters)),
+		)
+		// Pay the winning bets
 		for _, better := range r.Betters {
 			if better.Winnings != 0 {
 				better.Member.WinBet(better.Winnings)
@@ -244,17 +264,18 @@ func (r *Race) End() {
 		}
 	}
 
-	log.WithFields(log.Fields{"guild": r.GuildID}).Info("end race")
+	sslog.Info("end race",
+		slog.String("guildID", r.GuildID),
+	)
 }
 
 // ResetRace resets a hung race for a given guild.
 func ResetRace(guildID string) {
-	log.Trace("---> race.ResetRace")
-	defer log.Trace("<-- race.ResetRace")
-
 	delete(currentRaces, guildID)
 	delete(lastRaceTimes, guildID)
-	log.WithFields(log.Fields{"guild": guildID}).Info("reset race")
+	sslog.Info("reset race",
+		slog.String("guildID", guildID),
+	)
 }
 
 // getRaceAvatar returns a  random race avatar to be used by a race participant.
@@ -279,7 +300,6 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 			Finished:        true,
 			Speed:           previousPosition.Speed,
 		}
-		log.WithFields(log.Fields{"guildID": previousPosition.RaceParticipant.Member.GuildID, "memberID": previousPosition.RaceParticipant.Member.MemberID}).Trace("racer already finished")
 		return newPosition
 	}
 
@@ -305,7 +325,9 @@ func raceStartChecks(guildID string, memberID string) error {
 
 	race := currentRaces[guildID]
 	if race != nil {
-		log.WithFields(log.Fields{"guild_id": guildID}).Debug("race already in progress")
+		sslog.Debug("race already in progress",
+			slog.String("guildID", guildID),
+		)
 		return ErrRaceAlreadyInProgress
 	}
 
@@ -313,7 +335,10 @@ func raceStartChecks(guildID string, memberID string) error {
 	if time.Since(lastRaceTime) < config.WaitBetweenRaces {
 		timeSinceLastRace := time.Since(lastRaceTime)
 		timeUntilRaceCanStart := config.WaitBetweenRaces - timeSinceLastRace
-		log.WithFields(log.Fields{"guild_id": guildID, "timeUntilRaceCanStart": timeUntilRaceCanStart}).Debug("racers are resting")
+		sslog.Debug("racers are resting",
+			slog.String("guildID", guildID),
+			slog.Duration("timeUntilRaceCanStart", timeUntilRaceCanStart),
+		)
 		return ErrRacersAreResting{timeUntilRaceCanStart}
 	}
 	delete(lastRaceTimes, guildID)
@@ -324,17 +349,25 @@ func raceStartChecks(guildID string, memberID string) error {
 // raceJoinChecks checks to see if a racer is able to join the race.
 func raceJoinChecks(race *Race, memberID string) error {
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("race has started")
+		sslog.Warn("race has started",
+			slog.String("guildID", race.GuildID),
+		)
 		return ErrRaceHasStarted
 	}
 
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("betting has opened")
+		sslog.Warn("betting has opened",
+			slog.String("guildID", race.GuildID),
+		)
 		return ErrBettingHasOpened
 	}
 
 	if len(race.Racers) >= race.config.MaxNumRacers {
-		log.WithFields(log.Fields{"guild_id": race.GuildID, "maxNumRacers": race.config.MaxNumRacers, "numRacers": len(race.Racers)}).Warn("too many racers already joined")
+		sslog.Warn("too many racers already joined",
+			slog.String("guildID", race.GuildID),
+			slog.Int("maxNumRacers", race.config.MaxNumRacers),
+			slog.Int("numRacers", len(race.Racers)),
+		)
 		return ErrRaceAlreadyFull
 	}
 
@@ -350,12 +383,16 @@ func raceJoinChecks(race *Race, memberID string) error {
 // raceBetChecks checks to see if a better is able to place a bet on the current race.
 func raceBetChecks(race *Race, memberID string) error {
 	if time.Now().Before(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("betting has opened")
+		sslog.Warn("betting has opened",
+			slog.String("guildID", race.GuildID),
+		)
 		return ErrBettingNotOpened
 	}
 
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		log.WithFields(log.Fields{"guild_id": race.GuildID}).Warn("race has started")
+		sslog.Warn("race has started",
+			slog.String("guildID", race.GuildID),
+		)
 		return ErrRaceHasStarted
 	}
 

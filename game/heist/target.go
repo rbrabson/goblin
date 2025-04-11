@@ -3,11 +3,11 @@ package heist
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -41,7 +41,6 @@ func GetTargets(guildID string, theme string) []*Target {
 
 	}
 
-	log.WithFields(log.Fields{"guild": guildID, "targets": len(targets)}).Trace("get targets")
 	return targets
 }
 
@@ -49,7 +48,10 @@ func GetTargets(guildID string, theme string) []*Target {
 // If the amount is greater than the vault, the vault is set to 0.
 func (t *Target) StealFromValut(amount int) {
 	if amount <= 0 {
-		log.WithField("amount", amount).Debug("nothing stolen from the vault")
+		sslog.Debug("nothing stolen from the vault",
+			slog.String("guildID", t.GuildID),
+			slog.String("target", t.Name),
+		)
 		return
 	}
 
@@ -63,7 +65,13 @@ func (t *Target) StealFromValut(amount int) {
 
 	writeTarget(t)
 
-	log.WithFields(log.Fields{"guild": t.GuildID, "target": t.Name, "amount": amount, "original": originalVaultAmount, "new": t.Vault}).Debug("steal from vault")
+	sslog.Debug("steal from vault",
+		slog.String("guild", t.GuildID),
+		slog.String("target", t.Name),
+		slog.Int("amount", amount),
+		slog.Int("original", originalVaultAmount),
+		slog.Int("new", t.Vault),
+	)
 }
 
 // getAllTargets returns all targets that match the filter.
@@ -88,29 +96,38 @@ func getTarget(targets []*Target, crewSize int) *Target {
 	if target == nil {
 		target = targets[len(targets)-1]
 	}
-	log.WithField("Target", target.Name).Debug("Heist Target")
+	sslog.Debug("heist target",
+		slog.String("guildID", target.GuildID),
+		slog.String("target", target.Name),
+	)
 	return target
 }
 
 // readTargetsFromFIle returns the default targets for a server.
 // If the file is not found or cannot be decoded, the default targets are used.
 func readTargetsFromFIle(guildID string) []*Target {
-	log.Debug("--> heist.readTargetsFromFIle")
-	defer log.Debug("<-- heist.readTargetsFromFIle")
-
 	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "heist", "targets", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to read default targets")
+		sslog.Error("failed to read default targets",
+			slog.String("guildID", guildID),
+			slog.String("file", configFileName),
+			slog.Any("error", err),
+		)
 		return getDefaultTargets(guildID)
 	}
 
 	var targets []*Target
 	err = json.Unmarshal(bytes, &targets)
 	if err != nil {
-		log.WithField("file", configFileName).Error("failed to unmarshal default targets")
+		sslog.Error("failed to unmarshal default targets",
+			slog.String("guildID", guildID),
+			slog.String("file", configFileName),
+			slog.String("targets", string(bytes)),
+			slog.Any("error", err),
+		)
 		return getDefaultTargets(guildID)
 	}
 	for _, target := range targets {
@@ -120,16 +137,17 @@ func readTargetsFromFIle(guildID string) []*Target {
 		target.IsAtMax = true
 	}
 
-	log.WithField("guild", guildID).Info("create new targets")
+	sslog.Info("create new targets",
+		slog.String("guildID", guildID),
+		slog.String("file", configFileName),
+		slog.Int("targets", len(targets)),
+	)
 
 	return targets
 }
 
 // getDefaultTargets returns the default targets for a server.
 func getDefaultTargets(guildID string) []*Target {
-	log.Debug("--> heist.getDefaultTargets")
-	defer log.Debug("<-- heist.getDefaultTargets")
-
 	targets := []*Target{
 		newTarget(guildID, "clash", "Goblin Forest", 2, 29.3, 16000),
 		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000),
@@ -154,9 +172,6 @@ func getDefaultTargets(guildID string) []*Target {
 
 // newTarget creates a new target for a heist
 func newTarget(guildID string, theme string, name string, maxCrewSize int, success float64, maxVault int) *Target {
-	log.Debug("--> heist.newTarget")
-	defer log.Debug("<-- heist.newTarget")
-
 	target := Target{
 		GuildID:  guildID,
 		Theme:    theme,
@@ -178,7 +193,11 @@ func ResetVaultsToMaximumValue(guildID string) {
 		target.Vault = target.VaultMax
 		target.IsAtMax = true
 		writeTarget(target)
-		log.WithFields(log.Fields{"guild": guildID, "target": target.Name, "vault": target.Vault}).Info("reset vault to maximum")
+		sslog.Info("reset vault to maximum",
+			slog.String("guildID", guildID),
+			slog.String("target", target.Name),
+			slog.Int("vault", target.Vault),
+		)
 	}
 }
 
@@ -190,11 +209,16 @@ func vaultUpdater() {
 	// Update the vaults forever
 	for {
 		time.Sleep(timer)
-		log.WithFields(log.Fields{"timer": timer}).Trace("vault updater")
 		for _, target := range getAllTargets(filter) {
 			recoverAmount := int(float64(target.VaultMax) * VAULT_RECOVER_PERCENT)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
-			log.WithFields(log.Fields{"guild": target.GuildID, "target": target.Name, "old": target.Vault, "new": newVaultAmount, "max": target.VaultMax}).Info("vault updater: update vault")
+			sslog.Info("vault updater: update vault",
+				slog.String("guildID", target.GuildID),
+				slog.String("target", target.Name),
+				slog.Int("old", target.Vault),
+				slog.Int("new", newVaultAmount),
+				slog.Int("max", target.VaultMax),
+			)
 			target.Vault = newVaultAmount
 			if target.Vault == target.VaultMax {
 				target.IsAtMax = true

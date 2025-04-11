@@ -2,13 +2,18 @@ package role
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
-	log "github.com/sirupsen/logrus"
+	"github.com/rbrabson/goblin/internal/logger"
+)
+
+var (
+	sslog = logger.GetLogger()
 )
 
 var (
@@ -86,7 +91,11 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options[0].Name == "role" {
 		role(s, i)
 	} else {
-		log.WithFields(log.Fields{"command": options[0].Name}).Warn("unknown guild-admin command")
+		sslog.Warn("unknown guild-admin command",
+			slog.String("guildID", i.GuildID),
+			slog.String("userID", i.Member.User.ID),
+			slog.String("command", options[0].Name),
+		)
 	}
 }
 
@@ -101,7 +110,11 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "remove":
 		removeRole(s, i)
 	default:
-		log.WithFields(log.Fields{"subcommand": options[0].Name}).Warn("unknown guild-admin role command")
+		sslog.Warn("unknown guild-admin role command",
+			slog.String("guildID", i.GuildID),
+			slog.String("userID", i.Member.User.ID),
+			slog.String("command", options[0].Name),
+		)
 	}
 }
 
@@ -116,7 +129,10 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Add the role to the server configuration
 	server.AddAdminRole(roleName)
-	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role add")
+	sslog.Debug("/guild-admin role add",
+		slog.String("guildID", guildID),
+		slog.String("role", roleName),
+	)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" added", roleName)),
@@ -135,7 +151,10 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Remove the role from the server configuration
 	server.RemoveAdminRole(roleName)
-	log.WithFields(log.Fields{"guild": guildID, "role": roleName}).Debug("/guild-admin role remove")
+	sslog.Debug("/guild-admin role remove",
+		slog.String("guildID", guildID),
+		slog.String("role", roleName),
+	)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" removed", roleName)),
@@ -160,7 +179,10 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sb.WriteString(role + "\n")
 	}
 	roleList := sb.String()
-	log.WithFields(log.Fields{"guild": guildID, "roles": roleList}).Debug("/guild-admin role list")
+	sslog.Debug("/guild-admin role list",
+		slog.String("guildID", guildID),
+		slog.Int("roles", len(roles)),
+	)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(roleList),
