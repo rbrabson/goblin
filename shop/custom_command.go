@@ -2,10 +2,10 @@ package shop
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -45,7 +45,12 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purch
 	item := ShopItem(*cc)
 	purchase, err := item.purchase(memberID, PENDING, false)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "memberID": memberID}).WithError(err).Error("failed to purchase custom command")
+		sslog.Error("failed to purchase custom command",
+			slog.String("guildID", cc.GuildID),
+			slog.String("commandName", cc.Name),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
 		return nil, err
 	}
 
@@ -57,7 +62,12 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purch
 	)
 	_, err = dm.Send(s, config.NotificationID)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "notificationID": config.NotificationID}).WithError(err).Error("failed to send notification message")
+		sslog.Error("failed to send notification message",
+			slog.String("guildID", cc.GuildID),
+			slog.String("commandName", cc.Name),
+			slog.String("notificationID", config.NotificationID),
+			slog.Any("error", err),
+		)
 		purchase.Return()
 		return nil, err
 	}
@@ -68,7 +78,12 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purch
 	)
 	_, err = dm.Send(s, memberID)
 	if err != nil {
-		log.WithFields(log.Fields{"guildID": cc.GuildID, "commandName": cc.Name, "memberID": memberID}).WithError(err).Error("failed to send direct message")
+		sslog.Error("failed to send direct message",
+			slog.String("guildID", cc.GuildID),
+			slog.String("commandName", cc.Name),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
 		purchase.Return()
 		return nil, err
 	}
@@ -98,7 +113,10 @@ func customCommandPurchaseChecks(s *discordgo.Session, i *discordgo.InteractionC
 	// Make sure the role is still available in the shop
 	shopItem := getShopItem(i.GuildID, commandName, ROLE)
 	if shopItem == nil {
-		log.WithFields(log.Fields{"guildID": i.GuildID, "commandName": commandName}).Error("failed to read custom command from shop")
+		sslog.Error("failed to read custom command from shop",
+			slog.String("guildID", i.GuildID),
+			slog.String("commandName", commandName),
+		)
 		return fmt.Errorf("custom command `%s` not found in the shop", commandName)
 	}
 

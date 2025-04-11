@@ -2,9 +2,9 @@ package shop
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/rbrabson/goblin/bank"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -45,18 +45,32 @@ func newShopItem(guildID string, name string, description string, itemType strin
 
 	err := writeShopItem(item)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "name": name, "type": itemType, "error": err}).Error("unable to write shop item to the database")
+		sslog.Error("unable to write shop item to the database",
+			slog.String("guild", guildID),
+			slog.String("name", name),
+			slog.String("type", itemType),
+			slog.Any("error", err),
+		)
 		return nil
 	}
 
-	log.WithFields(log.Fields{"guild": guildID, "name": name, "type": itemType}).Info("new shop item created")
+	sslog.Info("new shop item created",
+		slog.String("guild", guildID),
+		slog.String("name", name),
+		slog.String("type", itemType),
+	)
+
 	return item
 }
 
 // update updates the shop item with the given name and type. If the item does not exist, an error is returned.
 func (item *ShopItem) update(name string, description string, itemType string, price int, duration string, autoRenewable bool) error {
 	if item.Name == name && item.Description == description && item.Type == itemType && item.Price == price && duration == item.Duration && autoRenewable == item.AutoRenewable {
-		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Warn("no change to the shop item")
+		sslog.Warn("no change to the shop item",
+			slog.String("guild", item.GuildID),
+			slog.String("name", item.Name),
+			slog.String("type", item.Type),
+		)
 		return fmt.Errorf("no change to the shop item")
 	}
 
@@ -69,10 +83,19 @@ func (item *ShopItem) update(name string, description string, itemType string, p
 
 	err := writeShopItem(item)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type, "error": err}).Error("unable to update shop item to the database")
+		sslog.Error("unable to update shop item to the database",
+			slog.String("guild", item.GuildID),
+			slog.String("name", item.Name),
+			slog.String("type", item.Type),
+			slog.Any("error", err),
+		)
 		return fmt.Errorf("unable to add item")
 	}
-	log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Info("shop item updated")
+	sslog.Info("shop item updated",
+		slog.String("guild", item.GuildID),
+		slog.String("name", item.Name),
+		slog.String("type", item.Type),
+	)
 	return nil
 }
 
@@ -85,12 +108,21 @@ func (item *ShopItem) addToShop(s *Shop) error {
 
 	err := writeShopItem(item)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type, "error": err}).Error("unable to write shop item to the database")
+		sslog.Error("unable to write shop item to the database",
+			slog.String("guild", item.GuildID),
+			slog.String("name", item.Name),
+			slog.String("type", item.Type),
+			slog.Any("error", err),
+		)
 		return fmt.Errorf("unable to add %s to shop", item.Type)
 	}
 
 	s.Items = append(s.Items, item)
-	log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Info("shop item added to shop")
+	sslog.Info("shop item added to shop",
+		slog.String("guild", item.GuildID),
+		slog.String("name", item.Name),
+		slog.String("type", item.Type),
+	)
 	return nil
 }
 
@@ -105,7 +137,12 @@ func (item *ShopItem) removeFromShop(s *Shop) error {
 	// Remove the item from the database
 	err := deleteShopItem(item)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type, "error": err}).Error("unable to remove shop item from the database")
+		sslog.Error("unable to remove shop item from the database",
+			slog.String("guild", item.GuildID),
+			slog.String("name", item.Name),
+			slog.String("type", item.Type),
+			slog.Any("error", err),
+		)
 		return fmt.Errorf("unable to remove %s from shop", item.Type)
 	}
 
@@ -117,7 +154,11 @@ func (item *ShopItem) removeFromShop(s *Shop) error {
 		}
 	}
 
-	log.WithFields(log.Fields{"guild": item.GuildID, "name": item.Name, "type": item.Type}).Info("shop item removed from shop")
+	sslog.Info("shop item removed from shop",
+		slog.String("guild", item.GuildID),
+		slog.String("name", item.Name),
+		slog.String("type", item.Type),
+	)
 	return nil
 }
 
@@ -126,7 +167,12 @@ func (item *ShopItem) removeFromShop(s *Shop) error {
 func (item *ShopItem) purchase(memberID string, status string, renew bool) (*Purchase, error) {
 	purchase, err := PurchaseItem(item.GuildID, memberID, item, status, renew)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": item.GuildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to create purchase")
+		sslog.Error("unable to create purchase",
+			slog.String("guild", item.GuildID),
+			slog.String("member", memberID),
+			slog.String("item", item.Name),
+			slog.Any("error", err),
+		)
 		return nil, err
 	}
 
@@ -137,7 +183,11 @@ func (item *ShopItem) purchase(memberID string, status string, renew bool) (*Pur
 func createChecks(guildID string, itemName string, itemType string) error {
 	shopItem := getShopItem(guildID, itemName, itemType)
 	if shopItem != nil {
-		log.WithFields(log.Fields{"guildID": guildID, "itemName": itemName, "itemType": itemType}).Error("item already exists in the shop")
+		sslog.Error("item already exists in the shop",
+			slog.String("guild", guildID),
+			slog.String("name", itemName),
+			slog.String("type", itemType),
+		)
 		return fmt.Errorf("%s `%s` already exists in the shop", itemType, itemName)
 	}
 
@@ -148,7 +198,12 @@ func createChecks(guildID string, itemName string, itemType string) error {
 func purchaseChecks(guildID string, memberID string, itemType string, itemName string) error {
 	purchase, _ := readPurchase(guildID, memberID, itemName, itemType)
 	if purchase != nil && !purchase.IsExpired {
-		log.WithFields(log.Fields{"guildID": guildID, "memberID": memberID, "itemName": itemName, "itemType": itemType}).Debug("item already purchased")
+		sslog.Debug("item already purchased",
+			slog.String("guild", guildID),
+			slog.String("member", memberID),
+			slog.String("name", itemName),
+			slog.String("type", itemType),
+		)
 		return fmt.Errorf("you have already purchased %s `%s`", itemType, itemName)
 	}
 
@@ -156,7 +211,12 @@ func purchaseChecks(guildID string, memberID string, itemType string, itemName s
 	item := getShopItem(guildID, itemName, itemType)
 	bankAccount := bank.GetAccount(guildID, memberID)
 	if bankAccount.CurrentBalance < item.Price {
-		log.WithFields(log.Fields{"guildID": guildID, "name": itemName, "type": itemType, "memberID": memberID}).Debug("insufficient funds to purchase item")
+		sslog.Debug("insufficient funds to purchase item",
+			slog.String("guild", guildID),
+			slog.String("name", itemName),
+			slog.String("type", itemType),
+			slog.String("member", memberID),
+		)
 		return fmt.Errorf("you do not have enough credits to purchase the `%s` %s", itemName, itemType)
 	}
 	return nil

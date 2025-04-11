@@ -3,6 +3,7 @@ package shop
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/disctime"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/text/language"
@@ -42,7 +42,11 @@ type Purchase struct {
 func GetAllPurchases(guildID string, memberID string) []*Purchase {
 	purchases, err := readPurchases(guildID, memberID)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "error": err}).Error("unable to read purchases from the database")
+		sslog.Error("unable to read purchases from the database",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
 		return nil
 	}
 
@@ -108,7 +112,13 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 	bankAccount := bank.GetAccount(guildID, memberID)
 	err := bankAccount.WithdrawFromCurrentOnly(item.Price)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Warn("unable to withdraw cash from the bank account")
+		sslog.Warn("unable to withdraw cash from the bank account",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.String("itemName", item.Name),
+			slog.Int("itemPrice", item.Price),
+			slog.Any("error", err),
+		)
 		return nil, errors.New(p.Sprintf("insufficient funds to buy the %s `%s` for %d", item.Type, item.Name, item.Price))
 	}
 
@@ -128,11 +138,23 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 	}
 	err = writePurchase(purchase)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name, "error": err}).Error("unable to write purchase to the database")
+		sslog.Error("unable to write purchase to the database",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.String("itemName", item.Name),
+			slog.String("itemType", item.Type),
+			slog.Any("error", err),
+		)
+		// Refund the member
 		bankAccount.Deposit(item.Price)
 		return nil, fmt.Errorf("unable to write purchase to the database: %w", err)
 	}
-	log.WithFields(log.Fields{"guild": guildID, "member": memberID, "item": item.Name}).Info("creating new purchase")
+	sslog.Info("creating new purchase",
+		slog.String("guildID", guildID),
+		slog.String("memberID", memberID),
+		slog.String("itemName", item.Name),
+		slog.String("itemType", item.Type),
+	)
 	config := GetConfig(guildID)
 	if config.ModChannelID != "" {
 		guildMember := guild.GetMember(guildID, memberID)
@@ -149,14 +171,12 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 // if it has expired.
 func (p *Purchase) HasExpired() bool {
 	if p.IsExpired {
-		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase has already been marked as expired")
 		return true
 	}
 
 	oldIsExpired := p.IsExpired
 	switch {
 	case p.ExpiresOn.IsZero():
-		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase has a zero expiration timer")
 		return false
 	case p.ExpiresOn.Before(time.Now().UTC()):
 		switch p.Item.Type {
@@ -164,11 +184,21 @@ func (p *Purchase) HasExpired() bool {
 			// Assign the role to the user. If the role can't be assigned, then undo the purchase of the role.
 			err := guild.UnAssignRole(bot.Session, p.GuildID, p.MemberID, p.Item.Name)
 			if err != nil {
-				log.WithFields(log.Fields{"guildID": p.GuildID, "roleName": p.Item.Name, "memberID": p.MemberID, "error": err}).Error("failed to unassign role")
+				sslog.Error("failed to unassign role",
+					slog.String("guildID", p.GuildID),
+					slog.String("memberID", p.MemberID),
+					slog.String("roleName", p.Item.Name),
+					slog.Any("error", err),
+				)
 				return false
 			}
 		default:
-			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("unknown purchase has expired")
+			sslog.Warn("unknown purchase has expired",
+				slog.String("guildID", p.GuildID),
+				slog.String("memberID", p.MemberID),
+				slog.String("itemName", p.Item.Name),
+				slog.String("itemType", p.Item.Type),
+			)
 		}
 
 		p.IsExpired = true
@@ -191,7 +221,13 @@ func (p *Purchase) HasExpired() bool {
 		)
 		_, err := dm.Send(bot.Session, p.MemberID)
 		if err != nil {
-			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to send direct message about expired purchase")
+			sslog.Error("unable to send direct message about expired purchase",
+				slog.String("guildID", p.GuildID),
+				slog.String("memberID", p.MemberID),
+				slog.String("itemName", p.Item.Name),
+				slog.String("itemType", p.Item.Type),
+				slog.Any("error", err),
+			)
 		}
 
 		config := GetConfig(p.GuildID)
@@ -202,12 +238,20 @@ func (p *Purchase) HasExpired() bool {
 				disgomsg.WithContent(printer.Sprintf("`%s` (id=%s) had their purchase of %s `%s` expire", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name)),
 			)
 			msg.Send(bot.Session, config.ModChannelID)
-			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase has expired")
+			sslog.Info("purchase has expired",
+				slog.String("guildID", p.GuildID),
+				slog.String("memberID", p.MemberID),
+				slog.String("itemName", p.Item.Name),
+				slog.String("itemType", p.Item.Type),
+			)
 		} else {
-			log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("no mod channel configured to notify of expired purchase")
+			sslog.Info("no mod channel configured to notify of expired purchase",
+				slog.String("guildID", p.GuildID),
+				slog.String("memberID", p.MemberID),
+				slog.String("itemName", p.Item.Name),
+				slog.String("itemType", p.Item.Type),
+			)
 		}
-	} else {
-		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Trace("purchase expiration has not changed")
 	}
 
 	return p.IsExpired
@@ -218,13 +262,25 @@ func (p *Purchase) Return() error {
 	bankAccount := bank.GetAccount(p.GuildID, p.MemberID)
 	err := bankAccount.DepositToCurrentOnly(p.Item.Price)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to deposit cash to the bank account")
+		sslog.Error("unable to deposit cash to the bank account",
+			slog.String("guildID", p.GuildID),
+			slog.String("memberID", p.MemberID),
+			slog.String("itemName", p.Item.Name),
+			slog.String("itemType", p.Item.Type),
+			slog.Any("error", err),
+		)
 		return fmt.Errorf("unable to deposit cash to the bank account: %w", err)
 	}
 
 	err = deletePurchase(p)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to delete purchase from the database")
+		sslog.Error("unable to delete purchase from the database",
+			slog.String("guildID", p.GuildID),
+			slog.String("memberID", p.MemberID),
+			slog.String("itemName", p.Item.Name),
+			slog.String("itemType", p.Item.Type),
+			slog.Any("error", err),
+		)
 		return fmt.Errorf("unable to delete purchase from the database: %w", err)
 	}
 
@@ -244,17 +300,32 @@ func (p *Purchase) Return() error {
 // Update updates the purchase with the given autoRenew value.
 func (p *Purchase) Update(autoRenew bool) error {
 	if p.AutoRenew == autoRenew {
-		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("purchase already has the same autoRenew value")
+		sslog.Info("purchase already has the same autoRenew value",
+			slog.String("guildID", p.GuildID),
+			slog.String("memberID", p.MemberID),
+			slog.String("itemName", p.Item.Name),
+			slog.Bool("autoRenew", autoRenew),
+		)
 		return fmt.Errorf("purchase already has the same autoRenew value")
 	}
 
 	p.AutoRenew = autoRenew
 	err := writePurchase(p)
 	if err != nil {
-		log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name, "error": err}).Error("unable to update purchase in the database")
+		sslog.Error("unable to update purcahse autorenew in the database",
+			slog.String("guildID", p.GuildID),
+			slog.String("memberID", p.MemberID),
+			slog.String("itemName", p.Item.Name),
+			slog.Bool("autoRenew", autoRenew),
+		)
 		return fmt.Errorf("unable to update purchase in the database: %w", err)
 	}
-	log.WithFields(log.Fields{"guild": p.GuildID, "member": p.MemberID, "item": p.Item.Name}).Info("updating purchase")
+	sslog.Info("updated purchase autorenw",
+		slog.String("guildID", p.GuildID),
+		slog.String("memberID", p.MemberID),
+		slog.String("itemName", p.Item.Name),
+		slog.Bool("autoRenew", autoRenew),
+	)
 
 	return nil
 }
@@ -269,9 +340,11 @@ func checkForExpiredPurchases() {
 				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$lte", Value: time.Now().UTC()}}}},
 			}},
 		}
-		log.WithFields(log.Fields{"filter": filter}).Trace("checking for expired purchases")
 		purchases, _ := readAllPurchases(filter)
-		log.WithFields(log.Fields{"count": len(purchases)}).Debug("checking for expired purchases")
+		sslog.Debug("checking for expired purchases",
+			slog.Any("filter", filter),
+			slog.Int("count", len(purchases)),
+		)
 		for _, purchase := range purchases {
 			purchase.HasExpired()
 		}
@@ -279,7 +352,6 @@ func checkForExpiredPurchases() {
 		// Wait until tomorrow to check again
 		year, month, day := time.Now().UTC().Date()
 		tomorrow := time.Date(year, month, day+1, 0, 0, 0, 0, time.UTC)
-		log.WithFields(log.Fields{"tomorrow": tomorrow}).Trace("waiting until tomorrow to check for expired purchases")
 		time.Sleep(time.Until(tomorrow))
 	}
 }
