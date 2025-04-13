@@ -72,7 +72,7 @@ func newHeistMember(guildID string, memberID string) *HeistMember {
 		Status:        FREE,
 	}
 	writeMember(member)
-	sslog.Debug("create heist member",
+	slog.Debug("create heist member",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)
@@ -96,19 +96,19 @@ func (member *HeistMember) Apprehended() {
 	member.BailCost = bailCost
 
 	writeMember(member)
-	sslog.Debug("heist member apprehended",
-		"bail", member.BailCost,
-		"criminalLevel", member.CriminalLevel,
-		"deathTimer", member.DeathTimer,
-		"guild", member.GuildID,
-		"jailCounter", member.JailCounter,
-		"member", member.MemberID,
-		"sentence", member.Sentence,
-		"spree", member.Spree,
-		"status", member.Status,
-		"timer", member.JailTimer,
-		"totalDeaths", member.Deaths,
-		"totalJail", member.TotalJail,
+	slog.Debug("heist member apprehended",
+		slog.Int("bail", member.BailCost),
+		slog.Any("criminalLevel", member.CriminalLevel),
+		slog.Time("deathTimer", member.DeathTimer),
+		slog.String("guild", member.GuildID),
+		slog.Int("jailCounter", member.JailCounter),
+		slog.String("member", member.MemberID),
+		slog.Duration("sentence", member.Sentence),
+		slog.Int("spree", member.Spree),
+		slog.Any("status", member.Status),
+		slog.Time("timer", member.JailTimer),
+		slog.Int("totalDeaths", member.Deaths),
+		slog.Int("totalJail", member.TotalJail),
 	)
 }
 
@@ -126,19 +126,19 @@ func (member *HeistMember) Died() {
 
 	writeMember(member)
 
-	sslog.Debug("heist member died",
-		"bail", member.BailCost,
-		"criminalLevel", member.CriminalLevel,
-		"deathTimer", member.DeathTimer,
-		"guild", member.GuildID,
-		"jailCounter", member.JailCounter,
-		"member", member.MemberID,
-		"sentence", member.Sentence,
-		"spree", member.Spree,
-		"status", member.Status,
-		"timer", member.JailTimer,
-		"totalDeaths", member.Deaths,
-		"totalJail", member.TotalJail,
+	slog.Debug("heist member died",
+		slog.Int("bail", member.BailCost),
+		slog.Any("criminalLevel", member.CriminalLevel),
+		slog.Time("deathTimer", member.DeathTimer),
+		slog.String("guild", member.GuildID),
+		slog.Int("jailCounter", member.JailCounter),
+		slog.String("member", member.MemberID),
+		slog.Duration("sentence", member.Sentence),
+		slog.Int("spree", member.Spree),
+		slog.Any("status", member.Status),
+		slog.Time("timer", member.JailTimer),
+		slog.Int("totalDeaths", member.Deaths),
+		slog.Int("totalJail", member.TotalJail),
 	)
 }
 
@@ -147,19 +147,19 @@ func (member *HeistMember) Escaped() {
 	member.Spree++
 	writeMember(member)
 
-	sslog.Debug("heist member escaped",
-		"bail", member.BailCost,
-		"criminalLevel", member.CriminalLevel,
-		"deathTimer", member.DeathTimer,
-		"guild", member.GuildID,
-		"jailCounter", member.JailCounter,
-		"member", member.MemberID,
-		"sentence", member.Sentence,
-		"spree", member.Spree,
-		"status", member.Status,
-		"timer", member.JailTimer,
-		"totalDeaths", member.Deaths,
-		"totalJail", member.TotalJail,
+	slog.Debug("heist member escaped",
+		slog.Int("bail", member.BailCost),
+		slog.Any("criminalLevel", member.CriminalLevel),
+		slog.Time("deathTimer", member.DeathTimer),
+		slog.String("guild", member.GuildID),
+		slog.Int("jailCounter", member.JailCounter),
+		slog.String("member", member.MemberID),
+		slog.Duration("sentence", member.Sentence),
+		slog.Int("spree", member.Spree),
+		slog.Any("status", member.Status),
+		slog.Time("timer", member.JailTimer),
+		slog.Int("totalDeaths", member.Deaths),
+		slog.Int("totalJail", member.TotalJail),
 	)
 }
 
@@ -185,28 +185,34 @@ func (member *HeistMember) UpdateStatus() {
 // ClearJailAndDeathStatus is called when a player is released from jail or rises from the grave.
 func (member *HeistMember) ClearJailAndDeathStatus() {
 	if member.Status == DEAD {
-		sslog.Debug("heist member risen from the grave",
-			"guildID", member.GuildID,
-			"memberID", member.MemberID,
-			"bail", member.BailCost,
-			"deathTimer", member.DeathTimer,
-			"jailCounter", member.JailCounter,
-			"jailTimer", member.JailTimer,
-			"sentence", member.Sentence,
-			"spree", member.Spree,
-			"status", member.Status,
+		slog.Debug("heist member risen from the grave",
+			slog.Int("bail", member.BailCost),
+			slog.Any("criminalLevel", member.CriminalLevel),
+			slog.Time("deathTimer", member.DeathTimer),
+			slog.String("guild", member.GuildID),
+			slog.Int("jailCounter", member.JailCounter),
+			slog.String("member", member.MemberID),
+			slog.Duration("sentence", member.Sentence),
+			slog.Int("spree", member.Spree),
+			slog.Any("status", member.Status),
+			slog.Time("timer", member.JailTimer),
+			slog.Int("totalDeaths", member.Deaths),
+			slog.Int("totalJail", member.TotalJail),
 		)
 	} else if member.Status == APPREHENDED || member.Status == OOB {
-		sslog.Debug("heist member released from jail",
-			"guildID", member.GuildID,
-			"memberID", member.MemberID,
-			"bail", member.BailCost,
-			"deathTimer", member.DeathTimer,
-			"jailCounter", member.JailCounter,
-			"jailTimer", member.JailTimer,
-			"sentence", member.Sentence,
-			"spree", member.Spree,
-			"status", member.Status,
+		slog.Debug("heist member released from jail",
+			slog.Int("bail", member.BailCost),
+			slog.Any("criminalLevel", member.CriminalLevel),
+			slog.Time("deathTimer", member.DeathTimer),
+			slog.String("guild", member.GuildID),
+			slog.Int("jailCounter", member.JailCounter),
+			slog.String("member", member.MemberID),
+			slog.Duration("sentence", member.Sentence),
+			slog.Int("spree", member.Spree),
+			slog.Any("status", member.Status),
+			slog.Time("timer", member.JailTimer),
+			slog.Int("totalDeaths", member.Deaths),
+			slog.Int("totalJail", member.TotalJail),
 		)
 	}
 

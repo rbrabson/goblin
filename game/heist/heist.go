@@ -11,17 +11,12 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
-	"github.com/rbrabson/goblin/internal/logger"
 )
 
 var (
 	alertTimes    = make(map[string]time.Time)
 	currentHeists = make(map[string]*Heist)
 	heistLock     = sync.Mutex{}
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 // Heist is a heist that is being planned, is in progress, or has completed
@@ -82,7 +77,7 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 
 	err := heistChecks(heist, organizer)
 	if err != nil {
-		sslog.Debug("heist checks failed",
+		slog.Debug("heist checks failed",
 			slog.String("guilIDd", guildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
@@ -94,7 +89,7 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 	heist.Crew = append(heist.Crew, organizer)
 	currentHeists[guildID] = heist
 
-	sslog.Debug("create heist",
+	slog.Debug("create heist",
 		slog.String("guilIDd", guildID),
 		slog.String("memberID", memberID),
 	)
@@ -104,9 +99,6 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 
 // addCrewMember adds a crew member to the heist
 func (h *Heist) AddCrewMember(member *HeistMember) error {
-	h.mutex.Lock()
-	defer h.mutex.Unlock()
-
 	err := heistChecks(h, member)
 	if err != nil {
 		return err
@@ -114,7 +106,7 @@ func (h *Heist) AddCrewMember(member *HeistMember) error {
 
 	member.heist = h
 	h.Crew = append(h.Crew, member)
-	sslog.Debug("member joined heist",
+	slog.Debug("member joined heist",
 		slog.String("guilIDd", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)
@@ -127,7 +119,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 	defer heistLock.Unlock()
 
 	if len(h.Crew) < 2 {
-		sslog.Error("not enough members to start heist",
+		slog.Error("not enough members to start heist",
 			slog.String("guilIDd", h.GuildID),
 		)
 		return nil, ErrNotEnoughMembers{*h.theme}
@@ -156,10 +148,10 @@ func (h *Heist) Start() (*HeistResult, error) {
 	for _, crewMember := range h.Crew {
 		guildMember := crewMember.guildMember
 		chance := r.IntN(100) + 1
-		sslog.Debug("heist results",
+		slog.Debug("heist results",
 			slog.String("member", guildMember.Name),
-			slog.Int("Chance", chance),
-			slog.Int("SuccessRate", successRate),
+			slog.Int("chance", chance),
+			slog.Int("successRate", successRate),
 		)
 		if chance <= successRate {
 			index := r.IntN(len(goodResults))
@@ -211,10 +203,10 @@ func (h *Heist) Start() (*HeistResult, error) {
 	}
 
 	// If at least one member escaped, then calculate the credits to distributed.
-	sslog.Debug("heist results",
-		slog.Int("Escaped", len(results.Escaped)),
-		slog.Int("Apprehended", len(results.Apprehended)),
-		slog.Int("Died", len(results.Dead)),
+	slog.Debug("heist results",
+		slog.Int("escaped", len(results.Escaped)),
+		slog.Int("apprehended", len(results.Apprehended)),
+		slog.Int("died", len(results.Dead)),
 	)
 	if len(results.Escaped) > 0 {
 		calculateCredits(results)
@@ -230,7 +222,7 @@ func (h *Heist) End() {
 	delete(currentHeists, h.GuildID)
 	alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
 
-	sslog.Debug("heist ended",
+	slog.Debug("heist ended",
 		slog.String("guildID", h.GuildID),
 	)
 }
@@ -242,7 +234,7 @@ func heistChecks(h *Heist, member *HeistMember) error {
 	if slices.ContainsFunc(h.Crew, func(m *HeistMember) bool {
 		return m.MemberID == member.MemberID
 	}) {
-		sslog.Debug("member already joined heist",
+		slog.Debug("member already joined heist",
 			slog.String("guildID", h.GuildID),
 			slog.String("memberID", member.MemberID),
 		)
@@ -282,7 +274,7 @@ func calculateSuccessRate(heist *Heist, target *Target) int {
 	bonus := calculateBonusRate(heist, target)
 	targetSuccess := int(math.Round(target.Success))
 	successChance := targetSuccess + bonus
-	sslog.Debug("success rate",
+	slog.Debug("success rate",
 		slog.Int("bunusRate", bonus),
 		slog.Int("targetSuccess", targetSuccess),
 		slog.Int("successChance", successChance),
@@ -295,7 +287,7 @@ func calculateSuccessRate(heist *Heist, target *Target) int {
 // the bonus amount.
 func calculateBonusRate(heist *Heist, target *Target) int {
 	percent := 100 * len(heist.Crew) / target.CrewSize
-	sslog.Debug("percentage for calculating success bonus",
+	slog.Debug("percentage for calculating success bonus",
 		slog.Int("crewSize", len(heist.Crew)),
 		slog.Int("targetCrewSize", target.CrewSize),
 		slog.Int("percent", percent),
@@ -329,7 +321,7 @@ func calculateCredits(results *HeistResult) {
 
 	results.TotalStolen = 0
 	// Caculate a "base amount". Those who escape get 2x those who don't. So Divide the
-	sslog.Debug("looted",
+	slog.Debug("looted",
 
 		slog.String("target", results.Target.Name),
 		slog.Int("vault", results.Target.Vault),
@@ -344,7 +336,7 @@ func calculateCredits(results *HeistResult) {
 		heistMemberResult.StolenCredits = baseStolen
 		results.TotalStolen += heistMemberResult.StolenCredits
 	}
-	sslog.Debug("total stolen",
+	slog.Debug("total stolen",
 		slog.String("guildID", results.Target.GuildID),
 		slog.String("target", results.Target.Name),
 		slog.Int("totalStolen", results.TotalStolen),

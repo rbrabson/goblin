@@ -8,17 +8,12 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/rbrabson/goblin/internal/logger"
 )
 
 var (
 	lastRaceTimes = make(map[string]time.Time)
 	currentRaces  = make(map[string]*Race)
 	raceLock      = sync.Mutex{}
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 // Race represents a race that is currently in progress.
@@ -106,7 +101,7 @@ func newRace(guildID string) *Race {
 	race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
 
 	currentRaces[guildID] = race
-	sslog.Info("new race",
+	slog.Info("new race",
 		slog.String("guildID", guildID),
 	)
 
@@ -157,7 +152,7 @@ func (race *Race) addBetter(better *RaceBetter) error {
 	defer race.mutex.Unlock()
 
 	race.Betters = append(race.Betters, better)
-	sslog.Debug("add better to current race",
+	slog.Debug("add better to current race",
 		slog.String("guildID", race.GuildID),
 		slog.String("memberID", better.Member.MemberID),
 	)
@@ -186,7 +181,7 @@ func (race *Race) RunRace(trackLength int) {
 	previousLeg := raceLeg
 
 	// Run the race until all racers cross the finish line
-	sslog.Debug("starting race",
+	slog.Debug("starting race",
 		slog.String("guildID", race.GuildID),
 		slog.Int("numRacers", len(race.Racers)),
 		slog.Int("trackLength", trackLength),
@@ -233,7 +228,7 @@ func (r *Race) End() {
 	delete(currentRaces, r.GuildID)
 
 	if r.RaceResult != nil && len(r.Racers) >= r.config.MinNumRacers {
-		sslog.Info("processing race results",
+		slog.Info("processing race results",
 			slog.String("guildID", r.GuildID),
 			slog.Int("numRacers", len(r.Racers)),
 		)
@@ -250,7 +245,7 @@ func (r *Race) End() {
 			}
 		}
 
-		sslog.Info("processing race bets",
+		slog.Info("processing race bets",
 			slog.String("guildID", r.GuildID),
 			slog.Int("numBetters", len(r.Betters)),
 		)
@@ -264,7 +259,7 @@ func (r *Race) End() {
 		}
 	}
 
-	sslog.Info("end race",
+	slog.Info("end race",
 		slog.String("guildID", r.GuildID),
 	)
 }
@@ -273,7 +268,7 @@ func (r *Race) End() {
 func ResetRace(guildID string) {
 	delete(currentRaces, guildID)
 	delete(lastRaceTimes, guildID)
-	sslog.Info("reset race",
+	slog.Info("reset race",
 		slog.String("guildID", guildID),
 	)
 }
@@ -325,7 +320,7 @@ func raceStartChecks(guildID string, memberID string) error {
 
 	race := currentRaces[guildID]
 	if race != nil {
-		sslog.Debug("race already in progress",
+		slog.Debug("race already in progress",
 			slog.String("guildID", guildID),
 		)
 		return ErrRaceAlreadyInProgress
@@ -335,7 +330,7 @@ func raceStartChecks(guildID string, memberID string) error {
 	if time.Since(lastRaceTime) < config.WaitBetweenRaces {
 		timeSinceLastRace := time.Since(lastRaceTime)
 		timeUntilRaceCanStart := config.WaitBetweenRaces - timeSinceLastRace
-		sslog.Debug("racers are resting",
+		slog.Debug("racers are resting",
 			slog.String("guildID", guildID),
 			slog.Duration("timeUntilRaceCanStart", timeUntilRaceCanStart),
 		)
@@ -349,21 +344,21 @@ func raceStartChecks(guildID string, memberID string) error {
 // raceJoinChecks checks to see if a racer is able to join the race.
 func raceJoinChecks(race *Race, memberID string) error {
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		sslog.Warn("race has started",
+		slog.Warn("race has started",
 			slog.String("guildID", race.GuildID),
 		)
 		return ErrRaceHasStarted
 	}
 
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		sslog.Warn("betting has opened",
+		slog.Warn("betting has opened",
 			slog.String("guildID", race.GuildID),
 		)
 		return ErrBettingHasOpened
 	}
 
 	if len(race.Racers) >= race.config.MaxNumRacers {
-		sslog.Warn("too many racers already joined",
+		slog.Warn("too many racers already joined",
 			slog.String("guildID", race.GuildID),
 			slog.Int("maxNumRacers", race.config.MaxNumRacers),
 			slog.Int("numRacers", len(race.Racers)),
@@ -383,14 +378,14 @@ func raceJoinChecks(race *Race, memberID string) error {
 // raceBetChecks checks to see if a better is able to place a bet on the current race.
 func raceBetChecks(race *Race, memberID string) error {
 	if time.Now().Before(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		sslog.Warn("betting has opened",
+		slog.Warn("betting has opened",
 			slog.String("guildID", race.GuildID),
 		)
 		return ErrBettingNotOpened
 	}
 
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		sslog.Warn("race has started",
+		slog.Warn("race has started",
 			slog.String("guildID", race.GuildID),
 		)
 		return ErrRaceHasStarted

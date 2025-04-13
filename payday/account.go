@@ -37,14 +37,14 @@ func (a *Account) setNextPayday(nextPayday time.Time) {
 	a.NextPayday = nextPayday
 	err := writeAccount(a)
 	if err != nil {
-		sslog.Error("unable to save account to the database",
+		slog.Error("unable to save account to the database",
 			slog.String("guildID", a.GuildID),
 			slog.String("memberID", a.MemberID),
 			slog.Any("error", err),
 		)
 		return
 	}
-	sslog.Debug("set next payday",
+	slog.Debug("set next payday",
 		slog.String("guildID", a.GuildID),
 		slog.String("memberID", a.MemberID),
 		slog.Time("nextPayday", a.NextPayday),

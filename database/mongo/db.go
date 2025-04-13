@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/rbrabson/goblin/internal/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -14,10 +13,6 @@ import (
 
 const (
 	DB_TIMEOUT = 10 * time.Second
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 // MongoDB represents a connection to a mongo database
@@ -46,7 +41,7 @@ func NewDatabase() *MongoDB {
 	m.clientOpts = options.Client().ApplyURI(m.uri)
 	m.Client, err = mongo.Connect(ctx, m.clientOpts)
 	if err != nil {
-		sslog.Error("unable to connect to the MongoDB database",
+		slog.Error("unable to connect to the MongoDB database",
 			slog.Any("error", err),
 		)
 		return nil
@@ -55,10 +50,10 @@ func NewDatabase() *MongoDB {
 	// Check the connection
 	err = m.Client.Ping(ctx, nil)
 	if err != nil {
-		sslog.Error("unable to ping the MongoDB database",
+		slog.Error("unable to ping the MongoDB database",
 			slog.Any("error", err),
 		)
-		err = nil
+		return nil
 	}
 
 	return m
@@ -78,7 +73,7 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 
 	cur, err := collection.Find(ctx, filter, opts)
 	if err != nil {
-		sslog.Error("Failed to read the collection",
+		slog.Error("Failed to read the collection",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
 		)
@@ -94,7 +89,7 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 	var results []result
 	err = cur.All(ctx, &results)
 	if err != nil {
-		sslog.Error("error getting IDs for the collection",
+		slog.Error("error getting IDs for the collection",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
 		)
@@ -129,7 +124,7 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 
 	cur, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
-		sslog.Debug("unable to find the document",
+		slog.Debug("unable to find the document",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
@@ -141,11 +136,11 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 	}()
 	err = cur.All(ctx, data)
 	if err != nil {
-		sslog.Error("unable to decode the documents",
+		slog.Error("unable to decode the documents",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"data", data,
+			slog.Any("data", data),
 		)
 		return ErrInvalidDocument
 	}
@@ -165,16 +160,16 @@ func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interf
 
 	res := collection.FindOne(ctx, filter)
 	if res.Err() != nil {
-		sslog.Debug("unable to find the document",
+		slog.Debug("unable to find the document",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
 			slog.String("error", res.Err().Error()),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return res.Err()
 	}
 	if res == nil {
-		sslog.Debug("unable to find the document",
+		slog.Debug("unable to find the document",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
 		)
@@ -182,11 +177,11 @@ func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interf
 	}
 	err = res.Decode(data)
 	if err != nil {
-		sslog.Error("unable to decode the document",
+		slog.Error("unable to decode the document",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"data", data,
+			slog.Any("data", data),
 		)
 		return ErrInvalidDocument
 	}
@@ -206,11 +201,11 @@ func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data
 	update := bson.M{"$set": data}
 	_, err = collection.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
-		sslog.Error("unable to insert or update the document the collection",
+		slog.Error("unable to insert or update the document the collection",
 			slog.String("database", m.dbname),
 			slog.String("collection", collectionName),
-			"filter", filter,
-			"data", data,
+			slog.Any("filter", filter),
+			slog.Any("data", data),
 		)
 		return err
 	}
@@ -231,18 +226,18 @@ func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data int
 	update := bson.M{"$set": data}
 	_, err = collection.UpdateMany(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
-		sslog.Error("unable to insert or update the document the collection",
+		slog.Error("unable to insert or update the document the collection",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"filter", filter,
-			"data", data,
+			slog.Any("filter", filter),
+			slog.Any("data", data),
 		)
 		return err
 	}
-	sslog.Debug("updated document in the collection",
+	slog.Debug("updated document in the collection",
 		slog.String("collection", collectionName),
-		"filter", filter,
-		"data", data,
+		slog.Any("filter", filter),
+		slog.Any("data", data),
 	)
 
 	return nil
@@ -261,17 +256,17 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 	opts := options.Count()
 	count, err := collection.CountDocuments(ctx, filter, opts)
 	if err != nil {
-		sslog.Error("Failed to read the collection",
+		slog.Error("Failed to read the collection",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return 0, ErrCollectionNotAccessable
 	}
-	sslog.Debug("count",
+	slog.Debug("count",
 		slog.String("collection", collectionName),
 		slog.Int64("count", count),
-		"filter", filter,
+		slog.Any("filter", filter),
 	)
 
 	return int(count), nil
@@ -289,23 +284,23 @@ func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
 
 	res, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
-		sslog.Error("unable to delete the document",
+		slog.Error("unable to delete the document",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return err
 	}
 	if res.DeletedCount == 0 {
-		sslog.Warn("document not found",
+		slog.Warn("document not found",
 			slog.String("collection", collectionName),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 	}
-	sslog.Debug("deleted document",
+	slog.Debug("deleted document",
 		slog.String("collection", collectionName),
 		slog.Int64("count", res.DeletedCount),
-		"filter", filter,
+		slog.Any("filter", filter),
 	)
 
 	return nil
@@ -323,24 +318,24 @@ func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
 
 	res, err := collection.DeleteMany(ctx, filter)
 	if err != nil {
-		sslog.Error("unable to delete the document",
+		slog.Error("unable to delete the document",
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		return err
 	}
 	if res.DeletedCount == 0 {
-		sslog.Warn("document not found",
+		slog.Warn("document not found",
 			slog.String("collection", collectionName),
 			slog.Int64("count", res.DeletedCount),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 	}
-	sslog.Debug("deleted document",
+	slog.Debug("deleted document",
 		slog.String("collection", collectionName),
 		slog.Int64("count", res.DeletedCount),
-		"filter", filter,
+		slog.Any("filter", filter),
 	)
 
 	return nil
@@ -351,7 +346,7 @@ func (m *MongoDB) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()
 	if err := m.Client.Disconnect(ctx); err != nil {
-		sslog.Error("unable to close the mongo database client",
+		slog.Error("unable to close the mongo database client",
 			slog.Any("error", err),
 		)
 		return err
@@ -366,7 +361,7 @@ func (m *MongoDB) getCollection(ctx context.Context, collectionName string) (*mo
 		m.clientOpts = options.Client().ApplyURI(m.uri)
 		m.Client, err = mongo.Connect(ctx, m.clientOpts)
 		if err != nil {
-			sslog.Error("unable to connect to the MongoDB database",
+			slog.Error("unable to connect to the MongoDB database",
 				slog.Any("error", err),
 			)
 			return nil, err
@@ -376,7 +371,7 @@ func (m *MongoDB) getCollection(ctx context.Context, collectionName string) (*mo
 	db := m.Client.Database(m.dbname)
 	collection := db.Collection(collectionName)
 	if collection == nil {
-		sslog.Error("uanble to access the collection",
+		slog.Error("uanble to access the collection",
 			slog.String("collection", collectionName),
 		)
 		return nil, ErrCollectionNotAccessable

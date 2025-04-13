@@ -20,13 +20,13 @@ func readPayday(guildID string) *Payday {
 	var payday *Payday
 	err := db.FindOne(PAYDAY_COLLECTION, filter, &payday)
 	if err != nil {
-		sslog.Debug("payday not found in the database",
+		slog.Debug("payday not found in the database",
 			slog.String("guildID", guildID),
 			slog.Any("error", err),
 		)
 		return nil
 	}
-	sslog.Debug("read payday from the database",
+	slog.Debug("read payday from the database",
 		slog.String("guildID", payday.GuildID),
 	)
 
@@ -40,13 +40,13 @@ func writePayday(payday *Payday) error {
 
 	err := db.UpdateOrInsert(PAYDAY_COLLECTION, filter, payday)
 	if err != nil {
-		sslog.Error("unable to save payday to the database",
+		slog.Error("unable to save payday to the database",
 			slog.String("guildID", payday.GuildID),
 			slog.Any("error", err),
 		)
 		return err
 	}
-	sslog.Debug("save payday to the database",
+	slog.Debug("save payday to the database",
 		slog.String("guildID", payday.GuildID),
 	)
 	return nil
@@ -58,14 +58,14 @@ func readAccount(payday *Payday, accountID string) *Account {
 	var account *Account
 	err := db.FindOne(PAYDAY_ACCOUNT_COLLECTION, filter, &account)
 	if err != nil {
-		sslog.Debug("payday account not found in the database",
+		slog.Debug("payday account not found in the database",
 			slog.String("guildID", payday.GuildID),
 			slog.String("memberID", accountID),
 			slog.Any("error", err),
 		)
 		return nil
 	}
-	sslog.Debug("read payday account from the database",
+	slog.Debug("read payday account from the database",
 		slog.String("guildID", payday.GuildID),
 		slog.String("memberID", accountID),
 	)
@@ -84,7 +84,7 @@ func writeAccount(account *Account) error {
 	}
 	err := db.UpdateOrInsert(PAYDAY_ACCOUNT_COLLECTION, filter, account)
 	if err != nil {
-		sslog.Debug("unable to write payday account to the database",
+		slog.Debug("unable to write payday account to the database",
 			slog.String("guildID", account.GuildID),
 			slog.String("memberID", account.MemberID),
 			slog.Any("filter", filter),
@@ -93,7 +93,7 @@ func writeAccount(account *Account) error {
 		return err
 	}
 
-	sslog.Debug("wrote payday account to the database",
+	slog.Debug("wrote payday account to the database",
 		slog.String("guildID", account.GuildID),
 		slog.String("memberID", account.MemberID),
 	)

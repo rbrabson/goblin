@@ -9,11 +9,6 @@ import (
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/logger"
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 var (
@@ -91,7 +86,7 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options[0].Name == "role" {
 		role(s, i)
 	} else {
-		sslog.Warn("unknown guild-admin command",
+		slog.Warn("unknown guild-admin command",
 			slog.String("guildID", i.GuildID),
 			slog.String("userID", i.Member.User.ID),
 			slog.String("command", options[0].Name),
@@ -110,7 +105,7 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "remove":
 		removeRole(s, i)
 	default:
-		sslog.Warn("unknown guild-admin role command",
+		slog.Warn("unknown guild-admin role command",
 			slog.String("guildID", i.GuildID),
 			slog.String("userID", i.Member.User.ID),
 			slog.String("command", options[0].Name),
@@ -129,7 +124,7 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Add the role to the server configuration
 	server.AddAdminRole(roleName)
-	sslog.Debug("/guild-admin role add",
+	slog.Debug("/guild-admin role add",
 		slog.String("guildID", guildID),
 		slog.String("role", roleName),
 	)
@@ -151,7 +146,7 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Remove the role from the server configuration
 	server.RemoveAdminRole(roleName)
-	sslog.Debug("/guild-admin role remove",
+	slog.Debug("/guild-admin role remove",
 		slog.String("guildID", guildID),
 		slog.String("role", roleName),
 	)
@@ -179,7 +174,7 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sb.WriteString(role + "\n")
 	}
 	roleList := sb.String()
-	sslog.Debug("/guild-admin role list",
+	slog.Debug("/guild-admin role list",
 		slog.String("guildID", guildID),
 		slog.Int("roles", len(roles)),
 	)

@@ -20,13 +20,13 @@ func readConfig(guildID string) *Config {
 	var config Config
 	err := db.FindOne(RACE_CONFIG_COLLECTION, filter, &config)
 	if err != nil {
-		sslog.Debug("race configuration not found in the database",
+		slog.Debug("race configuration not found in the database",
 			slog.String("guildID", guildID),
 			slog.Any("error", err),
 		)
 		return nil
 	}
-	sslog.Debug("read race configuration from the database",
+	slog.Debug("read race configuration from the database",
 		slog.String("guildID", guildID),
 		slog.String("config", config.Theme),
 	)
@@ -44,7 +44,7 @@ func writeConfig(config *Config) {
 	}
 	err := db.UpdateOrInsert(RACE_CONFIG_COLLECTION, filter, config)
 	if err != nil {
-		sslog.Error("failed to write the race configuration to the database",
+		slog.Error("failed to write the race configuration to the database",
 			slog.String("guildID", config.GuildID),
 			slog.Any("error", err),
 		)
@@ -58,14 +58,14 @@ func readRaceMember(guildID string, memberID string) *RaceMember {
 	var member RaceMember
 	err := db.FindOne(RACE_MEMBER_COLLECTION, filter, &member)
 	if err != nil {
-		sslog.Debug("race member not found in the database",
+		slog.Debug("race member not found in the database",
 			slog.String("guildID", guildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
 		)
 		return nil
 	}
-	sslog.Debug("read race member from the database",
+	slog.Debug("read race member from the database",
 		slog.String("guildID", guildID),
 		slog.String("memberID", memberID),
 	)
@@ -82,7 +82,7 @@ func writeRaceMember(member *RaceMember) {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
 	db.UpdateOrInsert(RACE_MEMBER_COLLECTION, filter, member)
-	sslog.Debug("write race member to the database",
+	slog.Debug("write race member to the database",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)
@@ -94,9 +94,9 @@ func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 	sort := bson.D{{Key: "crew_size", Value: 1}}
 	err := db.FindMany(RACER_COLLECTION, filter, &racers, sort, 0)
 	if err != nil || len(racers) == 0 {
-		sslog.Warn("unable to read racers",
+		slog.Warn("unable to read racers",
 			slog.Any("error", err),
-			"filter", filter,
+			slog.Any("filter", filter),
 		)
 		if err != nil {
 			return nil, err
@@ -117,7 +117,7 @@ func writeRacer(racer *RaceAvatar) {
 	}
 
 	db.UpdateOrInsert(RACER_COLLECTION, filter, racer)
-	sslog.Debug("create or update race avatar",
+	slog.Debug("create or update race avatar",
 		slog.String("guildID", racer.GuildID),
 		slog.String("theme", racer.Theme),
 	)

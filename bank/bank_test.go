@@ -1,6 +1,7 @@
 package bank
 
 import (
+	"log/slog"
 	"os"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 func init() {
 	err := godotenv.Load("../.env_test")
 	if err != nil {
-		sslog.Error("Error loading .env file")
+		slog.Error("Error loading .env file")
 		os.Exit(1)
 	}
 	db = mongo.NewDatabase()

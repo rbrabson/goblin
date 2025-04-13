@@ -108,11 +108,11 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // getHelp gets help about commands from all plugins.
 func getHelp() string {
 	var sb strings.Builder
-	sslog.Debug("plugins",
-		"plugins", ListPlugin(),
+	slog.Debug("plugins",
+		slog.Any("plugins", ListPlugin()),
 	)
 	for _, plugin := range ListPlugin() {
-		sslog.Debug("plugin",
+		slog.Debug("plugin",
 			slog.String("plugin", plugin.GetName()),
 		)
 		for _, str := range plugin.GetHelp() {
@@ -152,7 +152,7 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "status":
 		serverStatus(s, i)
 	default:
-		sslog.Error("unknown subcommand",
+		slog.Error("unknown subcommand",
 			slog.String("subCommand", subCommand.Name),
 		)
 	}
@@ -160,6 +160,10 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // serverShutdown prepares the server to be serverShutdown.
 func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	slog.Info("*** shutting down all bot services ***",
+		slog.String("guildID", i.GuildID),
+		slog.String("userID", i.Member.User.ID),
+	)
 	for _, plugin := range ListPlugin() {
 		plugin.Stop()
 	}
@@ -214,12 +218,12 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
-		sslog.Error("failed to send server status",
+		slog.Error("failed to send server status",
 			slog.Any("error", err),
 		)
 		return
 	}
-	sslog.Debug("send server status",
-		"embeds", embeds,
+	slog.Debug("send server status",
+		slog.Any("embeds", embeds),
 	)
 }

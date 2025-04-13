@@ -51,7 +51,7 @@ func GetThemeNames(guildID string) ([]string, error) {
 func GetThemes(guildID string) []*Theme {
 	themes, err := readAllThemes(guildID)
 	if err != nil {
-		sslog.Warn("unable to read themes",
+		slog.Warn("unable to read themes",
 			slog.String("guildID", guildID),
 			slog.Any("error", err),
 		)
@@ -68,7 +68,7 @@ func GetTheme(guildID string) *Theme {
 	if err == nil && theme != nil {
 		return theme
 	}
-	sslog.Error("unable to read theme",
+	slog.Error("unable to read theme",
 		slog.String("guildID", guildID),
 		slog.Any("error", err),
 	)
@@ -77,7 +77,7 @@ func GetTheme(guildID string) *Theme {
 	// The theme was found in the DB, so create the default theme and use that
 	theme = readThemeFromFile(guildID)
 	writeTheme(theme)
-	sslog.Debug("created default theme",
+	slog.Debug("created default theme",
 		slog.String("guildID", guildID),
 		slog.String("theme", theme.Name),
 	)
@@ -93,7 +93,7 @@ func readThemeFromFile(guildID string) *Theme {
 	configFileName := filepath.Join(configDir, "heist", "themes", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		sslog.Error("failed to read default theme",
+		slog.Error("failed to read default theme",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.Any("error", err),
@@ -104,7 +104,7 @@ func readThemeFromFile(guildID string) *Theme {
 	theme := &Theme{}
 	err = json.Unmarshal(bytes, theme)
 	if err != nil {
-		sslog.Error("failed to unmarshal default theme",
+		slog.Error("failed to unmarshal default theme",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.String("data", string(bytes)),
@@ -115,7 +115,7 @@ func readThemeFromFile(guildID string) *Theme {
 	theme.GuildID = guildID
 	theme.Name = configTheme
 
-	sslog.Info("create new theme",
+	slog.Info("create new theme",
 		slog.String("guildID", theme.GuildID),
 		slog.String("theme", theme.Name),
 	)

@@ -26,15 +26,6 @@ func GetMember(guildID string, memberID string) *Member {
 	if member == nil {
 		member = newMember(guildID, memberID)
 	}
-	// if member.UserName == "" || member.Name == "" {
-	// 	guildMember, err := s.GuildMember(guildID, memberID)
-	// 	if err != nil {
-	// 		sslog.WithFields(sslog.Fields{"guild": guildID, "member": memberID, "error": err}).Error("failed to get guild member")
-	// 		return member
-	// 	}
-	// 	member.SetName(guildMember.User.Username, guildMember.Nick, guildMember.User.GlobalName)
-	// 	sslog.WithFields(sslog.Fields{"guild": guildID, "member": memberID, "nickname": guildMember.Nick, "username": guildMember.User.Username, "userid": guildMember.User.ID, "globalname": guildMember.User.GlobalName}).Debug("updated member")
-	// }
 
 	return member
 }
@@ -56,7 +47,7 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 		member.NickName = nickname
 		member.GlobalName = globalname
 		writeMember(member)
-		sslog.Debug("set member name",
+		slog.Debug("set member name",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
 			slog.String("name", member.Name),
@@ -73,7 +64,7 @@ func newMember(guildID string, memberID string) *Member {
 		GuildID:  guildID,
 	}
 	writeMember(member)
-	sslog.Info("created new member",
+	slog.Info("created new member",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)

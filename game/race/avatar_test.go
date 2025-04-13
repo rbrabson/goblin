@@ -13,7 +13,7 @@ import (
 func init() {
 	err := godotenv.Load("../../.env_test")
 	if err != nil {
-		sslog.Error("Error loading .env file")
+		slog.Error("Error loading .env file")
 		os.Exit(1)
 	}
 	db = mongo.NewDatabase()
@@ -48,13 +48,13 @@ func TestCalculateMovement(t *testing.T) {
 	racer := racers[0]
 
 	movement := racer.calculateMovement(1)
-	sslog.Info("movement", slog.Int("movement", movement))
+	slog.Info("movement", slog.Int("movement", movement))
 
 	movement = racer.calculateMovement(2)
-	sslog.Info("movement", slog.Int("movement", movement))
+	slog.Info("movement", slog.Int("movement", movement))
 
 	movement = racer.calculateMovement(3)
-	sslog.Info("movement", slog.Int("movement", movement))
+	slog.Info("movement", slog.Int("movement", movement))
 
 	filter := bson.M{"guild_id": "123", "theme": "clash"}
 	err := db.Delete(RACER_COLLECTION, filter)

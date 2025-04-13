@@ -10,15 +10,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/internal/disctime"
-	"github.com/rbrabson/goblin/internal/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 // A Leaderboard is used to send a monthly leaderboard to the Discord server for each guild.
@@ -45,13 +40,13 @@ func getLeaderboards() []*Leaderboard {
 	var leaderboards []*Leaderboard
 	err := db.FindMany(LEADERBOARD_COLLECTION, bson.D{}, &leaderboards, bson.D{}, 0)
 	if err != nil {
-		sslog.Error("unable to get leaderboards",
+		slog.Error("unable to get leaderboards",
 			slog.Any("error", err),
 		)
 
 		return nil
 	}
-	sslog.Debug("leaderboards",
+	slog.Debug("leaderboards",
 		slog.Int("count", len(leaderboards)),
 	)
 	return leaderboards
@@ -150,7 +145,7 @@ func getCurrentRanking(lb *Leaderboard, account *bank.Account) int {
 	}
 	rank, _ := db.Count(bank.ACCOUNT_COLLECTION, filter)
 	rank++
-	sslog.Debug("current ranking",
+	slog.Debug("current ranking",
 		slog.String("guildID", lb.GuildID),
 		slog.String("account", account.MemberID),
 		slog.Int("rank", rank),
@@ -168,7 +163,7 @@ func getMonthlyRanking(lb *Leaderboard, account *bank.Account) int {
 
 	rank, _ := db.Count(bank.ACCOUNT_COLLECTION, filter)
 	rank++
-	sslog.Debug("monthly ranking",
+	slog.Debug("monthly ranking",
 		slog.String("guildID", lb.GuildID),
 		slog.String("account", account.MemberID),
 		slog.Int("rank", rank),
@@ -186,7 +181,7 @@ func getLifetimeRanking(lb *Leaderboard, account *bank.Account) int {
 
 	rank, _ := db.Count(bank.ACCOUNT_COLLECTION, filter)
 	rank++
-	sslog.Debug("lifetime ranking",
+	slog.Debug("lifetime ranking",
 		slog.String("guildID", lb.GuildID),
 		slog.String("account", account.MemberID),
 		slog.Int("rank", rank),
@@ -211,7 +206,7 @@ func sendMonthlyLeaderboard(lb *Leaderboard) error {
 			Embeds: embeds,
 		})
 		if err != nil {
-			sslog.Error("unable to send montly leaderboard",
+			slog.Error("unable to send montly leaderboard",
 				slog.String("guildID", lb.GuildID),
 				slog.String("channelID", lb.ChannelID),
 				slog.Any("error", err),
@@ -219,19 +214,19 @@ func sendMonthlyLeaderboard(lb *Leaderboard) error {
 			return err
 		}
 	} else {
-		sslog.Warn("no leaderboard channel set for server",
+		slog.Warn("no leaderboard channel set for server",
 			slog.String("guildID", lb.GuildID),
 			slog.String("channelID", lb.ChannelID),
 		)
 	}
 	for _, account := range accounts {
-		sslog.Debug("sent monthly leaderboard",
+		slog.Debug("sent monthly leaderboard",
 			slog.String("guildID", lb.GuildID),
 			slog.String("memberID", account.MemberID),
 			slog.Int("monthlyBalance", account.MonthlyBalance),
 		)
 	}
-	sslog.Info("sent monthly leaderboard",
+	slog.Info("sent monthly leaderboard",
 		slog.String("guildID", lb.GuildID),
 		slog.String("channelID", lb.ChannelID),
 		slog.Int("leaderboardSize", leaderboardSize),
@@ -261,7 +256,7 @@ func sendAllMonthlyLeaderboards() {
 		for _, lb := range leaderboards {
 			err := sendMonthlyLeaderboard(lb)
 			if err != nil {
-				sslog.Error("unable to send monthly leaderboard",
+				slog.Error("unable to send monthly leaderboard",
 					slog.String("guildID", lb.GuildID),
 					slog.String("channelID", lb.ChannelID),
 					slog.Any("error", err),

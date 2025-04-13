@@ -4,12 +4,6 @@ import (
 	"cmp"
 	"log/slog"
 	"slices"
-
-	"github.com/rbrabson/goblin/internal/logger"
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 // The shop for a guild. The shop contains all items available for purchase.
@@ -28,7 +22,7 @@ func GetShop(guildID string) *Shop {
 
 	shop.Items, err = readShopItems(guildID)
 	if err != nil {
-		sslog.Error("unable to read shop items from the database",
+		slog.Error("unable to read shop items from the database",
 			slog.String("guildID", guildID),
 			slog.Any("error", err),
 		)

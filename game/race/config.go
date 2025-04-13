@@ -53,7 +53,7 @@ func readConfigFromFile(guildID string) *Config {
 	configFileName := filepath.Join(configDir, "race", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		sslog.Error("failed to read default race config",
+		slog.Error("failed to read default race config",
 			slog.String("guildID", guildID),
 			slog.String("theme", configTheme),
 			slog.Any("error", err),
@@ -65,7 +65,7 @@ func readConfigFromFile(guildID string) *Config {
 	config := &Config{}
 	err = json.Unmarshal(bytes, config)
 	if err != nil {
-		sslog.Error("failed to unmarshal default race config",
+		slog.Error("failed to unmarshal default race config",
 			slog.String("guildID", guildID),
 			slog.String("theme", configTheme),
 			slog.String("file", configFileName),
@@ -76,7 +76,7 @@ func readConfigFromFile(guildID string) *Config {
 	config.GuildID = guildID
 
 	writeConfig(config)
-	sslog.Info("create new race config",
+	slog.Info("create new race config",
 		slog.String("guildID", guildID),
 		slog.String("theme", configTheme),
 	)
@@ -105,7 +105,7 @@ func getDefauiltConfig(guildID string) *Config {
 	}
 
 	writeConfig(config)
-	sslog.Info("race configuration created",
+	slog.Info("race configuration created",
 		slog.String("guildID", guildID),
 		slog.String("theme", config.Theme),
 	)

@@ -48,7 +48,7 @@ func GetTargets(guildID string, theme string) []*Target {
 // If the amount is greater than the vault, the vault is set to 0.
 func (t *Target) StealFromValut(amount int) {
 	if amount <= 0 {
-		sslog.Debug("nothing stolen from the vault",
+		slog.Debug("nothing stolen from the vault",
 			slog.String("guildID", t.GuildID),
 			slog.String("target", t.Name),
 		)
@@ -65,7 +65,7 @@ func (t *Target) StealFromValut(amount int) {
 
 	writeTarget(t)
 
-	sslog.Debug("steal from vault",
+	slog.Debug("steal from vault",
 		slog.String("guild", t.GuildID),
 		slog.String("target", t.Name),
 		slog.Int("amount", amount),
@@ -96,7 +96,7 @@ func getTarget(targets []*Target, crewSize int) *Target {
 	if target == nil {
 		target = targets[len(targets)-1]
 	}
-	sslog.Debug("heist target",
+	slog.Debug("heist target",
 		slog.String("guildID", target.GuildID),
 		slog.String("target", target.Name),
 	)
@@ -111,7 +111,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 	configFileName := filepath.Join(configDir, "heist", "targets", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		sslog.Error("failed to read default targets",
+		slog.Error("failed to read default targets",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.Any("error", err),
@@ -122,7 +122,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 	var targets []*Target
 	err = json.Unmarshal(bytes, &targets)
 	if err != nil {
-		sslog.Error("failed to unmarshal default targets",
+		slog.Error("failed to unmarshal default targets",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.String("targets", string(bytes)),
@@ -137,7 +137,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 		target.IsAtMax = true
 	}
 
-	sslog.Info("create new targets",
+	slog.Info("create new targets",
 		slog.String("guildID", guildID),
 		slog.String("file", configFileName),
 		slog.Int("targets", len(targets)),
@@ -193,7 +193,7 @@ func ResetVaultsToMaximumValue(guildID string) {
 		target.Vault = target.VaultMax
 		target.IsAtMax = true
 		writeTarget(target)
-		sslog.Info("reset vault to maximum",
+		slog.Info("reset vault to maximum",
 			slog.String("guildID", guildID),
 			slog.String("target", target.Name),
 			slog.Int("vault", target.Vault),
@@ -212,7 +212,7 @@ func vaultUpdater() {
 		for _, target := range getAllTargets(filter) {
 			recoverAmount := int(float64(target.VaultMax) * VAULT_RECOVER_PERCENT)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
-			sslog.Info("vault updater: update vault",
+			slog.Info("vault updater",
 				slog.String("guildID", target.GuildID),
 				slog.String("target", target.Name),
 				slog.Int("old", target.Vault),

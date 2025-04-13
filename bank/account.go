@@ -43,7 +43,7 @@ func (account *Account) Deposit(amt int) error {
 	account.LifetimeBalance += amt
 
 	err := writeAccount(account)
-	sslog.Info("deposit into account",
+	slog.Info("deposit into account",
 		slog.String("guildID", account.GuildID),
 		slog.String("memberID", account.MemberID),
 		slog.Int("balance", account.CurrentBalance),
@@ -57,7 +57,7 @@ func (account *Account) DepositToCurrentOnly(amt int) error {
 	account.CurrentBalance += amt
 
 	err := writeAccount(account)
-	sslog.Info("deposit into current account",
+	slog.Info("deposit into current account",
 		slog.String("guildID", account.GuildID),
 		slog.String("memberID", account.MemberID),
 		slog.Int("balance", account.CurrentBalance),
@@ -69,7 +69,7 @@ func (account *Account) DepositToCurrentOnly(amt int) error {
 // Withdraw deducts the amount from the balance of the account
 func (account *Account) Withdraw(amt int) error {
 	if amt > account.CurrentBalance {
-		sslog.Warn("insufficient funds for withdrawl",
+		slog.Warn("insufficient funds for withdrawl",
 			slog.String("guildID", account.GuildID),
 			slog.String("memberID", account.MemberID),
 			slog.Int("balance", account.CurrentBalance),
@@ -82,7 +82,7 @@ func (account *Account) Withdraw(amt int) error {
 	account.LifetimeBalance -= amt
 
 	err := writeAccount(account)
-	sslog.Info("withdraw from account",
+	slog.Info("withdraw from account",
 		slog.String("guildID", account.GuildID),
 		slog.String("memberID", account.MemberID),
 		slog.Int("balance", account.CurrentBalance),
@@ -95,7 +95,7 @@ func (account *Account) Withdraw(amt int) error {
 // is useful for transactions that should not affect the monthly or lifetime balance.
 func (account *Account) WithdrawFromCurrentOnly(amt int) error {
 	if amt > account.CurrentBalance {
-		sslog.Warn("insufficient funds for withdrawal",
+		slog.Warn("insufficient funds for withdrawal",
 			slog.String("guildID", account.GuildID),
 			slog.String("memberID", account.MemberID),
 			slog.Int("balance", account.CurrentBalance),
@@ -106,7 +106,7 @@ func (account *Account) WithdrawFromCurrentOnly(amt int) error {
 	account.CurrentBalance -= amt
 
 	err := writeAccount(account)
-	sslog.Info("withdraw from account",
+	slog.Info("withdraw from account",
 		slog.String("guildID", account.GuildID),
 		slog.String("memberID", account.MemberID),
 		slog.Int("balance", account.CurrentBalance),
@@ -129,7 +129,7 @@ func (account *Account) SetBalance(balance int) error {
 	}
 
 	err := writeAccount(account)
-	sslog.Info("set account balance",
+	slog.Info("set account balance",
 		slog.String("guildID", account.GuildID),
 		slog.String("memberID", account.MemberID),
 		slog.Int("balance", account.CurrentBalance),
@@ -148,7 +148,7 @@ func newAccount(guildID string, memberID string) *Account {
 		CreatedAt:       time.Now(),
 	}
 	writeAccount(account)
-	sslog.Info("created new bank account",
+	slog.Info("created new bank account",
 		slog.String("guildID", account.GuildID),
 		slog.String("memberID", account.MemberID),
 	)

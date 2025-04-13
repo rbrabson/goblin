@@ -8,7 +8,6 @@ import (
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/logger"
 )
 
 const (
@@ -23,10 +22,6 @@ var (
 	Revision string
 	BotName  = "Goblin"
 	db       *mongo.MongoDB
-)
-
-var (
-	sslog = logger.GetLogger()
 )
 
 var (
@@ -60,7 +55,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {
-		sslog.Error("failed to create the bot",
+		slog.Error("failed to create the bot",
 			slog.Any("error", err),
 		)
 		os.Exit(1)
@@ -75,7 +70,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 	bot.Session.Identify.Intents = botIntents
 
 	bot.Session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		sslog.Info("Bot is up!",
+		slog.Info("Bot is up!",
 			slog.String("bot", BotName),
 			slog.String("version", Version),
 			slog.String("revision", Revision),
@@ -86,7 +81,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 	guild.SetDB(db)
 	for _, plugin := range ListPlugin() {
 		plugin.Initialize(bot, db)
-		sslog.Info("initialized plugin",
+		slog.Info("initialized plugin",
 			slog.String("plugin", plugin.GetName()),
 		)
 	}
@@ -113,14 +108,14 @@ func NewBot(botName string, version string, revision string) *Bot {
 	}
 
 	// Register a function to add the command or component handler for each plugin
-	sslog.Debug("add bot handlers")
+	slog.Debug("add bot handlers")
 	bot.Session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		switch i.Type {
 		case discordgo.InteractionApplicationCommand:
 			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
 				h(s, i)
 			} else {
-				sslog.Warn("unhandled command",
+				slog.Warn("unhandled command",
 					slog.String("command", i.ApplicationCommandData().Name),
 				)
 				resp := disgomsg.NewResponse(
@@ -135,7 +130,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 				if h, ok := customComponentHandlers[i.MessageComponentData().CustomID]; ok {
 					h(s, i)
 				} else {
-					sslog.Warn("unhandled component",
+					slog.Warn("unhandled component",
 						slog.String("component", i.MessageComponentData().CustomID),
 					)
 					resp := disgomsg.NewResponse(
@@ -146,7 +141,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 			}
 		}
 	})
-	sslog.Debug("bot handlers added")
+	slog.Debug("bot handlers added")
 
 	deleteSlashCommands := GetenvBool("DISCORD_DELETE_SLASH_COMMANDS")
 	if deleteSlashCommands {
@@ -173,40 +168,40 @@ func (bot *Bot) DeleteCommands() {
 	// 	}
 	// }
 
-	sslog.Debug("deleting old bot commands")
+	slog.Debug("deleting old bot commands")
 	_, err := bot.Session.ApplicationCommandBulkOverwrite(bot.appID, bot.guildID, nil)
 	if err != nil {
-		sslog.Error("failed to delete old commands", slog.Any("error", err))
+		slog.Error("failed to delete old commands", slog.Any("error", err))
 		os.Exit(1)
 	}
-	sslog.Debug("old bot commands deleted")
+	slog.Debug("old bot commands deleted")
 }
 
 // LoadCommands register all the commands. This implicitly will call the function added above that
 // adds the command and component handlers for each plugin.
 func (bot *Bot) LoadCommands(commands []*discordgo.ApplicationCommand) {
-	sslog.Debug("load new bot commands",
+	slog.Debug("load new bot commands",
 		slog.String("appID", bot.appID),
 		slog.String("guildID", bot.guildID),
 	)
 	_, err := bot.Session.ApplicationCommandBulkOverwrite(bot.appID, bot.guildID, commands)
 	if err != nil {
 		for _, command := range commands {
-			sslog.Error("failed to load command",
+			slog.Error("failed to load command",
 				slog.String("name", command.Name),
 				slog.String("description", command.Description),
 			)
 		}
-		sslog.Error("failed to load bot commands",
+		slog.Error("failed to load bot commands",
 			slog.String("appID", bot.appID),
 			slog.String("guildID", bot.guildID),
 			slog.Any("error", err),
-			"commands", commands,
+			slog.Any("commands", commands),
 		)
 		os.Exit(1)
 
 	}
-	sslog.Info("new bot commands loaded")
+	slog.Info("new bot commands loaded")
 }
 
 // AddComponentHandler adds a component handler for the bot. This is used to handle
