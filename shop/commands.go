@@ -77,31 +77,31 @@ var (
 								},
 							},
 						},
-						{
-							Name:        "command",
-							Description: "Adds a purchasable custom command to the shop.",
-							Type:        discordgo.ApplicationCommandOptionSubCommand,
-							Options: []*discordgo.ApplicationCommandOption{
-								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "The name of the custom command.",
-									Required:    true,
-								},
-								{
-									Type:        discordgo.ApplicationCommandOptionInteger,
-									Name:        "cost",
-									Description: "The cost of the custom command.",
-									Required:    true,
-								},
-								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "description",
-									Description: "The description of the custom command.",
-									Required:    false,
-								},
-							},
-						},
+						// {
+						// 	Name:        "command",
+						// 	Description: "Adds a purchasable custom command to the shop.",
+						// 	Type:        discordgo.ApplicationCommandOptionSubCommand,
+						// 	Options: []*discordgo.ApplicationCommandOption{
+						// 		{
+						// 			Type:        discordgo.ApplicationCommandOptionString,
+						// 			Name:        "name",
+						// 			Description: "The name of the custom command.",
+						// 			Required:    true,
+						// 		},
+						// 		{
+						// 			Type:        discordgo.ApplicationCommandOptionInteger,
+						// 			Name:        "cost",
+						// 			Description: "The cost of the custom command.",
+						// 			Required:    true,
+						// 		},
+						// 		{
+						// 			Type:        discordgo.ApplicationCommandOptionString,
+						// 			Name:        "description",
+						// 			Description: "The description of the custom command.",
+						// 			Required:    false,
+						// 		},
+						// 	},
+						// },
 					},
 				},
 				{
@@ -122,19 +122,19 @@ var (
 								},
 							},
 						},
-						{
-							Name:        "command",
-							Description: "Adds a purchasable custom command to the shop.",
-							Type:        discordgo.ApplicationCommandOptionSubCommand,
-							Options: []*discordgo.ApplicationCommandOption{
-								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "The name of the custom command.",
-									Required:    true,
-								},
-							},
-						},
+						// {
+						// 	Name:        "command",
+						// 	Description: "Adds a purchasable custom command to the shop.",
+						// 	Type:        discordgo.ApplicationCommandOptionSubCommand,
+						// 	Options: []*discordgo.ApplicationCommandOption{
+						// 		{
+						// 			Type:        discordgo.ApplicationCommandOptionString,
+						// 			Name:        "name",
+						// 			Description: "The name of the custom command.",
+						// 			Required:    true,
+						// 		},
+						// 	},
+						// },
 					},
 				},
 				{
