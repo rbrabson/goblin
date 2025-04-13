@@ -160,6 +160,10 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // serverShutdown prepares the server to be serverShutdown.
 func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	slog.Info("*** shutting down all bot services ***",
+		slog.String("guildID", i.GuildID),
+		slog.String("userID", i.Member.User.ID),
+	)
 	for _, plugin := range ListPlugin() {
 		plugin.Stop()
 	}
