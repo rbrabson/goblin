@@ -539,11 +539,11 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	err := heist.AddCrewMember(heistMember)
 	if err != nil {
+		heist.mutex.Unlock()
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		resp.SendEphemeral(s, i.Interaction)
-		defer heist.mutex.Unlock()
 		return
 	}
 
@@ -559,7 +559,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	)
 	resp.SendEphemeral(s, i.Interaction)
 
-	defer heist.mutex.Unlock()
+	heist.mutex.Unlock()
 	heistMessage(s, heist, heistMember, "join")
 }
 
