@@ -200,7 +200,7 @@ If the bot is already running, stop it before reinstalling.
 
 ### Setting administrator permissions
 
-In order to use adminstrative commands with the goblin bot, users must have an admistrative role assigned to them. When first installed, the Goblin bot assigns the following roles for admin users:`Admin`, `Admins`, `Administrator`, `Mod`, `Mods`, and `Moderator`. You can add additional roles or remove exising ones using the `/server-admin role add` command, or remove an existing role using the `/server-admin role remove` command. At any time, you can see the list of exisitng administrative roles using the `/server-admin role list` command.
+In order to use adminstrative commands with the goblin bot, users must have an admistrative role assigned to them. When first installed, the Goblin bot assigns the following roles for admin users:`Admin`, `Admins`, `Administrator`, `Mod`, `Mods`, and `Moderator`. You can add additional roles or remove exising ones using the `/server role add` command, or remove an existing role using the `/server role remove` command. At any time, you can see the list of exisitng administrative roles using the `/server role list` command.
 
 ### Setting up Goblin permissions in the game channels
 

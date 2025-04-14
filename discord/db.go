@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -28,7 +29,7 @@ func ReadServer() *Server {
 // WriteServer writes the server to the database
 func WriteServer(server *Server) error {
 	var filter bson.M
-	if server.ID.IsZero() {
+	if server.ID == primitive.NilObjectID {
 		filter = bson.M{}
 	} else {
 		filter = bson.M{"_id": server.ID}
@@ -36,11 +37,14 @@ func WriteServer(server *Server) error {
 	err := db.UpdateOrInsert(SERVER_COLLECTION, filter, server)
 	if err != nil {
 		slog.Error("unable to save server to the database",
+			slog.Any("filter", filter),
 			slog.Any("error", err),
 		)
 		return err
 	}
-	slog.Debug("save server to the database")
+	slog.Debug("save server to the database",
+		slog.Any("filter", filter),
+	)
 
 	return nil
 }
