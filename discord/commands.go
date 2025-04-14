@@ -213,6 +213,8 @@ func getAdminHelp() string {
 // serverAdmin handles server admin commands.
 func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server := GetServer()
+	server.mutex.Lock()
+	defer server.mutex.Unlock()
 	if server.HasOwners() && !server.IsOwner(i.Member.User.ID) && !server.IsAdmin(i.Member.User.ID) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You do not have permission to use this command."),

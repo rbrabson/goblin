@@ -2,6 +2,7 @@ package discord
 
 import (
 	"slices"
+	"sync"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -11,6 +12,7 @@ type Server struct {
 	ID     primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Owners []string           `json:"owners" bson:"owners"`
 	Admins []string           `json:"admins" bson:"admins"`
+	mutex  *sync.Mutex        `json:"-" bson:"-"`
 }
 
 // GetServer retrieves the bot from the database.
@@ -18,6 +20,8 @@ func GetServer() *Server {
 	server := ReadServer()
 	if server == nil {
 		server = NewServer()
+	} else {
+		server.mutex = &sync.Mutex{}
 	}
 	return server
 }
@@ -27,6 +31,7 @@ func NewServer() *Server {
 	server := &Server{
 		Owners: []string{},
 		Admins: []string{},
+		mutex:  &sync.Mutex{},
 	}
 	WriteServer(server)
 	return server
