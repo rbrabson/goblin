@@ -37,6 +37,13 @@ var (
 		},
 	}
 
+	// TODO: add some commands here
+	// - add owner
+	// - remove owner
+	// - add admin
+	// - remove admin
+	// - list owners
+	// - list admins
 	serverCommands = []*discordgo.ApplicationCommand{
 		{
 			Name:        "server-admin",
@@ -47,7 +54,6 @@ var (
 					Description: "Prepares the server to be shutdown.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
-
 				{
 					Name:        "status",
 					Description: "Returns the status of the server.",
@@ -160,6 +166,7 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // serverShutdown prepares the server to be serverShutdown.
 func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// TODO: make sure the user is an admin or owner
 	slog.Info("*** shutting down all bot services ***",
 		slog.String("guildID", i.GuildID),
 		slog.String("userID", i.Member.User.ID),
@@ -176,6 +183,7 @@ func serverShutdown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // serverStatus returns the status of the server.
 func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// TODO: make sure the user is an admin or owner
 	plugins := ListPlugin()
 	pluginStatus := make([]*discordgo.MessageEmbedField, 0, len(plugins))
 
