@@ -849,7 +849,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err == nil {
 		if member.HasRestriction(SHOP_BAN) {
 			resp := disgomsg.NewResponse(
-				disgomsg.WithContent("You have been banned from the shop."),
+				disgomsg.WithContent("You aren't able to purchase items from the shop."),
 			)
 			resp.SendEphemeral(s, i.Interaction)
 			return
