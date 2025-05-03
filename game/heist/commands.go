@@ -336,9 +336,14 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	account.Withdraw(heist.config.HeistCost)
 
+	heist.mutex.Lock()
 	heistMessage(s, heist, heist.Organizer, "plan")
+	heist.mutex.Unlock()
 
 	waitForHeistToStart(s, i, heist)
+
+	heist.mutex.Lock()
+	defer heist.mutex.Unlock()
 
 	if len(heist.Crew) < 2 {
 		heistMessage(s, heist, heist.Organizer, "cancel")
@@ -351,9 +356,11 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.String("guild", heist.GuildID),
 			slog.String("heist", heist.theme.Heist),
 		)
+
 		heistLock.Lock()
-		defer heistLock.Unlock()
 		delete(currentHeists, heist.GuildID)
+		heistLock.Unlock()
+
 		return
 	}
 
@@ -422,7 +429,9 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 			break
 		}
 		time.Sleep(timeToWait)
+		heist.mutex.Lock()
 		heistMessage(s, heist, heist.Organizer, "update")
+		heist.mutex.Unlock()
 	}
 }
 
@@ -519,6 +528,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	h := currentHeists[i.GuildID]
 	alertTimes[i.GuildID] = time.Now().Add(h.config.PoliceAlert)
 	heistLock.Unlock()
+
 	heistMessage(s, h, h.Organizer, "ended")
 }
 
@@ -533,13 +543,13 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp.SendEphemeral(s, i.Interaction)
 		return
 	}
-
 	heist.mutex.Lock()
+	defer heist.mutex.Unlock()
+
 	heistMember := getHeistMember(i.GuildID, i.Member.User.ID)
 	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	err := heist.AddCrewMember(heistMember)
 	if err != nil {
-		heist.mutex.Unlock()
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
@@ -559,7 +569,6 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	)
 	resp.SendEphemeral(s, i.Interaction)
 
-	heist.mutex.Unlock()
 	heistMessage(s, heist, heistMember, "join")
 }
 
@@ -757,12 +766,10 @@ func heistMessage(s *discordgo.Session, heist *Heist, member *HeistMember, actio
 		buttonDisabled = true
 	}
 
-	heist.mutex.Lock()
 	crew := make([]string, 0, len(heist.Crew))
 	for _, crewMember := range heist.Crew {
 		crew = append(crew, crewMember.guildMember.Name)
 	}
-	heist.mutex.Unlock()
 
 	caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
 	p := message.NewPrinter(language.AmericanEnglish)
@@ -833,6 +840,7 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heist := currentHeists[i.GuildID]
 	delete(currentHeists, i.GuildID)
 	heistLock.Unlock()
+
 	if heist == nil {
 		theme := GetTheme(i.GuildID)
 		resp := disgomsg.NewResponse(
@@ -842,6 +850,8 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	heist.mutex.Lock()
+	defer heist.mutex.Unlock()
 	heistMessage(s, heist, heist.Organizer, "cancel")
 
 	resp := disgomsg.NewResponse(
