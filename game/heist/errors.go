@@ -17,6 +17,7 @@ var (
 	ErrNoHeist             = errors.New("heist not found")
 	ErrNotAllowed          = errors.New("user is not allowed to perform command")
 	ErrThemeNotFound       = errors.New("theme not found")
+	ErrHeistAlreadyStarted = errors.New("heist has already started")
 )
 
 // ErrNotEnoughMembers is returned when there are not enough members to start a heist.

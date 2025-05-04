@@ -19,12 +19,22 @@ var (
 	heistLock     = sync.Mutex{}
 )
 
+type HeistState string
+
+const (
+	Planning   HeistState = "Planning"
+	InProgress HeistState = "In Progress"
+	Cancelled  HeistState = "Cancelled"
+	Completed  HeistState = "Completed"
+)
+
 // Heist is a heist that is being planned, is in progress, or has completed
 type Heist struct {
 	GuildID     string
 	Organizer   *HeistMember
 	Crew        []*HeistMember
 	StartTime   time.Time
+	State       HeistState
 	targets     []*Target
 	theme       *Theme
 	interaction *discordgo.InteractionCreate
@@ -53,6 +63,14 @@ type HeistMemberResult struct {
 	heist         *Heist
 }
 
+// GetHeist returns the current heist for the given guild ID. If there is no
+// heist, it returns nil.
+func GetHeist(guildID string) *Heist {
+	heistLock.Lock()
+	defer heistLock.Unlock()
+	return currentHeists[guildID]
+}
+
 // NewHeist creates a new heist if one is not already underway.
 func NewHeist(guildID string, memberID string) (*Heist, error) {
 	heistLock.Lock()
@@ -69,16 +87,19 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 		Organizer: organizer,
 		Crew:      make([]*HeistMember, 0, 10),
 		StartTime: time.Now(),
+		State:     Planning,
 		config:    GetConfig(guildID),
 		targets:   GetTargets(guildID, theme.Name),
 		theme:     theme,
 		mutex:     sync.Mutex{},
 	}
+	heist.mutex.Lock()
+	defer heist.mutex.Unlock()
 
 	err := heistChecks(heist, organizer)
 	if err != nil {
 		slog.Debug("heist checks failed",
-			slog.String("guilIDd", guildID),
+			slog.String("guildID", guildID),
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
 		)
@@ -90,7 +111,7 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 	currentHeists[guildID] = heist
 
 	slog.Debug("create heist",
-		slog.String("guilIDd", guildID),
+		slog.String("guildID", guildID),
 		slog.String("memberID", memberID),
 	)
 
@@ -99,6 +120,9 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 
 // addCrewMember adds a crew member to the heist
 func (h *Heist) AddCrewMember(member *HeistMember) error {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
 	err := heistChecks(h, member)
 	if err != nil {
 		return err
@@ -107,7 +131,7 @@ func (h *Heist) AddCrewMember(member *HeistMember) error {
 	member.heist = h
 	h.Crew = append(h.Crew, member)
 	slog.Debug("member joined heist",
-		slog.String("guilIDd", member.GuildID),
+		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)
 	return nil
@@ -115,12 +139,14 @@ func (h *Heist) AddCrewMember(member *HeistMember) error {
 
 // Start runs the heist and returns the results of the heist.
 func (h *Heist) Start() (*HeistResult, error) {
-	heistLock.Lock()
-	defer heistLock.Unlock()
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	h.State = InProgress
 
 	if len(h.Crew) < 2 {
 		slog.Error("not enough members to start heist",
-			slog.String("guilIDd", h.GuildID),
+			slog.String("guildID", h.GuildID),
 		)
 		return nil, ErrNotEnoughMembers{*h.theme}
 	}
@@ -216,19 +242,48 @@ func (h *Heist) Start() (*HeistResult, error) {
 }
 
 // End ends the current heist, allowing for the cleanup of the heist.
+// This is used when a heist is completed, and the results are being calculated.
 func (h *Heist) End() {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+	h.State = Completed
+
 	heistLock.Lock()
-	defer heistLock.Unlock()
 	delete(currentHeists, h.GuildID)
 	alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
+	heistLock.Unlock()
 
 	slog.Debug("heist ended",
 		slog.String("guildID", h.GuildID),
 	)
 }
 
+// Cancel cancels the current heist, allowing for the cleanup of the heist.
+// This is used when a heist is started, but the heist cannot be run for some reason.
+func (h *Heist) Cancel() {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+	h.State = Cancelled
+
+	heistLock.Lock()
+	delete(currentHeists, h.GuildID)
+	heistLock.Unlock()
+
+	slog.Debug("heist cancelled",
+		slog.String("guildID", h.GuildID),
+	)
+}
+
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.
 func heistChecks(h *Heist, member *HeistMember) error {
+	if h.State != Planning {
+		slog.Debug("heist already started or completed",
+			slog.String("guildID", h.GuildID),
+			slog.String("state", string(h.State)),
+		)
+		return ErrHeistAlreadyStarted
+	}
+
 	member.UpdateStatus()
 
 	if slices.ContainsFunc(h.Crew, func(m *HeistMember) bool {
