@@ -118,7 +118,7 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 	return heist, nil
 }
 
-// addCrewMember adds a crew member to the heist
+// AddCrewMember adds a crew member to the heist
 func (h *Heist) AddCrewMember(member *HeistMember) error {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
