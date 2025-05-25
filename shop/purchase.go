@@ -181,7 +181,8 @@ func (p *Purchase) HasExpired() bool {
 	case p.ExpiresOn.Before(time.Now().UTC()):
 		switch p.Item.Type {
 		case ROLE:
-			// Assign the role to the user. If the role can't be assigned, then undo the purchase of the role.
+			// Unassign the role to the user. If it can't be unassigned, log the error but don't mark it as expired
+			// so that it can be retried later.
 			err := guild.UnAssignRole(bot.Session, p.GuildID, p.MemberID, p.Item.Name)
 			if err != nil {
 				slog.Error("failed to unassign role",
@@ -333,11 +334,12 @@ func (p *Purchase) Update(autoRenew bool) error {
 // checkForExpiredPurchases checks once a day to see if any purchases that may be expired have expired.
 func checkForExpiredPurchases() {
 	for {
+		now := time.Now().UTC()
 		filter := bson.D{
 			{Key: "is_expired", Value: false},
 			{Key: "$and", Value: bson.A{
 				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$ne", Value: time.Time{}}}}},
-				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$lte", Value: time.Now().UTC()}}}},
+				bson.D{{Key: "expires_on", Value: bson.D{{Key: "$lte", Value: now}}}},
 			}},
 		}
 		purchases, _ := readAllPurchases(filter)
@@ -350,7 +352,7 @@ func checkForExpiredPurchases() {
 		}
 
 		// Wait until tomorrow to check again
-		year, month, day := time.Now().UTC().Date()
+		year, month, day := now.Date()
 		tomorrow := time.Date(year, month, day+1, 0, 0, 0, 0, time.UTC)
 		time.Sleep(time.Until(tomorrow))
 	}
