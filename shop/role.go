@@ -24,7 +24,7 @@ func GetRole(guildID string, name string) *Role {
 
 // NewRole creates a new role for the shop.
 func NewRole(guildID string, name string, description string, price int, duration string, autoRenewable bool) *Role {
-	item := newShopItem(guildID, name, description, ROLE, price, duration, autoRenewable)
+	item := newShopItem(guildID, name, description, ROLE, price, duration, autoRenewable, 0)
 	role := (*Role)(item)
 	return role
 }

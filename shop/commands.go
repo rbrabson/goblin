@@ -100,6 +100,12 @@ var (
 						// 			Description: "The description of the custom command.",
 						// 			Required:    false,
 						// 		},
+						// 		{
+						// 			Type:        discordgo.ApplicationCommandOptionInteger,
+						// 			Name:        "max-purchases",
+						// 			Description: "The maximum number of purchases of the custom command. Defaults to 1.",
+						// 			Required:    false,
+						// 		},
 						// 	},
 						// },
 					},

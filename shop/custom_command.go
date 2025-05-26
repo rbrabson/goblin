@@ -29,7 +29,7 @@ func NewCustomCommand(guildID string, name string, description string, price int
 	if description == "" {
 		description = fmt.Sprintf("Custom command `%s`", name)
 	}
-	item := newShopItem(guildID, name, description, CUSTOM_COMMAND, price, "", false)
+	item := newShopItem(guildID, name, description, CUSTOM_COMMAND, price, "", false, 1)
 	command := (*CustomCommand)(item)
 	return command
 }

@@ -88,17 +88,17 @@ func setup(t *testing.T) {
 	var err error
 
 	testShop = GetShop(GUILD_ID)
-	item := newShopItem(GUILD_ID, "test_item_1", "description of test Item 1", "role", 100, "", false)
+	item := newShopItem(GUILD_ID, "test_item_1", "description of test Item 1", "role", 100, "", false, 0)
 	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)
 	}
-	item = newShopItem(GUILD_ID, "test_item_2", "description of test_item_2", "role", 100, "", false)
+	item = newShopItem(GUILD_ID, "test_item_2", "description of test_item_2", "role", 100, "", false, 0)
 	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)
 	}
-	item = newShopItem(GUILD_ID, "test_item_3", "description of test_item_3", "role", 100, "", false)
+	item = newShopItem(GUILD_ID, "test_item_3", "description of test_item_3", "role", 100, "", false, 0)
 	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)
