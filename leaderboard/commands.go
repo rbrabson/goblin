@@ -2,6 +2,8 @@ package leaderboard
 
 import (
 	"fmt"
+	"github.com/olekukonko/tablewriter/tw"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -91,7 +93,11 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -99,7 +105,11 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You do not have permission to use this command."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -117,7 +127,11 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -146,7 +160,11 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Invalid command: " + options[0].Name),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 	}
 }
 
@@ -180,7 +198,11 @@ func setLeaderboardChannel(s *discordgo.Session, i *discordgo.InteractionCreate)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Channel ID for the monthly leaderboard set to %s.", channelID)),
 	)
-	resp.Send(s, i.Interaction)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("failed to send the response",
+			slog.Any("error", err),
+		)
+	}
 }
 
 // getLeaderboardInfo returns the leaderboard configuration for the server.
@@ -189,7 +211,11 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Channel ID for the monthly leaderboard is %s.", lb.ChannelID)),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("failed to send the response",
+			slog.Any("error", err),
+		)
+	}
 }
 
 // sendLeaderboard is a utility function that sends an economy leaderboard to Discord.
@@ -200,13 +226,18 @@ func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title
 	p := message.NewPrinter(language.AmericanEnglish)
 	embeds := formatAccounts(p, string(title), accounts)
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: embeds,
 			Flags:  discordgo.MessageFlagsEphemeral,
 		},
 	})
+	if err != nil {
+		slog.Error("failed to send the response",
+			slog.Any("error", err),
+		)
+	}
 }
 
 // rank returns the rank of the member in the leaderboard.
@@ -221,7 +252,11 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank)),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("failed to send the response",
+			slog.Any("error", err),
+		)
+	}
 }
 
 // formatAccounts formats the leaderboard to be sent to a Discord server
@@ -284,19 +319,33 @@ func newFormatAccounts(p *message.Printer, title string, accounts []*bank.Accoun
 // formatAccounts formats the leaderboard to be sent to a Discord server
 func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
 	var tableBuffer strings.Builder
-	table := tablewriter.NewWriter(&tableBuffer)
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
-	table.SetTablePadding("\t")
-	table.SetNoWhiteSpace(true)
-	table.SetHeader([]string{"#", "Name", "Balance"})
+	table := tablewriter.NewTable(&tableBuffer,
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
+				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
+			},
+			Header: tw.CellConfig{
+				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
+				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
+			},
+		}),
+	)
+
+	//table.SetAutoWrapText(false) // done
+	//table.SetAutoFormatHeaders(true) // maybe?
+	//table.SetHeaderAlignment(tablewriter.ALIGN_LEFT) // done
+	//table.SetAlignment(tablewriter.ALIGN_LEFT) // done
+	//table.SetCenterSeparator("") // maybe?
+	//table.SetColumnSeparator("") // maybe?
+	//table.SetRowSeparator("") // maybe?
+	//table.SetHeaderLine(false) // maybe?
+	//table.SetBorder(false) // maybe?
+	//table.SetTablePadding("\t") // not sure
+	//table.SetNoWhiteSpace(true) // not sure
+	table.Header([]string{"#", "Name", "Balance"})
 
 	// A bit of a hack, but good enough....
 	for i, account := range accounts {
@@ -313,9 +362,17 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 			balance = account.MonthlyBalance
 		}
 		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
-		table.Append(data)
+		if err := table.Append(data); err != nil {
+			slog.Error("failed to append data to the table",
+				slog.Any("error", err),
+			)
+		}
 	}
-	table.Render()
+	if err := table.Render(); err != nil {
+		slog.Error("failed to render the table",
+			slog.Any("error", err),
+		)
+	}
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Type:  discordgo.EmbedTypeRich,

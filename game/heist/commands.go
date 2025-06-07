@@ -2,6 +2,7 @@ package heist
 
 import (
 	"fmt"
+	"github.com/olekukonko/tablewriter/tw"
 	"log/slog"
 	"strings"
 	"time"
@@ -531,42 +532,72 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 			)
 		}
 
-		// Render the results into a table and returnt he results.
 		var tableBuffer strings.Builder
-		table := tablewriter.NewWriter(&tableBuffer)
-		table.SetBorder(false)
-		table.SetAutoWrapText(false)
-		table.SetAutoFormatHeaders(true)
-		table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-		table.SetAlignment(tablewriter.ALIGN_LEFT)
-		table.SetCenterSeparator("")
-		table.SetColumnSeparator("")
-		table.SetRowSeparator("")
-		table.SetHeaderLine(false)
-		table.SetBorder(false)
-		table.SetTablePadding("\t")
-		table.SetNoWhiteSpace(true)
-		table.SetHeader([]string{"Player", "Loot", "Bonus", "Total"})
+		table := tablewriter.NewTable(&tableBuffer,
+			tablewriter.WithConfig(tablewriter.Config{
+				Row: tw.CellConfig{
+					Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
+					Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
+					Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
+				},
+				Header: tw.CellConfig{
+					Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
+					Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
+					Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
+				},
+			}),
+		)
+
+		// Render the results into a table and returnt he results.
+		//var tableBuffer strings.Builder
+		//table := tablewriter.NewWriter(&tableBuffer)
+		//table.SetBorder(false)
+		//table.SetAutoWrapText(false)
+		//table.SetAutoFormatHeaders(true)
+		//table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+		//table.SetAlignment(tablewriter.ALIGN_LEFT)
+		//table.SetCenterSeparator("")
+		//table.SetColumnSeparator("")
+		//table.SetRowSeparator("")
+		//table.SetHeaderLine(false)
+		//table.SetBorder(false)
+		//table.SetTablePadding("\t")
+		//table.SetNoWhiteSpace(true)
+		numLines := 0
+		table.Header([]string{"Player", "Loot", "Bonus", "Total"})
 		for _, result := range res.AllResults {
 			guildMember := result.Player.guildMember
 			if result.Status == FREE || result.Status == APPREHENDED {
 				data := []string{guildMember.Name, p.Sprintf("%d", result.StolenCredits), p.Sprintf("%d", result.BonusCredits), p.Sprintf("%d", result.StolenCredits+result.BonusCredits)}
-				table.Append(data)
-				if table.NumLines() >= MAX_WINNINGS_PER_PAGE {
-					table.Render()
+				if err := table.Append(data); err != nil {
+					slog.Error("failed to append to table",
+						slog.Any("error", err),
+					)
+				}
+				numLines++
+				if numLines >= MAX_WINNINGS_PER_PAGE {
+					if err := table.Render(); err != nil {
+						slog.Error("failed to render table",
+							slog.Any("error", err),
+						)
+					}
 					if _, err := s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"\n```"); err != nil {
 						slog.Error("failed to send message",
 							slog.String("channelID", i.ChannelID),
 							slog.Any("error", err),
 						)
 					}
-					table.ClearRows()
+					table.Reset()
 					tableBuffer.Reset()
 				}
 			}
 		}
-		if table.NumLines() > 0 {
-			table.Render()
+		if numLines > 0 {
+			if err := table.Render(); err != nil {
+				slog.Error("failed to render table",
+					slog.Any("error", err),
+				)
+			}
 			if _, err := s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"```"); err != nil {
 				slog.Error("failed to send message",
 					slog.String("channelID", i.ChannelID),
@@ -1040,25 +1071,49 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Lets return the data in an Ascii table. Ideally, it would be using a Discord embed, but unfortunately
 	// Discord only puts three columns per row, which isn't enough for our purposes.
 	var tableBuffer strings.Builder
-	table := tablewriter.NewWriter(&tableBuffer)
-	table.SetBorder(false)
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
-	table.SetTablePadding("\t")
-	table.SetNoWhiteSpace(true)
-	table.SetHeader([]string{"ID", "Max Crew", theme.Vault, "Max " + theme.Vault, "Success Rate"})
+	table := tablewriter.NewTable(&tableBuffer,
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
+				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
+			},
+			Header: tw.CellConfig{
+				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
+				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
+			},
+		}),
+	)
+
+	//var tableBuffer strings.Builder
+	//table := tablewriter.NewWriter(&tableBuffer)
+	//table.SetBorder(false)
+	//table.SetAutoWrapText(false)
+	//table.SetAutoFormatHeaders(true)
+	//table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	//table.SetAlignment(tablewriter.ALIGN_LEFT)
+	//table.SetCenterSeparator("")
+	//table.SetColumnSeparator("")
+	//table.SetRowSeparator("")
+	//table.SetHeaderLine(false)
+	//table.SetBorder(false)
+	//table.SetTablePadding("\t")
+	//table.SetNoWhiteSpace(true)
+	table.Header([]string{"ID", "Max Crew", theme.Vault, "Max " + theme.Vault, "Success Rate"})
 	for _, target := range targets {
 		data := []string{target.Name, fmt.Sprintf("%d", target.CrewSize), fmt.Sprintf("%d", target.Vault), fmt.Sprintf("%d", target.VaultMax), fmt.Sprintf("%.2f", target.Success)}
-		table.Append(data)
+		if err := table.Append(data); err != nil {
+			slog.Error("failed to append the data to the table",
+				slog.Any("error", err),
+			)
+		}
 	}
-	table.Render()
+	if err := table.Render(); err != nil {
+		slog.Error("failed to render the table",
+			slog.Any("error", err),
+		)
+	}
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent("```\n" + tableBuffer.String() + "\n```"),
