@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	GUILD_ID     = "12345"
-	ORGANIZER_ID = "12345"
+	GuildId     = "12345"
+	OrganizerId = "12345"
 )
 
 func init() {
@@ -32,12 +32,12 @@ func TestNewHeist(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	organizer := guild.GetMember(GUILD_ID, ORGANIZER_ID)
+	organizer := guild.GetMember(GuildId, OrganizerId)
 	if organizer == nil {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(GUILD_ID, ORGANIZER_ID)
+	heist, err := NewHeist(GuildId, OrganizerId)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -49,11 +49,11 @@ func TestNewHeist(t *testing.T) {
 	}
 	defer heist.End()
 
-	if heist.GuildID != GUILD_ID {
-		t.Errorf("Expected %s, got %s", GUILD_ID, heist.GuildID)
+	if heist.GuildID != GuildId {
+		t.Errorf("Expected %s, got %s", GuildId, heist.GuildID)
 	}
-	if heist.Organizer.MemberID != ORGANIZER_ID {
-		t.Errorf("Expected %s, got %s", ORGANIZER_ID, heist.Organizer.MemberID)
+	if heist.Organizer.MemberID != OrganizerId {
+		t.Errorf("Expected %s, got %s", OrganizerId, heist.Organizer.MemberID)
 	}
 	if len(heist.Crew) != 1 {
 		t.Errorf("Expected 1, got %d", len(heist.Crew))
@@ -67,12 +67,12 @@ func TestHeistChecks(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	organizer := guild.GetMember(GUILD_ID, ORGANIZER_ID)
+	organizer := guild.GetMember(GuildId, OrganizerId)
 	if organizer == nil {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(GUILD_ID, ORGANIZER_ID)
+	heist, err := NewHeist(GuildId, OrganizerId)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -84,14 +84,20 @@ func TestHeistChecks(t *testing.T) {
 	}
 	defer heist.End()
 
-	member := getHeistMember(GUILD_ID, "abcdef")
+	member := getHeistMember(GuildId, "abcdef")
 	member.guildMember.SetName("Crew Member 1", "", "")
 	err = heistChecks(heist, member)
 	if err != nil {
 		t.Errorf("Got %s", err.Error())
 		return
 	}
-	heist.AddCrewMember(member)
+	if err := heist.AddCrewMember(member); err != nil {
+		slog.Error("error adding crew member to heist",
+			slog.String("guildID", heist.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.Any("err", err),
+		)
+	}
 	err = heistChecks(heist, member)
 	if err == nil {
 		t.Errorf("Expected non-nil, got nil error")
@@ -103,12 +109,12 @@ func TestStartHeist(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	organizer := guild.GetMember(GUILD_ID, ORGANIZER_ID).SetName("Organizer", "", "")
+	organizer := guild.GetMember(GuildId, OrganizerId).SetName("Organizer", "", "")
 	if organizer == nil {
 		t.Errorf("Expected organizer, got nil")
 		return
 	}
-	heist, err := NewHeist(GUILD_ID, ORGANIZER_ID)
+	heist, err := NewHeist(GuildId, OrganizerId)
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
 		return
@@ -119,9 +125,15 @@ func TestStartHeist(t *testing.T) {
 	}
 	defer heist.End()
 
-	member := getHeistMember(GUILD_ID, "abcdef")
+	member := getHeistMember(GuildId, "abcdef")
 	member.guildMember.SetName("Crew Member 1", "", "")
-	heist.AddCrewMember(member)
+	if err := heist.AddCrewMember(member); err != nil {
+		slog.Error("error adding crew member to heist",
+			slog.String("guildID", heist.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.Any("err", err),
+		)
+	}
 
 	res, err := heist.Start()
 	if err != nil {
@@ -136,12 +148,40 @@ func TestStartHeist(t *testing.T) {
 func testSetup() {}
 
 func testTeardown() {
-	db.DeleteMany(guild.MEMBER_COLLECTION, bson.M{"guild_id": GUILD_ID})
-	db.DeleteMany(bank.ACCOUNT_COLLECTION, bson.M{"guild_id": GUILD_ID})
-	db.DeleteMany(bank.BANK_COLLECTION, bson.M{"guild_id": GUILD_ID})
-	db.DeleteMany(CONFIG_COLLECTION, bson.M{"guild_id": GUILD_ID})
-	db.DeleteMany(HEIST_MEMBER_COLLECTION, bson.M{"guild_id": GUILD_ID})
-	db.DeleteMany(TARGET_COLLECTION, bson.M{"guild_id": GUILD_ID})
-	db.DeleteMany(THEME_COLLECTION, bson.M{"guild_id": GUILD_ID})
-	delete(alertTimes, GUILD_ID)
+	if err := db.DeleteMany(guild.MemberCollection, bson.M{"guild_id": GuildId}); err != nil {
+		slog.Error("error deleting all members",
+			slog.Any("err", err),
+		)
+	}
+	if err := db.DeleteMany(bank.AccountCollection, bson.M{"guild_id": GuildId}); err != nil {
+		slog.Error("error deleting all account",
+			slog.Any("err", err),
+		)
+	}
+	if err := db.DeleteMany(bank.BankCollection, bson.M{"guild_id": GuildId}); err != nil {
+		slog.Error("error deleting all banks",
+			slog.Any("err", err),
+		)
+	}
+	if err := db.DeleteMany(ConfigCollection, bson.M{"guild_id": GuildId}); err != nil {
+		slog.Error("error deleting all configs",
+			slog.Any("err", err),
+		)
+	}
+	if err := db.DeleteMany(HeistMemberCollection, bson.M{"guild_id": GuildId}); err != nil {
+		slog.Error("error deleting all heist members",
+			slog.Any("err", err),
+		)
+	}
+	if err := db.DeleteMany(TargetCollection, bson.M{"guild_id": GuildId}); err != nil {
+		slog.Error("error deleting all targets",
+			slog.Any("err", err),
+		)
+	}
+	if err := db.DeleteMany(ThemeCollection, bson.M{"guild_id": GuildId}); err != nil {
+		slog.Error("error deleting all themes",
+			slog.Any("err", err),
+		)
+	}
+	delete(alertTimes, GuildId)
 }

@@ -2,6 +2,7 @@ package leaderboard
 
 import (
 	"log"
+	"log/slog"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -22,7 +23,12 @@ func TestNewLeaderboard(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -38,7 +44,12 @@ func TestGetLeaderboards(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -61,7 +72,12 @@ func TestGetLeaderboard(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -84,7 +100,12 @@ func TestSetChannel(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -110,19 +131,35 @@ func TestGetCurrentLeaderboard(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	banks := make([]*bank.Bank, 0, 1)
 	defer func() {
 		for _, b := range banks {
-			db.Delete(bank.BANK_COLLECTION, bson.M{"guild_id": b.GuildID})
+			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
+				slog.Error("Error deleting bank",
+					slog.String("guildID", b.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	bankAccounts := make([]*bank.Account, 0, 1)
 	defer func() {
 		for _, account := range bankAccounts {
-			db.Delete(bank.ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID})
+			if err := db.Delete(bank.AccountCollection, bson.M{"guild_id": account.GuildID, "account_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting bank account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -165,19 +202,35 @@ func TestGetMonthlyLeaderboard(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	banks := make([]*bank.Bank, 0, 1)
 	defer func() {
 		for _, b := range banks {
-			db.Delete(bank.BANK_COLLECTION, bson.M{"guild_id": b.GuildID})
+			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
+				slog.Error("Error deleting bank",
+					slog.String("guildID", b.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	bankAccounts := make([]*bank.Account, 0, 1)
 	defer func() {
 		for _, account := range bankAccounts {
-			db.Delete(bank.ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID})
+			if err := db.Delete(bank.AccountCollection, bson.M{"guild_id": account.GuildID, "account_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting bank account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -219,19 +272,35 @@ func TestGetLifetimeLeaderboard(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	banks := make([]*bank.Bank, 0, 1)
 	defer func() {
 		for _, b := range banks {
-			db.Delete(bank.BANK_COLLECTION, bson.M{"guild_id": b.GuildID})
+			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
+				slog.Error("Error deleting bank",
+					slog.String("guildID", b.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	bankAccounts := make([]*bank.Account, 0, 1)
 	defer func() {
 		for _, account := range bankAccounts {
-			db.Delete(bank.ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID})
+			if err := db.Delete(bank.AccountCollection, bson.M{"guild_id": account.GuildID, "account_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting bank account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -274,19 +343,35 @@ func TestGetCurrentRanking(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	banks := make([]*bank.Bank, 0, 1)
 	defer func() {
 		for _, b := range banks {
-			db.Delete(bank.BANK_COLLECTION, bson.M{"guild_id": b.GuildID})
+			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
+				slog.Error("Error deleting bank",
+					slog.String("guildID", b.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	bankAccounts := make([]*bank.Account, 0, 1)
 	defer func() {
 		for _, account := range bankAccounts {
-			db.Delete(bank.ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID})
+			if err := db.Delete(bank.AccountCollection, bson.M{"guild_id": account.GuildID, "account_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting bank account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -324,19 +409,35 @@ func TestGetMonthlyRanking(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	banks := make([]*bank.Bank, 0, 1)
 	defer func() {
 		for _, b := range banks {
-			db.Delete(bank.BANK_COLLECTION, bson.M{"guild_id": b.GuildID})
+			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
+				slog.Error("Error deleting bank",
+					slog.String("guildID", b.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	bankAccounts := make([]*bank.Account, 0, 1)
 	defer func() {
 		for _, account := range bankAccounts {
-			db.Delete(bank.ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID})
+			if err := db.Delete(bank.AccountCollection, bson.M{"guild_id": account.GuildID, "account_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting bank account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -374,19 +475,35 @@ func TestGetLifetimeRanking(t *testing.T) {
 	leaderboards := make([]*Leaderboard, 0, 1)
 	defer func() {
 		for _, leaderboard := range leaderboards {
-			db.Delete(LEADERBOARD_COLLECTION, bson.M{"guild_id": leaderboard.GuildID})
+			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
+				slog.Error("Error deleting leaderboard",
+					slog.String("guildID", leaderboard.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	banks := make([]*bank.Bank, 0, 1)
 	defer func() {
 		for _, b := range banks {
-			db.Delete(bank.BANK_COLLECTION, bson.M{"guild_id": b.GuildID})
+			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
+				slog.Error("Error deleting bank",
+					slog.String("guildID", b.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	bankAccounts := make([]*bank.Account, 0, 1)
 	defer func() {
 		for _, account := range bankAccounts {
-			db.Delete(bank.ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID})
+			if err := db.Delete(bank.AccountCollection, bson.M{"guild_id": account.GuildID, "account_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting bank account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 

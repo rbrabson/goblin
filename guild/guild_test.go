@@ -31,7 +31,13 @@ func TestGetMember(t *testing.T) {
 	members := make([]*Member, 0, 1)
 	defer func() {
 		for _, member := range members {
-			db.Delete(MEMBER_COLLECTION, bson.M{"guild_id": member.GuildID, "member_id": member.MemberID})
+			if err := db.Delete(MemberCollection, bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}); err != nil {
+				slog.Error("Error deleting guild member",
+					slog.String("guildID", member.GuildID),
+					slog.String("memberID", member.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 

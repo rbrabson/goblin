@@ -63,11 +63,34 @@ func TestGetRace(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
-	db.Delete(RACE_MEMBER_COLLECTION, filter)
+	if err := db.Delete(RaceMemberCollection, filter); err != nil {
+		slog.Error("Error deleting race member",
+			slog.String("guildID", "123"),
+			slog.String("memberID", "456"),
+			slog.Any("error", err),
+		)
+	}
 	filter = bson.M{"guild_id": "123", "member_id": "789"}
-	db.Delete(RACE_MEMBER_COLLECTION, filter)
+	if err := db.Delete(RaceMemberCollection, filter); err != nil {
+		slog.Error("Error deleting race member",
+			slog.String("guildID", "123"),
+			slog.String("memberID", "789"),
+			slog.Any("error", err),
+		)
+	}
 	filter = bson.M{"guild_id": "123", "theme": "clash"}
-	db.DeleteMany(RACER_COLLECTION, filter)
+	if err := db.DeleteMany(RacerCollection, filter); err != nil {
+		slog.Error("Error deleting race member",
+			slog.String("guildID", "123"),
+			slog.String("memberID", "789"),
+			slog.Any("error", err),
+		)
+	}
 	filter = bson.M{"guild_id": "123"}
-	db.Delete(RACE_CONFIG_COLLECTION, filter)
+	if err := db.Delete(RaceConfigCollection, filter); err != nil {
+		slog.Error("Error deleting race config",
+			slog.String("guildID", "123"),
+			slog.Any("error", err),
+		)
+	}
 }

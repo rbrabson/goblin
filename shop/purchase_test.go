@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	MEMBER_ID = "67890"
+	MemberId = "67890"
 )
 
 func init() {
@@ -22,7 +22,7 @@ func init() {
 	}
 	db = mongo.NewDatabase()
 	bank.SetDB(db)
-	testShop = GetShop(GUILD_ID)
+	testShop = GetShop(GuildId)
 }
 
 func TestNewPurchase(t *testing.T) {
@@ -30,7 +30,7 @@ func TestNewPurchase(t *testing.T) {
 	defer teardown()
 
 	item := testShop.GetShopItem("test_item_1", "role")
-	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item, PURCHASED, false)
+	purchase, err := PurchaseItem(GuildId, MemberId, item, PURCHASED, false)
 	if err != nil {
 		t.Errorf("NewPurchase failed to create a new purchase, error: %s", err)
 	}
@@ -42,7 +42,7 @@ func TestGetAllPurchases(t *testing.T) {
 	defer teardown()
 
 	item1 := testShop.GetShopItem("test_item_1", "role")
-	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item1, PURCHASED, false)
+	purchase, err := PurchaseItem(GuildId, MemberId, item1, PURCHASED, false)
 	if err != nil {
 		t.Errorf("NewPurchase failed to create a new purchase, error: %s", err)
 		return
@@ -53,7 +53,7 @@ func TestGetAllPurchases(t *testing.T) {
 	)
 
 	item2 := testShop.GetShopItem("test_item_2", "role")
-	purchase, err = PurchaseItem(GUILD_ID, MEMBER_ID, item2, PURCHASED, false)
+	purchase, err = PurchaseItem(GuildId, MemberId, item2, PURCHASED, false)
 	if err != nil {
 		t.Errorf("NewPurchase failed to create a new purchase, error: %s", err)
 		return
@@ -63,7 +63,7 @@ func TestGetAllPurchases(t *testing.T) {
 		slog.Any("purchases", purchases),
 	)
 
-	locPurchases := GetAllPurchases(GUILD_ID, MEMBER_ID)
+	locPurchases := GetAllPurchases(GuildId, MemberId)
 	slog.Info("Purchases from DB", slog.Any("purcahses", locPurchases))
 	if len(locPurchases) != 2 {
 		t.Errorf("GetAllPurchases failed to return all purchases, expected 2, got %d", len(locPurchases))
@@ -77,7 +77,7 @@ func TestUpdatePurchase(t *testing.T) {
 	defer teardown()
 
 	item := testShop.GetShopItem("test_item_1", "role")
-	purchase, err := PurchaseItem(GUILD_ID, MEMBER_ID, item, PURCHASED, false)
+	purchase, err := PurchaseItem(GuildId, MemberId, item, PURCHASED, false)
 	if err != nil {
 		t.Errorf("NewPurchase failed to create a new purchase, error: %s", err)
 		return

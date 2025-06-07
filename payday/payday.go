@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	DEFAULT_PAYDAY_AMOUNT    = 5000
-	DEFAULT_PAYDAY_FREQUENCY = 23 * time.Hour
+	DefaultPaydayAmount    = 5000
+	DefaultPaydayFrequency = 23 * time.Hour
 )
 
 // Payday is the daily payment for members of a guild (server).
@@ -114,8 +114,8 @@ func readPaydayFromFile(guildID string) *Payday {
 func getDefaultPayday(guildID string) *Payday {
 	payday := &Payday{
 		GuildID:         guildID,
-		Amount:          DEFAULT_PAYDAY_AMOUNT,
-		PaydayFrequency: DEFAULT_PAYDAY_FREQUENCY,
+		Amount:          DefaultPaydayAmount,
+		PaydayFrequency: DefaultPaydayFrequency,
 	}
 	if err := writePayday(payday); err != nil {
 		slog.Error("error writing payday",

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	CUSTOM_COMMAND = "custom_command"
+	CustomCommandCollection = "custom_command"
 )
 
 // CustomCommand represents a custom command item in the shop.
@@ -17,7 +17,7 @@ type CustomCommand ShopItem
 
 // GetCustomCommand retrieves a custom command from the shop by its name for a specific guild.
 func GetCustomCommand(guildID string, name string) *CustomCommand {
-	item := getShopItem(guildID, name, CUSTOM_COMMAND)
+	item := getShopItem(guildID, name, CustomCommandCollection)
 	command := CustomCommand(*item)
 	return &command
 }
@@ -27,7 +27,7 @@ func NewCustomCommand(guildID string, name string, description string, price int
 	if description == "" {
 		description = fmt.Sprintf("Custom command `%s`", name)
 	}
-	item := newShopItem(guildID, name, description, CUSTOM_COMMAND, price, "", false, 1)
+	item := newShopItem(guildID, name, description, CustomCommandCollection, price, "", false, 1)
 	command := (*CustomCommand)(item)
 	return command
 }
@@ -35,7 +35,7 @@ func NewCustomCommand(guildID string, name string, description string, price int
 // Update updates the command's properties in the shop.
 func (cc *CustomCommand) Update(name string, description string, price int, duration string, autoRenewable bool) error {
 	item := (*ShopItem)(cc)
-	return item.update(name, description, CUSTOM_COMMAND, price, duration, autoRenewable)
+	return item.update(name, description, CustomCommandCollection, price, duration, autoRenewable)
 }
 
 // Purchase allows a member to purchase the command from the shop.
@@ -107,7 +107,7 @@ func (cc *CustomCommand) RemoveFromShop(s *Shop) error {
 
 // customCommandCreateChecks performs checkst to see if a custom command can be added to the shop.
 func customCommandCreateChecks(guildID string, commandName string) error {
-	return createChecks(guildID, commandName, CUSTOM_COMMAND)
+	return createChecks(guildID, commandName, CustomCommandCollection)
 }
 
 // customCommandPurchaseChecks performs checks to see if a role can be purchased.
@@ -123,7 +123,7 @@ func customCommandPurchaseChecks(guildID string, memberID string, commandName st
 	}
 
 	// Make common checks for all purchases
-	if err := purchaseChecks(guildID, memberID, CUSTOM_COMMAND, commandName); err != nil {
+	if err := purchaseChecks(guildID, memberID, CustomCommandCollection, commandName); err != nil {
 		return err
 	}
 

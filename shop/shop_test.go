@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	GUILD_ID = "12345"
+	GuildId = "12345"
 )
 
 var (
@@ -26,14 +26,14 @@ func init() {
 		os.Exit(1)
 	}
 	db = mongo.NewDatabase()
-	testShop = GetShop(GUILD_ID)
+	testShop = GetShop(GuildId)
 }
 
 func TestGetShopItem(t *testing.T) {
 	setup(t)
 	defer teardown()
 
-	item := getShopItem(GUILD_ID, "test_item_1", "role")
+	item := getShopItem(GuildId, "test_item_1", "role")
 	if item == nil {
 		t.Error("GetShopItem failed to returned n existing item")
 	}
@@ -88,18 +88,18 @@ func TestUpdateShopItem(t *testing.T) {
 func setup(t *testing.T) {
 	var err error
 
-	testShop = GetShop(GUILD_ID)
-	item := newShopItem(GUILD_ID, "test_item_1", "description of test Item 1", "role", 100, "", false, 0)
+	testShop = GetShop(GuildId)
+	item := newShopItem(GuildId, "test_item_1", "description of test Item 1", "role", 100, "", false, 0)
 	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)
 	}
-	item = newShopItem(GUILD_ID, "test_item_2", "description of test_item_2", "role", 100, "", false, 0)
+	item = newShopItem(GuildId, "test_item_2", "description of test_item_2", "role", 100, "", false, 0)
 	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)
 	}
-	item = newShopItem(GUILD_ID, "test_item_3", "description of test_item_3", "role", 100, "", false, 0)
+	item = newShopItem(GuildId, "test_item_3", "description of test_item_3", "role", 100, "", false, 0)
 	err = item.addToShop(testShop)
 	if err != nil {
 		t.Fatal(err)

@@ -25,13 +25,24 @@ func TestGetAccount(t *testing.T) {
 	paydays := make([]*Payday, 0, 1)
 	defer func() {
 		for _, payday := range paydays {
-			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			db.Delete(PAYDAY_ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID})
+			if err := db.Delete(PaydayAccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting payday account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -54,13 +65,24 @@ func TestNewAccount(t *testing.T) {
 	paydays := make([]*Payday, 0, 1)
 	defer func() {
 		for _, payday := range paydays {
-			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			db.Delete(PAYDAY_ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID})
+			if err := db.Delete(PaydayAccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting payday account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -92,13 +114,24 @@ func TestSetNextPayday(t *testing.T) {
 	paydays := make([]*Payday, 0, 1)
 	defer func() {
 		for _, payday := range paydays {
-			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			db.Delete(PAYDAY_ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID})
+			if err := db.Delete(PaydayAccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting payday account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -133,13 +166,24 @@ func TestGetNextPayday(t *testing.T) {
 	paydays := make([]*Payday, 0, 1)
 	defer func() {
 		for _, payday := range paydays {
-			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			db.Delete(PAYDAY_ACCOUNT_COLLECTION, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID})
+			if err := db.Delete(PaydayAccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting payday account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 

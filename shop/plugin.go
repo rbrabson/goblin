@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	PLUGIN_NAME        = "shop"
-	PURCHASES_PER_PAGE = 5
+	PluginName       = "shop"
+	PurchasesPerPage = 5
 )
 
 var (
@@ -62,14 +62,9 @@ func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 				RemoveComponentHandler: bot.RemoveComponentHandler,
 			},
 		),
-		page.WithItemsPerPage(PURCHASES_PER_PAGE),
+		page.WithItemsPerPage(PurchasesPerPage),
 	)
 	go checkForExpiredPurchases()
-}
-
-// SetDB sets the database for testing purposes
-func SetDB(d *mongo.MongoDB) {
-	db = d
 }
 
 // GetCommands returns the commands for the banking system
@@ -92,7 +87,7 @@ func (plugin *Plugin) GetComponentHandlers() map[string]func(*discordgo.Session,
 
 // GetName returns the name of the banking system plugin
 func (plugin *Plugin) GetName() string {
-	return PLUGIN_NAME
+	return PluginName
 }
 
 // GetHelp returns the member help for the banking system
@@ -105,7 +100,7 @@ func (plugin *Plugin) GetHelp() []string {
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
 	help = append([]string{title}, help...)
 
 	return help
@@ -121,7 +116,7 @@ func (plugin *Plugin) GetAdminHelp() []string {
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
 	help = append([]string{title}, help...)
 
 	return help

@@ -111,7 +111,12 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
 		return
 	}
 
@@ -119,7 +124,12 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You do not have permission to use this command."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
 		return
 	}
 
@@ -148,7 +158,12 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
 		return
 	}
 
@@ -178,7 +193,12 @@ func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(content),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("error", err.Error()),
+		)
+	}
 }
 
 // setAccountBalance sets the balance of the account for the member of the guild to the specified amount
@@ -202,14 +222,25 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("An account with that ID does not exist."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
 		return
 	}
 
 	m := guild.GetMember(i.GuildID, member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	account := GetAccount(i.GuildID, id)
 
-	account.SetBalance(amount)
+	if err := account.SetBalance(amount); err != nil {
+		slog.Error("error setting bank account balance",
+			slog.String("guildID", i.GuildID),
+			slog.Int("amount", amount),
+			slog.Any("error", err),
+		)
+	}
 
 	slog.Debug("/bank-admin set account",
 		slog.String("guildID", i.GuildID),
@@ -221,7 +252,12 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Account balance for %s was set to %d", m.Name, account.CurrentBalance)),
 	)
-	resp.Send(s, i.Interaction)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("error", err.Error()),
+		)
+	}
 }
 
 // setDefaultBalance sets the default balance for bank for the guild (server).
@@ -248,7 +284,12 @@ func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank default balance was set to %d", bank.DefaultBalance)),
 	)
-	resp.Send(s, i.Interaction)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("error", err.Error()),
+		)
+	}
 }
 
 // setBankName sets the name of the bank for the guild (server).
@@ -275,7 +316,12 @@ func setBankName(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank name was set to %s", bank.Name)),
 	)
-	resp.Send(s, i.Interaction)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("error", err.Error()),
+		)
+	}
 }
 
 // setBankCurrency sets the name of the currency used by the bank for the guild (server).
@@ -302,7 +348,12 @@ func setBankCurrency(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Bank currency was set to %s", bank.Currency)),
 	)
-	resp.Send(s, i.Interaction)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("error", err.Error()),
+		)
+	}
 }
 
 // getBankInfo gets information about the bank for the guild (server).
@@ -319,5 +370,10 @@ func getBankInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(content),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("error", err.Error()),
+		)
+	}
 }

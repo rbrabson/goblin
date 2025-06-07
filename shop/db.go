@@ -8,17 +8,17 @@ import (
 )
 
 const (
-	CONFIG_COLLECTION    = "shop_configs"
-	SHOP_ITEM_COLLECTION = "shop_items"
-	PURCHASE_COLLECTION  = "shop_purchases"
-	MEMBER_COLLECTION    = "shop_members"
+	ConfigCollection   = "shop_configs"
+	ShopItemCollection = "shop_items"
+	PurchaseCollection = "shop_purchases"
+	MemberCollection   = "shop_members"
 )
 
 // readConfig reads the configuration from the database. If the config does not exist, it returns nil.
 func readConfig(guildID string) (*Config, error) {
 	filter := bson.M{"guild_id": guildID}
 	var config *Config
-	err := db.FindOne(CONFIG_COLLECTION, filter, &config)
+	err := db.FindOne(ConfigCollection, filter, &config)
 	if err != nil {
 		slog.Error("unable to read shop config from the database",
 			slog.String("guildID", guildID),
@@ -42,7 +42,7 @@ func writeConfig(config *Config) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: config.GuildID}}
 	}
-	err := db.UpdateOrInsert(CONFIG_COLLECTION, filter, config)
+	err := db.UpdateOrInsert(ConfigCollection, filter, config)
 	if err != nil {
 		slog.Error("unable to write shop config to the database",
 			slog.String("guildID", config.GuildID),
@@ -63,7 +63,7 @@ func readShopItems(guildID string) ([]*ShopItem, error) {
 	filter := bson.M{"guild_id": guildID}
 	sortBy := bson.M{"name": 1}
 	var items []*ShopItem
-	err := db.FindMany(SHOP_ITEM_COLLECTION, filter, &items, sortBy, 0)
+	err := db.FindMany(ShopItemCollection, filter, &items, sortBy, 0)
 	if err != nil {
 		slog.Error("unable to read shop items from the database",
 			slog.String("guildID", guildID),
@@ -84,7 +84,7 @@ func readShopItems(guildID string) ([]*ShopItem, error) {
 func readShopItem(guildID string, name string, itemType string) (*ShopItem, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "name", Value: name}, {Key: "type", Value: itemType}}
 	var item *ShopItem
-	err := db.FindOne(SHOP_ITEM_COLLECTION, filter, &item)
+	err := db.FindOne(ShopItemCollection, filter, &item)
 	if err != nil {
 		slog.Error("unable to read shop item from the database",
 			slog.String("guildID", guildID),
@@ -110,7 +110,7 @@ func writeShopItem(item *ShopItem) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: item.GuildID}, {Key: "name", Value: item.Name}, {Key: "type", Value: item.Type}}
 	}
-	err := db.UpdateOrInsert(SHOP_ITEM_COLLECTION, filter, item)
+	err := db.UpdateOrInsert(ShopItemCollection, filter, item)
 	if err != nil {
 		slog.Error("unable to save shop item to the database",
 			slog.String("guildID", item.GuildID),
@@ -136,7 +136,7 @@ func deleteShopItem(item *ShopItem) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: item.GuildID}, {Key: "name", Value: item.Name}, {Key: "type", Value: item.Type}}
 	}
-	err := db.Delete(SHOP_ITEM_COLLECTION, filter)
+	err := db.Delete(ShopItemCollection, filter)
 	if err != nil {
 		slog.Error("unable to delete shop item from the database",
 			slog.String("guildID", item.GuildID),
@@ -157,7 +157,7 @@ func deleteShopItem(item *ShopItem) error {
 // readAllPurchases reads all the purchases from the database that match the input filter
 func readAllPurchases(filter interface{}) ([]*Purchase, error) {
 	var items []*Purchase
-	err := db.FindMany(PURCHASE_COLLECTION, filter, &items, bson.D{}, 0)
+	err := db.FindMany(PurchaseCollection, filter, &items, bson.D{}, 0)
 	if err != nil {
 		slog.Error("unable to read all purchases from the database",
 			slog.Any("filter", filter),
@@ -174,7 +174,7 @@ func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	sortBy := bson.M{"name": 1}
 	var items []*Purchase
-	err := db.FindMany(PURCHASE_COLLECTION, filter, &items, sortBy, 0)
+	err := db.FindMany(PurchaseCollection, filter, &items, sortBy, 0)
 	if err != nil {
 		slog.Error("unable to read purchases from the database",
 			slog.String("guildID", guildID),
@@ -192,7 +192,7 @@ func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 func readPurchase(guildID string, memberID string, itemName string, itemType string) (*Purchase, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}, {Key: "name", Value: itemName}, {Key: "type", Value: itemType}, {Key: "is_expired", Value: false}}
 	var item Purchase
-	err := db.FindOne(PURCHASE_COLLECTION, filter, &item)
+	err := db.FindOne(PurchaseCollection, filter, &item)
 	if err != nil {
 		slog.Debug("unable to read purchase from the database",
 			slog.Any("filter", filter),
@@ -216,7 +216,7 @@ func writePurchase(item *Purchase) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: item.Item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "name", Value: item.Item.Name}, {Key: "type", Value: item.Item.Type}, {Key: "is_expired", Value: false}}
 	}
-	err := db.UpdateOrInsert(PURCHASE_COLLECTION, filter, item)
+	err := db.UpdateOrInsert(PurchaseCollection, filter, item)
 	if err != nil {
 		slog.Error("unable to write purchase to the database",
 			slog.String("guildID", item.Item.GuildID),
@@ -243,7 +243,7 @@ func deletePurchase(purchase *Purchase) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: purchase.Item.GuildID}, {Key: "member_id", Value: purchase.MemberID}, {Key: "name", Value: purchase.Item.Name}, {Key: "type", Value: purchase.Item.Type}}
 	}
-	err := db.Delete(PURCHASE_COLLECTION, filter)
+	err := db.Delete(PurchaseCollection, filter)
 	if err != nil {
 		slog.Error("unable to delete purchasefrom the database",
 			slog.String("guildID", purchase.Item.GuildID),
@@ -264,7 +264,7 @@ func deletePurchase(purchase *Purchase) error {
 func readMember(guildID string, memberID string) (*Member, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}}
 	var member *Member
-	err := db.FindOne(MEMBER_COLLECTION, filter, &member)
+	err := db.FindOne(MemberCollection, filter, &member)
 	if err != nil {
 		slog.Debug("unable to read shop member from the datrabase",
 			slog.String("guildID", guildID),
@@ -289,7 +289,7 @@ func writeMember(member *Member) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: member.GuildID}, {Key: "member_id", Value: member.MemberID}}
 	}
-	err := db.UpdateOrInsert(MEMBER_COLLECTION, filter, member)
+	err := db.UpdateOrInsert(MemberCollection, filter, member)
 	if err != nil {
 		slog.Error("unable to save shop member to the database",
 			slog.String("guildID", member.GuildID),
@@ -315,7 +315,7 @@ func deleteMember(member *Member) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: member.GuildID}, {Key: "member_id", Value: member.MemberID}}
 	}
-	err := db.Delete(MEMBER_COLLECTION, filter)
+	err := db.Delete(MemberCollection, filter)
 	if err != nil {
 		slog.Error("unable to delete shop member from the database",
 			slog.String("guildID", member.GuildID),

@@ -129,339 +129,339 @@ func getDefauiltTheme(guildID string) *Theme {
 		{
 			Message:     "%s brought a few healers to keep themself alive " + emoji.Healer + ", +25 " + emoji.Gold,
 			BonusAmount: 25,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s brought a rage spell to the raid " + emoji.RageSpell + ", +25 " + emoji.Gold,
 			BonusAmount: 25,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s remembered to request CC troops before attacking. +25 " + emoji.Gold,
 			BonusAmount: 25,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s used Royal Cloak " + emoji.ArcherQueen + ". +25 " + emoji.Gold,
 			BonusAmount: 25,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s used Iron Fist " + emoji.BarbarianKing + ". +25 " + emoji.Gold,
 			BonusAmount: 25,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s took out a corner builder hut " + emoji.BuilderHut + ". +50 " + emoji.Gold + ".",
 			BonusAmount: 50,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s boosted the training barracks " + emoji.Gems + ". +50 " + emoji.Gold,
 			BonusAmount: 50,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s lured defending CC troops. +50 " + emoji.Gold,
 			BonusAmount: 50,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s built a funnel correctly. +100 " + emoji.Gold,
 			BonusAmount: 100,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s used a power potion on the clan. +100 " + emoji.Gold,
 			BonusAmount: 100,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s dropped a heal on a known Giant Bomb location " + emoji.HealingSpell + ". +100 " + emoji.Gold,
 			BonusAmount: 100,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s successfully scouted the top base. +100 " + emoji.Gold,
 			BonusAmount: 100,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s managed to take out the Town Hall. +150 " + emoji.Gold,
 			BonusAmount: 150,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s got every last drop of Dark Elixir " + emoji.DarkElixer + ". +250 " + emoji.Gold,
 			BonusAmount: 250,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s three starred a base with barch " + emoji.Barbarian + " " + emoji.SneakyArcher + ". +250 " + emoji.Gold,
 			BonusAmount: 250,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s cast Eternal Tome " + emoji.GrandWarden + ". +250 " + emoji.Gold,
 			BonusAmount: 250,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s HOG RIIIIIIIIDDEEEER " + emoji.HogRider + ". +500 " + emoji.Gold,
 			BonusAmount: 500,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s scored a six pack " + emoji.SharkHi + ". +1,000 " + emoji.Gold,
 			BonusAmount: 1000,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s 3 starred the top base in War without use of Heroes. +1,500 " + emoji.Gold,
 			BonusAmount: 1500,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 		{
 			Message:     "%s found a gem box " + emoji.Gems + ". +2,500 " + emoji.Gold,
 			BonusAmount: 2500,
-			Result:      ESCAPED,
+			Result:      Escaped,
 		},
 	}
 
 	apprehendedMessages := []*HeistMessage{
 		{
 			Message: "%s stepped onto a spring trap.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s forgot to bring heals to their GoHo attack " + emoji.Golem + " " + emoji.HogRider + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s used their builder potions while not upgrading anything.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s dropped rage on healers too late " + emoji.RageSpell + " " + emoji.Healer + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s forgot to bring heroes to the raid.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s forgot to bring CC troops to the raid.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s lost connection!",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s brought jump spells to a LaLo attack. " + emoji.JumpSpell + " " + emoji.LavaHound + " " + emoji.Balloon + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s fell out of a balloon " + emoji.Balloon + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s tried using a cold air balloon " + emoji.Balloon + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s got stuck in the clouds.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s stayed behind to finish taking out a wall.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s was paralyzed by a Hidden Tesla.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s dropped a freeze spell on themself " + emoji.FreezeSpell + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s attempted to teach the Hog Rider to ride Sheep instead " + emoji.HogRider + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s forgot to attack " + emoji.StarFishBarb + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s managed to get 0 stars " + emoji.StarEmpty + emoji.StarEmpty + emoji.StarEmpty + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s decided to upgrade all their barracks at the same time.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s decided to upgrade all their spell factories at the same time.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s decided to heal the grass " + emoji.HealingSpell + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s dropped their spells instead of troops and rage quit.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s decided to chase around a butterfly " + emoji.PEKKA + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s got lost in a Miner tunnel " + emoji.Miner + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s left Grand Warden in air mode " + emoji.GrandWarden + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s left Grand Warden in ground mode " + emoji.GrandWarden + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s spent all their gold on an empty Wall Wrecker " + emoji.WallWrecker + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s spent all their gold on a Battle Blimp with a hole in it " + emoji.BattleBlimp + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s was taken out by a Sneaky Archer " + emoji.SneakyArcher + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s was knocked into next week by a Boxer Giant " + emoji.BoxerGiant + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s was blown off the map by an Air Sweeper.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s used GoWiPe it was super ineffective " + emoji.Golem + " " + emoji.Wizard + " " + emoji.PEKKA + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s attempted to clone the Dark Elixir Storage " + emoji.CloneSpell + " " + emoji.DarkElixer + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s brought their farming army to the war " + emoji.Barbarian + " " + emoji.SneakyArcher + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s fell asleep under a builder hut " + emoji.Sleeping + " " + emoji.BuilderHut + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s got paralyzed by an Electro Dragon " + emoji.ElectroDragon + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s donated wallbreakers for defending CC " + emoji.WallBreaker + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s's dragons took a stroll around the perimeter of the base " + emoji.Dragon + " " + emoji.ElectroDragon + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s forgot to use the King's ability " + emoji.BarbarianKing + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s forgot to use the Queen's ability " + emoji.ArcherQueen + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s forgot to the use the Warden's ability " + emoji.GrandWarden + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s's wallbreakers went to the wrong wall " + emoji.WallBreaker + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s's night witches ran into a mega mine " + emoji.NightWitch + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s used a Book of Building to save the ten seconds needed to finish a level one gold mine.",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s used a Book of Heroes to finish the level two Barbarian King upgrade " + emoji.BarbarianKing + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s spent gems on wall rings to get level two walls!",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s got a 49%% 0 Star. " + emoji.StarEmpty + emoji.StarEmpty + emoji.StarEmpty + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 		{
 			Message: "%s got a 99%% 1 Star in the deciding attack. " + emoji.StarNew + emoji.StarEmpty + emoji.StarEmpty + ".",
-			Result:  APPREHENDED,
+			Result:  Apprehended,
 		},
 	}
 	diedMessages := []*HeistMessage{
 		{
 			Message: "%s forgot funnel and was singled out by an archer tower. (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s walked into double giant bombs. (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s was burnt to a crisp by a single target Inferno Tower. (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s got killed by the CC troops. (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s accidentally drank a poison spell " + emoji.PoisonSpell + ". (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s tried to take out the Giga Tesla alone. (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s was eaten by a dragon " + emoji.Dragon + ". (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s wasn't healed by the healers " + emoji.Healer + ". (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s pinged the discord mods for help with their attack. (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s was tripled by an engineer. (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 		{
 			Message: "%s was banned by spAnser. (death) " + emoji.Toombstone,
-			Result:  DEAD,
+			Result:  Dead,
 		},
 	}
 

@@ -21,11 +21,11 @@ func init() {
 }
 
 func TestGetConfig(t *testing.T) {
-	guild := guild.GetGuild("12345")
+	g := guild.GetGuild("12345")
 	configs := make([]*Config, 0, 1)
 	defer func() {
 		for _, config := range configs {
-			if err := db.Delete(CONFIG_COLLECTION, bson.M{"guild_id": config.GuildID}); err != nil {
+			if err := db.Delete(ConfigCollection, bson.M{"guild_id": config.GuildID}); err != nil {
 				slog.Error("error deleting config",
 					slog.Any("error", err),
 				)
@@ -33,38 +33,38 @@ func TestGetConfig(t *testing.T) {
 		}
 	}()
 
-	config := GetConfig(guild.GuildID)
+	config := GetConfig(g.GuildID)
 	if config == nil {
 		t.Errorf("Expected config, got nil")
 		return
 	}
 	configs = append(configs, config)
 
-	if config.Theme != HEIST_DEFAULT_THEME {
-		t.Errorf("Expected %s, got %s", HEIST_DEFAULT_THEME, config.Theme)
+	if config.Theme != HeistDefaultTheme {
+		t.Errorf("Expected %s, got %s", HeistDefaultTheme, config.Theme)
 	}
-	if config.BailBase != BAIL_BASE {
-		t.Errorf("Expected %d, got %d", BAIL_BASE, config.BailBase)
+	if config.BailBase != BailBase {
+		t.Errorf("Expected %d, got %d", BailBase, config.BailBase)
 	}
-	if config.CrewOutput != CREW_OUTPUT {
-		t.Errorf("Expected %s, got %s", CREW_OUTPUT, config.CrewOutput)
+	if config.CrewOutput != CrewOutput {
+		t.Errorf("Expected %s, got %s", CrewOutput, config.CrewOutput)
 	}
-	if config.DeathTimer != DEATH_TIMER {
-		t.Errorf("Expected %d, got %d", DEATH_TIMER, config.DeathTimer)
+	if config.DeathTimer != DeathTimer {
+		t.Errorf("Expected %d, got %d", DeathTimer, config.DeathTimer)
 	}
-	if config.HeistCost != HEIST_COST {
-		t.Errorf("Expected %d, got %d", HEIST_COST, config.HeistCost)
+	if config.HeistCost != HeistCost {
+		t.Errorf("Expected %d, got %d", HeistCost, config.HeistCost)
 	}
-	if config.PoliceAlert != POLICE_ALERT {
-		t.Errorf("Expected %d, got %d", POLICE_ALERT, config.PoliceAlert)
+	if config.PoliceAlert != PoliceAlert {
+		t.Errorf("Expected %d, got %d", PoliceAlert, config.PoliceAlert)
 	}
-	if config.SentenceBase != SENTENCE_BASE {
-		t.Errorf("Expected %d, got %d", SENTENCE_BASE, config.SentenceBase)
+	if config.SentenceBase != SentenceBase {
+		t.Errorf("Expected %d, got %d", SentenceBase, config.SentenceBase)
 	}
-	if config.WaitTime != WAIT_TIME {
-		t.Errorf("Expected %d, got %d", WAIT_TIME, config.WaitTime)
+	if config.WaitTime != WaitTime {
+		t.Errorf("Expected %d, got %d", WaitTime, config.WaitTime)
 	}
-	if config.Targets != HEIST_DEFAULT_THEME {
+	if config.Targets != HeistDefaultTheme {
 		t.Errorf("Expected empty string, got %s", config.Targets)
 	}
 }

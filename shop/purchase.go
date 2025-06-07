@@ -87,23 +87,13 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 	return purchases
 }
 
-// GetPurchase returns the purchase made by a member in the guild for the given item name.
-// If the purchase does not exist, nil is returned.
-func GetPurchase(guildID string, memberID string, itemName string, itemType string) *Purchase {
-	purchase, err := readPurchase(guildID, memberID, itemName, itemType)
-	if err != nil {
-		return nil
-	}
-	return purchase
-}
-
 // PurchaseItem creates a new Purchase with the given guild ID, member ID, and a purchasable
 // shop item.
 func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew bool) (*Purchase, error) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	member, _ := readMember(guildID, memberID)
-	if member != nil && member.HasRestriction(SHOP_BAN) {
+	if member != nil && member.HasRestriction(ShopBan) {
 		return nil, errors.New(p.Sprintf("you are banned from using the shop"))
 	}
 

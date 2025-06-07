@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	PLUGIN_NAME = "payday"
+	PluginName = "payday"
 )
 
 var (
@@ -45,26 +45,6 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 	return status
 }
 
-// GetMemberHelp returns help information about the heist bot commands
-func GetMemberHelp() []string {
-	help := make([]string, 0, 1)
-
-	for _, command := range memberCommands {
-		commandDescription := fmt.Sprintf("- `/%s`: %s\n", command.Name, command.Description)
-		help = append(help, commandDescription)
-	}
-	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
-	help = append([]string{title}, help...)
-
-	return help
-}
-
-// GetAdminHelp returns help information about the heist bot commands
-func GetAdminHelp() []string {
-	return nil
-}
-
 // Initialize saves the Discord bot to be used by the banking system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
@@ -89,7 +69,7 @@ func (plugin *Plugin) GetComponentHandlers() map[string]func(*discordgo.Session,
 
 // GetName returns the name of the banking system plugin
 func (plugin *Plugin) GetName() string {
-	return PLUGIN_NAME
+	return PluginName
 }
 
 // GetHelp returns the member help for the banking system
@@ -101,7 +81,7 @@ func (plugin *Plugin) GetHelp() []string {
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
 	help = append([]string{title}, help...)
 
 	return help

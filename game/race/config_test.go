@@ -36,7 +36,7 @@ func TestGetConfig(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123"}
-	err := db.Delete(RACE_CONFIG_COLLECTION, filter)
+	err := db.Delete(RaceConfigCollection, filter)
 	if err != nil {
 		t.Error(err)
 		return

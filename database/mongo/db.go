@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	DB_TIMEOUT = 10 * time.Second
+	DbTimeout = 10 * time.Second
 )
 
 // MongoDB represents a connection to a mongo database
@@ -61,7 +61,7 @@ func NewDatabase() *MongoDB {
 
 // FindAllIDs returns the ID of each document in a collection in the database.
 func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -119,7 +119,7 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 
 // FindMany reads all documents from the database that match the filter
 func (m *MongoDB) FindMany(collectionName string, filter interface{}, data interface{}, sortBy interface{}, limit int64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -166,7 +166,7 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 
 // FindOne loads a document identified by documentID from the collection into data.
 func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -261,7 +261,7 @@ func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data int
 
 // Count returns the count of documents that match the filter.
 func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -290,7 +290,7 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 
 // Delete removes a document from the collection that matches the filter.
 func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -324,7 +324,7 @@ func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
 
 // DeleteMany removes all documents from the collection that matche the filter.
 func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -359,7 +359,7 @@ func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
 
 // Close closes the mongo database client connection
 func (m *MongoDB) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 	if err := m.Client.Disconnect(ctx); err != nil {
 		slog.Error("unable to close the mongo database client",

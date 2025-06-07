@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	MAX_SHOP_ITEMS_DISPLAYED = 25
+	MaxShopItemsDisplayed = 25
 )
 
 var (
@@ -617,7 +617,7 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	memberID := options[0].Options[0].UserValue(s).ID
 
 	member := GetMember(i.GuildID, memberID)
-	err := member.AddRestriction(SHOP_BAN)
+	err := member.AddRestriction(ShopBan)
 	if err != nil {
 		slog.Error("failed to ban member from shop",
 			slog.String("guildID", i.GuildID),
@@ -667,7 +667,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = member.RemoveRestriction(SHOP_BAN)
+	err = member.RemoveRestriction(ShopBan)
 	if err != nil {
 		slog.Error("failed to ban member from shop",
 			slog.String("guildID", i.GuildID),
@@ -889,7 +889,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 		default:
 			sb.WriteString(p.Sprintf("\nExpired On: %s", purchase.ExpiresOn.Format("02 Jan 2006")))
 		}
-		if (i+1)%PURCHASES_PER_PAGE != 0 && (i+1) < len(purchases) {
+		if (i+1)%PurchasesPerPage != 0 && (i+1) < len(purchases) {
 			sb.WriteString("\n\u200B")
 		}
 		embedFields = append(embedFields, &discordgo.MessageEmbedField{
@@ -929,7 +929,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	member, err := readMember(i.GuildID, i.Member.User.ID)
 	if err == nil {
-		if member.HasRestriction(SHOP_BAN) {
+		if member.HasRestriction(ShopBan) {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent("You aren't able to purchase items from the shop."),
 			)
@@ -947,7 +947,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch itemType {
 	case ROLE:
 		initiatePurchaseOfRoleFromShop(s, i, itemName)
-	case CUSTOM_COMMAND:
+	case CustomCommandCollection:
 		initiatePurchaseOfCustomCommandFromShop(s, i, itemName)
 	default:
 		slog.Error("unknown item type",
@@ -1036,7 +1036,7 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch itemType {
 	case ROLE:
 		completePurchaseOfRoleFromShop(s, i, itemName)
-	case CUSTOM_COMMAND:
+	case CustomCommandCollection:
 		completePurchaseOfCustomCommandFromShop(s, i, itemName)
 	default:
 		slog.Error("unknown item type",
@@ -1255,7 +1255,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 				slog.String("formattedDuration", disctime.FormatDuration(duration)),
 			)
 		}
-		if len(shopItems)+1 < len(items) && len(shopItems)+1 < MAX_SHOP_ITEMS_DISPLAYED {
+		if len(shopItems)+1 < len(items) && len(shopItems)+1 < MaxShopItemsDisplayed {
 			sb.WriteString("\n\u200B")
 		}
 		embed := &discordgo.MessageEmbedField{
@@ -1265,7 +1265,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		}
 		shopItems = append(shopItems, embed)
 
-		if len(shopItems) == MAX_SHOP_ITEMS_DISPLAYED {
+		if len(shopItems) == MaxShopItemsDisplayed {
 			slog.Warn("maximum number of shop items reached",
 				slog.String("guildID", guildID),
 				slog.Int("numItems", len(shopItems)),
@@ -1375,7 +1375,7 @@ func getShopButtons(shop *Shop) []discordgo.ActionsRow {
 
 		row := discordgo.ActionsRow{Components: buttons}
 		rows = append(rows, row)
-		if itemsIncludedInButtons >= MAX_SHOP_ITEMS_DISPLAYED {
+		if itemsIncludedInButtons >= MaxShopItemsDisplayed {
 			break
 		}
 	}

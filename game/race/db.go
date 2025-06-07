@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	RACE_CONFIG_COLLECTION = "race_configs"
-	RACE_MEMBER_COLLECTION = "race_members"
-	RACER_COLLECTION       = "race_avatars"
+	RaceConfigCollection = "race_configs"
+	RaceMemberCollection = "race_members"
+	RacerCollection      = "race_avatars"
 )
 
 // readConfig loads the race configuration from the database. If it does not exist then
@@ -18,7 +18,7 @@ const (
 func readConfig(guildID string) *Config {
 	filter := bson.M{"guild_id": guildID}
 	var config Config
-	err := db.FindOne(RACE_CONFIG_COLLECTION, filter, &config)
+	err := db.FindOne(RaceConfigCollection, filter, &config)
 	if err != nil {
 		slog.Debug("race configuration not found in the database",
 			slog.String("guildID", guildID),
@@ -42,7 +42,7 @@ func writeConfig(config *Config) {
 	} else {
 		filter = bson.M{"guild_id": config.GuildID}
 	}
-	err := db.UpdateOrInsert(RACE_CONFIG_COLLECTION, filter, config)
+	err := db.UpdateOrInsert(RaceConfigCollection, filter, config)
 	if err != nil {
 		slog.Error("failed to write the race configuration to the database",
 			slog.String("guildID", config.GuildID),
@@ -56,7 +56,7 @@ func writeConfig(config *Config) {
 func readRaceMember(guildID string, memberID string) *RaceMember {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}}
 	var member RaceMember
-	err := db.FindOne(RACE_MEMBER_COLLECTION, filter, &member)
+	err := db.FindOne(RaceMemberCollection, filter, &member)
 	if err != nil {
 		slog.Debug("race member not found in the database",
 			slog.String("guildID", guildID),
@@ -81,7 +81,7 @@ func writeRaceMember(member *RaceMember) {
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
-	if err := db.UpdateOrInsert(RACE_MEMBER_COLLECTION, filter, member); err != nil {
+	if err := db.UpdateOrInsert(RaceMemberCollection, filter, member); err != nil {
 		slog.Error("failed to write the race member to the database",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
@@ -98,7 +98,7 @@ func writeRaceMember(member *RaceMember) {
 func readAllRacers(filter bson.D) ([]*Avatar, error) {
 	var racers []*Avatar
 	sort := bson.D{{Key: "crew_size", Value: 1}}
-	err := db.FindMany(RACER_COLLECTION, filter, &racers, sort, 0)
+	err := db.FindMany(RacerCollection, filter, &racers, sort, 0)
 	if err != nil || len(racers) == 0 {
 		slog.Warn("unable to read racers",
 			slog.Any("error", err),
@@ -122,7 +122,7 @@ func writeRacer(racer *Avatar) {
 		filter = bson.D{{Key: "guild_id", Value: racer.GuildID}, {Key: "theme", Value: racer.Theme}, {Key: "emoji", Value: racer.Emoji}, {Key: "movement_speed", Value: racer.MovementSpeed}}
 	}
 
-	if err := db.UpdateOrInsert(RACER_COLLECTION, filter, racer); err != nil {
+	if err := db.UpdateOrInsert(RacerCollection, filter, racer); err != nil {
 		slog.Error("failed to write the racer to the database",
 			slog.String("guildID", racer.GuildID),
 			slog.Any("error", err),

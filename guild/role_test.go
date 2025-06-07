@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	GUILD_ID = "12345"
+	GuildId = "12345"
 )
 
 func init() {
@@ -27,7 +27,7 @@ func TestGetAdminRoles(t *testing.T) {
 	setup()
 	defer teardown()
 
-	adminRoles := GetAdminRoles(GUILD_ID)
+	adminRoles := GetAdminRoles(GuildId)
 	if adminRoles == nil {
 		t.Error("expected admin roles to be not nil")
 		return
@@ -43,7 +43,7 @@ func TestCheckAdminRoles(t *testing.T) {
 	setup()
 	defer teardown()
 
-	adminRoles := GetAdminRoles(GUILD_ID)
+	adminRoles := GetAdminRoles(GuildId)
 	if adminRoles == nil {
 		t.Error("expected admin roles to be not nil")
 		return
@@ -66,12 +66,22 @@ func setup() {
 		AdminRoles []string `bson:"admin_roles"`
 	}
 	server := &Server{
-		GuildID:    GUILD_ID,
+		GuildID:    GuildId,
 		AdminRoles: []string{"Admin", "Admins", "Administrator", "Mod", "Mods", "Moderator"},
 	}
-	db.UpdateOrInsert(GUILD_COLLECTION, bson.M{"guild_id": GUILD_ID}, server)
+	if err := db.UpdateOrInsert(GuildCollection, bson.M{"guild_id": GuildId}, server); err != nil {
+		slog.Error("Error inserting guild",
+			slog.String("guildID", server.GuildID),
+			slog.Any("err", err),
+		)
+	}
 }
 
 func teardown() {
-	db.Delete(GUILD_COLLECTION, bson.M{"guild_id": GUILD_ID})
+	if err := db.Delete(GuildCollection, bson.M{"guild_id": GuildId}); err != nil {
+		slog.Error("Error deleting guild",
+			slog.String("guildID", GuildId),
+			slog.Any("err", err),
+		)
+	}
 }

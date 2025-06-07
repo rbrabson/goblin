@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	DEFAULT_ADMIN_ROLES = []string{"Admin", "Admins", "Administrator", "Mod", "Mods", "Moderator"}
+	DefaultAdminRoles = []string{"Admin", "Admins", "Administrator", "Mod", "Mods", "Moderator"}
 )
 
 // Guild is the configuration for a guild (guild).
@@ -26,7 +26,7 @@ type Guild struct {
 // GetAllGuilds returns all guilds in the database.
 func GetAllGuilds() []*Guild {
 	guilds := make([]*Guild, 0)
-	err := db.FindMany(GUILD_COLLECTION, bson.M{}, &guilds, bson.M{}, 0)
+	err := db.FindMany(GuildCollection, bson.M{}, &guilds, bson.M{}, 0)
 	if err != nil {
 		slog.Error("failed to get all guilds")
 		return nil
@@ -96,8 +96,8 @@ func getDefaultGuild(guildID string) *Guild {
 	guild := &Guild{
 		GuildID: guildID,
 	}
-	guild.AdminRoles = make([]string, len(DEFAULT_ADMIN_ROLES))
-	copy(guild.AdminRoles, DEFAULT_ADMIN_ROLES)
+	guild.AdminRoles = make([]string, len(DefaultAdminRoles))
+	copy(guild.AdminRoles, DefaultAdminRoles)
 	if err := writeGuild(guild); err != nil {
 		slog.Error("failed to write default guild config",
 			slog.String("guildID", guildID),

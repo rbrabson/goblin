@@ -8,15 +8,15 @@ import (
 )
 
 const (
-	BANK_COLLECTION    = "banks"
-	ACCOUNT_COLLECTION = "bank_accounts"
+	BankCollection    = "banks"
+	AccountCollection = "bank_accounts"
 )
 
 // ResetMonthlyBalances resets the monthly balances for all accounts in all banks.
 func ResetMonthlyBalances() {
 	filter := bson.M{}
 	update := bson.M{"monthly_balance": 0}
-	err := db.UpdateMany(ACCOUNT_COLLECTION, filter, update)
+	err := db.UpdateMany(AccountCollection, filter, update)
 	if err != nil {
 		slog.Error("unable to reset monthly balances for all accounts",
 			slog.Any("error", err),
@@ -29,7 +29,7 @@ func ResetMonthlyBalances() {
 func readBank(guildID string) *Bank {
 	filter := bson.M{"guild_id": guildID}
 	var bank Bank
-	err := db.FindOne(BANK_COLLECTION, filter, &bank)
+	err := db.FindOne(BankCollection, filter, &bank)
 	if err != nil {
 		slog.Debug("bank not found in the database",
 			slog.String("guildID", guildID),
@@ -46,7 +46,7 @@ func readBank(guildID string) *Bank {
 // writeBank creates or updates the bank data in the database being used by the Discord bot.
 func writeBank(bank *Bank) error {
 	filter := bson.M{"guild_id": bank.GuildID}
-	err := db.UpdateOrInsert(BANK_COLLECTION, filter, bank)
+	err := db.UpdateOrInsert(BankCollection, filter, bank)
 	if err != nil {
 		slog.Error("unable to save bank to the database",
 			slog.String("guildID", bank.GuildID),
@@ -64,7 +64,7 @@ func writeBank(bank *Bank) error {
 // Get all the matching accounts for the given bank.
 func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit int64) []*Account {
 	var accounts []*Account
-	err := db.FindMany(ACCOUNT_COLLECTION, filter, &accounts, sortBy, limit)
+	err := db.FindMany(AccountCollection, filter, &accounts, sortBy, limit)
 	if err != nil {
 		slog.Error("unable to read accounts from the database",
 			slog.String("guildID", guildID),
@@ -85,7 +85,7 @@ func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit 
 func readAccount(guildID string, memberID string) *Account {
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	var account Account
-	err := db.FindOne(ACCOUNT_COLLECTION, filter, &account)
+	err := db.FindOne(AccountCollection, filter, &account)
 	if err != nil {
 		slog.Debug("account not found in the database",
 			slog.String("guildID", guildID),
@@ -110,7 +110,7 @@ func writeAccount(account *Account) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: account.GuildID}, {Key: "member_id", Value: account.MemberID}}
 	}
-	err := db.UpdateOrInsert(ACCOUNT_COLLECTION, filter, account)
+	err := db.UpdateOrInsert(AccountCollection, filter, account)
 	if err != nil {
 		slog.Error("unable to save bank account to the database",
 			slog.String("guildID", account.GuildID),

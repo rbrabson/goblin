@@ -43,7 +43,7 @@ func TestGetRaceMember(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
-	err := db.Delete(RACE_MEMBER_COLLECTION, filter)
+	err := db.Delete(RaceMemberCollection, filter)
 	if err != nil {
 		t.Error(err)
 		return
@@ -75,11 +75,11 @@ func TestRaceMemberWinRace(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
-	err := db.Delete(RACE_MEMBER_COLLECTION, filter)
+	err := db.Delete(RaceMemberCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.ACCOUNT_COLLECTION, filter)
+	err = db.Delete(bank.AccountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -110,11 +110,11 @@ func TestRaceMemberPlacedInRace(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
-	err := db.Delete(RACE_MEMBER_COLLECTION, filter)
+	err := db.Delete(RaceMemberCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.ACCOUNT_COLLECTION, filter)
+	err = db.Delete(bank.AccountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -145,11 +145,11 @@ func TestRaceMemberHowedInRace(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
-	err := db.Delete(RACE_MEMBER_COLLECTION, filter)
+	err := db.Delete(RaceMemberCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.ACCOUNT_COLLECTION, filter)
+	err = db.Delete(bank.AccountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -180,11 +180,11 @@ func TestRaceMemberLoseRace(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
-	err := db.Delete(RACE_MEMBER_COLLECTION, filter)
+	err := db.Delete(RaceMemberCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.ACCOUNT_COLLECTION, filter)
+	err = db.Delete(bank.AccountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -197,7 +197,14 @@ func TestRaceBetOnRace(t *testing.T) {
 		return
 	}
 
-	member.PlaceBet(100)
+	if err := member.PlaceBet(100); err != nil {
+		slog.Error("error placing bet",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.Int("amount", 100),
+			slog.Any("err", err),
+		)
+	}
 	raceMember := readRaceMember("123", "456")
 	if raceMember == nil {
 		t.Error("expected member to be found")
@@ -212,11 +219,11 @@ func TestRaceBetOnRace(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
-	err := db.Delete(RACE_MEMBER_COLLECTION, filter)
+	err := db.Delete(RaceMemberCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.ACCOUNT_COLLECTION, filter)
+	err = db.Delete(bank.AccountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -247,11 +254,11 @@ func TestRaceWinBet(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "member_id": "456"}
-	err := db.Delete(RACE_MEMBER_COLLECTION, filter)
+	err := db.Delete(RaceMemberCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.ACCOUNT_COLLECTION, filter)
+	err = db.Delete(bank.AccountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}

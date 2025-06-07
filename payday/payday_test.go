@@ -24,7 +24,12 @@ func TestGetPayday(t *testing.T) {
 	paydays := make([]*Payday, 0, 1)
 	defer func() {
 		for _, payday := range paydays {
-			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -39,7 +44,12 @@ func TestNewPayday(t *testing.T) {
 	paydays := make([]*Payday, 0, 1)
 	defer func() {
 		for _, payday := range paydays {
-			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -53,11 +63,11 @@ func TestNewPayday(t *testing.T) {
 	if payday.GuildID != "12345" {
 		t.Errorf("expected GuildID to be '12345', got '%s'", payday.GuildID)
 	}
-	if payday.Amount != DEFAULT_PAYDAY_AMOUNT {
-		t.Errorf("expected Amount to be '%d', got '%d'", DEFAULT_PAYDAY_AMOUNT, payday.Amount)
+	if payday.Amount != DefaultPaydayAmount {
+		t.Errorf("expected Amount to be '%d', got '%d'", DefaultPaydayAmount, payday.Amount)
 	}
-	if payday.PaydayFrequency != DEFAULT_PAYDAY_FREQUENCY {
-		t.Errorf("expected PaydayFrequency to be '%s', got '%s'", DEFAULT_PAYDAY_FREQUENCY, payday.PaydayFrequency)
+	if payday.PaydayFrequency != DefaultPaydayFrequency {
+		t.Errorf("expected PaydayFrequency to be '%s', got '%s'", DefaultPaydayFrequency, payday.PaydayFrequency)
 	}
 }
 
@@ -65,7 +75,12 @@ func TestSetPaydayAmount(t *testing.T) {
 	paydays := make([]*Payday, 0, 1)
 	defer func() {
 		for _, payday := range paydays {
-			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -88,7 +103,12 @@ func TestSetPaydayFrequency(t *testing.T) {
 	paydays := make([]*Payday, 0, 1)
 	defer func() {
 		for _, payday := range paydays {
-			db.Delete(PAYDAY_COLLECTION, bson.M{"guild_id": payday.GuildID})
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 

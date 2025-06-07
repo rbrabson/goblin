@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	VAULT_RECOVER_PERCENT = 0.04 // Percentage of valuts total that is recovered every update
+	VaultRecoverPercent = 0.04 // Percentage of valuts total that is recovered every update
 )
 
 // Target is a target of a heist.
@@ -209,7 +209,7 @@ func vaultUpdater() {
 	for {
 		time.Sleep(timer)
 		for _, target := range getAllTargets(filter) {
-			recoverAmount := int(float64(target.VaultMax) * VAULT_RECOVER_PERCENT)
+			recoverAmount := int(float64(target.VaultMax) * VaultRecoverPercent)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
 			slog.Info("vault updater",
 				slog.String("guildID", target.GuildID),

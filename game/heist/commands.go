@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	MAX_WINNINGS_PER_PAGE = 30
+	MaxWinningsPerPage = 30
 )
 
 // componentHandlers are the buttons that appear on messages sent by this bot.
@@ -504,7 +504,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	for _, result := range res.AllResults {
 		guildMember := result.Player.guildMember
 		msg = p.Sprintf(result.Message+"\n", "**"+guildMember.Name+"**")
-		if result.Status == APPREHENDED {
+		if result.Status == Apprehended {
 			msg += p.Sprintf("`%s dropped out of the game.`", guildMember.Name)
 		}
 		if _, err := s.ChannelMessageSend(i.ChannelID, msg); err != nil {
@@ -576,7 +576,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 		table.Header([]string{"Player", "Loot", "Bonus", "Total"})
 		for _, result := range res.AllResults {
 			guildMember := result.Player.guildMember
-			if result.Status == FREE || result.Status == APPREHENDED {
+			if result.Status == FREE || result.Status == Apprehended {
 				data := []string{guildMember.Name, p.Sprintf("%d", result.StolenCredits), p.Sprintf("%d", result.BonusCredits), p.Sprintf("%d", result.StolenCredits+result.BonusCredits)}
 				if err := table.Append(data); err != nil {
 					slog.Error("failed to append to table",
@@ -584,7 +584,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 					)
 				}
 				numLines++
-				if numLines >= MAX_WINNINGS_PER_PAGE {
+				if numLines >= MaxWinningsPerPage {
 					if err := table.Render(); err != nil {
 						slog.Error("failed to render table",
 							slog.Any("error", err),
@@ -620,9 +620,9 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	for _, result := range res.AllResults {
 		result.Player.heist = result.heist
 		switch result.Status {
-		case APPREHENDED:
+		case Apprehended:
 			result.Player.Apprehended()
-		case DEAD:
+		case Dead:
 			result.Player.Died()
 		default:
 			result.Player.Escaped()
@@ -725,7 +725,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 
 	var sentence string
-	if player.Status == APPREHENDED {
+	if player.Status == Apprehended {
 		if player.RemainingJailTime() <= 0 {
 			sentence = "Served"
 		} else {
@@ -846,7 +846,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	if heistMember.Status != APPREHENDED {
+	if heistMember.Status != Apprehended {
 		var msg string
 		if heistMember.MemberID == i.Member.User.ID {
 			msg = "You are not in jail"

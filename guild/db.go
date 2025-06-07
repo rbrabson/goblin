@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	GUILD_COLLECTION  = "guilds"
-	MEMBER_COLLECTION = "guild_members"
+	GuildCollection  = "guilds"
+	MemberCollection = "guild_members"
 )
 
 // readMember reads the member from the database and returns the value, if it exists, or returns nil if the
@@ -19,7 +19,7 @@ func readMember(guildID string, memberID string) *Member {
 		"member_id": memberID,
 	}
 	var member Member
-	err := db.FindOne(MEMBER_COLLECTION, filter, &member)
+	err := db.FindOne(MemberCollection, filter, &member)
 	if err != nil {
 		slog.Debug("guild member not found in the database",
 			slog.String("guildID", guildID),
@@ -37,7 +37,7 @@ func writeMember(member *Member) error {
 		"guild_id":  member.GuildID,
 		"member_id": member.MemberID,
 	}
-	err := db.UpdateOrInsert(MEMBER_COLLECTION, filter, member)
+	err := db.UpdateOrInsert(MemberCollection, filter, member)
 	if err != nil {
 		slog.Error("unable to create or update guild in the database",
 			slog.String("guildID", member.GuildID),
@@ -59,7 +59,7 @@ func writeMember(member *Member) error {
 func readGuild(guildID string) *Guild {
 	filter := bson.M{"guild_id": guildID}
 	var guild Guild
-	err := db.FindOne(GUILD_COLLECTION, filter, &guild)
+	err := db.FindOne(GuildCollection, filter, &guild)
 	if err != nil {
 		slog.Debug("guild not found in the database",
 			slog.String("guildID", guildID),
@@ -73,7 +73,7 @@ func readGuild(guildID string) *Guild {
 // writeGuild creates or updates the guild data in the database being used by the Discord bot.
 func writeGuild(guild *Guild) error {
 	filter := bson.M{"guild_id": guild.GuildID}
-	err := db.UpdateOrInsert(GUILD_COLLECTION, filter, guild)
+	err := db.UpdateOrInsert(GuildCollection, filter, guild)
 	if err != nil {
 		slog.Error("unable to save guild to the database",
 			slog.String("guildID", guild.GuildID),

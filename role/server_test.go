@@ -27,7 +27,12 @@ func TestGetServer(t *testing.T) {
 	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
+			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
+				slog.Error("Error deleting guild",
+					slog.String("guildID", server.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -40,8 +45,8 @@ func TestGetServer(t *testing.T) {
 	servers = append(servers, server)
 
 	for i, role := range server.AdminRoles {
-		if !slices.Contains(guild.DEFAULT_ADMIN_ROLES, role) {
-			t.Errorf("Expected role to be %s, got %s", guild.DEFAULT_ADMIN_ROLES[i], role)
+		if !slices.Contains(guild.DefaultAdminRoles, role) {
+			t.Errorf("Expected role to be %s, got %s", guild.DefaultAdminRoles[i], role)
 		}
 	}
 }
@@ -50,7 +55,12 @@ func TestAddAdminRole(t *testing.T) {
 	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
+			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
+				slog.Error("Error deleting guild",
+					slog.String("guildID", server.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -78,7 +88,12 @@ func TestRemoveAdminRole(t *testing.T) {
 	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
+			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
+				slog.Error("Error deleting guild",
+					slog.String("guildID", server.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -105,7 +120,12 @@ func TestListAdminRoles(t *testing.T) {
 	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
+			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
+				slog.Error("Error deleting guild",
+					slog.String("guildID", server.GuildID),
+					slog.Any("err", err),
+				)
+			}
 		}
 	}()
 
@@ -119,8 +139,8 @@ func TestListAdminRoles(t *testing.T) {
 
 	roles := server.GetAdminRoles()
 	for i, role := range roles {
-		if !slices.Contains(guild.DEFAULT_ADMIN_ROLES, role) {
-			t.Errorf("Expected role to not be %s, got %s", guild.DEFAULT_ADMIN_ROLES[i], role)
+		if !slices.Contains(guild.DefaultAdminRoles, role) {
+			t.Errorf("Expected role to not be %s, got %s", guild.DefaultAdminRoles[i], role)
 		}
 	}
 }

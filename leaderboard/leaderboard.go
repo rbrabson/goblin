@@ -43,7 +43,7 @@ func newLeaderboard(guildID string) *Leaderboard {
 // getLeaderboards returns all the leaderboards for all guilds known to the bot.
 func getLeaderboards() []*Leaderboard {
 	var leaderboards []*Leaderboard
-	err := db.FindMany(LEADERBOARD_COLLECTION, bson.D{}, &leaderboards, bson.D{}, 0)
+	err := db.FindMany(LeaderboardCollection, bson.D{}, &leaderboards, bson.D{}, 0)
 	if err != nil {
 		slog.Error("unable to get leaderboards",
 			slog.Any("error", err),
@@ -153,7 +153,7 @@ func getCurrentRanking(lb *Leaderboard, account *bank.Account) int {
 		{Key: "guild_id", Value: lb.GuildID},
 		{Key: "current_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
 	}
-	rank, _ := db.Count(bank.ACCOUNT_COLLECTION, filter)
+	rank, _ := db.Count(bank.AccountCollection, filter)
 	rank++
 	slog.Debug("current ranking",
 		slog.String("guildID", lb.GuildID),
@@ -171,7 +171,7 @@ func getMonthlyRanking(lb *Leaderboard, account *bank.Account) int {
 		{Key: "monthly_balance", Value: bson.D{{Key: "$gt", Value: account.MonthlyBalance}}},
 	}
 
-	rank, _ := db.Count(bank.ACCOUNT_COLLECTION, filter)
+	rank, _ := db.Count(bank.AccountCollection, filter)
 	rank++
 	slog.Debug("monthly ranking",
 		slog.String("guildID", lb.GuildID),
@@ -189,7 +189,7 @@ func getLifetimeRanking(lb *Leaderboard, account *bank.Account) int {
 		{Key: "lifetime_balance", Value: bson.D{{Key: "$gt", Value: account.LifetimeBalance}}},
 	}
 
-	rank, _ := db.Count(bank.ACCOUNT_COLLECTION, filter)
+	rank, _ := db.Count(bank.AccountCollection, filter)
 	rank++
 	slog.Debug("lifetime ranking",
 		slog.String("guildID", lb.GuildID),
