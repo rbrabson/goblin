@@ -150,7 +150,7 @@ func (m *RaceMember) WinBet(winnings int) {
 	)
 }
 
-// WinBet is used when a member wins a bet on a race.
+// LoseBet is used when a member loses a bet on a race.
 func (m *RaceMember) LoseBet() {
 	writeRaceMember(m)
 

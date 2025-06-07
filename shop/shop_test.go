@@ -16,7 +16,7 @@ const (
 
 var (
 	testShop  *Shop
-	purchases []*Purchase = make([]*Purchase, 0)
+	purchases = make([]*Purchase, 0)
 )
 
 func init() {
@@ -67,6 +67,7 @@ func TestUpdateShopItem(t *testing.T) {
 	item := testShop.GetShopItem("test_item_1", "role")
 	if item == nil {
 		t.Error("GetShopItem failed to returned n existing item")
+		return
 	}
 
 	err := item.update("test_item_1", "description of test Item 1", "role", 200, "", false)

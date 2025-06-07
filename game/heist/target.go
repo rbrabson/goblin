@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	VAULT_UPDATE_TIME     = 1 * time.Minute // Update the vault once every minute
-	VAULT_RECOVER_PERCENT = 0.04            // Percentage of valuts total that is recovered every update
+	VAULT_RECOVER_PERCENT = 0.04 // Percentage of valuts total that is recovered every update
 )
 
 // Target is a target of a heist.
@@ -185,7 +184,7 @@ func newTarget(guildID string, theme string, name string, maxCrewSize int, succe
 	return &target
 }
 
-// Resets all vaults in a guild to the maximum amount.
+// ResetVaultsToMaximumValue resets all vaults in a guild to the maximum amount.
 func ResetVaultsToMaximumValue(guildID string) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}}
 	targets := getAllTargets(filter)
@@ -203,7 +202,7 @@ func ResetVaultsToMaximumValue(guildID string) {
 
 // vaultUpdater updates the vault balance for any target whose vault is not at the maximum value
 func vaultUpdater() {
-	const timer = time.Duration(1 * time.Minute)
+	const timer = 1 * time.Minute
 
 	filter := bson.D{{Key: "is_at_max", Value: false}}
 	// Update the vaults forever

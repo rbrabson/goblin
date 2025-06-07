@@ -229,7 +229,7 @@ func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data
 	return nil
 }
 
-// Write stores data into multiple documeents within the specified collection.
+// UpdateMany stores data into multiple documeents within the specified collection.
 func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -322,7 +322,7 @@ func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
 	return nil
 }
 
-// Delete removes all documents from the collection that matche the filter.
+// DeleteMany removes all documents from the collection that matche the filter.
 func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
 	defer cancel()

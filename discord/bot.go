@@ -219,7 +219,7 @@ func (bot *Bot) AddComponentHandler(key string, handler func(*discordgo.Session,
 	customComponentHandlers[key] = handler
 }
 
-// removeComponentHandler removes a component handler for the bot. This is used to remove
+// RemoveComponentHandler removes a component handler for the bot. This is used to remove
 // components that are not explicitly defined in the bot.
 func (bot *Bot) RemoveComponentHandler(key string) {
 	delete(customComponentHandlers, key)

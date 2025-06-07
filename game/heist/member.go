@@ -29,7 +29,6 @@ const (
 	DEAD        = "Dead"
 	APPREHENDED = "Apprehended"
 	OOB         = "Out on Bail"
-	UNKNOWN     = "Unknown"
 )
 
 // HeistMember is the status of a member who has participated in at least one heist

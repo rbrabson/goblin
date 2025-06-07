@@ -9,9 +9,7 @@ import (
 )
 
 const (
-	CUSTOM_COMMAND             = "custom_command"
-	CUSTOM_COMMAND_NAME        = "Custom Command"
-	CUSTOM_COMMAND_DESCRIPTION = "Custom command that may be used on this server"
+	CUSTOM_COMMAND = "custom_command"
 )
 
 // CustomCommand represents a custom command item in the shop.

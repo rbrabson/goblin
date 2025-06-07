@@ -464,7 +464,7 @@ func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, h
 	)
 	for !time.Now().After(waitTime) {
 		maximumWait := time.Until(waitTime)
-		timeToWait := min(maximumWait, time.Duration(5*time.Second))
+		timeToWait := min(maximumWait, 5*time.Second)
 		if timeToWait < 0 {
 			slog.Debug("wait for the heist to start is over",
 				slog.String("guildID", heist.GuildID),
@@ -720,7 +720,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	theme := GetTheme(i.GuildID)
 	player := getHeistMember(i.GuildID, i.Member.User.ID)
 	player.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
-	caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
+	caser := cases.Title(language.Und, cases.NoLower)
 
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 
@@ -948,7 +948,7 @@ func heistMessage(s *discordgo.Session, heist *Heist) error {
 		crew = append(crew, crewMember.guildMember.Name)
 	}
 
-	caser := cases.Caser(cases.Title(language.Und, cases.NoLower))
+	caser := cases.Title(language.Und, cases.NoLower)
 	p := message.NewPrinter(language.AmericanEnglish)
 	description := p.Sprintf("A new %s is being planned by %s. You can join the %s for a cost of %d credits at any time prior to the %s starting.",
 		heist.theme.Heist,

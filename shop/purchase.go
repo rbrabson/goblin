@@ -19,8 +19,6 @@ import (
 )
 
 const (
-	APPROVED  = "approved"
-	DENIED    = "denied"
 	PENDING   = "pending"
 	PURCHASED = "purchased"
 )

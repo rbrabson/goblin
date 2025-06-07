@@ -13,7 +13,7 @@ import (
 
 const (
 	DEFAULT_PAYDAY_AMOUNT    = 5000
-	DEFAULT_PAYDAY_FREQUENCY = time.Duration(23 * time.Hour)
+	DEFAULT_PAYDAY_FREQUENCY = 23 * time.Hour
 )
 
 // Payday is the daily payment for members of a guild (server).

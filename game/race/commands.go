@@ -696,7 +696,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 			Embeds: &embeds,
 		})
 	case "betting":
-		components := []discordgo.MessageComponent{}
+		var components []discordgo.MessageComponent
 		rows := getRaceButtons(race)
 		for _, row := range rows {
 			components = append(components, row)

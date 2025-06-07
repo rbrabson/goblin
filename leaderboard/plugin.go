@@ -19,7 +19,7 @@ var (
 	plugin *Plugin
 	bot    *discord.Bot
 	db     *mongo.MongoDB
-	status discord.PluginStatus = discord.RUNNING
+	status = discord.RUNNING
 )
 
 // Plugin is the plugin for the leaderboard

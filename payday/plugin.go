@@ -19,7 +19,7 @@ const (
 var (
 	plugin *Plugin
 	db     *mongo.MongoDB
-	status discord.PluginStatus = discord.RUNNING
+	status = discord.RUNNING
 )
 
 // Plugin is the plugin for the payday system used by the bot

@@ -31,7 +31,7 @@ func GetAccount(guildID string, memberID string) *Account {
 	return account
 }
 
-// GetAcconts returns a list of all accounts for the given bank
+// GetAccounts returns a list of all accounts for the given bank
 func GetAccounts(guildID string, filter interface{}, sortBy interface{}, limit int64) []*Account {
 	return readAccounts(guildID, filter, sortBy, limit)
 }

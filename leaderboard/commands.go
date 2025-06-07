@@ -261,63 +261,6 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 // formatAccounts formats the leaderboard to be sent to a Discord server
-func newFormatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
-	embeds := []*discordgo.MessageEmbed{
-		{
-			Type:   discordgo.EmbedTypeRich,
-			Title:  title,
-			Fields: make([]*discordgo.MessageEmbedField, 0, len(accounts)),
-		},
-	}
-	embed := embeds[0]
-
-	sb := strings.Builder{}
-	for i, account := range accounts {
-		sb.Reset()
-		member := guild.GetMember(account.GuildID, account.MemberID)
-		var balance int
-		switch title {
-		case string(CurrentLeaderboard):
-			balance = account.CurrentBalance
-		case string(MonthlyLeaderboard):
-			balance = account.MonthlyBalance
-		case string(LifetimeLeaderboard):
-			balance = account.LifetimeBalance
-		default:
-			balance = account.MonthlyBalance
-		}
-
-		sb.WriteString(p.Sprintf("Rank %d", i+1))
-		switch i {
-		case 0:
-			sb.WriteString(" 🥇")
-		case 1:
-			sb.WriteString(" 🥈")
-		case 2:
-			sb.WriteString(" 🥉")
-		}
-		sb.WriteString(p.Sprintf(" - %s", member.Name))
-		name := sb.String()
-
-		sb.Reset()
-		sb.WriteString(p.Sprintf("Balance: %d\n", balance))
-		sb.WriteString(p.Sprintf("Tag: <@%s>\n", member.MemberID))
-		if member.UserName != "" {
-			sb.WriteString(p.Sprintf("Username: %s\n", member.UserName))
-		}
-		value := sb.String()
-
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:   name,
-			Value:  value,
-			Inline: false,
-		})
-	}
-
-	return embeds
-}
-
-// formatAccounts formats the leaderboard to be sent to a Discord server
 func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
 	var tableBuffer strings.Builder
 	table := tablewriter.NewTable(&tableBuffer,
