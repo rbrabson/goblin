@@ -228,14 +228,14 @@ func vaultUpdater() {
 }
 
 // String returns a string representation of the Target.
-func (target *Target) String() string {
+func (t *Target) String() string {
 	return fmt.Sprintf("Target{ID=%s, GuildID=%s, TargetID=%s, CrewSize=%d, Success=%.2f, Vault=%d, VaultMax=%d}",
-		target.ID,
-		target.GuildID,
-		target.Name,
-		target.CrewSize,
-		target.Success,
-		target.Vault,
-		target.VaultMax,
+		t.ID,
+		t.GuildID,
+		t.Name,
+		t.CrewSize,
+		t.Success,
+		t.Vault,
+		t.VaultMax,
 	)
 }

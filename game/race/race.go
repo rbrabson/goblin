@@ -64,7 +64,7 @@ type RaceLeg struct {
 	ParticipantPositions []*RaceParticipantPosition // The results for each member in a given leg of the race
 }
 
-// RacePartipantPosition is used to track the movement of a given member during a single leg of a race.
+// RaceParticipantPosition is used to track the movement of a given member during a single leg of a race.
 type RaceParticipantPosition struct {
 	RaceParticipant *RaceParticipant // Member who is racing
 	Position        int              // Position of the member on the track for a given leg of the race
@@ -147,13 +147,13 @@ func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 }
 
 // addBetter adds a better for the given race.
-func (race *Race) addBetter(better *RaceBetter) error {
-	race.mutex.Lock()
-	defer race.mutex.Unlock()
+func (r *Race) addBetter(better *RaceBetter) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
-	race.Betters = append(race.Betters, better)
+	r.Betters = append(r.Betters, better)
 	slog.Debug("add better to current race",
-		slog.String("guildID", race.GuildID),
+		slog.String("guildID", r.GuildID),
 		slog.String("memberID", better.Member.MemberID),
 	)
 
@@ -162,28 +162,28 @@ func (race *Race) addBetter(better *RaceBetter) error {
 
 // RunRace runs a race, calculating the results of each leg of the race and the
 // ultimate winners of the race.
-func (race *Race) RunRace(trackLength int) {
-	race.mutex.Lock()
-	defer race.mutex.Unlock()
+func (r *Race) RunRace(trackLength int) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
 	// Create the initial starting positions and add them to an initial race leg
 	raceLeg := &RaceLeg{
-		ParticipantPositions: make([]*RaceParticipantPosition, 0, len(race.Racers)),
+		ParticipantPositions: make([]*RaceParticipantPosition, 0, len(r.Racers)),
 	}
-	for _, racer := range race.Racers {
+	for _, racer := range r.Racers {
 		participantPosition := &RaceParticipantPosition{
 			RaceParticipant: racer,
 			Position:        trackLength,
 		}
 		raceLeg.ParticipantPositions = append(raceLeg.ParticipantPositions, participantPosition)
 	}
-	race.RaceLegs = append(race.RaceLegs, raceLeg)
+	r.RaceLegs = append(r.RaceLegs, raceLeg)
 	previousLeg := raceLeg
 
 	// Run the race until all racers cross the finish line
 	slog.Debug("starting race",
-		slog.String("guildID", race.GuildID),
-		slog.Int("numRacers", len(race.Racers)),
+		slog.String("guildID", r.GuildID),
+		slog.Int("numRacers", len(r.Racers)),
 		slog.Int("trackLength", trackLength),
 	)
 	turn := 0
@@ -193,7 +193,7 @@ func (race *Race) RunRace(trackLength int) {
 
 		// Create and add a new race leg
 		newRaceLeg := &RaceLeg{
-			ParticipantPositions: make([]*RaceParticipantPosition, 0, len(race.Racers)),
+			ParticipantPositions: make([]*RaceParticipantPosition, 0, len(r.Racers)),
 		}
 
 		// Run the new race leg
@@ -206,11 +206,11 @@ func (race *Race) RunRace(trackLength int) {
 			}
 		}
 
-		race.RaceLegs = append(race.RaceLegs, newRaceLeg)
+		r.RaceLegs = append(r.RaceLegs, newRaceLeg)
 		previousLeg = newRaceLeg
 	}
 
-	calculateWinnings(race, previousLeg)
+	calculateWinnings(r, previousLeg)
 }
 
 // End ends the current race.

@@ -397,6 +397,6 @@ func (m *MongoDB) getCollection(ctx context.Context, collectionName string) (*mo
 }
 
 // String returns the name of the database
-func (db *MongoDB) String() string {
+func (m *MongoDB) String() string {
 	return "mongo"
 }

@@ -75,7 +75,7 @@ func (c *Config) SetModChannel(channelID string) {
 	}
 }
 
-// SetModChannel sets the channel to which to notify a user (e.g., ModMail) about an action to take to complete a member's purchase.
+// SetNotificationID sets the channel to which to notify a user (e.g., ModMail) about an action to take to complete a member's purchase.
 func (c *Config) SetNotificationID(id string) {
 	if c.NotificationID != id {
 		c.NotificationID = id

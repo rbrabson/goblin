@@ -36,7 +36,7 @@ type Purchase struct {
 	IsExpired   bool               `json:"is_expired" bson:"is_expired"`
 }
 
-// GetAllRoles returns all the purchases made by a member in the guild.
+// GetAllPurchases returns all the purchases made by a member in the guild.
 func GetAllPurchases(guildID string, memberID string) []*Purchase {
 	purchases, err := readPurchases(guildID, memberID)
 	if err != nil {
