@@ -15,12 +15,12 @@ import (
 	"golang.org/x/text/message"
 )
 
-type LeaderboardType string
+type Type string
 
 const (
-	CurrentLeaderboard  LeaderboardType = "Current Leaderboard"
-	MonthlyLeaderboard  LeaderboardType = "Monthly Leaderboard"
-	LifetimeLeaderboard LeaderboardType = "Lifetime Leaderboard"
+	CurrentLeaderboard  Type = "Current Leaderboard"
+	MonthlyLeaderboard  Type = "Monthly Leaderboard"
+	LifetimeLeaderboard Type = "Lifetime Leaderboard"
 )
 
 var (
@@ -193,7 +193,7 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 // sendLeaderboard is a utility function that sends an economy leaderboard to Discord.
-func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title LeaderboardType, accounts []*bank.Account) {
+func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title Type, accounts []*bank.Account) {
 	// Make sure the guild member's name is updated
 	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 

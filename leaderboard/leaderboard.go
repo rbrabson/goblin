@@ -30,7 +30,12 @@ func newLeaderboard(guildID string) *Leaderboard {
 		GuildID:    guildID,
 		LastSeason: disctime.CurrentMonth(time.Now()),
 	}
-	writeLeaderboard(lb)
+	if err := writeLeaderboard(lb); err != nil {
+		slog.Error("Error writing leaderboard",
+			slog.String("guild", guildID),
+			slog.Any("error", err),
+		)
+	}
 
 	return lb
 }
@@ -65,7 +70,12 @@ func getLeaderboard(guildID string) *Leaderboard {
 // setChannel sets the channel ID for the leaderboard to publish the monthly leaderboard.
 func (lb *Leaderboard) setChannel(channelID string) {
 	lb.ChannelID = channelID
-	writeLeaderboard(lb)
+	if err := writeLeaderboard(lb); err != nil {
+		slog.Error("error writing leaderboard",
+			slog.String("guild", lb.GuildID),
+			slog.Any("error", err),
+		)
+	}
 }
 
 // GetCurrentRanking returns the global rankings based on the current balance.
@@ -263,7 +273,13 @@ func sendAllMonthlyLeaderboards() {
 				)
 			}
 			lb.LastSeason = disctime.NextMonth(lastSeason)
-			writeLeaderboard(lb)
+			if err := writeLeaderboard(lb); err != nil {
+				slog.Error("unable to write leaderboard to database",
+					slog.String("guildID", lb.GuildID),
+					slog.String("channelID", lb.ChannelID),
+					slog.Any("error", err),
+				)
+			}
 		}
 		lastSeason = disctime.NextMonth(time.Now())
 

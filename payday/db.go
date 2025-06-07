@@ -36,7 +36,12 @@ func readPayday(guildID string) *Payday {
 // writePayday saves the payday information for the guild into the database.
 func writePayday(payday *Payday) error {
 	filter := bson.M{"guild_id": payday.GuildID}
-	db.UpdateOrInsert(PAYDAY_COLLECTION, filter, payday)
+	if err := db.UpdateOrInsert(PAYDAY_COLLECTION, filter, payday); err != nil {
+		slog.Error("error writing payday",
+			slog.String("guildID", payday.GuildID),
+			slog.Any("error", err),
+		)
+	}
 
 	err := db.UpdateOrInsert(PAYDAY_COLLECTION, filter, payday)
 	if err != nil {

@@ -22,7 +22,11 @@ func newAccount(payday *Payday, memberID string) *Account {
 		MemberID: memberID,
 		GuildID:  payday.GuildID,
 	}
-	writeAccount(account)
+	if err := writeAccount(account); err != nil {
+		slog.Error("error writing account",
+			slog.Any("error", err),
+		)
+	}
 
 	return account
 }

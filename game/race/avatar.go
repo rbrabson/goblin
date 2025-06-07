@@ -12,8 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// RaceAvatar represents a character that may be assigned to a member that partipates in a race
-type RaceAvatar struct {
+// Avatar represents a character that may be assigned to a member that partipates in a race
+type Avatar struct {
 	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID       string             `json:"guild_id" bson:"guild_id"`
 	Theme         string             `json:"theme" bson:"theme"`
@@ -22,7 +22,7 @@ type RaceAvatar struct {
 }
 
 // GetRaceAvatars returns the list of chracters that may be assigned to a member during a race.
-func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
+func GetRaceAvatars(guildID string, themeName string) []*Avatar {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
 	avatars, err := readAllRacers(filter)
 	if err != nil {
@@ -49,7 +49,7 @@ func GetRaceAvatars(guildID string, themeName string) []*RaceAvatar {
 
 // readRaceAvatarsFromFile reads the list of characters for the theme and guild from the database. If the list
 // does not exist, then an error is returned.
-func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
+func readRaceAvatarsFromFile(guildID string, themeName string) []*Avatar {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "race", "avatars", themeName+".json")
 	bytes, err := os.ReadFile(configFileName)
@@ -63,7 +63,7 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 		return getDefaultRaceAvatars(guildID)
 	}
 
-	var avatars []*RaceAvatar
+	var avatars []*Avatar
 	err = json.Unmarshal(bytes, &avatars)
 	if err != nil {
 		slog.Error("failed to unmarshal default race avatars",
@@ -92,8 +92,8 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*RaceAvatar {
 
 // getDefaultRaceAvatars creates a new list of characters for the guild. The list is saved to
 // the database.
-func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
-	racers := []*RaceAvatar{
+func getDefaultRaceAvatars(guildID string) []*Avatar {
+	racers := []*Avatar{
 		{
 			GuildID:       guildID,
 			Theme:         "clash",
@@ -319,7 +319,7 @@ func getDefaultRaceAvatars(guildID string) []*RaceAvatar {
 }
 
 // calculateMovement calculates the distance a racer moves on a given turn
-func (avatar *RaceAvatar) calculateMovement(currentTurn int) int {
+func (avatar *Avatar) calculateMovement(currentTurn int) int {
 	source := rand.NewPCG(rand.Uint64(), rand.Uint64())
 	r := rand.New(source)
 	switch avatar.MovementSpeed {
@@ -358,6 +358,6 @@ func (avatar *RaceAvatar) calculateMovement(currentTurn int) int {
 }
 
 // String returns a string representation of the race avatar.
-func (r *RaceAvatar) String() string {
+func (r *Avatar) String() string {
 	return r.Emoji
 }

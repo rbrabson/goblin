@@ -26,7 +26,7 @@ type Race struct {
 	RaceLegs      []*RaceLeg                   // The list of legs in the race
 	RaceResult    *RaceResult                  // The results of the race
 	RaceStartTime time.Time                    // The time at which the race is started (first created)
-	raceAvatars   []*RaceAvatar                // The avatars of the racers
+	raceAvatars   []*Avatar                    // The avatars of the racers
 	interaction   *discordgo.InteractionCreate // Interaction used in sending message updates
 	config        *Config                      // Race configuration (avoids having to read from the database)
 	mutex         sync.Mutex                   // Lock used to synchronize access to the race
@@ -35,7 +35,7 @@ type Race struct {
 // RaceParticpant is a member who is racing. This includes the member and the racer assigned to them.
 type RaceParticipant struct {
 	Member *RaceMember // Member who is racing
-	Racer  *RaceAvatar // Racer assigned to the member
+	Racer  *Avatar     // Racer assigned to the member
 }
 
 // RaceBetter is a member who is betting on the outcome of the race.
@@ -274,7 +274,7 @@ func ResetRace(guildID string) {
 }
 
 // getRaceAvatar returns a  random race avatar to be used by a race participant.
-func getRaceAvatar(race *Race) *RaceAvatar {
+func getRaceAvatar(race *Race) *Avatar {
 	if len(race.raceAvatars) == 0 {
 		race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
 	}

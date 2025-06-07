@@ -121,7 +121,12 @@ func NewBot(botName string, version string, revision string) *Bot {
 				resp := disgomsg.NewResponse(
 					disgomsg.WithContent("Unknown command. Use `/help` to see a list of available commands."),
 				)
-				resp.SendEphemeral(s, i.Interaction)
+				if err = resp.SendEphemeral(s, i.Interaction); err != nil {
+					slog.Error("failed to send ephemeral message",
+						slog.String("command", i.ApplicationCommandData().Name),
+						slog.Any("error", err),
+					)
+				}
 			}
 		case discordgo.InteractionMessageComponent:
 			if h, ok := componentHandlers[i.MessageComponentData().CustomID]; ok {
@@ -136,7 +141,11 @@ func NewBot(botName string, version string, revision string) *Bot {
 					resp := disgomsg.NewResponse(
 						disgomsg.WithContent("Unknown component. Please try again."),
 					)
-					resp.SendEphemeral(s, i.Interaction)
+					if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+						slog.Error("failed to send ephemeral message",
+							slog.Any("error", err),
+						)
+					}
 				}
 			}
 		}

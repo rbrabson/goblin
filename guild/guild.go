@@ -77,7 +77,13 @@ func readGuildFromFile(guildID string) *Guild {
 	}
 	guild.GuildID = guildID
 
-	writeGuild(guild)
+	if err := writeGuild(guild); err != nil {
+		slog.Error("failed to write default guild config",
+			slog.String("guildID", guildID),
+			slog.String("file", configFileName),
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("create new guild",
 		slog.String("guildID", guild.GuildID),
 		slog.String("file", configFileName),
@@ -92,7 +98,13 @@ func getDefaultGuild(guildID string) *Guild {
 	}
 	guild.AdminRoles = make([]string, len(DEFAULT_ADMIN_ROLES))
 	copy(guild.AdminRoles, DEFAULT_ADMIN_ROLES)
-	writeGuild(guild)
+	if err := writeGuild(guild); err != nil {
+		slog.Error("failed to write default guild config",
+			slog.String("guildID", guildID),
+			slog.String("file", guild.GuildID),
+			slog.Any("error", err),
+		)
+	}
 
 	return guild
 }
@@ -109,7 +121,13 @@ func (guild *Guild) AddAdminRole(roleName string) {
 	}
 
 	guild.AdminRoles = append(guild.AdminRoles, roleName)
-	writeGuild(guild)
+	if err := writeGuild(guild); err != nil {
+		slog.Error("failed to write default guild config",
+			slog.String("guildID", guild.GuildID),
+			slog.String("file", guild.GuildID),
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("adde role",
 		slog.String("guildID", guild.GuildID),
 		slog.String("roleName", roleName),
@@ -122,7 +140,13 @@ func (guild *Guild) RemoveAdminRole(roleName string) {
 	for i, role := range guild.AdminRoles {
 		if role == roleName {
 			guild.AdminRoles = append(guild.AdminRoles[:i], guild.AdminRoles[i+1:]...)
-			writeGuild(guild)
+			if err := writeGuild(guild); err != nil {
+				slog.Error("failed to write default guild config",
+					slog.String("guildID", guild.GuildID),
+					slog.String("file", guild.GuildID),
+					slog.Any("error", err),
+				)
+			}
 			slog.Info("removed admin role",
 				slog.String("guildID", guild.GuildID),
 				slog.String("roleName", roleName),

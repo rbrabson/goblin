@@ -70,7 +70,11 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -78,7 +82,11 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You do not have permission to use this command."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -132,7 +140,11 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" added", roleName)),
 	)
-	resp.Send(s, i.Interaction)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.Any("error", err),
+		)
+	}
 }
 
 // removeRole removes a role from the list of admin roles for the server.
@@ -154,7 +166,11 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" removed", roleName)),
 	)
-	resp.Send(s, i.Interaction)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.Any("error", err),
+		)
+	}
 }
 
 // listRoles lists the admin roles for the server.
@@ -182,5 +198,9 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(roleList),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.Any("error", err),
+		)
+	}
 }

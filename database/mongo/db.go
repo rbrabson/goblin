@@ -77,10 +77,15 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
 		)
-		return nil, ErrCollectionNotAccessable
+		return nil, ErrCollectionNotAccessible
 	}
 	defer func() {
-		cur.Close(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close the mongodb cursor",
+				slog.String("collection", collectionName),
+				slog.Any("error", err),
+			)
+		}
 	}()
 
 	type result struct {
@@ -93,10 +98,15 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
 		)
-		return nil, ErrCollectionNotAccessable
+		return nil, ErrCollectionNotAccessible
 	}
 	defer func() {
-		cur.Close(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close the mongodb cursor",
+				slog.String("collection", collectionName),
+				slog.Any("error", err),
+			)
+		}
 	}()
 
 	idList := make([]string, 0, len(results))
@@ -132,7 +142,13 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 		return err
 	}
 	defer func() {
-		cur.Close(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close the mongodb cursor",
+				slog.String("database", m.dbname),
+				slog.String("collection", collectionName),
+				slog.Any("error", err),
+			)
+		}
 	}()
 	err = cur.All(ctx, data)
 	if err != nil {
@@ -261,7 +277,7 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 			slog.Any("error", err),
 			slog.Any("filter", filter),
 		)
-		return 0, ErrCollectionNotAccessable
+		return 0, ErrCollectionNotAccessible
 	}
 	slog.Debug("count",
 		slog.String("collection", collectionName),
@@ -374,7 +390,7 @@ func (m *MongoDB) getCollection(ctx context.Context, collectionName string) (*mo
 		slog.Error("uanble to access the collection",
 			slog.String("collection", collectionName),
 		)
-		return nil, ErrCollectionNotAccessable
+		return nil, ErrCollectionNotAccessible
 	}
 
 	return collection, nil

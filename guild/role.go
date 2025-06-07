@@ -13,7 +13,7 @@ var (
 	db *mongo.MongoDB
 )
 
-// Sets the database to be used by the role package.
+// SetDB sets the database to be used by the role package.
 func SetDB(database *mongo.MongoDB) {
 	db = database
 }

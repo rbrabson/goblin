@@ -39,7 +39,7 @@ func main() {
 	}
 
 	outDir := from_dir.Name() + "/" + "converted"
-	convert.Intialize(GUILD_ID, outDir)
+	convert.Initialize(GUILD_ID, outDir)
 
 	slog.Info("Starting conversion", slog.String("output_directory", outDir))
 	for _, fileName := range fileNames {

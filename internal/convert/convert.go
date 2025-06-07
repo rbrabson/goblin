@@ -5,7 +5,8 @@ var (
 	OUT_DIR  string
 )
 
-func Intialize(guildID string, outputDir string) {
+// Initialize sets the guild ID and output directory
+func Initialize(guildID string, outputDir string) {
 	GUILD_ID = guildID
 	OUT_DIR = outputDir
 }

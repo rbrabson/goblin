@@ -42,7 +42,12 @@ func writeConfig(config *Config) {
 	} else {
 		filter = bson.M{"guild_id": config.GuildID}
 	}
-	db.UpdateOrInsert(CONFIG_COLLECTION, filter, config)
+	if err := db.UpdateOrInsert(CONFIG_COLLECTION, filter, config); err != nil {
+		slog.Error("error writing heist configuration to database",
+			slog.String("guildID", config.GuildID),
+			slog.Any("error", err),
+		)
+	}
 }
 
 // readMember loads the heist member from the database. If it does not exist then
@@ -59,7 +64,7 @@ func readMember(guildID string, memberID string) *HeistMember {
 		)
 		return nil
 	}
-	slog.Debug("read heist member from the database",
+	slog.Info("read heist member from the database",
 		slog.String("guildID", guildID),
 		slog.String("memberID", memberID),
 	)
@@ -75,7 +80,13 @@ func writeMember(member *HeistMember) {
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
-	db.UpdateOrInsert(HEIST_MEMBER_COLLECTION, filter, member)
+	if err := db.UpdateOrInsert(HEIST_MEMBER_COLLECTION, filter, member); err != nil {
+		slog.Error("error writing heist member to the database",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.Any("error", err),
+		)
+	}
 	slog.Debug("write heist member to the database",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
@@ -124,8 +135,14 @@ func writeTarget(target *Target) {
 		filter = bson.D{{Key: "guild_id", Value: target.GuildID}, {Key: "target_id", Value: target.Name}}
 	}
 
-	db.UpdateOrInsert(TARGET_COLLECTION, filter, target)
-	slog.Debug("create or update target",
+	if err := db.UpdateOrInsert(TARGET_COLLECTION, filter, target); err != nil {
+		slog.Error("error writing target to database",
+			slog.String("guildID", target.GuildID),
+			slog.String("targetID", target.Name),
+			slog.Any("error", err),
+		)
+	}
+	slog.Info("create or update target",
 		slog.String("guild", target.GuildID),
 		slog.String("target", target.Name),
 		slog.String("theme", target.Theme),
@@ -173,8 +190,14 @@ func writeTheme(theme *Theme) {
 	} else {
 		filter = bson.M{"guild_id": theme.GuildID, "name": theme.Name}
 	}
-	db.UpdateOrInsert(THEME_COLLECTION, filter, theme)
-	slog.Debug("write theme to the database",
+	if err := db.UpdateOrInsert(THEME_COLLECTION, filter, theme); err != nil {
+		slog.Error("error writing theme to the database",
+			slog.String("guildID", theme.GuildID),
+			slog.String("name", theme.Name),
+			slog.Any("error", err),
+		)
+	}
+	slog.Info("write theme to the database",
 		slog.String("guild", theme.GuildID),
 		slog.String("theme", theme.Name),
 	)

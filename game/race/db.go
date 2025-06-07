@@ -81,16 +81,22 @@ func writeRaceMember(member *RaceMember) {
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
-	db.UpdateOrInsert(RACE_MEMBER_COLLECTION, filter, member)
-	slog.Debug("write race member to the database",
+	if err := db.UpdateOrInsert(RACE_MEMBER_COLLECTION, filter, member); err != nil {
+		slog.Error("failed to write the race member to the database",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.Any("error", err),
+		)
+	}
+	slog.Info("write race member to the database",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)
 }
 
 // readAllRaces loads the racers that may be used in racers that match the filter criteria.
-func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
-	var racers []*RaceAvatar
+func readAllRacers(filter bson.D) ([]*Avatar, error) {
+	var racers []*Avatar
 	sort := bson.D{{Key: "crew_size", Value: 1}}
 	err := db.FindMany(RACER_COLLECTION, filter, &racers, sort, 0)
 	if err != nil || len(racers) == 0 {
@@ -108,7 +114,7 @@ func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 }
 
 // writeRacer creates or updates the target in the database.
-func writeRacer(racer *RaceAvatar) {
+func writeRacer(racer *Avatar) {
 	var filter bson.D
 	if racer.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: racer.ID}}
@@ -116,8 +122,13 @@ func writeRacer(racer *RaceAvatar) {
 		filter = bson.D{{Key: "guild_id", Value: racer.GuildID}, {Key: "theme", Value: racer.Theme}, {Key: "emoji", Value: racer.Emoji}, {Key: "movement_speed", Value: racer.MovementSpeed}}
 	}
 
-	db.UpdateOrInsert(RACER_COLLECTION, filter, racer)
-	slog.Debug("create or update race avatar",
+	if err := db.UpdateOrInsert(RACER_COLLECTION, filter, racer); err != nil {
+		slog.Error("failed to write the racer to the database",
+			slog.String("guildID", racer.GuildID),
+			slog.Any("error", err),
+		)
+	}
+	slog.Info("create or update race avatar",
 		slog.String("guildID", racer.GuildID),
 		slog.String("theme", racer.Theme),
 	)
