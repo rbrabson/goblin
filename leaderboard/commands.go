@@ -2,6 +2,7 @@ package leaderboard
 
 import (
 	"fmt"
+	"github.com/olekukonko/tablewriter/renderer"
 	"github.com/olekukonko/tablewriter/tw"
 	"log/slog"
 	"strconv"
@@ -320,6 +321,14 @@ func newFormatAccounts(p *message.Printer, title string, accounts []*bank.Accoun
 func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
 	var tableBuffer strings.Builder
 	table := tablewriter.NewTable(&tableBuffer,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.BorderNone,
+			Symbols: tw.NewSymbols(tw.StyleASCII),
+			Settings: tw.Settings{
+				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+				Lines:      tw.Lines{ShowHeaderLine: tw.Off},
+			},
+		})),
 		tablewriter.WithConfig(tablewriter.Config{
 			Row: tw.CellConfig{
 				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
@@ -334,17 +343,6 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 		}),
 	)
 
-	//table.SetAutoWrapText(false) // done
-	//table.SetAutoFormatHeaders(true) // maybe?
-	//table.SetHeaderAlignment(tablewriter.ALIGN_LEFT) // done
-	//table.SetAlignment(tablewriter.ALIGN_LEFT) // done
-	//table.SetCenterSeparator("") // maybe?
-	//table.SetColumnSeparator("") // maybe?
-	//table.SetRowSeparator("") // maybe?
-	//table.SetHeaderLine(false) // maybe?
-	//table.SetBorder(false) // maybe?
-	//table.SetTablePadding("\t") // not sure
-	//table.SetNoWhiteSpace(true) // not sure
 	table.Header([]string{"#", "Name", "Balance"})
 
 	// A bit of a hack, but good enough....

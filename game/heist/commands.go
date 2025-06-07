@@ -2,6 +2,7 @@ package heist
 
 import (
 	"fmt"
+	"github.com/olekukonko/tablewriter/renderer"
 	"github.com/olekukonko/tablewriter/tw"
 	"log/slog"
 	"strings"
@@ -534,6 +535,14 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 
 		var tableBuffer strings.Builder
 		table := tablewriter.NewTable(&tableBuffer,
+			tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+				Borders: tw.BorderNone,
+				Symbols: tw.NewSymbols(tw.StyleASCII),
+				Settings: tw.Settings{
+					Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+					Lines:      tw.Lines{ShowHeaderLine: tw.Off},
+				},
+			})),
 			tablewriter.WithConfig(tablewriter.Config{
 				Row: tw.CellConfig{
 					Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
@@ -1068,10 +1077,18 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	// Lets return the data in an Ascii table. Ideally, it would be using a Discord embed, but unfortunately
+	// Returns the data in an Ascii table. Ideally, it would be using a Discord embed, but unfortunately
 	// Discord only puts three columns per row, which isn't enough for our purposes.
 	var tableBuffer strings.Builder
 	table := tablewriter.NewTable(&tableBuffer,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.BorderNone,
+			Symbols: tw.NewSymbols(tw.StyleASCII),
+			Settings: tw.Settings{
+				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+				Lines:      tw.Lines{ShowHeaderLine: tw.Off},
+			},
+		})),
 		tablewriter.WithConfig(tablewriter.Config{
 			Row: tw.CellConfig{
 				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
@@ -1085,21 +1102,6 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}),
 	)
-
-	//var tableBuffer strings.Builder
-	//table := tablewriter.NewWriter(&tableBuffer)
-	//table.SetBorder(false)
-	//table.SetAutoWrapText(false)
-	//table.SetAutoFormatHeaders(true)
-	//table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	//table.SetAlignment(tablewriter.ALIGN_LEFT)
-	//table.SetCenterSeparator("")
-	//table.SetColumnSeparator("")
-	//table.SetRowSeparator("")
-	//table.SetHeaderLine(false)
-	//table.SetBorder(false)
-	//table.SetTablePadding("\t")
-	//table.SetNoWhiteSpace(true)
 	table.Header([]string{"ID", "Max Crew", theme.Vault, "Max " + theme.Vault, "Success Rate"})
 	for _, target := range targets {
 		data := []string{target.Name, fmt.Sprintf("%d", target.CrewSize), fmt.Sprintf("%d", target.Vault), fmt.Sprintf("%d", target.VaultMax), fmt.Sprintf("%.2f", target.Success)}
