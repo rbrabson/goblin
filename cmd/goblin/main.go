@@ -21,9 +21,9 @@ import (
 )
 
 var (
-	BotName  string = "Goblin"
-	Version  string = "dev"
-	Revision string = "test"
+	BotName  = "Goblin"
+	Version  = "dev"
+	Revision = "test"
 )
 
 // Main Discord game bot

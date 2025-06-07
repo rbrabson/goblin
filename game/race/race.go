@@ -32,7 +32,7 @@ type Race struct {
 	mutex         sync.Mutex                   // Lock used to synchronize access to the race
 }
 
-// RaceParticpant is a member who is racing. This includes the member and the racer assigned to them.
+// RaceParticipant is a member who is racing. This includes the member and the racer assigned to them.
 type RaceParticipant struct {
 	Member *RaceMember // Member who is racing
 	Racer  *Avatar     // Racer assigned to the member
@@ -45,7 +45,7 @@ type RaceBetter struct {
 	Winnings int              // Amount won by the better
 }
 
-// RaceResults is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
+// RaceResult is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
 // well as the speed at which they finished.
 type RaceResult struct {
 	Win   *RaceParticipantResult // First place in the race
@@ -413,7 +413,7 @@ func calculateWinnings(race *Race, lastLeg *RaceLeg) {
 	})
 
 	// Calculate the winners of the race and save in the results
-	prize := r.IntN(int(race.config.MaxPrizeAmount-race.config.MinPrizeAmount)) + race.config.MinPrizeAmount
+	prize := r.IntN(race.config.MaxPrizeAmount-race.config.MinPrizeAmount) + race.config.MinPrizeAmount
 	prize *= len(race.Racers)
 
 	// Assign the purse for the winner

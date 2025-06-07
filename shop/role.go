@@ -62,7 +62,7 @@ func roleCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, role
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
 		)
-		return fmt.Errorf("Role %s not found on the server", roleName)
+		return fmt.Errorf("role %s not found on the server", roleName)
 	}
 
 	return createChecks(i.GuildID, roleName, ROLE)

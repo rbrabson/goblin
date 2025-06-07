@@ -12,7 +12,7 @@ const (
 	ACCOUNT_COLLECTION = "bank_accounts"
 )
 
-// Resets the monthly balances for all accounts in all banks.
+// ResetMonthlyBalances resets the monthly balances for all accounts in all banks.
 func ResetMonthlyBalances() {
 	filter := bson.M{}
 	update := bson.M{"monthly_balance": 0}

@@ -11,21 +11,17 @@ import (
 )
 
 const (
-	GAME_ID = "heist"
-)
-
-const (
 	BAIL_BASE           = 250
 	CREW_OUTPUT         = "None"
-	DEATH_TIMER         = time.Duration(45 * time.Second)
+	DEATH_TIMER         = 45 * time.Second
 	HEIST_COST          = 1000
-	POLICE_ALERT        = time.Duration(60 * time.Second)
-	SENTENCE_BASE       = time.Duration(45 * time.Second)
-	WAIT_TIME           = time.Duration(60 * time.Second)
+	POLICE_ALERT        = 60 * time.Second
+	SENTENCE_BASE       = 45 * time.Second
+	WAIT_TIME           = 60 * time.Second
 	HEIST_DEFAULT_THEME = "clash"
 )
 
-// Configuration data for new heists
+// Config is the configuration data for new heists
 type Config struct {
 	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID      string             `json:"guild_id" bson:"guild_id"`
