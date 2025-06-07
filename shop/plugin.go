@@ -130,8 +130,8 @@ func (plugin *Plugin) GetAdminHelp() []string {
 // registerAllShoopItemComponentHandlers adds the component handlers for all
 // shop items that may be purchased.
 func registerAllShoopItemComponentHandlers() {
-	for _, guild := range guild.GetAllGuilds() {
-		shop := GetShop(guild.GuildID)
+	for _, g := range guild.GetAllGuilds() {
+		shop := GetShop(g.GuildID)
 		for _, item := range shop.Items {
 			registerShopItemComponentHandlers(item)
 		}

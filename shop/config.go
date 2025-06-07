@@ -33,7 +33,11 @@ func newConfig(guildID string) *Config {
 		ID:      primitive.NewObjectID(),
 		GuildID: guildID,
 	}
-	writeConfig(config)
+	if err := writeConfig(config); err != nil {
+		slog.Error("error writing the shop config",
+			slog.Any("error", err.Error()),
+		)
+	}
 
 	return config
 }
@@ -43,7 +47,11 @@ func (c *Config) SetChannel(channelID string) {
 	if c.ChannelID != channelID {
 		c.ChannelID = channelID
 		c.MessageID = ""
-		writeConfig(c)
+		if err := writeConfig(c); err != nil {
+			slog.Error("error setting the shop channel",
+				slog.Any("error", err.Error()),
+			)
+		}
 		slog.Debug("set shop channel",
 			slog.String("guildID", c.GuildID),
 			slog.String("channel", channelID),
@@ -55,7 +63,11 @@ func (c *Config) SetChannel(channelID string) {
 func (c *Config) SetModChannel(channelID string) {
 	if c.ModChannelID != channelID {
 		c.ModChannelID = channelID
-		writeConfig(c)
+		if err := writeConfig(c); err != nil {
+			slog.Error("error setting the shop mod channel",
+				slog.Any("error", err.Error()),
+			)
+		}
 		slog.Debug("set shop mod channel",
 			slog.String("guildID", c.GuildID),
 			slog.String("channel", channelID),
@@ -67,7 +79,11 @@ func (c *Config) SetModChannel(channelID string) {
 func (c *Config) SetNotificationID(id string) {
 	if c.NotificationID != id {
 		c.NotificationID = id
-		writeConfig(c)
+		if err := writeConfig(c); err != nil {
+			slog.Error("error setting the shop notification id",
+				slog.Any("error", err.Error()),
+			)
+		}
 		slog.Debug("set shop notification ID",
 			slog.String("guildID", c.GuildID),
 			slog.String("member", id),
@@ -79,7 +95,11 @@ func (c *Config) SetNotificationID(id string) {
 func (c *Config) SetMessageID(messageID string) {
 	if c.MessageID != messageID {
 		c.MessageID = messageID
-		writeConfig(c)
+		if err := writeConfig(c); err != nil {
+			slog.Error("error setting the shop message id",
+				slog.Any("error", err.Error()),
+			)
+		}
 		slog.Debug("set shop message ID",
 			slog.String("guildID", c.GuildID),
 			slog.String("messageID", messageID),

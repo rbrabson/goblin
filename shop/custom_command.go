@@ -68,7 +68,9 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purch
 			slog.String("notificationID", config.NotificationID),
 			slog.Any("error", err),
 		)
-		purchase.Return()
+		if err := purchase.Return(); err != nil {
+			slog.Error("failed to return the custom command")
+		}
 		return nil, err
 	}
 
@@ -84,7 +86,9 @@ func (cc *CustomCommand) Purchase(s *discordgo.Session, memberID string) (*Purch
 			slog.String("memberID", memberID),
 			slog.Any("error", err),
 		)
-		purchase.Return()
+		if err := purchase.Return(); err != nil {
+			slog.Error("failed to return the custom command")
+		}
 		return nil, err
 	}
 
@@ -121,8 +125,7 @@ func customCommandPurchaseChecks(guildID string, memberID string, commandName st
 	}
 
 	// Make common checks for all purchases
-	err := purchaseChecks(guildID, memberID, CUSTOM_COMMAND, commandName)
-	if err != nil {
+	if err := purchaseChecks(guildID, memberID, CUSTOM_COMMAND, commandName); err != nil {
 		return err
 	}
 

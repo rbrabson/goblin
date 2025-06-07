@@ -56,7 +56,7 @@ func GetAllPurchases(guildID string, memberID string) []*Purchase {
 
 	purchaseCmp := func(a, b *Purchase) int {
 		// Sort expired purchases to the bottom of the purchases
-		if a.IsExpired && !a.IsExpired {
+		if a.IsExpired && !b.IsExpired {
 			return 1
 		}
 		if !a.IsExpired && b.IsExpired {
@@ -146,7 +146,15 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 			slog.Any("error", err),
 		)
 		// Refund the member
-		bankAccount.Deposit(item.Price)
+		if err := bankAccount.Deposit(item.Price); err != nil {
+			slog.Error("unable to deposit cash from the bank account",
+				slog.String("guildID", guildID),
+				slog.String("memberID", memberID),
+				slog.String("itemName", item.Name),
+				slog.String("itemType", item.Type),
+				slog.Any("error", err),
+			)
+		}
 		return nil, fmt.Errorf("unable to write purchase to the database: %w", err)
 	}
 	slog.Info("creating new purchase",
@@ -161,13 +169,21 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 		msg := disgomsg.NewMessage(
 			disgomsg.WithContent(p.Sprintf("`%s` (id=%s) purchased %s `%s` for %d", guildMember.Name, memberID, item.Type, item.Name, item.Price)),
 		)
-		msg.Send(bot.Session, config.ModChannelID)
+		if _, err := msg.Send(bot.Session, config.ModChannelID); err != nil {
+			slog.Error("unable to send message to mod channel",
+				slog.String("guildID", guildID),
+				slog.String("memberID", memberID),
+				slog.String("itemName", item.Name),
+				slog.String("itemType", item.Type),
+				slog.Any("error", err),
+			)
+		}
 	}
 
 	return purchase, nil
 }
 
-// Determine if a purchase has expired. This marks the purchase as expired and undoes the effects of the purchase
+// HasExpired determines if a purchase has expired. This marks the purchase as expired and undoes the effects of the purchase
 // if it has expired.
 func (p *Purchase) HasExpired() bool {
 	if p.IsExpired {
@@ -208,7 +224,14 @@ func (p *Purchase) HasExpired() bool {
 	}
 
 	if p.IsExpired != oldIsExpired {
-		writePurchase(p)
+		if err := writePurchase(p); err != nil {
+			slog.Error("unable to write purchase to the database",
+				slog.String("guildID", p.GuildID),
+				slog.String("memberID", p.MemberID),
+				slog.String("itemName", p.Item.Name),
+				slog.Any("error", err),
+			)
+		}
 
 		g, _ := bot.Session.Guild(p.GuildID)
 		var msg string
@@ -238,7 +261,14 @@ func (p *Purchase) HasExpired() bool {
 			msg := disgomsg.NewMessage(
 				disgomsg.WithContent(printer.Sprintf("`%s` (id=%s) had their purchase of %s `%s` expire", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name)),
 			)
-			msg.Send(bot.Session, config.ModChannelID)
+			if _, err := msg.Send(bot.Session, config.ModChannelID); err != nil {
+				slog.Error("unable to send message to mod channel",
+					slog.String("guildID", p.GuildID),
+					slog.String("memberID", p.MemberID),
+					slog.String("itemName", p.Item.Name),
+					slog.Any("error", err),
+				)
+			}
 			slog.Info("purchase has expired",
 				slog.String("guildID", p.GuildID),
 				slog.String("memberID", p.MemberID),
@@ -292,7 +322,14 @@ func (p *Purchase) Return() error {
 		msg := disgomsg.NewMessage(
 			disgomsg.WithContent(printer.Sprintf("`%s` (id=%s) has returned the purchase of %s `%s`", guildMember.Name, p.MemberID, p.Item.Type, p.Item.Name)),
 		)
-		msg.Send(bot.Session, config.ModChannelID)
+		if _, err := msg.Send(bot.Session, config.ModChannelID); err != nil {
+			slog.Error("unable to send message to mod channel",
+				slog.String("guildID", p.GuildID),
+				slog.String("memberID", p.MemberID),
+				slog.String("itemName", p.Item.Name),
+				slog.Any("error", err),
+			)
+		}
 	}
 
 	return nil
