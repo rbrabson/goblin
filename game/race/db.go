@@ -13,7 +13,7 @@ const (
 	RacerCollection      = "race_avatars"
 )
 
-// readConfig loads the race configuration from the database. If it does not exist then
+// readConfig loads the race configuration from the database. If it does not exist, then
 // a `nil` value is returned.
 func readConfig(guildID string) *Config {
 	filter := bson.M{"guild_id": guildID}
@@ -51,7 +51,7 @@ func writeConfig(config *Config) {
 	}
 }
 
-// readConfig loads the race member from the database. If it does not exist then
+// readConfig loads the race member from the database. If it does not exist, then
 // a `nil` value is returned.
 func readRaceMember(guildID string, memberID string) *RaceMember {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}}
@@ -73,7 +73,7 @@ func readRaceMember(guildID string, memberID string) *RaceMember {
 	return &member
 }
 
-// Write creates or updates the race member in the database
+// writeRaceMember creates or updates the race member in the database
 func writeRaceMember(member *RaceMember) {
 	var filter bson.M
 	if member.ID != primitive.NilObjectID {
