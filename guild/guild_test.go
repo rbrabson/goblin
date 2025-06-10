@@ -54,3 +54,84 @@ func TestGetMember(t *testing.T) {
 	}
 	members = append(members, member)
 }
+
+func TestAddAndRemoveAdminRole(t *testing.T) {
+	// Setup
+	guildID := "12345"
+	testRole := "TestAdminRole"
+
+	// Get the guild
+	guild := GetGuild(guildID)
+	if guild == nil {
+		t.Errorf("GetGuild() guild not found or created")
+		return
+	}
+
+	// Store original admin roles to restore later
+	originalRoles := make([]string, len(guild.AdminRoles))
+	copy(originalRoles, guild.AdminRoles)
+
+	// Cleanup function to restore original state
+	defer func() {
+		guild = GetGuild(guildID)
+		guild.AdminRoles = originalRoles
+		if err := writeGuild(guild); err != nil {
+			slog.Error("Error restoring guild admin roles",
+				slog.String("guildID", guildID),
+				slog.Any("err", err),
+			)
+		}
+	}()
+
+	// Test AddAdminRole
+	guild.AddAdminRole(testRole)
+
+	// Verify role was added
+	guild = GetGuild(guildID) // Re-read from database to ensure it was saved
+	found := false
+	for _, role := range guild.AdminRoles {
+		if role == testRole {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("AddAdminRole() failed to add role %s", testRole)
+	}
+
+	// Test RemoveAdminRole
+	guild.RemoveAdminRole(testRole)
+
+	// Verify role was removed
+	guild = GetGuild(guildID) // Re-read from database to ensure it was saved
+	for _, role := range guild.AdminRoles {
+		if role == testRole {
+			t.Errorf("RemoveAdminRole() failed to remove role %s", testRole)
+			break
+		}
+	}
+}
+
+func TestGetAllGuilds(t *testing.T) {
+	// Get all guilds
+	guilds := GetAllGuilds()
+
+	// Verify we got at least one guild (the one created in previous tests)
+	if len(guilds) < 1 {
+		t.Errorf("GetAllGuilds() returned no guilds")
+		return
+	}
+
+	// Verify the test guild is in the list
+	found := false
+	for _, guild := range guilds {
+		if guild.GuildID == "12345" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Errorf("GetAllGuilds() did not return the test guild")
+	}
+}

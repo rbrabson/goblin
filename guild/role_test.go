@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
 	"go.mongodb.org/mongo-driver/bson"
@@ -83,5 +84,34 @@ func teardown() {
 			slog.String("guildID", GuildId),
 			slog.Any("err", err),
 		)
+	}
+}
+
+func TestGetMemberRoles(t *testing.T) {
+	// Create mock guild roles
+	guildRoles := []*discordgo.Role{
+		{ID: "role1", Name: "Admin"},
+		{ID: "role2", Name: "Moderator"},
+		{ID: "role3", Name: "User"},
+		{ID: "role4", Name: "Guest"},
+	}
+
+	// Create mock member role IDs
+	memberRoleIDs := []string{"role1", "role3"}
+
+	// Get member roles
+	memberRoles := GetMemberRoles(guildRoles, memberRoleIDs)
+
+	// Verify the result
+	if len(memberRoles) != 2 {
+		t.Errorf("Expected 2 roles, got %d", len(memberRoles))
+	}
+
+	// Check that the correct roles were returned
+	expectedRoles := []string{"Admin", "User"}
+	for i, role := range expectedRoles {
+		if i >= len(memberRoles) || memberRoles[i] != role {
+			t.Errorf("Expected role %s at position %d, got %s", role, i, memberRoles[i])
+		}
 	}
 }
