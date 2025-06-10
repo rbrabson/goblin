@@ -39,7 +39,7 @@ func TestGetBank(t *testing.T) {
 	banks = append(banks, bank)
 }
 
-func TestGetAccounts(t *testing.T) {
+func TestGetAccountsWithFilter(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
