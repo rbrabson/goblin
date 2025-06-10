@@ -263,3 +263,61 @@ func TestRaceWinBet(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestRaceLoseBet(t *testing.T) {
+	member := GetRaceMember("123", "456")
+	if member == nil {
+		t.Error("expected member to be created")
+		return
+	}
+
+	// Place a bet first
+	if err := member.PlaceBet(100); err != nil {
+		t.Error("error placing bet:", err)
+		return
+	}
+
+	// Initial state after placing bet
+	if member.BetsMade != 1 {
+		t.Error("expected BetsMade to be 1, got", member.BetsMade)
+	}
+	if member.TotalEarnings != -100 {
+		t.Error("expected TotalEarnings to be -100, got", member.TotalEarnings)
+	}
+
+	// Lose the bet
+	member.LoseBet()
+
+	// Verify state after losing bet
+	member = readRaceMember("123", "456")
+	if member == nil {
+		t.Error("expected member to be found")
+		return
+	}
+
+	// BetsMade should still be 1
+	if member.BetsMade != 1 {
+		t.Error("expected BetsMade to be 1, got", member.BetsMade)
+	}
+
+	// BetsWon should be 0
+	if member.BetsWon != 0 {
+		t.Error("expected BetsWon to be 0, got", member.BetsWon)
+	}
+
+	// TotalEarnings should still be -100 (no change from losing)
+	if member.TotalEarnings != -100 {
+		t.Error("expected TotalEarnings to be -100, got", member.TotalEarnings)
+	}
+
+	// Cleanup
+	filter := bson.M{"guild_id": "123", "member_id": "456"}
+	err := db.Delete(RaceMemberCollection, filter)
+	if err != nil {
+		t.Error(err)
+	}
+	err = db.Delete(bank.AccountCollection, filter)
+	if err != nil {
+		t.Error(err)
+	}
+}
