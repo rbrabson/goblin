@@ -209,3 +209,56 @@ func TestGetNextPayday(t *testing.T) {
 
 	accounts = append(accounts, account)
 }
+
+func TestAccountString(t *testing.T) {
+	paydays := make([]*Payday, 0, 1)
+	defer func() {
+		for _, payday := range paydays {
+			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
+				slog.Error("Error deleting payday",
+					slog.String("guildID", payday.GuildID),
+					slog.Any("err", err),
+				)
+			}
+		}
+	}()
+	accounts := make([]*Account, 0, 1)
+	defer func() {
+		for _, account := range accounts {
+			if err := db.Delete(PaydayAccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+				slog.Error("Error deleting payday account",
+					slog.String("guildID", account.GuildID),
+					slog.String("accountID", account.MemberID),
+					slog.Any("err", err),
+				)
+			}
+		}
+	}()
+
+	payday := readPaydayFromFile("12345")
+	if payday == nil {
+		t.Errorf("newPayday() returned nil")
+		return
+	}
+	paydays = append(paydays, payday)
+
+	account := newAccount(payday, "67890")
+	if account == nil {
+		t.Error("account is nil")
+		return
+	}
+
+	// Set a specific next payday time for consistent testing
+	nextPayday := time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)
+	account.setNextPayday(nextPayday)
+	account = readAccount(payday, "67890")
+
+	// Test the String method
+	str := account.String()
+	expected := "PaydayAccount{ID=" + account.ID.Hex() + ", GuildID=12345, MemberID=67890, NextPayday=2023-01-01 12:00:00 +0000 UTC}"
+	if str != expected {
+		t.Errorf("expected String() to return '%s', got '%s'", expected, str)
+	}
+
+	accounts = append(accounts, account)
+}
