@@ -24,7 +24,7 @@ func GetRole(guildID string, name string) *Role {
 
 // NewRole creates a new role for the shop.
 func NewRole(guildID string, name string, description string, price int, duration string, autoRenewable bool) *Role {
-	item := newShopItem(guildID, name, description, ROLE, price, duration, autoRenewable)
+	item := newShopItem(guildID, name, description, ROLE, price, duration, autoRenewable, 0)
 	role := (*Role)(item)
 	return role
 }
@@ -62,7 +62,7 @@ func roleCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, role
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
 		)
-		return fmt.Errorf("Role %s not found on the server", roleName)
+		return fmt.Errorf("role %s not found on the server", roleName)
 	}
 
 	return createChecks(i.GuildID, roleName, ROLE)

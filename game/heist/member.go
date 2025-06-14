@@ -12,24 +12,23 @@ import (
 type CriminalLevel int
 
 const (
-	GREENHORN CriminalLevel = 0
-	RENEGADE  CriminalLevel = 1
-	VETERAN   CriminalLevel = 10
-	COMMANDER CriminalLevel = 25
-	WAR_CHIEF CriminalLevel = 50
-	LEGEND    CriminalLevel = 75
-	IMMORTAL  CriminalLevel = 100
+	Greenhorn CriminalLevel = 0
+	Renegade  CriminalLevel = 1
+	Veteran   CriminalLevel = 10
+	Commander CriminalLevel = 25
+	WarChief  CriminalLevel = 50
+	Legend    CriminalLevel = 75
+	Immortal  CriminalLevel = 100
 )
 
 type MemberStatus string
 
 const (
-	ESCAPED     = "Escaped"
+	Escaped     = "Escaped"
 	FREE        = "Free"
-	DEAD        = "Dead"
-	APPREHENDED = "Apprehended"
+	Dead        = "Dead"
+	Apprehended = "Apprehended"
 	OOB         = "Out on Bail"
-	UNKNOWN     = "Unknown"
 )
 
 // HeistMember is the status of a member who has participated in at least one heist
@@ -68,7 +67,7 @@ func newHeistMember(guildID string, memberID string) *HeistMember {
 	member := &HeistMember{
 		GuildID:       guildID,
 		MemberID:      memberID,
-		CriminalLevel: GREENHORN,
+		CriminalLevel: Greenhorn,
 		Status:        FREE,
 	}
 	writeMember(member)
@@ -88,7 +87,7 @@ func (member *HeistMember) Apprehended() {
 	}
 	member.Sentence = time.Duration(int64(member.heist.config.SentenceBase) * int64(member.JailCounter+1))
 	member.JailTimer = time.Now().Add(member.Sentence)
-	member.Status = APPREHENDED
+	member.Status = Apprehended
 	member.JailCounter++
 	member.TotalJail++
 	member.Spree = 0
@@ -122,7 +121,7 @@ func (member *HeistMember) Died() {
 	member.JailTimer = time.Time{}
 	member.Sentence = 0
 	member.Spree = 0
-	member.Status = DEAD
+	member.Status = Dead
 
 	writeMember(member)
 
@@ -167,7 +166,7 @@ func (member *HeistMember) Escaped() {
 // or dead, then the status is updated to FREE when the time has expired.
 func (member *HeistMember) UpdateStatus() {
 	switch member.Status {
-	case APPREHENDED:
+	case Apprehended:
 		if member.RemainingJailTime() <= 0 {
 			member.ClearJailAndDeathStatus()
 		}
@@ -175,7 +174,7 @@ func (member *HeistMember) UpdateStatus() {
 		if member.RemainingJailTime() <= 0 {
 			member.ClearJailAndDeathStatus()
 		}
-	case DEAD:
+	case Dead:
 		if member.RemainingDeathTime() <= 0 {
 			member.ClearJailAndDeathStatus()
 		}
@@ -184,7 +183,7 @@ func (member *HeistMember) UpdateStatus() {
 
 // ClearJailAndDeathStatus is called when a player is released from jail or rises from the grave.
 func (member *HeistMember) ClearJailAndDeathStatus() {
-	if member.Status == DEAD {
+	if member.Status == Dead {
 		slog.Debug("heist member risen from the grave",
 			slog.Int("bail", member.BailCost),
 			slog.Any("criminalLevel", member.CriminalLevel),
@@ -199,7 +198,7 @@ func (member *HeistMember) ClearJailAndDeathStatus() {
 			slog.Int("totalDeaths", member.Deaths),
 			slog.Int("totalJail", member.TotalJail),
 		)
-	} else if member.Status == APPREHENDED || member.Status == OOB {
+	} else if member.Status == Apprehended || member.Status == OOB {
 		slog.Debug("heist member released from jail",
 			slog.Int("bail", member.BailCost),
 			slog.Any("criminalLevel", member.CriminalLevel),
@@ -265,19 +264,19 @@ func (member *HeistMember) String() string {
 // String returns the string representation for a criminal level
 func (level CriminalLevel) String() string {
 	switch {
-	case level >= IMMORTAL:
+	case level >= Immortal:
 		return "Immortal"
-	case level >= LEGEND:
+	case level >= Legend:
 		return "Legend"
-	case level >= WAR_CHIEF:
+	case level >= WarChief:
 		return "WarChief"
-	case level >= COMMANDER:
+	case level >= Commander:
 		return "Commander"
-	case level >= VETERAN:
+	case level >= Veteran:
 		return "Veteran"
-	case level >= RENEGADE:
+	case level >= Renegade:
 		return "Renegade"
-	case level >= GREENHORN:
+	case level >= Greenhorn:
 		return "Greenhorn"
 	default:
 		return "Unknown"

@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	PAYDAY_COLLECTION         = "paydays"
-	PAYDAY_ACCOUNT_COLLECTION = "payday_accounts"
+	PaydayCollection        = "paydays"
+	PaydayAccountCollection = "payday_accounts"
 )
 
 // readPayday loads payday information for the guild from the database.
@@ -18,7 +18,7 @@ func readPayday(guildID string) *Payday {
 		"guild_id": guildID,
 	}
 	var payday *Payday
-	err := db.FindOne(PAYDAY_COLLECTION, filter, &payday)
+	err := db.FindOne(PaydayCollection, filter, &payday)
 	if err != nil {
 		slog.Debug("payday not found in the database",
 			slog.String("guildID", guildID),
@@ -36,9 +36,7 @@ func readPayday(guildID string) *Payday {
 // writePayday saves the payday information for the guild into the database.
 func writePayday(payday *Payday) error {
 	filter := bson.M{"guild_id": payday.GuildID}
-	db.UpdateOrInsert(PAYDAY_COLLECTION, filter, payday)
-
-	err := db.UpdateOrInsert(PAYDAY_COLLECTION, filter, payday)
+	err := db.UpdateOrInsert(PaydayCollection, filter, payday)
 	if err != nil {
 		slog.Error("unable to save payday to the database",
 			slog.String("guildID", payday.GuildID),
@@ -56,7 +54,7 @@ func writePayday(payday *Payday) error {
 func readAccount(payday *Payday, accountID string) *Account {
 	filter := bson.M{"guild_id": payday.GuildID, "member_id": accountID}
 	var account *Account
-	err := db.FindOne(PAYDAY_ACCOUNT_COLLECTION, filter, &account)
+	err := db.FindOne(PaydayAccountCollection, filter, &account)
 	if err != nil {
 		slog.Debug("payday account not found in the database",
 			slog.String("guildID", payday.GuildID),
@@ -82,7 +80,7 @@ func writeAccount(account *Account) error {
 	} else {
 		filter = bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}
 	}
-	err := db.UpdateOrInsert(PAYDAY_ACCOUNT_COLLECTION, filter, account)
+	err := db.UpdateOrInsert(PaydayAccountCollection, filter, account)
 	if err != nil {
 		slog.Debug("unable to write payday account to the database",
 			slog.String("guildID", account.GuildID),

@@ -1,6 +1,7 @@
 package payday
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -31,7 +32,11 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -44,17 +49,31 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(p.Sprintf("You can't get another payday yet. You need to wait %s.", format.Duration(remainingTime))),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
-	account.Deposit(payday.Amount)
+	if err := account.Deposit(payday.Amount); err != nil {
+		slog.Error("error depositing data in the account",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
+	}
 
 	paydayAccount.setNextPayday(time.Now().Add(payday.PaydayFrequency))
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("You deposited your check of %d into your bank account. You now have %d credits.", payday.Amount, account.CurrentBalance)),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.Any("error", err),
+		)
+	}
 }

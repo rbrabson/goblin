@@ -76,7 +76,11 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("System is shutting down"),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the race admin command",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -93,7 +97,11 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Command is unknown"),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the race admin command",
+				slog.Any("error", err),
+			)
+		}
 	}
 }
 
@@ -103,7 +111,11 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("System is shutting down"),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the race admin command",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -117,7 +129,11 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Command is unknown"),
 		)
-		resp.Send(s, i.Interaction)
+		if err := resp.Send(s, i.Interaction); err != nil {
+			slog.Error("failed to send the race admin command",
+				slog.Any("error", err),
+			)
+		}
 		slog.Error("unknown command",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
@@ -135,7 +151,11 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent("Race has been reset"),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("failed to send the race admin command",
+			slog.Any("error", err),
+		)
+	}
 }
 
 // startRace starts a race that other members may join.
@@ -147,7 +167,11 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the race admin command",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 	race := GetRace(i.GuildID)
@@ -158,7 +182,11 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race.addRaceParticipant(member)
 	defer race.End()
 
-	raceMessage(s, race, "start")
+	if err := raceMessage(s, race, "start"); err != nil {
+		slog.Error("failed to send the race admin command",
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("race started",
 		slog.String("guiildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
@@ -166,18 +194,30 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
-		raceMessage(s, race, "cancelled")
+		if err := raceMessage(s, race, "cancelled"); err != nil {
+			slog.Error("failed to send the race admin command",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
-	raceMessage(s, race, "betting")
+	if err := raceMessage(s, race, "betting"); err != nil {
+		slog.Error("failed to send the race admin command",
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("waiting for bets",
 		slog.String("guildID", i.GuildID),
 		slog.Int("racers", len(race.Racers)),
 	)
 	waitForBetsToBePlaced(s, race)
 
-	raceMessage(s, race, "started")
+	if err := raceMessage(s, race, "started"); err != nil {
+		slog.Error("failed to send the race admin command",
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("race starting",
 		slog.String("guildID", i.GuildID),
 		slog.Int("racers", len(race.Racers)),
@@ -187,7 +227,11 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race.RunRace(len([]rune(race.config.Track)))
 	sendRace(s, race)
 
-	raceMessage(s, race, "ended")
+	if err := raceMessage(s, race, "ended"); err != nil {
+		slog.Error("failed to send the race admin command",
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("race ended",
 		slog.String("guildID", i.GuildID),
 	)
@@ -251,7 +295,11 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("No race is planned"),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -260,7 +308,11 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -396,7 +448,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("No race is planned"),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -406,7 +462,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
@@ -428,19 +488,33 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Insufficiient funds in your bank account to place a bet"),
 		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
 	// Add to the list of betters
 	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	better := getRaceBetter(raceMember, raceParticipant)
-	race.addBetter(better)
+	if err := race.addBetter(better); err != nil {
+		slog.Error("failed to add better",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
+	}
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("You have placed a %d credit bet on %s", race.config.BetAmount, raceParticipant.Member.guildMember.Name)),
 	)
-	resp.SendEphemeral(s, i.Interaction)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("failed to send the response",
+			slog.Any("error", err),
+		)
+	}
 
 	slog.Info("you have placed a bet",
 		slog.String("guildID", i.GuildID),
@@ -622,7 +696,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 			Embeds: &embeds,
 		})
 	case "betting":
-		components := []discordgo.MessageComponent{}
+		var components []discordgo.MessageComponent
 		rows := getRaceButtons(race)
 		for _, row := range rows {
 			components = append(components, row)
@@ -646,7 +720,7 @@ func sendRace(s *discordgo.Session, race *Race) {
 	channelID := race.interaction.ChannelID
 	// Send the initial track
 	track := getCurrentTrack(race.RaceLegs[0], race.config)
-	message, err := s.ChannelMessageSend(channelID, fmt.Sprintf("%s\n", track))
+	m, err := s.ChannelMessageSend(channelID, fmt.Sprintf("%s\n", track))
 	if err != nil {
 		slog.Error("failed to send message at the start of the race",
 			slog.String("guildID", race.GuildID),
@@ -662,7 +736,7 @@ func sendRace(s *discordgo.Session, race *Race) {
 	for _, raceLeg := range race.RaceLegs {
 		time.Sleep(2 * time.Second)
 		track = getCurrentTrack(raceLeg, race.config)
-		_, err = s.ChannelMessageEdit(channelID, message.ID, fmt.Sprintf("%s\n", track))
+		_, err = s.ChannelMessageEdit(channelID, m.ID, fmt.Sprintf("%s\n", track))
 		if err != nil {
 			slog.Error("failed to update race message",
 				slog.String("guildID", race.GuildID),
@@ -755,9 +829,15 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 			Fields: raceResults,
 		},
 	}
-	s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
+	_, err := s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Embeds: embeds,
 	})
+	if err != nil {
+		slog.Error("failed to send the racer results to the channel",
+			slog.String("channelID", channelID),
+			slog.Any("error", err),
+		)
+	}
 }
 
 // getRacer takes a custom button ID and returns the corresponding racer.

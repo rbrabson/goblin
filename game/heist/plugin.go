@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	PLUGIN_NAME = "heist"
+	PluginName = "heist"
 )
 
 var (
 	plugin *Plugin
 	db     *mongo.MongoDB
-	status discord.PluginStatus = discord.RUNNING
+	status = discord.RUNNING
 )
 
 // Plugin is the plugin for the heist game
@@ -78,7 +78,7 @@ func (plugin *Plugin) GetComponentHandlers() map[string]func(*discordgo.Session,
 
 // GetName returns the name of the banking system plugin
 func (plugin *Plugin) GetName() string {
-	return PLUGIN_NAME
+	return PluginName
 }
 
 // GetHelp returns the member help for the banking system
@@ -86,11 +86,11 @@ func (plugin *Plugin) GetHelp() []string {
 	help := make([]string, 0, 1)
 
 	for _, command := range memberCommands[0].Options {
-		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", PLUGIN_NAME, command.Name, command.Description)
+		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", PluginName, command.Name, command.Description)
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
 	help = append([]string{title}, help...)
 
 	return help
@@ -106,7 +106,7 @@ func (plugin *Plugin) GetAdminHelp() []string {
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PLUGIN_NAME))
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
 	help = append([]string{title}, help...)
 
 	return help

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	SHOP_BAN = "shop"
+	ShopBan = "shop"
 )
 
 // Member represents a member of a guild with restrictions on what they can or cannot do in a shop.

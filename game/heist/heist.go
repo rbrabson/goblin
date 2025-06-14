@@ -218,7 +218,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 				heist:        h,
 				BonusCredits: 0,
 			}
-			if result.Status == DEAD {
+			if result.Status == Dead {
 				results.Dead = append(results.Dead, result)
 				results.AllResults = append(results.AllResults, result)
 			} else {
@@ -308,13 +308,13 @@ func heistChecks(h *Heist, member *HeistMember) error {
 		return &ErrPoliceOnAlert{h.theme.Police, remainingTime}
 	}
 
-	if member.Status == APPREHENDED {
+	if member.Status == Apprehended {
 		remainingTime := member.RemainingJailTime()
 		err := &ErrInJail{h.theme.Jail, h.theme.Sentence, remainingTime, h.theme.Bail, member.BailCost}
 		return err
 	}
 
-	if member.Status == DEAD {
+	if member.Status == Dead {
 		remainingTime := member.RemainingDeathTime()
 		err := &ErrDead{remainingTime}
 		return err

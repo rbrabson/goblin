@@ -31,7 +31,7 @@ func GetAccount(guildID string, memberID string) *Account {
 	return account
 }
 
-// GetAcconts returns a list of all accounts for the given bank
+// GetAccounts returns a list of all accounts for the given bank
 func GetAccounts(guildID string, filter interface{}, sortBy interface{}, limit int64) []*Account {
 	return readAccounts(guildID, filter, sortBy, limit)
 }
@@ -147,7 +147,13 @@ func newAccount(guildID string, memberID string) *Account {
 		LifetimeBalance: bank.DefaultBalance,
 		CreatedAt:       time.Now(),
 	}
-	writeAccount(account)
+	if err := writeAccount(account); err != nil {
+		slog.Error("error writing account",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("created new bank account",
 		slog.String("guildID", account.GuildID),
 		slog.String("memberID", account.MemberID),

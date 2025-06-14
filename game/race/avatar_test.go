@@ -32,7 +32,7 @@ func TestGetRacers(t *testing.T) {
 	}
 
 	filter := bson.M{"guild_id": "123", "theme": "clash"}
-	err := db.Delete(RACER_COLLECTION, filter)
+	err := db.Delete(RacerCollection, filter)
 	if err != nil {
 		t.Error(err)
 		return
@@ -57,7 +57,7 @@ func TestCalculateMovement(t *testing.T) {
 	slog.Info("movement", slog.Int("movement", movement))
 
 	filter := bson.M{"guild_id": "123", "theme": "clash"}
-	err := db.Delete(RACER_COLLECTION, filter)
+	err := db.Delete(RacerCollection, filter)
 	if err != nil {
 		t.Error(err)
 		return

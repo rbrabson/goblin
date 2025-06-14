@@ -11,21 +11,17 @@ import (
 )
 
 const (
-	GAME_ID = "heist"
+	BailBase          = 250
+	CrewOutput        = "None"
+	DeathTimer        = 45 * time.Second
+	HeistCost         = 1000
+	PoliceAlert       = 60 * time.Second
+	SentenceBase      = 45 * time.Second
+	WaitTime          = 60 * time.Second
+	HeistDefaultTheme = "clash"
 )
 
-const (
-	BAIL_BASE           = 250
-	CREW_OUTPUT         = "None"
-	DEATH_TIMER         = time.Duration(45 * time.Second)
-	HEIST_COST          = 1000
-	POLICE_ALERT        = time.Duration(60 * time.Second)
-	SENTENCE_BASE       = time.Duration(45 * time.Second)
-	WAIT_TIME           = time.Duration(60 * time.Second)
-	HEIST_DEFAULT_THEME = "clash"
-)
-
-// Configuration data for new heists
+// Config is the configuration data for new heists
 type Config struct {
 	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID      string             `json:"guild_id" bson:"guild_id"`
@@ -89,15 +85,15 @@ func readConfigFromFile(guildID string) *Config {
 func getDefaultConfig(guildID string) *Config {
 	config := &Config{
 		GuildID:      guildID,
-		BailBase:     BAIL_BASE,
-		CrewOutput:   CREW_OUTPUT,
-		DeathTimer:   DEATH_TIMER,
-		HeistCost:    HEIST_COST,
-		PoliceAlert:  POLICE_ALERT,
-		SentenceBase: SENTENCE_BASE,
-		Targets:      HEIST_DEFAULT_THEME,
-		Theme:        HEIST_DEFAULT_THEME,
-		WaitTime:     WAIT_TIME,
+		BailBase:     BailBase,
+		CrewOutput:   CrewOutput,
+		DeathTimer:   DeathTimer,
+		HeistCost:    HeistCost,
+		PoliceAlert:  PoliceAlert,
+		SentenceBase: SentenceBase,
+		Targets:      HeistDefaultTheme,
+		Theme:        HeistDefaultTheme,
+		WaitTime:     WaitTime,
 	}
 	writeConfig(config)
 

@@ -18,6 +18,7 @@ type ShopItem struct {
 	Price         int                `json:"price" bson:"price"`
 	Duration      string             `json:"duration,omitempty" bson:"duration,omitempty"`
 	AutoRenewable bool               `json:"auto_renewable,omitempty" bson:"auto_renewable,omitempty"`
+	MaxPurhases   int                `json:"max_purchases,omitempty" bson:"max_purchases,omitempty"`
 }
 
 // getShopItem returns the shop item with the given guild ID, name, and type. If the item does
@@ -32,7 +33,7 @@ func getShopItem(guildID string, name string, itemType string) *ShopItem {
 }
 
 // newShopItem creates a new ShopItem with the given guild ID, name, description, type, and price.
-func newShopItem(guildID string, name string, description string, itemType string, price int, duration string, autoRenewable bool) *ShopItem {
+func newShopItem(guildID string, name string, description string, itemType string, price int, duration string, autoRenewable bool, maxPurchases int) *ShopItem {
 	item := &ShopItem{
 		GuildID:       guildID,
 		Name:          name,
@@ -41,6 +42,7 @@ func newShopItem(guildID string, name string, description string, itemType strin
 		Price:         price,
 		Duration:      duration,
 		AutoRenewable: autoRenewable,
+		MaxPurhases:   maxPurchases,
 	}
 
 	err := writeShopItem(item)

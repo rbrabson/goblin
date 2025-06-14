@@ -11,7 +11,11 @@ import (
 // Initialize sets the logging level. If the LOG_LEVEL environment variable isn't set or the value
 // isn't recognized, logging defaults to the `debug` level
 func Initialize() {
-	godotenv.Load(".env")
+	if err := godotenv.Load(".env"); err != nil {
+		slog.Error("Error loading .env file",
+			slog.Any("error", err),
+		)
+	}
 	level := strings.ToLower(os.Getenv("LOG_LEVEL"))
 
 	var sslog *slog.Logger

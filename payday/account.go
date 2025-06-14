@@ -22,7 +22,11 @@ func newAccount(payday *Payday, memberID string) *Account {
 		MemberID: memberID,
 		GuildID:  payday.GuildID,
 	}
-	writeAccount(account)
+	if err := writeAccount(account); err != nil {
+		slog.Error("error writing account",
+			slog.Any("error", err),
+		)
+	}
 
 	return account
 }
@@ -52,11 +56,11 @@ func (a *Account) setNextPayday(nextPayday time.Time) {
 }
 
 // String returns a string representation of the Account.
-func (account *Account) String() string {
+func (a *Account) String() string {
 	return fmt.Sprintf("PaydayAccount{ID=%s, GuildID=%s, MemberID=%s, NextPayday=%s}",
-		account.ID.Hex(),
-		account.GuildID,
-		account.MemberID,
-		account.NextPayday,
+		a.ID.Hex(),
+		a.GuildID,
+		a.MemberID,
+		a.NextPayday,
 	)
 }

@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	DEFAULT_PAYDAY_AMOUNT    = 5000
-	DEFAULT_PAYDAY_FREQUENCY = time.Duration(23 * time.Hour)
+	DefaultPaydayAmount    = 5000
+	DefaultPaydayFrequency = 23 * time.Hour
 )
 
 // Payday is the daily payment for members of a guild (server).
@@ -49,14 +49,24 @@ func (payday *Payday) GetAccount(memberID string) *Account {
 func (payday *Payday) SetPaydayAmount(amount int) {
 	payday.Amount = amount
 
-	writePayday(payday)
+	if err := writePayday(payday); err != nil {
+		slog.Error("error writing payday",
+			slog.String("guildID", payday.GuildID),
+			slog.Any("error", err),
+		)
+	}
 }
 
 // SetPaydayFrequency sets the frequency of paydays at which a player can deposit credits into their account.
 func (payday *Payday) SetPaydayFrequency(frequency time.Duration) {
 	payday.PaydayFrequency = frequency
 
-	writePayday(payday)
+	if err := writePayday(payday); err != nil {
+		slog.Error("error writing payday",
+			slog.String("guildID", payday.GuildID),
+			slog.Any("error", err),
+		)
+	}
 }
 
 // readPaydayFromFile creates new payday information for a server/guild.
@@ -87,7 +97,12 @@ func readPaydayFromFile(guildID string) *Payday {
 	}
 	payday.GuildID = guildID
 
-	writePayday(payday)
+	if err := writePayday(payday); err != nil {
+		slog.Error("error writing payday",
+			slog.String("guildID", payday.GuildID),
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("create new payday config",
 		slog.String("guildID", payday.GuildID),
 	)
@@ -99,10 +114,15 @@ func readPaydayFromFile(guildID string) *Payday {
 func getDefaultPayday(guildID string) *Payday {
 	payday := &Payday{
 		GuildID:         guildID,
-		Amount:          DEFAULT_PAYDAY_AMOUNT,
-		PaydayFrequency: DEFAULT_PAYDAY_FREQUENCY,
+		Amount:          DefaultPaydayAmount,
+		PaydayFrequency: DefaultPaydayFrequency,
 	}
-	writePayday(payday)
+	if err := writePayday(payday); err != nil {
+		slog.Error("error writing payday",
+			slog.String("guildID", payday.GuildID),
+			slog.Any("error", err),
+		)
+	}
 	slog.Debug("created new payday",
 		slog.String("guildID", payday.GuildID),
 	)

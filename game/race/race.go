@@ -26,16 +26,16 @@ type Race struct {
 	RaceLegs      []*RaceLeg                   // The list of legs in the race
 	RaceResult    *RaceResult                  // The results of the race
 	RaceStartTime time.Time                    // The time at which the race is started (first created)
-	raceAvatars   []*RaceAvatar                // The avatars of the racers
+	raceAvatars   []*Avatar                    // The avatars of the racers
 	interaction   *discordgo.InteractionCreate // Interaction used in sending message updates
 	config        *Config                      // Race configuration (avoids having to read from the database)
 	mutex         sync.Mutex                   // Lock used to synchronize access to the race
 }
 
-// RaceParticpant is a member who is racing. This includes the member and the racer assigned to them.
+// RaceParticipant is a member who is racing. This includes the member and the racer assigned to them.
 type RaceParticipant struct {
 	Member *RaceMember // Member who is racing
-	Racer  *RaceAvatar // Racer assigned to the member
+	Racer  *Avatar     // Racer assigned to the member
 }
 
 // RaceBetter is a member who is betting on the outcome of the race.
@@ -45,7 +45,7 @@ type RaceBetter struct {
 	Winnings int              // Amount won by the better
 }
 
-// RaceResults is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
+// RaceResult is the final results of the race. This includes the winner, 2nd place, and 3rd place finishers, as
 // well as the speed at which they finished.
 type RaceResult struct {
 	Win   *RaceParticipantResult // First place in the race
@@ -64,7 +64,7 @@ type RaceLeg struct {
 	ParticipantPositions []*RaceParticipantPosition // The results for each member in a given leg of the race
 }
 
-// RacePartipantPosition is used to track the movement of a given member during a single leg of a race.
+// RaceParticipantPosition is used to track the movement of a given member during a single leg of a race.
 type RaceParticipantPosition struct {
 	RaceParticipant *RaceParticipant // Member who is racing
 	Position        int              // Position of the member on the track for a given leg of the race
@@ -147,13 +147,13 @@ func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 }
 
 // addBetter adds a better for the given race.
-func (race *Race) addBetter(better *RaceBetter) error {
-	race.mutex.Lock()
-	defer race.mutex.Unlock()
+func (r *Race) addBetter(better *RaceBetter) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
-	race.Betters = append(race.Betters, better)
+	r.Betters = append(r.Betters, better)
 	slog.Debug("add better to current race",
-		slog.String("guildID", race.GuildID),
+		slog.String("guildID", r.GuildID),
 		slog.String("memberID", better.Member.MemberID),
 	)
 
@@ -162,28 +162,28 @@ func (race *Race) addBetter(better *RaceBetter) error {
 
 // RunRace runs a race, calculating the results of each leg of the race and the
 // ultimate winners of the race.
-func (race *Race) RunRace(trackLength int) {
-	race.mutex.Lock()
-	defer race.mutex.Unlock()
+func (r *Race) RunRace(trackLength int) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
 	// Create the initial starting positions and add them to an initial race leg
 	raceLeg := &RaceLeg{
-		ParticipantPositions: make([]*RaceParticipantPosition, 0, len(race.Racers)),
+		ParticipantPositions: make([]*RaceParticipantPosition, 0, len(r.Racers)),
 	}
-	for _, racer := range race.Racers {
+	for _, racer := range r.Racers {
 		participantPosition := &RaceParticipantPosition{
 			RaceParticipant: racer,
 			Position:        trackLength,
 		}
 		raceLeg.ParticipantPositions = append(raceLeg.ParticipantPositions, participantPosition)
 	}
-	race.RaceLegs = append(race.RaceLegs, raceLeg)
+	r.RaceLegs = append(r.RaceLegs, raceLeg)
 	previousLeg := raceLeg
 
 	// Run the race until all racers cross the finish line
 	slog.Debug("starting race",
-		slog.String("guildID", race.GuildID),
-		slog.Int("numRacers", len(race.Racers)),
+		slog.String("guildID", r.GuildID),
+		slog.Int("numRacers", len(r.Racers)),
 		slog.Int("trackLength", trackLength),
 	)
 	turn := 0
@@ -193,7 +193,7 @@ func (race *Race) RunRace(trackLength int) {
 
 		// Create and add a new race leg
 		newRaceLeg := &RaceLeg{
-			ParticipantPositions: make([]*RaceParticipantPosition, 0, len(race.Racers)),
+			ParticipantPositions: make([]*RaceParticipantPosition, 0, len(r.Racers)),
 		}
 
 		// Run the new race leg
@@ -206,11 +206,11 @@ func (race *Race) RunRace(trackLength int) {
 			}
 		}
 
-		race.RaceLegs = append(race.RaceLegs, newRaceLeg)
+		r.RaceLegs = append(r.RaceLegs, newRaceLeg)
 		previousLeg = newRaceLeg
 	}
 
-	calculateWinnings(race, previousLeg)
+	calculateWinnings(r, previousLeg)
 }
 
 // End ends the current race.
@@ -274,7 +274,7 @@ func ResetRace(guildID string) {
 }
 
 // getRaceAvatar returns a  random race avatar to be used by a race participant.
-func getRaceAvatar(race *Race) *RaceAvatar {
+func getRaceAvatar(race *Race) *Avatar {
 	if len(race.raceAvatars) == 0 {
 		race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
 	}
@@ -413,7 +413,7 @@ func calculateWinnings(race *Race, lastLeg *RaceLeg) {
 	})
 
 	// Calculate the winners of the race and save in the results
-	prize := r.IntN(int(race.config.MaxPrizeAmount-race.config.MinPrizeAmount)) + race.config.MinPrizeAmount
+	prize := r.IntN(race.config.MaxPrizeAmount-race.config.MinPrizeAmount) + race.config.MinPrizeAmount
 	prize *= len(race.Racers)
 
 	// Assign the purse for the winner

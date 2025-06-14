@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	VAULT_UPDATE_TIME     = 1 * time.Minute // Update the vault once every minute
-	VAULT_RECOVER_PERCENT = 0.04            // Percentage of valuts total that is recovered every update
+	VaultRecoverPercent = 0.04 // Percentage of valuts total that is recovered every update
 )
 
 // Target is a target of a heist.
@@ -185,7 +184,7 @@ func newTarget(guildID string, theme string, name string, maxCrewSize int, succe
 	return &target
 }
 
-// Resets all vaults in a guild to the maximum amount.
+// ResetVaultsToMaximumValue resets all vaults in a guild to the maximum amount.
 func ResetVaultsToMaximumValue(guildID string) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}}
 	targets := getAllTargets(filter)
@@ -203,14 +202,14 @@ func ResetVaultsToMaximumValue(guildID string) {
 
 // vaultUpdater updates the vault balance for any target whose vault is not at the maximum value
 func vaultUpdater() {
-	const timer = time.Duration(1 * time.Minute)
+	const timer = 1 * time.Minute
 
 	filter := bson.D{{Key: "is_at_max", Value: false}}
 	// Update the vaults forever
 	for {
 		time.Sleep(timer)
 		for _, target := range getAllTargets(filter) {
-			recoverAmount := int(float64(target.VaultMax) * VAULT_RECOVER_PERCENT)
+			recoverAmount := int(float64(target.VaultMax) * VaultRecoverPercent)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
 			slog.Info("vault updater",
 				slog.String("guildID", target.GuildID),
@@ -229,14 +228,14 @@ func vaultUpdater() {
 }
 
 // String returns a string representation of the Target.
-func (target *Target) String() string {
+func (t *Target) String() string {
 	return fmt.Sprintf("Target{ID=%s, GuildID=%s, TargetID=%s, CrewSize=%d, Success=%.2f, Vault=%d, VaultMax=%d}",
-		target.ID,
-		target.GuildID,
-		target.Name,
-		target.CrewSize,
-		target.Success,
-		target.Vault,
-		target.VaultMax,
+		t.ID,
+		t.GuildID,
+		t.Name,
+		t.CrewSize,
+		t.Success,
+		t.Vault,
+		t.VaultMax,
 	)
 }

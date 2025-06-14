@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	LEADERBOARD_COLLECTION = "leaderboards"
+	LeaderboardCollection = "leaderboards"
 )
 
 // readLeaderboard reads the leaderboard from the database and returns the value, if it exists, or returns nil if the
@@ -15,7 +15,7 @@ const (
 func readLeaderboard(guildID string) *Leaderboard {
 	filter := bson.M{"guild_id": guildID}
 	var lb Leaderboard
-	err := db.FindOne(LEADERBOARD_COLLECTION, filter, &lb)
+	err := db.FindOne(LeaderboardCollection, filter, &lb)
 	if err != nil {
 		slog.Debug("leaderboard not found in the database",
 			slog.String("guildID", guildID),
@@ -31,7 +31,7 @@ func readLeaderboard(guildID string) *Leaderboard {
 func writeLeaderboard(lb *Leaderboard) error {
 	filter := bson.M{"guild_id": lb.GuildID}
 
-	err := db.UpdateOrInsert(LEADERBOARD_COLLECTION, filter, lb)
+	err := db.UpdateOrInsert(LeaderboardCollection, filter, lb)
 	if err != nil {
 		slog.Error("unable to save leaderboard to the database",
 			slog.String("guildID", lb.GuildID),

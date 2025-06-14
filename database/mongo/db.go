@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	DB_TIMEOUT = 10 * time.Second
+	DbTimeout = 10 * time.Second
 )
 
 // MongoDB represents a connection to a mongo database
@@ -61,7 +61,7 @@ func NewDatabase() *MongoDB {
 
 // FindAllIDs returns the ID of each document in a collection in the database.
 func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -77,10 +77,15 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
 		)
-		return nil, ErrCollectionNotAccessable
+		return nil, ErrCollectionNotAccessible
 	}
 	defer func() {
-		cur.Close(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close the mongodb cursor",
+				slog.String("collection", collectionName),
+				slog.Any("error", err),
+			)
+		}
 	}()
 
 	type result struct {
@@ -93,10 +98,15 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 			slog.String("collection", collectionName),
 			slog.Any("error", err),
 		)
-		return nil, ErrCollectionNotAccessable
+		return nil, ErrCollectionNotAccessible
 	}
 	defer func() {
-		cur.Close(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close the mongodb cursor",
+				slog.String("collection", collectionName),
+				slog.Any("error", err),
+			)
+		}
 	}()
 
 	idList := make([]string, 0, len(results))
@@ -109,7 +119,7 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 
 // FindMany reads all documents from the database that match the filter
 func (m *MongoDB) FindMany(collectionName string, filter interface{}, data interface{}, sortBy interface{}, limit int64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -132,7 +142,13 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 		return err
 	}
 	defer func() {
-		cur.Close(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close the mongodb cursor",
+				slog.String("database", m.dbname),
+				slog.String("collection", collectionName),
+				slog.Any("error", err),
+			)
+		}
 	}()
 	err = cur.All(ctx, data)
 	if err != nil {
@@ -150,7 +166,7 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 
 // FindOne loads a document identified by documentID from the collection into data.
 func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -213,7 +229,7 @@ func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data
 	return nil
 }
 
-// Write stores data into multiple documeents within the specified collection.
+// UpdateMany stores data into multiple documeents within the specified collection.
 func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -245,7 +261,7 @@ func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data int
 
 // Count returns the count of documents that match the filter.
 func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -261,7 +277,7 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 			slog.Any("error", err),
 			slog.Any("filter", filter),
 		)
-		return 0, ErrCollectionNotAccessable
+		return 0, ErrCollectionNotAccessible
 	}
 	slog.Debug("count",
 		slog.String("collection", collectionName),
@@ -274,7 +290,7 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 
 // Delete removes a document from the collection that matches the filter.
 func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -306,9 +322,9 @@ func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
 	return nil
 }
 
-// Delete removes all documents from the collection that matche the filter.
+// DeleteMany removes all documents from the collection that matche the filter.
 func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
 	collection, err := m.getCollection(ctx, collectionName)
@@ -343,7 +359,7 @@ func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
 
 // Close closes the mongo database client connection
 func (m *MongoDB) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), DB_TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 	if err := m.Client.Disconnect(ctx); err != nil {
 		slog.Error("unable to close the mongo database client",
@@ -374,13 +390,13 @@ func (m *MongoDB) getCollection(ctx context.Context, collectionName string) (*mo
 		slog.Error("uanble to access the collection",
 			slog.String("collection", collectionName),
 		)
-		return nil, ErrCollectionNotAccessable
+		return nil, ErrCollectionNotAccessible
 	}
 
 	return collection, nil
 }
 
 // String returns the name of the database
-func (db *MongoDB) String() string {
+func (m *MongoDB) String() string {
 	return "mongo"
 }

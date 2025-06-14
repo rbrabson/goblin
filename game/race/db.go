@@ -8,17 +8,17 @@ import (
 )
 
 const (
-	RACE_CONFIG_COLLECTION = "race_configs"
-	RACE_MEMBER_COLLECTION = "race_members"
-	RACER_COLLECTION       = "race_avatars"
+	RaceConfigCollection = "race_configs"
+	RaceMemberCollection = "race_members"
+	RacerCollection      = "race_avatars"
 )
 
-// readConfig loads the race configuration from the database. If it does not exist then
+// readConfig loads the race configuration from the database. If it does not exist, then
 // a `nil` value is returned.
 func readConfig(guildID string) *Config {
 	filter := bson.M{"guild_id": guildID}
 	var config Config
-	err := db.FindOne(RACE_CONFIG_COLLECTION, filter, &config)
+	err := db.FindOne(RaceConfigCollection, filter, &config)
 	if err != nil {
 		slog.Debug("race configuration not found in the database",
 			slog.String("guildID", guildID),
@@ -42,7 +42,7 @@ func writeConfig(config *Config) {
 	} else {
 		filter = bson.M{"guild_id": config.GuildID}
 	}
-	err := db.UpdateOrInsert(RACE_CONFIG_COLLECTION, filter, config)
+	err := db.UpdateOrInsert(RaceConfigCollection, filter, config)
 	if err != nil {
 		slog.Error("failed to write the race configuration to the database",
 			slog.String("guildID", config.GuildID),
@@ -51,12 +51,12 @@ func writeConfig(config *Config) {
 	}
 }
 
-// readConfig loads the race member from the database. If it does not exist then
+// readConfig loads the race member from the database. If it does not exist, then
 // a `nil` value is returned.
 func readRaceMember(guildID string, memberID string) *RaceMember {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}}
 	var member RaceMember
-	err := db.FindOne(RACE_MEMBER_COLLECTION, filter, &member)
+	err := db.FindOne(RaceMemberCollection, filter, &member)
 	if err != nil {
 		slog.Debug("race member not found in the database",
 			slog.String("guildID", guildID),
@@ -73,7 +73,7 @@ func readRaceMember(guildID string, memberID string) *RaceMember {
 	return &member
 }
 
-// Write creates or updates the race member in the database
+// writeRaceMember creates or updates the race member in the database
 func writeRaceMember(member *RaceMember) {
 	var filter bson.M
 	if member.ID != primitive.NilObjectID {
@@ -81,18 +81,24 @@ func writeRaceMember(member *RaceMember) {
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
-	db.UpdateOrInsert(RACE_MEMBER_COLLECTION, filter, member)
-	slog.Debug("write race member to the database",
+	if err := db.UpdateOrInsert(RaceMemberCollection, filter, member); err != nil {
+		slog.Error("failed to write the race member to the database",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.Any("error", err),
+		)
+	}
+	slog.Info("write race member to the database",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)
 }
 
 // readAllRaces loads the racers that may be used in racers that match the filter criteria.
-func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
-	var racers []*RaceAvatar
+func readAllRacers(filter bson.D) ([]*Avatar, error) {
+	var racers []*Avatar
 	sort := bson.D{{Key: "crew_size", Value: 1}}
-	err := db.FindMany(RACER_COLLECTION, filter, &racers, sort, 0)
+	err := db.FindMany(RacerCollection, filter, &racers, sort, 0)
 	if err != nil || len(racers) == 0 {
 		slog.Warn("unable to read racers",
 			slog.Any("error", err),
@@ -108,7 +114,7 @@ func readAllRacers(filter bson.D) ([]*RaceAvatar, error) {
 }
 
 // writeRacer creates or updates the target in the database.
-func writeRacer(racer *RaceAvatar) {
+func writeRacer(racer *Avatar) {
 	var filter bson.D
 	if racer.ID != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: racer.ID}}
@@ -116,8 +122,13 @@ func writeRacer(racer *RaceAvatar) {
 		filter = bson.D{{Key: "guild_id", Value: racer.GuildID}, {Key: "theme", Value: racer.Theme}, {Key: "emoji", Value: racer.Emoji}, {Key: "movement_speed", Value: racer.MovementSpeed}}
 	}
 
-	db.UpdateOrInsert(RACER_COLLECTION, filter, racer)
-	slog.Debug("create or update race avatar",
+	if err := db.UpdateOrInsert(RacerCollection, filter, racer); err != nil {
+		slog.Error("failed to write the racer to the database",
+			slog.String("guildID", racer.GuildID),
+			slog.Any("error", err),
+		)
+	}
+	slog.Info("create or update race avatar",
 		slog.String("guildID", racer.GuildID),
 		slog.String("theme", racer.Theme),
 	)

@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"log/slog"
 	"slices"
 	"sync"
 
@@ -33,7 +34,11 @@ func NewServer() *Server {
 		Admins: []string{},
 		mutex:  &sync.Mutex{},
 	}
-	WriteServer(server)
+	if err := WriteServer(server); err != nil {
+		slog.Error("failed to write server object",
+			slog.Any("error", err),
+		)
+	}
 	return server
 }
 

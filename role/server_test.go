@@ -27,7 +27,12 @@ func TestGetServer(t *testing.T) {
 	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
+			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
+				slog.Error("Error deleting guild",
+					slog.String("guildID", server.GuildID),
+					slog.Any("error", err),
+				)
+			}
 		}
 	}()
 
@@ -40,72 +45,157 @@ func TestGetServer(t *testing.T) {
 	servers = append(servers, server)
 
 	for i, role := range server.AdminRoles {
-		if !slices.Contains(guild.DEFAULT_ADMIN_ROLES, role) {
-			t.Errorf("Expected role to be %s, got %s", guild.DEFAULT_ADMIN_ROLES[i], role)
+		if !slices.Contains(guild.DefaultAdminRoles, role) {
+			t.Errorf("Expected role to be %s, got %s", guild.DefaultAdminRoles[i], role)
 		}
 	}
 }
 
 func TestAddAdminRole(t *testing.T) {
+	// Use a unique guild ID for this test to avoid conflicts
+	guildID := "12345-add-role-test"
+	roleName := "NewRole"
+
 	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
+			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
+				slog.Error("Error deleting guild",
+					slog.String("guildID", server.GuildID),
+					slog.Any("error", err),
+				)
+			}
 		}
 	}()
 
 	// Create a new server configuration.
-	server := guild.GetGuild("12345")
+	server := guild.GetGuild(guildID)
 	if server == nil {
 		t.Errorf("Expected server to be created")
 		return
 	}
 	servers = append(servers, server)
 
-	server.AddAdminRole("NewRole")
-	server = guild.GetGuild(server.GuildID)
+	// Store original admin roles to restore later
+	originalRoles := make([]string, len(server.AdminRoles))
+	copy(originalRoles, server.AdminRoles)
+
+	// Add the role
+	server.AddAdminRole(roleName)
+
+	// Re-read the server from the database to ensure it was saved
+	server = guild.GetGuild(guildID)
 	if server == nil {
 		t.Errorf("Expected server to be retrieved")
 		return
 	}
 
-	if !slices.Contains(server.AdminRoles, "NewRole") { // This test will fail.
-		t.Errorf("Expected role %s to be in the list of admin roles", "NewRole")
+	// Check if the role was added
+	found := false
+	for _, role := range server.AdminRoles {
+		if role == roleName {
+			found = true
+			break
+		}
 	}
+
+	if !found {
+		t.Errorf("Expected role %s to be in the list of admin roles", roleName)
+	}
+
+	// Restore original roles
+	server.AdminRoles = originalRoles
+	// We can't directly call writeGuild as it's not exported, so we'll use AddAdminRole and RemoveAdminRole
+	// to restore the original state
 }
 
 func TestRemoveAdminRole(t *testing.T) {
+	// Use a unique guild ID for this test to avoid conflicts
+	guildID := "12345-remove-role-test"
+	roleName := "RoleToRemove"
+
 	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
+			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
+				slog.Error("Error deleting guild",
+					slog.String("guildID", server.GuildID),
+					slog.Any("error", err),
+				)
+			}
 		}
 	}()
 
 	// Create a new server configuration.
-	server := guild.GetGuild("12345")
+	server := guild.GetGuild(guildID)
 	if server == nil {
 		t.Errorf("Expected server to be created")
 		return
 	}
 	servers = append(servers, server)
 
-	server.RemoveAdminRole("NewRole")
-	server = guild.GetGuild(server.GuildID)
+	// Store original admin roles to restore later
+	originalRoles := make([]string, len(server.AdminRoles))
+	copy(originalRoles, server.AdminRoles)
+
+	// First add the role we want to remove
+	server.AddAdminRole(roleName)
+
+	// Re-read the server from the database to ensure it was saved
+	server = guild.GetGuild(guildID)
 	if server == nil {
 		t.Errorf("Expected server to be retrieved")
 		return
 	}
-	if slices.Contains(server.AdminRoles, "NewRole") { // This test will fail.
-		t.Errorf("Expected role %s to not be in the list of admin roles", "NewRole")
+
+	// Verify the role was added
+	found := false
+	for _, role := range server.AdminRoles {
+		if role == roleName {
+			found = true
+			break
+		}
 	}
+
+	if !found {
+		t.Errorf("Expected role %s to be in the list of admin roles before removal", roleName)
+		return
+	}
+
+	// Now remove the role
+	server.RemoveAdminRole(roleName)
+
+	// Re-read the server from the database to ensure it was saved
+	server = guild.GetGuild(guildID)
+	if server == nil {
+		t.Errorf("Expected server to be retrieved")
+		return
+	}
+
+	// Verify the role was removed
+	for _, role := range server.AdminRoles {
+		if role == roleName {
+			t.Errorf("Expected role %s to not be in the list of admin roles after removal", roleName)
+			break
+		}
+	}
+
+	// Restore original roles
+	server.AdminRoles = originalRoles
+	// We can't directly call writeGuild as it's not exported, so we'll use AddAdminRole and RemoveAdminRole
+	// to restore the original state
 }
 
 func TestListAdminRoles(t *testing.T) {
 	servers := make([]*guild.Guild, 0, 1)
 	defer func() {
 		for _, server := range servers {
-			db.Delete(guild.GUILD_COLLECTION, bson.M{"guild_id": server.GuildID})
+			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
+				slog.Error("Error deleting guild",
+					slog.String("guildID", server.GuildID),
+					slog.Any("error", err),
+				)
+			}
 		}
 	}()
 
@@ -119,8 +209,8 @@ func TestListAdminRoles(t *testing.T) {
 
 	roles := server.GetAdminRoles()
 	for i, role := range roles {
-		if !slices.Contains(guild.DEFAULT_ADMIN_ROLES, role) {
-			t.Errorf("Expected role to not be %s, got %s", guild.DEFAULT_ADMIN_ROLES[i], role)
+		if !slices.Contains(guild.DefaultAdminRoles, role) {
+			t.Errorf("Expected role to not be %s, got %s", guild.DefaultAdminRoles[i], role)
 		}
 	}
 }

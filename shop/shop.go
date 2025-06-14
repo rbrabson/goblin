@@ -6,7 +6,7 @@ import (
 	"slices"
 )
 
-// The shop for a guild. The shop contains all items available for purchase.
+// Shop is the shop for a guild. The shop contains all items available for purchase.
 type Shop struct {
 	GuildID string      // Guild (server) for the shop
 	Items   []*ShopItem // All items available in the shop
@@ -40,7 +40,7 @@ func GetShop(guildID string) *Shop {
 	return shop
 }
 
-// GetShopItems finds an item in the shop. If the item does not exist then nil is returned.
+// GetShopItem finds an item in the shop. If the item does not exist then nil is returned.
 func (s *Shop) GetShopItem(name string, itemType string) *ShopItem {
 	for _, item := range s.Items {
 		if item.Name == name && item.Type == itemType {

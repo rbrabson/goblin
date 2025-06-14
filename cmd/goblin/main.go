@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/bwmarrin/discordgo"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -20,9 +21,9 @@ import (
 )
 
 var (
-	BotName  string = "Goblin"
-	Version  string = "dev"
-	Revision string = "test"
+	BotName  = "Goblin"
+	Version  = "dev"
+	Revision = "test"
 )
 
 // Main Discord game bot
@@ -55,7 +56,14 @@ func main() {
 		)
 		os.Exit(1)
 	}
-	defer bot.Session.Close()
+	defer func(Session *discordgo.Session) {
+		err := Session.Close()
+		if err != nil {
+			slog.Error("unable to close Discord session",
+				slog.Any("error", err),
+			)
+		}
+	}(bot.Session)
 
 	// Wait for the user to cancel the program
 	sc := make(chan os.Signal, 1)

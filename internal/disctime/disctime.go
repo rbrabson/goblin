@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// currMon th returns the month and year at for the start of the month
+// CurrentMonth returns the month and year at for the start of the month
 func CurrentMonth(t time.Time) time.Time {
 	y, m, _ := t.Date()
 	month := time.Date(y, m, 1, 0, 0, 0, 0, time.UTC)

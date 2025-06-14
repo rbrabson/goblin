@@ -56,7 +56,14 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 // WinRace is called when the race member won a race.
 func (m *RaceMember) WinRace(amount int) {
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
-	bankAccount.Deposit(amount)
+	if err := bankAccount.Deposit(amount); err != nil {
+		slog.Error("error depositing race win amount",
+			slog.String("guildID", m.GuildID),
+			slog.String("memberID", m.MemberID),
+			slog.Int("amount", amount),
+			slog.Any("error", err),
+		)
+	}
 
 	m.RacesWon++
 	m.TotalEarnings += amount
@@ -72,7 +79,14 @@ func (m *RaceMember) WinRace(amount int) {
 // PlaceInRace is called when the race member places (comes in 2nd) in a race.
 func (m *RaceMember) PlaceInRace(amount int) {
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
-	bankAccount.Deposit(amount)
+	if err := bankAccount.Deposit(amount); err != nil {
+		slog.Error("error depositing race place amount",
+			slog.String("guildID", m.GuildID),
+			slog.String("memberID", m.MemberID),
+			slog.Int("amount", amount),
+			slog.Any("error", err),
+		)
+	}
 
 	m.RacesPlaced++
 	m.TotalEarnings += amount
@@ -88,7 +102,14 @@ func (m *RaceMember) PlaceInRace(amount int) {
 // ShowInRace is called when the race member shows (comes in 3rd) in a race.
 func (m *RaceMember) ShowInRace(amount int) {
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
-	bankAccount.Deposit(amount)
+	if err := bankAccount.Deposit(amount); err != nil {
+		slog.Error("error depositing race show amount",
+			slog.String("guildID", m.GuildID),
+			slog.String("memberID", m.MemberID),
+			slog.Int("amount", amount),
+			slog.Any("error", err),
+		)
+	}
 
 	m.RacesShowed++
 	m.TotalEarnings += amount
@@ -136,7 +157,14 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 // WinBet is used when a member wins a bet on a race.
 func (m *RaceMember) WinBet(winnings int) {
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
-	bankAccount.Deposit(winnings)
+	if err := bankAccount.Deposit(winnings); err != nil {
+		slog.Error("error depositing race win bet amount",
+			slog.String("guildID", m.GuildID),
+			slog.String("memberID", m.MemberID),
+			slog.Int("amount", winnings),
+			slog.Any("error", err),
+		)
+	}
 
 	m.BetsWon++
 	m.BetsEarnings += winnings
@@ -150,7 +178,7 @@ func (m *RaceMember) WinBet(winnings int) {
 	)
 }
 
-// WinBet is used when a member wins a bet on a race.
+// LoseBet is used when a member loses a bet on a race.
 func (m *RaceMember) LoseBet() {
 	writeRaceMember(m)
 

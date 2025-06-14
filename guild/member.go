@@ -46,7 +46,11 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 		member.UserName = username
 		member.NickName = nickname
 		member.GlobalName = globalname
-		writeMember(member)
+		if err := writeMember(member); err != nil {
+			slog.Error("failed to write member",
+				slog.Any("error", err),
+			)
+		}
 		slog.Debug("set member name",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
@@ -63,7 +67,11 @@ func newMember(guildID string, memberID string) *Member {
 		MemberID: memberID,
 		GuildID:  guildID,
 	}
-	writeMember(member)
+	if err := writeMember(member); err != nil {
+		slog.Error("failed to write member",
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("created new member",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),

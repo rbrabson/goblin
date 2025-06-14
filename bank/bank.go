@@ -12,9 +12,9 @@ import (
 
 // Default values when a new bank is created for a previously unknown guild.
 const (
-	DEFAULT_BANK_NAME = "Treasury"
-	DEFAULT_CURRENCY  = "Coins"
-	DEFAULT_BALANCE   = 20000
+	DefaultBankName = "Treasury"
+	DefaultCurrency = "Coins"
+	DefaultBalance  = 20000
 )
 
 // A Bank is the repository for all bank accounts for a given guild (server).
@@ -60,7 +60,12 @@ func readBankFromFile(guildID string) *Bank {
 	}
 	bank.GuildID = guildID
 
-	writeBank(bank)
+	if err := writeBank(bank); err != nil {
+		slog.Error("error writing bank",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("create new bank",
 		slog.String("guildID", bank.GuildID),
 	)
@@ -74,11 +79,16 @@ func readBankFromFile(guildID string) *Bank {
 func getDefaultBank(guildID string) *Bank {
 	bank := &Bank{
 		GuildID:        guildID,
-		Name:           DEFAULT_BANK_NAME,
-		Currency:       DEFAULT_CURRENCY,
-		DefaultBalance: DEFAULT_BALANCE,
+		Name:           DefaultBankName,
+		Currency:       DefaultCurrency,
+		DefaultBalance: DefaultBalance,
 	}
-	writeBank(bank)
+	if err := writeBank(bank); err != nil {
+		slog.Error("error writing bank",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("create new bank",
 		slog.String("guildID", bank.GuildID),
 	)
@@ -90,7 +100,12 @@ func getDefaultBank(guildID string) *Bank {
 func (b *Bank) SetDefaultBalance(balance int) {
 	if balance != b.DefaultBalance {
 		b.DefaultBalance = balance
-		writeBank(b)
+		if err := writeBank(b); err != nil {
+			slog.Error("error writing bank",
+				slog.String("guildID", b.GuildID),
+				slog.Any("error", err),
+			)
+		}
 		slog.Info("set default balance",
 			slog.String("guildID", b.GuildID),
 			slog.Int("balance", b.DefaultBalance),
@@ -102,7 +117,12 @@ func (b *Bank) SetDefaultBalance(balance int) {
 func (b *Bank) SetName(name string) {
 	if name != b.Name {
 		b.Name = name
-		writeBank(b)
+		if err := writeBank(b); err != nil {
+			slog.Error("error writing bank",
+				slog.String("guildID", b.GuildID),
+				slog.Any("error", err),
+			)
+		}
 		slog.Info("set bank name",
 			slog.String("name", b.Name),
 			slog.String("guildID", b.GuildID),
@@ -114,7 +134,12 @@ func (b *Bank) SetName(name string) {
 func (b *Bank) SetCurrency(currency string) {
 	if currency != b.Currency {
 		b.Currency = currency
-		writeBank(b)
+		if err := writeBank(b); err != nil {
+			slog.Error("error writing bank",
+				slog.String("guildID", b.GuildID),
+				slog.Any("error", err),
+			)
+		}
 		slog.Info("set currency",
 			slog.String("guildID", b.GuildID),
 			slog.String("currency", b.Currency),

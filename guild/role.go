@@ -13,7 +13,7 @@ var (
 	db *mongo.MongoDB
 )
 
-// Sets the database to be used by the role package.
+// SetDB sets the database to be used by the role package.
 func SetDB(database *mongo.MongoDB) {
 	db = database
 }
@@ -24,7 +24,7 @@ func SetDB(database *mongo.MongoDB) {
 func GetAdminRoles(guildID string) []string {
 	filter := bson.M{"guild_id": guildID}
 	server := &Guild{}
-	err := db.FindOne(GUILD_COLLECTION, filter, server)
+	err := db.FindOne(GuildCollection, filter, server)
 	if err != nil {
 		slog.Debug("server not found in the database",
 			slog.String("guildID", guildID),
