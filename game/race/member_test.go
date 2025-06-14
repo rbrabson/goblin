@@ -202,7 +202,7 @@ func TestRaceBetOnRace(t *testing.T) {
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
 			slog.Int("amount", 100),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	raceMember := readRaceMember("123", "456")

@@ -73,7 +73,7 @@ func setup() {
 	if err := db.UpdateOrInsert(GuildCollection, bson.M{"guild_id": GuildId}, server); err != nil {
 		slog.Error("Error inserting guild",
 			slog.String("guildID", server.GuildID),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 }
@@ -82,7 +82,7 @@ func teardown() {
 	if err := db.Delete(GuildCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("Error deleting guild",
 			slog.String("guildID", GuildId),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 }

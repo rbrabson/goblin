@@ -243,7 +243,7 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -253,7 +253,7 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("You do not have permission to use this command."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -281,7 +281,7 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Command `%s` is not recognized.", options[0].Name)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 	}
 }
@@ -299,7 +299,7 @@ func addShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 	}
 
@@ -341,7 +341,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					disgomsg.WithContent(fmt.Sprintf("Invalid duration: %s", err.Error())),
 				)
 				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-					slog.Error("unable to send ephemeral response", err)
+					slog.Error("unable to send ephemeral response", slog.Any("error", err))
 				}
 				return
 			}
@@ -365,7 +365,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 	}
 
@@ -383,7 +383,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Failed to add role `%s` to the shop: %s", roleName, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -400,7 +400,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(p.Sprintf("Role `%s` has been added to the shop.", roleName)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -434,7 +434,7 @@ func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 	}
 
@@ -452,7 +452,7 @@ func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate
 			disgomsg.WithContent(fmt.Sprintf("Failed to add custom command `%s` to the shop: %s", commandName, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -469,7 +469,7 @@ func addCustomCommandToShop(s *discordgo.Session, i *discordgo.InteractionCreate
 		disgomsg.WithContent(fmt.Sprintf("Custom command `%s` has been added to the shop.", commandName)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -490,7 +490,7 @@ func removeShopItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(msg),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 	}
 }
@@ -514,7 +514,7 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(p.Sprintf("Role `%s` not found in the shop.", roleName)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -531,13 +531,13 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(p.Sprintf("Failed to remove role `%s` from the shop: %s", roleName, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
 	config := GetConfig(i.GuildID)
 	if _, err := publishShop(s, i.GuildID, config.ChannelID, config.MessageID); err != nil {
-		slog.Error("failed to publish the shop", err)
+		slog.Error("failed to publish the shop", slog.Any("error", err))
 	}
 
 	slog.Info("role removed from shop",
@@ -548,7 +548,7 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(p.Sprintf("Role `%s` has been removed from the shop.", roleName)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -571,7 +571,7 @@ func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionC
 			disgomsg.WithContent(p.Sprintf("Custom command `%s` not found in the shop.", commandName)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -588,13 +588,13 @@ func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionC
 			disgomsg.WithContent(p.Sprintf("Failed to remove custom command `%s` from the shop: %s", commandName, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
 	config := GetConfig(i.GuildID)
 	if _, err := publishShop(s, i.GuildID, config.ChannelID, config.MessageID); err != nil {
-		slog.Error("failed to publish the shop", err)
+		slog.Error("failed to publish the shop", slog.Any("error", err))
 	}
 
 	slog.Info("custom command removed from shop",
@@ -605,7 +605,7 @@ func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionC
 		disgomsg.WithContent(p.Sprintf("Custom command `%s` has been removed from the shop.", commandName)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -628,7 +628,7 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Failed to ban member <@%s> from shop: %s", memberID, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 	} else {
 		slog.Info("member banned from shop",
@@ -639,7 +639,7 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(p.Sprintf("Member <@%s> has been banned from the shop.", memberID)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 	}
 }
@@ -662,7 +662,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(p.Sprintf("Member <@%s> is not banned from the shop.", memberID)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -678,7 +678,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(p.Sprintf("Failed to ban member <@%s> from shop: %s", memberID, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -691,7 +691,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(p.Sprintf("The ban from the shop for member <@%s> has been removed.", memberID)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -711,7 +711,7 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Failed to get channel %s: %s", channelID, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -724,7 +724,7 @@ func setShopChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(p.Sprintf("Shop channel set to <#%s>", channelID)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -743,7 +743,7 @@ func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Failed to get mod channel %s: %s", channelID, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -754,7 +754,7 @@ func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(fmt.Sprintf("Shop mod channel set to <#%s>", channelID)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -773,7 +773,7 @@ func setNotificationID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Failed to get member %s: %s", memberID, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -784,7 +784,7 @@ func setNotificationID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(fmt.Sprintf("Shop notification ID set to <@%s>", memberID)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -796,7 +796,7 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("No shop channel set. Use `/shop-admin channel` to set the shop channel."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -811,7 +811,7 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Failed to publish shop: %s", err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -820,7 +820,7 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(fmt.Sprintf("Shop items refreshed and published to <#%s>", config.ChannelID)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 	slog.Info("shop refreshed",
 		slog.String("guildID", i.GuildID),
@@ -834,7 +834,7 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -848,7 +848,7 @@ func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Command `%s\\%s` is not recognized.", options[0].Name, options[0].Options[0].Name)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 	}
 }
@@ -868,7 +868,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 			disgomsg.WithContent("You haven't made any purchases from the shop!"),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -922,7 +922,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -934,7 +934,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				disgomsg.WithContent("You aren't able to purchase items from the shop."),
 			)
 			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-				slog.Error("unable to send ephemeral response", err)
+				slog.Error("unable to send ephemeral response", slog.Any("error", err))
 			}
 			return
 		}
@@ -960,7 +960,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Unknown item type `%s`", itemType)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -976,7 +976,7 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1001,7 +1001,7 @@ func initiatePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1024,7 +1024,7 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1049,7 +1049,7 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(fmt.Sprintf("Unknown item type `%s`", itemType)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1067,7 +1067,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1086,7 +1086,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1107,7 +1107,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 			disgomsg.WithContent(p.Sprintf("Failed to assign role `%s` to you: %s", roleName, err)),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1121,7 +1121,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 		disgomsg.WithContent(p.Sprintf("Role `%s` has been purchased and assigned to you.", roleName)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -1137,7 +1137,7 @@ func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1156,7 +1156,7 @@ func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", err)
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
 		return
 	}
@@ -1170,7 +1170,7 @@ func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 		disgomsg.WithContent(p.Sprintf("Custom command `%s` has been purchased.", commandName)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 
@@ -1218,7 +1218,7 @@ func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreat
 		disgomsg.WithEmbeds(embeds),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", err)
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }
 

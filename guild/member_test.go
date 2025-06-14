@@ -28,7 +28,7 @@ func TestSetName(t *testing.T) {
 				slog.Error("Error deleting guild member",
 					slog.String("guildID", member.GuildID),
 					slog.String("memberID", member.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -76,7 +76,7 @@ func TestMemberString(t *testing.T) {
 				slog.Error("Error deleting guild member",
 					slog.String("guildID", member.GuildID),
 					slog.String("memberID", member.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}

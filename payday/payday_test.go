@@ -27,7 +27,7 @@ func TestGetPayday(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -47,7 +47,7 @@ func TestNewPayday(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -78,7 +78,7 @@ func TestSetPaydayAmount(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -106,7 +106,7 @@ func TestSetPaydayFrequency(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -134,7 +134,7 @@ func TestPaydayString(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -163,7 +163,7 @@ func TestGetDefaultPayday(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}

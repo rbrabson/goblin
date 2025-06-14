@@ -97,7 +97,7 @@ func TestHeistChecks(t *testing.T) {
 		slog.Error("error adding crew member to heist",
 			slog.String("guildID", heist.GuildID),
 			slog.String("memberID", member.MemberID),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	err = heistChecks(heist, member)
@@ -133,7 +133,7 @@ func TestStartHeist(t *testing.T) {
 		slog.Error("error adding crew member to heist",
 			slog.String("guildID", heist.GuildID),
 			slog.String("memberID", member.MemberID),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 
@@ -854,37 +854,37 @@ func TestCalculateCredits(t *testing.T) {
 func testTeardown() {
 	if err := db.DeleteMany(guild.MemberCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all members",
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	if err := db.DeleteMany(bank.AccountCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all account",
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	if err := db.DeleteMany(bank.BankCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all banks",
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	if err := db.DeleteMany(ConfigCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all configs",
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	if err := db.DeleteMany(HeistMemberCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all heist members",
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	if err := db.DeleteMany(TargetCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all targets",
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	if err := db.DeleteMany(ThemeCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all themes",
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 	delete(alertTimes, GuildId)

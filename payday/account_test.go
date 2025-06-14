@@ -28,7 +28,7 @@ func TestGetAccount(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -40,7 +40,7 @@ func TestGetAccount(t *testing.T) {
 				slog.Error("Error deleting payday account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -68,7 +68,7 @@ func TestNewAccount(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -80,7 +80,7 @@ func TestNewAccount(t *testing.T) {
 				slog.Error("Error deleting payday account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -117,7 +117,7 @@ func TestSetNextPayday(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -129,7 +129,7 @@ func TestSetNextPayday(t *testing.T) {
 				slog.Error("Error deleting payday account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -169,7 +169,7 @@ func TestGetNextPayday(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -181,7 +181,7 @@ func TestGetNextPayday(t *testing.T) {
 				slog.Error("Error deleting payday account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -217,7 +217,7 @@ func TestAccountString(t *testing.T) {
 			if err := db.Delete(PaydayCollection, bson.M{"guild_id": payday.GuildID}); err != nil {
 				slog.Error("Error deleting payday",
 					slog.String("guildID", payday.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -229,7 +229,7 @@ func TestAccountString(t *testing.T) {
 				slog.Error("Error deleting payday account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}

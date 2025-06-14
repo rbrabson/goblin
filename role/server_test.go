@@ -30,7 +30,7 @@ func TestGetServer(t *testing.T) {
 			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
 				slog.Error("Error deleting guild",
 					slog.String("guildID", server.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -62,7 +62,7 @@ func TestAddAdminRole(t *testing.T) {
 			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
 				slog.Error("Error deleting guild",
 					slog.String("guildID", server.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -120,7 +120,7 @@ func TestRemoveAdminRole(t *testing.T) {
 			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
 				slog.Error("Error deleting guild",
 					slog.String("guildID", server.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -193,7 +193,7 @@ func TestListAdminRoles(t *testing.T) {
 			if err := db.Delete(guild.GuildCollection, bson.M{"guild_id": server.GuildID}); err != nil {
 				slog.Error("Error deleting guild",
 					slog.String("guildID", server.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}

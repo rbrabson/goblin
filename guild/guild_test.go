@@ -35,7 +35,7 @@ func TestGetMember(t *testing.T) {
 				slog.Error("Error deleting guild member",
 					slog.String("guildID", member.GuildID),
 					slog.String("memberID", member.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -78,7 +78,7 @@ func TestAddAndRemoveAdminRole(t *testing.T) {
 		if err := writeGuild(guild); err != nil {
 			slog.Error("Error restoring guild admin roles",
 				slog.String("guildID", guildID),
-				slog.Any("err", err),
+				slog.Any("error", err),
 			)
 		}
 	}()

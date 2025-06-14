@@ -61,7 +61,7 @@ func (m *RaceMember) WinRace(amount int) {
 			slog.String("guildID", m.GuildID),
 			slog.String("memberID", m.MemberID),
 			slog.Int("amount", amount),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 
@@ -84,7 +84,7 @@ func (m *RaceMember) PlaceInRace(amount int) {
 			slog.String("guildID", m.GuildID),
 			slog.String("memberID", m.MemberID),
 			slog.Int("amount", amount),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 
@@ -107,7 +107,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 			slog.String("guildID", m.GuildID),
 			slog.String("memberID", m.MemberID),
 			slog.Int("amount", amount),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 
@@ -162,7 +162,7 @@ func (m *RaceMember) WinBet(winnings int) {
 			slog.String("guildID", m.GuildID),
 			slog.String("memberID", m.MemberID),
 			slog.Int("amount", winnings),
-			slog.Any("err", err),
+			slog.Any("error", err),
 		)
 	}
 

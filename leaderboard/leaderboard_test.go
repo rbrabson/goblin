@@ -28,7 +28,7 @@ func TestNewLeaderboard(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -49,7 +49,7 @@ func TestGetLeaderboards(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -77,7 +77,7 @@ func TestGetLeaderboard(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -105,7 +105,7 @@ func TestSetChannel(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -136,7 +136,7 @@ func TestGetCurrentLeaderboard(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -147,7 +147,7 @@ func TestGetCurrentLeaderboard(t *testing.T) {
 			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
 				slog.Error("Error deleting bank",
 					slog.String("guildID", b.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -159,7 +159,7 @@ func TestGetCurrentLeaderboard(t *testing.T) {
 				slog.Error("Error deleting bank account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -207,7 +207,7 @@ func TestGetMonthlyLeaderboard(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -218,7 +218,7 @@ func TestGetMonthlyLeaderboard(t *testing.T) {
 			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
 				slog.Error("Error deleting bank",
 					slog.String("guildID", b.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -230,7 +230,7 @@ func TestGetMonthlyLeaderboard(t *testing.T) {
 				slog.Error("Error deleting bank account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -277,7 +277,7 @@ func TestGetLifetimeLeaderboard(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -288,7 +288,7 @@ func TestGetLifetimeLeaderboard(t *testing.T) {
 			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
 				slog.Error("Error deleting bank",
 					slog.String("guildID", b.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -300,7 +300,7 @@ func TestGetLifetimeLeaderboard(t *testing.T) {
 				slog.Error("Error deleting bank account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -348,7 +348,7 @@ func TestGetCurrentRanking(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -359,7 +359,7 @@ func TestGetCurrentRanking(t *testing.T) {
 			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
 				slog.Error("Error deleting bank",
 					slog.String("guildID", b.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -371,7 +371,7 @@ func TestGetCurrentRanking(t *testing.T) {
 				slog.Error("Error deleting bank account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -414,7 +414,7 @@ func TestGetMonthlyRanking(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -425,7 +425,7 @@ func TestGetMonthlyRanking(t *testing.T) {
 			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
 				slog.Error("Error deleting bank",
 					slog.String("guildID", b.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -437,7 +437,7 @@ func TestGetMonthlyRanking(t *testing.T) {
 				slog.Error("Error deleting bank account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -480,7 +480,7 @@ func TestGetLifetimeRanking(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -491,7 +491,7 @@ func TestGetLifetimeRanking(t *testing.T) {
 			if err := db.Delete(bank.BankCollection, bson.M{"guild_id": b.GuildID}); err != nil {
 				slog.Error("Error deleting bank",
 					slog.String("guildID", b.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -503,7 +503,7 @@ func TestGetLifetimeRanking(t *testing.T) {
 				slog.Error("Error deleting bank account",
 					slog.String("guildID", account.GuildID),
 					slog.String("accountID", account.MemberID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -546,7 +546,7 @@ func TestReadLeaderboard(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -581,7 +581,7 @@ func TestWriteLeaderboard(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
@@ -703,7 +703,7 @@ func TestLeaderboardString(t *testing.T) {
 			if err := db.Delete(LeaderboardCollection, bson.M{"guild_id": leaderboard.GuildID}); err != nil {
 				slog.Error("Error deleting leaderboard",
 					slog.String("guildID", leaderboard.GuildID),
-					slog.Any("err", err),
+					slog.Any("error", err),
 				)
 			}
 		}
