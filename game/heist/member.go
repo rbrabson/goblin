@@ -24,11 +24,11 @@ const (
 type MemberStatus string
 
 const (
-	Escaped     = "Escaped"
-	FREE        = "Free"
-	Dead        = "Dead"
-	Apprehended = "Apprehended"
-	OOB         = "Out on Bail"
+	Escaped     MemberStatus = "Escaped"
+	Free        MemberStatus = "Free"
+	Dead        MemberStatus = "Dead"
+	Apprehended MemberStatus = "Apprehended"
+	OOB         MemberStatus = "Out on Bail"
 )
 
 // HeistMember is the status of a member who has participated in at least one heist
@@ -68,7 +68,7 @@ func newHeistMember(guildID string, memberID string) *HeistMember {
 		GuildID:       guildID,
 		MemberID:      memberID,
 		CriminalLevel: Greenhorn,
-		Status:        FREE,
+		Status:        Free,
 	}
 	writeMember(member)
 	slog.Debug("create heist member",
@@ -162,6 +162,12 @@ func (member *HeistMember) Escaped() {
 	)
 }
 
+// BailedOut updates the status of a heist member to "Out on Bail" and saves the changes to the database.
+func (member *HeistMember) BailedOut() {
+	member.Status = OOB
+	writeMember(member)
+}
+
 // UpdateStatus updates the status of the member based on the current time. If the member is in jail
 // or dead, then the status is updated to FREE when the time has expired.
 func (member *HeistMember) UpdateStatus() {
@@ -221,7 +227,7 @@ func (member *HeistMember) ClearJailAndDeathStatus() {
 	member.JailTimer = time.Time{}
 	member.Sentence = 0
 	member.Spree = 0
-	member.Status = FREE
+	member.Status = Free
 
 	writeMember(member)
 }

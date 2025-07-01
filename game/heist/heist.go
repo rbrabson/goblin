@@ -56,7 +56,7 @@ type HeistResult struct {
 // HeistMemberResult is the result for a single member of the heist
 type HeistMemberResult struct {
 	Player        *HeistMember
-	Status        string
+	Status        MemberStatus
 	Message       string
 	StolenCredits int
 	BonusCredits  int
@@ -192,7 +192,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
 			result := &HeistMemberResult{
 				Player:       heistMember,
-				Status:       FREE,
+				Status:       Free,
 				Message:      goodResult.Message,
 				BonusCredits: goodResult.BonusAmount,
 				heist:        h,
@@ -213,7 +213,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
 			result := &HeistMemberResult{
 				Player:       heistMember,
-				Status:       string(badResult.Result),
+				Status:       badResult.Result,
 				Message:      badResult.Message,
 				heist:        h,
 				BonusCredits: 0,
