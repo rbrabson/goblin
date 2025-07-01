@@ -155,7 +155,7 @@ func TestHeistMemberApprehended(t *testing.T) {
 	member.guildMember.SetName("Apprehended Test", "", "")
 
 	// Initial state check
-	if member.Status != FREE {
+	if member.Status != Free {
 		t.Errorf("Expected initial status to be Free, got %s", member.Status)
 	}
 
@@ -191,7 +191,7 @@ func TestHeistMemberDied(t *testing.T) {
 	member.guildMember.SetName("Died Test", "", "")
 
 	// Initial state check
-	if member.Status != FREE {
+	if member.Status != Free {
 		t.Errorf("Expected initial status to be Free, got %s", member.Status)
 	}
 
@@ -238,7 +238,7 @@ func TestHeistMemberEscaped(t *testing.T) {
 	member.Escaped()
 
 	// Verify status is still Free
-	if member.Status != FREE {
+	if member.Status != Free {
 		t.Errorf("Expected status to be Free, got %s", member.Status)
 	}
 
@@ -269,8 +269,8 @@ func TestHeistMemberUpdateStatus(t *testing.T) {
 	// Update status
 	member.UpdateStatus()
 
-	// Verify status changed back to FREE
-	if member.Status != FREE {
+	// Verify status changed back to Free
+	if member.Status != Free {
 		t.Errorf("Expected status to be Free after jail time expired, got %s", member.Status)
 	}
 
@@ -283,8 +283,8 @@ func TestHeistMemberUpdateStatus(t *testing.T) {
 	// Update status
 	member.UpdateStatus()
 
-	// Verify status changed back to FREE
-	if member.Status != FREE {
+	// Verify status changed back to Free
+	if member.Status != Free {
 		t.Errorf("Expected status to be Free after death time expired, got %s", member.Status)
 	}
 }
@@ -307,8 +307,8 @@ func TestHeistMemberClearJailAndDeathStatus(t *testing.T) {
 	// Clear status
 	member.ClearJailAndDeathStatus()
 
-	// Verify status is FREE
-	if member.Status != FREE {
+	// Verify status is Free
+	if member.Status != Free {
 		t.Errorf("Expected status to be Free after clearing, got %s", member.Status)
 	}
 
@@ -323,8 +323,8 @@ func TestHeistMemberClearJailAndDeathStatus(t *testing.T) {
 	// Clear status
 	member.ClearJailAndDeathStatus()
 
-	// Verify status is FREE
-	if member.Status != FREE {
+	// Verify status is Free
+	if member.Status != Free {
 		t.Errorf("Expected status to be Free after clearing, got %s", member.Status)
 	}
 
@@ -414,8 +414,8 @@ func TestStealFromVault(t *testing.T) {
 	defer testTeardown()
 
 	targets := GetTargets(GuildId, HeistDefaultTheme)
-	if targets == nil || len(targets) == 0 {
-		t.Errorf("Expected targets, got nil or empty")
+	if len(targets) == 0 {
+		t.Errorf("Expected targets, got empty")
 		return
 	}
 
@@ -441,8 +441,8 @@ func TestStealFromVault(t *testing.T) {
 	target.StealFromValut(stealAmount)
 
 	// Verify vault amount decreased
-	if target.Vault != initialVault - stealAmount {
-		t.Errorf("Expected vault to be %d, got %d", initialVault - stealAmount, target.Vault)
+	if target.Vault != initialVault-stealAmount {
+		t.Errorf("Expected vault to be %d, got %d", initialVault-stealAmount, target.Vault)
 	}
 
 	// Verify IsAtMax is false
@@ -518,8 +518,8 @@ func TestResetVaultsToMaximumValue(t *testing.T) {
 	defer testTeardown()
 
 	targets := GetTargets(GuildId, HeistDefaultTheme)
-	if targets == nil || len(targets) == 0 {
-		t.Errorf("Expected targets, got nil or empty")
+	if len(targets) == 0 {
+		t.Errorf("Expected targets, got empty")
 		return
 	}
 
@@ -738,8 +738,8 @@ func TestCalculateSuccessRate(t *testing.T) {
 
 	// Get a target
 	targets := GetTargets(GuildId, HeistDefaultTheme)
-	if targets == nil || len(targets) == 0 {
-		t.Errorf("Expected targets, got nil or empty")
+	if len(targets) == 0 {
+		t.Errorf("Expected targets, got empty")
 		return
 	}
 
@@ -775,8 +775,8 @@ func TestCalculateBonusRate(t *testing.T) {
 
 	// Get a target
 	targets := GetTargets(GuildId, HeistDefaultTheme)
-	if targets == nil || len(targets) == 0 {
-		t.Errorf("Expected targets, got nil or empty")
+	if len(targets) == 0 {
+		t.Errorf("Expected targets, got empty")
 		return
 	}
 
@@ -812,24 +812,24 @@ func TestCalculateCredits(t *testing.T) {
 
 	// Get a target
 	targets := GetTargets(GuildId, HeistDefaultTheme)
-	if targets == nil || len(targets) == 0 {
-		t.Errorf("Expected targets, got nil or empty")
+	if len(targets) == 0 {
+		t.Errorf("Expected targets, got empty")
 		return
 	}
 
 	// Create a heist result
 	result := &HeistResult{
-		Target:     targets[0],
+		Target:      targets[0],
 		TotalStolen: 1000,
-		AllResults: make([]*HeistMemberResult, 0, len(heist.Crew)),
-		heist:      heist,
+		AllResults:  make([]*HeistMemberResult, 0, len(heist.Crew)),
+		heist:       heist,
 	}
 
 	// Add member results
 	for _, member := range heist.Crew {
 		memberResult := &HeistMemberResult{
 			Player:  member,
-			Status:  string(Escaped),
+			Status:  Escaped,
 			Message: "{} escaped with the loot!",
 			heist:   heist,
 		}
