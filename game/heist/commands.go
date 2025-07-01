@@ -557,26 +557,11 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 			}),
 		)
 
-		// Render the results into a table and returnt he results.
-		//var tableBuffer strings.Builder
-		//table := tablewriter.NewWriter(&tableBuffer)
-		//table.SetBorder(false)
-		//table.SetAutoWrapText(false)
-		//table.SetAutoFormatHeaders(true)
-		//table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-		//table.SetAlignment(tablewriter.ALIGN_LEFT)
-		//table.SetCenterSeparator("")
-		//table.SetColumnSeparator("")
-		//table.SetRowSeparator("")
-		//table.SetHeaderLine(false)
-		//table.SetBorder(false)
-		//table.SetTablePadding("\t")
-		//table.SetNoWhiteSpace(true)
 		numLines := 0
 		table.Header([]string{"Player", "Loot", "Bonus", "Total"})
 		for _, result := range res.AllResults {
 			guildMember := result.Player.guildMember
-			if result.Status == FREE || result.Status == Apprehended {
+			if result.Status == Free || result.Status == Apprehended {
 				data := []string{guildMember.Name, p.Sprintf("%d", result.StolenCredits), p.Sprintf("%d", result.BonusCredits), p.Sprintf("%d", result.StolenCredits+result.BonusCredits)}
 				if err := table.Append(data); err != nil {
 					slog.Error("failed to append to table",
@@ -802,7 +787,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// bailoutPlayer bails a player player out from jail. This defaults to the player initiating the command, but can
+// bailoutPlayer bails a player out from jail. This defaults to the player initiating the command, but can
 // be another player as well.
 func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var playerID string
@@ -821,29 +806,8 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var heistMember *HeistMember
 	if playerID != "" {
 		heistMember = getHeistMember(i.GuildID, playerID)
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("Bailing out %s...", heistMember.guildMember.Name)),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response",
-				slog.String("guildID", i.GuildID),
-				slog.Any("error", err),
-			)
-		}
 	} else {
 		heistMember = initiatingHeistMember
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Bailing yourself out..."),
-		)
-		err := resp.SendEphemeral(s, i.Interaction)
-		if err != nil {
-			slog.Error("unable to send the bail message",
-				slog.String("guildID", i.GuildID),
-				slog.String("memberID", i.Member.User.ID),
-				slog.Any("error", err),
-			)
-			return
-		}
 	}
 
 	if heistMember.Status != Apprehended {
@@ -853,7 +817,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		} else {
 			msg = fmt.Sprintf("%s is not in jail", heistMember.guildMember.Name)
 		}
-		if err := resp.WithContent(msg).Edit(s); err != nil {
+		if err := resp.WithContent(msg).SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to edit the message",
 				slog.String("guildID", i.GuildID),
 				slog.Any("error", err),
@@ -864,7 +828,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if heistMember.RemainingJailTime() <= 0 {
 		if heistMember.MemberID == i.Member.User.ID {
-			if err := resp.WithContent("You have already served your sentence.").Edit(s); err != nil {
+			if err := resp.WithContent("You have already served your sentence.").SendEphemeral(s, i.Interaction); err != nil {
 				slog.Error("failed to send response",
 					slog.String("guildID", i.GuildID),
 					slog.String("memberID", i.Member.User.ID),
@@ -872,7 +836,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				)
 			}
 		} else {
-			if err := resp.WithContent(fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name)).Edit(s); err != nil {
+			if err := resp.WithContent(fmt.Sprintf("%s has already served their sentence.", heistMember.guildMember.Name)).SendEphemeral(s, i.Interaction); err != nil {
 				slog.Error("failed to send response",
 					slog.String("guildID", i.GuildID),
 					slog.String("memberID", i.Member.User.ID),
@@ -887,18 +851,18 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := account.Withdraw(heistMember.BailCost)
 	if err != nil {
 		p := message.NewPrinter(language.AmericanEnglish)
-		if err := resp.WithContent(p.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost)).Edit(s); err != nil {
+		if err := resp.WithContent(p.Sprintf("You do not have enough credits to play the bail of %d", heistMember.BailCost)).SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
 				slog.Any("error", err),
 			)
 		}
 		return
 	}
-	heistMember.Status = OOB
+	heistMember.BailedOut()
 
 	if heistMember.MemberID == initiatingHeistMember.MemberID {
 		p := message.NewPrinter(language.AmericanEnglish)
-		if err := resp.WithContent(p.Sprintf("Congratulations, you are now free! You spent %d credits on your bail. Enjoy your freedom while it lasts.", heistMember.BailCost)).Edit(s); err != nil {
+		if err := resp.WithContent(p.Sprintf("Congratulations, you are now free! You spent %d credits on your bail. Enjoy your freedom while it lasts.", heistMember.BailCost)).SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
 				slog.Any("error", err),
 			)
@@ -909,7 +873,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	member := guild.GetMember(heistMember.GuildID, heistMember.MemberID)
 	initiatingMember := initiatingHeistMember.guildMember
 	p := message.NewPrinter(language.AmericanEnglish)
-	if err := resp.WithContent(p.Sprintf("Congratulations, %s, %s bailed you out by spending %d credits and now you are free!. Enjoy your freedom while it lasts.", member.Name, initiatingMember.Name, heistMember.BailCost)).Edit(s); err != nil {
+	if err := resp.WithContent(p.Sprintf("Congratulations, %s, %s bailed you out by spending %d credits and now you are free! Enjoy your freedom while it lasts.", member.Name, initiatingMember.Name, heistMember.BailCost)).Send(s, i.Interaction); err != nil {
 		slog.Error("failed to send response",
 			slog.Any("error", err),
 		)
