@@ -1,118 +1,24 @@
 package stats
 
-import (
-	"time"
+import "time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
-// GameOutcome represents the outcome of a game.
-type GameOutcome string
-
-// Race game outcome.
-const (
-	Win   GameOutcome = "win"
-	Place GameOutcome = "place"
-	Show  GameOutcome = "show"
-	Lose  GameOutcome = "lose"
-)
-
-// Heist game outcome.
-const (
-	Escaped  GameOutcome = "escaped"
-	Captured GameOutcome = "captured"
-	Died     GameOutcome = "died"
-)
-
-// MemberStats represents statistical data for a member including games played and earnings over various time periods.
 type MemberStats struct {
-	ID          primitive.ObjectID           `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID     string                       `json:"guild_id" bson:"guild_id"`
-	MemberID    string                       `json:"member_id" bson:"member_id"`
-	Game        string                       `json:"game" bson:"game"`
-	GamesPlayed GamesPlayed                  `json:"games_played" bson:"games_played"`
-	Earnings    GameEarnings                 `json:"earnings" bson:"earnings"`
-	Results     map[GameOutcome]GameOutcomes `json:"results" bson:"results"`
-	Streaks     map[GameOutcome]Streak       `json:"streaks" bson:"streaks"`
-	Created     time.Time                    `json:"created" bson:"created"`
-	Updated     time.Time                    `json:"updated" bson:"updated"`
+	GuildID     string            `json:"guild_id" bson:"guild_id"`
+	MemberID    string            `json:"member_id" bson:"member_id"`
+	Game        string            `json:"game" bson:"game"`
+	FirstPlayed time.Time         `json:"first_played" bson:"first_played"`
+	LastPlayed  time.Time         `json:"last_played" bson:"last_played"`
+	LastUpdated time.Time         `json:"last_updated" bson:"last_updated"`
+	Last24Hours []MemberGameStats `json:"last_24_hours" bson:"last_24_hours"`
+	CurrentHour GameStats         `json:"current_hour" bson:"current_hour"`
 }
 
-// GamesPlayed represents the count and average of games played by a user over different time periods, such as daily or all-time.
-type GamesPlayed struct {
-	Daily   GamesPlayedStats `json:"daily" bson:"daily"`
-	Weekly  GamesPlayedStats `json:"weekly" bson:"weekly"`
-	Monthly GamesPlayedStats `json:"monthly" bson:"monthly"`
-	Total   int              `json:"total" bson:"total"`
-}
-
-type GamesPlayedStats struct {
-	Minimum int `json:"minimum" bson:"minimum"`
-	Maximum int `json:"maximum" bson:"maximum"`
-	Current int `json:"current" bson:"current"`
-	Average int `json:"average" bson:"average"`
-}
-
-// GameEarnings represents the earnings statistics of a game over various time periods such as daily, weekly, and monthly.
-type GameEarnings struct {
-	Daily   EarningsStats `json:"daily" bson:"daily"`
-	Weekly  EarningsStats `json:"weekly" bson:"weekly"`
-	Monthly EarningsStats `json:"monthly" bson:"monthly"`
-	Total   int           `json:"total" bson:"total"`
-}
-
-// EarningsStats represents statistical data for earnings, including the average and total earnings over a specific period.
-type EarningsStats struct {
-	Minimum int `json:"minimum" bson:"minimum"`
-	Maximum int `json:"maximum" bson:"maximum"`
-	Current int `json:"current" bson:"current"`
-	Average int `json:"average" bson:"average"`
-}
-
-// Streak represents a user's streak data, including the current streak and the longest streak achieved.
-type Streak struct {
-	Current int `json:"current" bson:"current"`
-	Longest int `json:"longest" bson:"longest"`
-}
-
-type GameOutcomes struct {
-	Daily   GameOutcomesStats `json:"daily" bson:"daily"`
-	Weekly  GameOutcomesStats `json:"weekly" bson:"weekly"`
-	Monthly GameOutcomesStats `json:"monthly" bson:"monthly"`
-	Total   int               `json:"total" bson:"total"`
-}
-
-// GameOutcomesStats represents the result of a game along with statistical data such as average and total scores.
-type GameOutcomesStats struct {
-	Minimum int `json:"minimum" bson:"minimum"`
-	Maximum int `json:"maximum" bson:"maximum"`
-	Current int `json:"current" bson:"current"`
-	Average int `json:"average" bson:"average"`
-	Total   int `json:"total" bson:"total"`
-}
-
-func AverageGamesPlayedByMember(guildID string, memberID string, game string, period Period) int {
-	return 0
-}
-
-func TotalGamesPlayedByMember(guildID string, memberID string, game string, period Period) int {
-	return 0
-}
-
-func AverageEarningsByMember(guildID string, memberID string, game string, period Period) int {
-	return 0
-}
-
-func TotalEarningsByMember(guildID string, memberID string, game string, period Period) int {
-	return 0
-}
-
-func LongestStreakByMember(guildID string, memberID string, game string, period Period) int {
-	return 0
-}
-
-func CurrentStreakByMember(guildID string, memberID string, game string, period Period) int {
-	return 0
+type MemberGameStats struct {
+	TotalEarnings   int            `json:"total_earnings" bson:"total_earnings"`
+	TotalGames      int            `json:"total_games" bson:"total_games"`
+	AverageEarnings float64        `json:"average_earnings" bson:"average_earnings"`
+	AverageGames    float64        `json:"average_games" bson:"average_games"`
+	Outcomes        map[string]int `json:"outcomes" bson:"outcomes"`
 }
 
 func AddMemberStats(guildID string, memberID string, game string, result string, earnings int) {
@@ -132,7 +38,13 @@ func AddMemberStats(guildID string, memberID string, game string, result string,
 	// TODO: figure out how best to update the server stats
 }
 
-// String returns the string representation of the GameOutcome value.
-func (gr GameOutcome) String() string {
-	return string(gr)
+func AddStats(guildID string, memberID string, game string, result string, outcome string, earnings int) {
+	// Keep track of the stats for the individual member in the guild for the game.
+	// - In particular, we need to know the first and last time the game was played.
+	//   - Used for updating the unique players in the days, weeks, months and all-time stats.
+	// - A lot of what is in GameStats is needed here. Keep track of the last 24 hours, plus the current hour.
+	//   - Once the current hour is over, remove the oldest hour and add the new one.
+	//   - Then update the overall game stats for the guild.
+	//   - Can be tricky as we need to run all the current status for every player hourly, and cannot count on a player
+	//     playing each hour.
 }

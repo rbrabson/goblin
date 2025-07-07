@@ -34,65 +34,62 @@ Time Periods:
   new hours in the period.
 */
 
-// Period represents a time interval or duration such as daily, weekly, monthly, or all-time.
-type Period string
-
+// Race game outcomes.
 const (
-	Daily   Period = "daily"
-	Weekly  Period = "weekly"
-	Monthly Period = "monthly"
-	AllTime Period = "allTime"
+	Win   = "win"   // The member won the race.
+	Place = "place" // The member came in second in the race.
+	Show  = "show"  // The member came in third in the race.
+	Lose  = "lose"  // The member lost the race.
 )
 
-// Stats represents statistical data related to a guild, including unique member counts and associated identifiers.
+// Heist game outcomes.
+const (
+	Escaped     = "escaped"     // The member successfully escaped the heist.
+	Apprehended = "apprehended" // The member was apprehended during the heist.
+	Died        = "died"        // The member died during the heist.
+)
+
+// Stats represents the statistics for a game over a period of time in a guild.
 type Stats struct {
-	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID       string             `json:"guild_id" bson:"guild_id"`
-	UniqueMembers UniqueMembers      `json:"unique_members" bson:"unique_members"`
+	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID string             `json:"guild_id" bson:"guild_id"`
+	Game    string             `json:"game" bson:"game"`
+	Daily   *GameStats         `json:"daily,omitempty" bson:"daily,omitempty"`
+	Weekly  *GameStats         `json:"weekly,omitempty" bson:"weekly,omitempty"`
+	Monthly *GameStats         `json:"monthly,omitempty" bson:"monthly,omitempty"`
+	AllTime *GameStats         `json:"all_time,omitempty" bson:"all_time,omitempty"`
 }
 
-// UniqueMembers represents the count of unique members within specific time frames.
-type UniqueMembers struct {
-	// TODO: need to track how much the average player actually plays each games
-	Daily   int `json:"daily" bson:"daily"`
-	Weekly  int `json:"weekly" bson:"weekly"`
-	Monthly int `json:"monthly" bson:"monthly"`
-	AllTime int `json:"all_time" bson:"all_time"`
+// GameStats represents the statistics for a game in a guild over a specific period.
+type GameStats struct {
+	UniqueMembers      int            `json:"unique_members" bson:"unique_members"`
+	TotalMembers       int            `json:"total_members" bson:"total_members"`
+	AverageTimesPlayed int            `json:"average_times_played" bson:"average_times_played"`
+	Earnings           int            `json:"earnings" bson:"earnings"`
+	Outcomes           map[string]int `json:"outcomes" bson:"outcomes"`
+	TotalTimesPlayed   int            `json:"total_times_played" bson:"total_times_played"`
 }
 
-func AverageGamesPlayed(guildID string, game string, period Period) int {
-	return 0
+// NewStats creates a new Stats instance for a specific guild and game.
+func NewStats(guildID, game string) *Stats {
+	return &Stats{
+		GuildID: guildID,
+		Game:    game,
+		Daily:   NewGameStats(),
+		Weekly:  NewGameStats(),
+		Monthly: NewGameStats(),
+		AllTime: NewGameStats(),
+	}
 }
 
-func TotalGamesPlayed(guildID string, game string, period Period) int {
-	return 0
-}
-
-func AverageNumMembersPlayed(guildID string, game string, period Period) int {
-	return 0
-}
-
-func TotalNumMembersPlayed(guildID string, game string, period Period) int {
-	return 0
-}
-
-func AverageUniqueMembersPlayed(guildID string, game string, period Period) int {
-	return 0
-}
-
-func TotalUniqueMembersPlayed(guildID string, game string, period Period) int {
-	return 0
-}
-
-func AverageWinnings(guildID string, game string, period Period) int {
-	return 0
-}
-
-func TotalWinnings(guildID string, game string, period Period) int {
-	return 0
-}
-
-// String returns the string representation of the Period.
-func (p Period) String() string {
-	return string(p)
+// NewGameStats creates a new GameStats instance for a given period of time with default values.
+func NewGameStats() *GameStats {
+	return &GameStats{
+		UniqueMembers:      0,
+		TotalMembers:       0,
+		AverageTimesPlayed: 0,
+		Earnings:           0,
+		Outcomes:           make(map[string]int),
+		TotalTimesPlayed:   0,
+	}
 }
