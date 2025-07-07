@@ -129,6 +129,7 @@ func AddMemberStats(guildID string, memberID string, game string, result string,
 	//       it is a bit more complicated w/ the rolling averages, since we only want some of the values to be included
 	//       in this case, perhaps multiply the old_average * (n-num_days_since), where "n" is the time period we are
 	//                     interested in
+	// TODO: figure out how best to update the server stats
 }
 
 // String returns the string representation of the GameOutcome value.
