@@ -3,14 +3,41 @@ package stats
 import "time"
 
 type MemberStats struct {
-	GuildID     string            `json:"guild_id" bson:"guild_id"`
-	MemberID    string            `json:"member_id" bson:"member_id"`
-	Game        string            `json:"game" bson:"game"`
-	FirstPlayed time.Time         `json:"first_played" bson:"first_played"`
-	LastPlayed  time.Time         `json:"last_played" bson:"last_played"`
-	LastUpdated time.Time         `json:"last_updated" bson:"last_updated"`
-	Last24Hours []MemberGameStats `json:"last_24_hours" bson:"last_24_hours"`
+	GuildID            string    `json:"guild_id" bson:"guild_id"`
+	MemberID           string    `json:"member_id" bson:"member_id"`
+	Game               string    `json:"game" bson:"game"`
+	FirstPlayed        time.Time `json:"first_played" bson:"first_played"`
+	LastPlayed         time.Time `json:"last_played" bson:"last_played"`
+	LastUpdated        time.Time `json:"last_updated" bson:"last_updated"`
+	HourlyMemberStats  `json:"hourly_stats" bson:"hourly_stats"`
+	DailyMemberStats   `json:"daily_stats" bson:"daily_stats"`
+	WeeklyMemberStats  `json:"weekly_stats" bson:"weekly_stats"`
+	MonthlyMemberStats `json:"monthly_stats" bson:"monthly_stats"`
+	AllTimeMemberStats `json:"all_time_stats" bson:"all_time_stats"`
+}
+
+type HourlyMemberStats struct {
+	CurrentDay  []MemberGameStats `json:"last_24_hours" bson:"last_24_hours"`
 	CurrentHour GameStats         `json:"current_hour" bson:"current_hour"`
+}
+
+type DailyMemberStats struct {
+	CurrentMonth []MemberGameStats `json:"current_month" bson:"current_month"`
+	CurrentDay   GameStats         `json:"current_day" bson:"current_day"`
+}
+
+type WeeklyMemberStats struct {
+	CurrentMonth []MemberGameStats `json:"current_month" bson:"current_month"`
+	CurrentWeek  []MemberGameStats `json:"current_week" bson:"current_week"`
+}
+
+type MonthlyMemberStats struct {
+	CurrentYear  []MemberGameStats `json:"current_year" bson:"current_year"`
+	CurrentMonth []MemberGameStats `json:"current_month" bson:"current_month"`
+}
+
+type AllTimeMemberStats struct {
+	AllTime GameStats `json:"all_time" bson:"all_time"`
 }
 
 type MemberGameStats struct {
@@ -21,7 +48,42 @@ type MemberGameStats struct {
 	Outcomes        map[string]int `json:"outcomes" bson:"outcomes"`
 }
 
-func AddMemberStats(guildID string, memberID string, game string, result string, earnings int) {
+func NewMemberStats(guildID string, memberID string, game string) *MemberStats {
+	return &MemberStats{
+		GuildID:     guildID,
+		MemberID:    memberID,
+		Game:        game,
+		FirstPlayed: time.Now(),
+		LastPlayed:  time.Time{},
+		LastUpdated: time.Time{},
+		HourlyMemberStats: HourlyMemberStats{
+			CurrentDay:  []MemberGameStats{},
+			CurrentHour: GameStats{},
+		},
+		DailyMemberStats: DailyMemberStats{
+			CurrentMonth: []MemberGameStats{},
+			CurrentDay:   GameStats{},
+		},
+		WeeklyMemberStats: WeeklyMemberStats{
+			CurrentMonth: []MemberGameStats{},
+			CurrentWeek:  []MemberGameStats{},
+		},
+		MonthlyMemberStats: MonthlyMemberStats{
+			CurrentYear:  []MemberGameStats{},
+			CurrentMonth: []MemberGameStats{},
+		},
+		AllTimeMemberStats: AllTimeMemberStats{
+			AllTime: GameStats{},
+		},
+	}
+}
+
+func GetMemberStats(guildID string, memberID string, game string) *MemberStats {
+	// TODO: check the database for the status first
+	return NewMemberStats(guildID, memberID, game)
+}
+
+func (ms *MemberStats) AddGameStats(result string, earnings int) {
 	// TODO: figure out what is required, and whether we should create a struct for that
 	//       not sure how to tell when to get rid of the previous entries w/out recording every one, which I really
 	//       don't want to have a monthly record for every member's every game, but I don't know how to do this unless
