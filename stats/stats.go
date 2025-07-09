@@ -1,6 +1,10 @@
 package stats
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"sync"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 /*
 For each player:
@@ -58,6 +62,7 @@ type Stats struct {
 	Weekly  *GameStats         `json:"weekly,omitempty" bson:"weekly,omitempty"`
 	Monthly *GameStats         `json:"monthly,omitempty" bson:"monthly,omitempty"`
 	AllTime *GameStats         `json:"all_time,omitempty" bson:"all_time,omitempty"`
+	mutex   sync.Mutex         `json:"-" bson:"-"`
 }
 
 // GameStats represents the statistics for a game in a guild over a specific period.
