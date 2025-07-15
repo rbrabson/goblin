@@ -169,7 +169,7 @@ func (member *HeistMember) BailedOut() {
 }
 
 // UpdateStatus updates the status of the member based on the current time. If the member is in jail
-// or dead, then the status is updated to FREE when the time has expired.
+// or dead, then the status is updated to Free when the time has expired.
 func (member *HeistMember) UpdateStatus() {
 	switch member.Status {
 	case Apprehended:
