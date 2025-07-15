@@ -16,22 +16,7 @@
         "result": "Escaped"
       },
       {
-        "message": "%s used Royal Cloak <:Archer_Queen:1346562884720922707>. +25 <:Gold:1346583263598219297>",
-        "bonus_amount": 25,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s used Iron Fist <:Barbarian_King:1346562986810146826>. +25 <:Gold:1346583263598219297>",
-        "bonus_amount": 25,
-        "result": "Escaped"
-      },
-      {
         "message": "%s took out a corner builder hut <:Builder_Hut:1346578230836199455>. +50 <:Gold:1346583263598219297>.",
-        "bonus_amount": 50,
-        "result": "Escaped"
-      },
-      {
-        "message": "%s boosted the training barracks <:Gems:1346582782276665406>. +50 <:Gold:1346583263598219297>",
         "bonus_amount": 50,
         "result": "Escaped"
       },
@@ -98,6 +83,36 @@
       {
         "message": "%s found a gem box <:Gems:1346582782276665406>. +2,500 <:Gold:1346583263598219297>",
         "bonus_amount": 2500,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s threw an overgrowth spell on multiple defenses <:Overgrowth_Spell:1394789755346227281>. +250 <:Gold:1346583263598219297>",
+        "bonus_amount": 250,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s was hit by the revive spell and tripled <:Revive_Spell:1394789328059629678>. +1,000 <:Gold:1346583263598219297>",
+        "bonus_amount": 1000,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s 1 shot skeleton park in capital raids. +250 <:Gold:1346583263598219297>",
+        "bonus_amount": 250,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s opened a legendary treasure chest <:Treasure_Chest_Legendary:1394790541698273410>. +750 <:Gold:1346583263598219297>",
+        "bonus_amount": 750,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s's fireball landed right into the core <:Fireball:1394791043693674576>! +500 <:Gold:1346583263598219297>",
+        "bonus_amount": 500,
+        "result": "Escaped"
+      },
+      {
+        "message": "%s defeated M.O.M.M.A <:PEKKA:1346564223203016856>. +1,000 <:Gold:1346583263598219297>",
+        "bonus_amount": 1000,
         "result": "Escaped"
       }
     ],
@@ -203,14 +218,6 @@
         "result": "Apprehended"
       },
       {
-        "message": "%s spent all their gold on an empty Wall Wrecker <:Wall_Wrecker:1346565296365895711>.",
-        "result": "Apprehended"
-      },
-      {
-        "message": "%s spent all their gold on a Battle Blimp with a hole in it <:Battle_Blimp:1346563046927237231>.",
-        "result": "Apprehended"
-      },
-      {
         "message": "%s was taken out by a Sneaky Archer <:Sneaky_Archer:1346564629815492699>.",
         "result": "Apprehended"
       },
@@ -289,6 +296,50 @@
       {
         "message": "%s got a 99%% 1 Star in the deciding attack. <:Star_New:1346596815364948069><:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382>.",
         "result": "Apprehended"
+      },
+      {
+        "message": "%s sent all of their troops into a poison tower. <:Spell_Tower_Poison:1394792360847609986>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s used a jump spell for their root riders. <:Root_Rider:1394792948050427994 <:Jump_Spell:1346563977831776370>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s forgot to bring clan castle troops to their war attack.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s didn’t place their mountain golem in the haste spell. <:Mountain_Golem:1394793509290250341> <:Haste_Spell:1346563628333006918>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s fireballed a corner tesla. <:Fireball:1394791043693674576> <:Hidden_Tesla:1394794127576662066>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s used angry jellyfish on their royal champion. <:Royal_Champion>:1346564515348611142> <:Angry_Jelly:1394794963153326151>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s recalled their queen too late! <:Archer_Queen:1346562884720922707> <:Recall_Spell:1346564418812776468>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s was launched away by the troop launcher. <:Troop_Launcher:1394795751019647148>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s used a book of fighting to finish a level one barracks upgrade. <:Book_of_Fighting:1346563200392499311>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s used a book of building to finish a level one builder hut upgrade. <:Book_of_Building:1346563200392499311>.",
+        "result": "Apprehended"
+      },
+      {
+        "message": "%s spammed all their miners into the capital peak and got a 1% 1 star. <:Miner:1346564114243391528> <:Star_New:1346596815364948069><:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382>.",
+        "result": "Apprehended"
       }
     ],
     "died_messages": [
@@ -334,6 +385,30 @@
       },
       {
         "message": "%s was banned by spAnser. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s was blown up by a wall breaker <:Wall_Breaker:1346565268087771217>.. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s spent all their ores on the lavaloon puppet <:Lava_Hound:1346564007368200273> <:Balloon:1346562966543269888>. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s forgot to set their warden to air mode in their hydra attack <:Grand_Warden:1346563596058103962> <:Dragon:1346563296584794122>. <:Dragon_Rider:1346563273226452992>. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s mistimed their recall spell <:Recall_Spell:1346564418812776468>. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s placed a golem in front of a single target inferno <:Golem:1346563552684671017> <:Inferno_Tower_Single:1394788218456637490>. (death) <:Toombstone:1346597374054633554>",
+        "result": "Dead"
+      },
+      {
+        "message": "%s set their showcase base as their legends base. (death) <:Toombstone:1346597374054633554>",
         "result": "Dead"
       }
     ],

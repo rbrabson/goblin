@@ -43,6 +43,25 @@ var (
 					},
 				},
 				{
+					Name:        "add",
+					Description: "Adds the amount of credits to a given member's bank account.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionString,
+							Name:        "id",
+							Description: "The member ID.",
+							Required:    true,
+						},
+						{
+							Type:        discordgo.ApplicationCommandOptionInteger,
+							Name:        "amount",
+							Description: "The amount to add to the account.",
+							Required:    true,
+						},
+					},
+				},
+				{
 					Name:        "balance",
 					Description: "Set the default balance for the bank for the server.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -99,6 +118,14 @@ var (
 					Name:        "account",
 					Description: "Bank account balance for the member.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Name:        "id",
+							Description: "The member ID.",
+							Type:        discordgo.ApplicationCommandOptionString,
+							Required:    false,
+						},
+					},
 				},
 			},
 		},
@@ -143,6 +170,8 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		setBankCurrency(s, i)
 	case "account":
 		setAccountBalance(s, i)
+	case "add":
+		addAccountBalance(s, i)
 	case "info":
 		getBankInfo(s, i)
 	default:
@@ -178,11 +207,35 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// account gets information about the member's bank account.
+// account gets information about a member's bank account. By default, it uses the member who invoked the command.
+// If an ID is provided, it will use that ID instead.
 func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	account := GetAccount(i.GuildID, i.Member.User.ID)
+	var account *Account
+	options := i.ApplicationCommandData().Options[0].Options
+	for _, option := range options {
+		if option.Name == "id" {
+			memberID := strings.TrimSpace(option.StringValue())
+			account = GetAccount(i.GuildID, memberID)
+			if account == nil {
+				resp := disgomsg.NewResponse(
+					disgomsg.WithContent("An account with that ID does not exist."),
+				)
+				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+					slog.Error("error sending response",
+						slog.String("guildID", i.GuildID),
+						slog.String("error", err.Error()),
+					)
+				}
+				return
+			}
+			break
+		}
+	}
+	if account == nil {
+		account = GetAccount(i.GuildID, i.Member.User.ID)
+	}
 
 	content := p.Sprintf("**Current Balance**: %d\n**Monthly Balance**: %d\n**Lifetime Balance**: %d\n**Created**: %s\n",
 		account.CurrentBalance,
@@ -251,6 +304,65 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("Account balance for %s was set to %d", m.Name, account.CurrentBalance)),
+	)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("error", err.Error()),
+		)
+	}
+}
+
+// addAccountBalance adds the amount to the balance of the account for the member of the guild
+func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	var id string
+	var amount int
+	options := i.ApplicationCommandData().Options[0].Options
+	for _, option := range options {
+		switch option.Name {
+		case "id":
+			id = strings.TrimSpace(option.StringValue())
+		case "amount":
+			amount = int(option.IntValue())
+		}
+	}
+
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	member, err := s.GuildMember(i.GuildID, id)
+	if err != nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("An account with that ID does not exist."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+		return
+	}
+
+	m := guild.GetMember(i.GuildID, member.User.ID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
+	account := GetAccount(i.GuildID, id)
+
+	if err := account.Deposit(amount); err != nil {
+		slog.Error("error adding credits to the bank account balance",
+			slog.String("guildID", i.GuildID),
+			slog.Int("amount", amount),
+			slog.Any("error", err),
+		)
+	}
+
+	slog.Debug("/bank-admin add account",
+		slog.String("guildID", i.GuildID),
+		slog.String("memberID", id),
+		slog.String("memberName", m.Name),
+		slog.Int("amount", amount),
+	)
+
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Account balance for %s was increased by %d", m.Name, amount)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("error sending response",
