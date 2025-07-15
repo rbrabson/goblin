@@ -165,16 +165,9 @@ func NewBot(botName string, version string, revision string) *Bot {
 // a new bot and the set of loaded slash commands changes.
 func (bot *Bot) DeleteCommands() {
 	// Delete all bot commands indivdually
-	// commands, err := bot.Session.ApplicationCommands(bot.appID, bot.guildID)
-	// if err != nil {
-	// 	log.WithFields(log.Fields{"appID": bot.appID, "guildID": bot.guildID, "error": err}).Fatal("failed to get bot commands")
-	// }
+	// commands, _ := bot.Session.ApplicationCommands(bot.appID, bot.guildID)
 	// for _, command := range commands {
-	// 	log.WithFields(log.Fields{"name": command.Name, "description": command.Description}).Debug("deleting command")
-	// 	err := bot.Session.ApplicationCommandDelete(bot.appID, bot.guildID, command.ID)
-	// 	if err != nil {
-	// 		log.WithFields(log.Fields{"name": command.Name, "description": command.Description, "error": err}).Error("failed to delete command")
-	// 	}
+	// 	bot.Session.ApplicationCommandDelete(bot.appID, bot.guildID, command.ID)
 	// }
 
 	slog.Debug("deleting old bot commands")

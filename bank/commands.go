@@ -118,12 +118,14 @@ var (
 					Name:        "account",
 					Description: "Bank account balance for the member.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
-				},
-				{
-					Name:        "id",
-					Description: "The member ID.",
-					Type:        discordgo.ApplicationCommandOptionString,
-					Required:    false,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Name:        "id",
+							Description: "The member ID.",
+							Type:        discordgo.ApplicationCommandOptionString,
+							Required:    false,
+						},
+					},
 				},
 			},
 		},
@@ -341,7 +343,7 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	m := guild.GetMember(i.GuildID, member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+	m := guild.GetMember(i.GuildID, member.User.ID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
 	account := GetAccount(i.GuildID, id)
 
 	if err := account.Deposit(amount); err != nil {
@@ -354,13 +356,13 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	slog.Debug("/bank-admin add account",
 		slog.String("guildID", i.GuildID),
-		slog.String("memberID", member.User.ID),
+		slog.String("memberID", id),
 		slog.String("memberName", m.Name),
 		slog.Int("amount", amount),
 	)
 
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(p.Sprintf("Account balance for %s was increased byset to %d", m.Name, account.CurrentBalance)),
+		disgomsg.WithContent(p.Sprintf("Account balance for %s was increased by %d", m.Name, amount)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("error sending response",
