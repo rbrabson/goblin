@@ -302,7 +302,7 @@
         "result": "Apprehended"
       },
       {
-        "message": "%s used a jump spell for their root riders. <:Root_Rider:1394792948050427994 <:Jump_Spell:1346563977831776370>.",
+        "message": "%s used a jump spell for their root riders. <:Root_Rider:1394792948050427994> <:Jump_Spell:1346563977831776370>.",
         "result": "Apprehended"
       },
       {
