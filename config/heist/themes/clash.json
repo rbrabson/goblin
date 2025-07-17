@@ -186,10 +186,6 @@
         "result": "Apprehended"
       },
       {
-        "message": "%s decided to upgrade all their barracks at the same time.",
-        "result": "Apprehended"
-      },
-      {
         "message": "%s decided to upgrade all their spell factories at the same time.",
         "result": "Apprehended"
       },
@@ -302,7 +298,7 @@
         "result": "Apprehended"
       },
       {
-        "message": "%s used a jump spell for their root riders. <:Root_Rider:1394792948050427994 <:Jump_Spell:1346563977831776370>.",
+        "message": "%s used a jump spell for their root riders. <:Root_Rider:1394792948050427994> <:Jump_Spell:1346563977831776370>.",
         "result": "Apprehended"
       },
       {
@@ -318,7 +314,7 @@
         "result": "Apprehended"
       },
       {
-        "message": "%s used angry jellyfish on their royal champion. <:Royal_Champion>:1346564515348611142> <:Angry_Jelly:1394794963153326151>.",
+        "message": "%s used angry jellyfish on their royal champion. <:Royal_Champion:1346564515348611142> <:Angry_Jelly:1394794963153326151>.",
         "result": "Apprehended"
       },
       {
@@ -338,7 +334,7 @@
         "result": "Apprehended"
       },
       {
-        "message": "%s spammed all their miners into the capital peak and got a 1% 1 star. <:Miner:1346564114243391528> <:Star_New:1346596815364948069><:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382>.",
+        "message": "%s spammed all their miners into the capital peak and got a 1%% 1 star. <:Miner:1346564114243391528> <:Star_New:1346596815364948069><:Star_Empty:1346596266343268382><:Star_Empty:1346596266343268382>.",
         "result": "Apprehended"
       }
     ],
