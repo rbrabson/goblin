@@ -2,11 +2,12 @@ package leaderboard
 
 import (
 	"fmt"
-	"github.com/olekukonko/tablewriter/renderer"
-	"github.com/olekukonko/tablewriter/tw"
 	"log/slog"
 	"strconv"
 	"strings"
+
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/olekukonko/tablewriter"
@@ -82,6 +83,14 @@ var (
 					Name:        "rank",
 					Description: "Gets the member rank for the leaderboards.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionString,
+							Name:        "id",
+							Description: "The ID of the member to return the leaderboard.",
+							Required:    false,
+						},
+					},
 				},
 			},
 		},
@@ -243,7 +252,31 @@ func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title
 
 // rank returns the rank of the member in the leaderboard.
 func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
+	var id string
+	options := i.ApplicationCommandData().Options[0].Options
+	for _, option := range options {
+		if option.Name == "id" {
+			id = strings.TrimSpace(option.StringValue())
+			break
+		}
+	}
+	if id == "" {
+		id = i.Member.User.ID
+	}
+
+	account := bank.GetAccount(i.GuildID, id)
+	if account == nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("No account found for member ID %s.", id)),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
+
 	lb := getLeaderboard(i.GuildID)
 	currentRank := getCurrentRanking(lb, account)
 	monthlyRank := getMonthlyRanking(lb, account)
