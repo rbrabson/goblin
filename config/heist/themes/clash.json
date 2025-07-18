@@ -186,10 +186,6 @@
         "result": "Apprehended"
       },
       {
-        "message": "%s decided to upgrade all their spell factories at the same time.",
-        "result": "Apprehended"
-      },
-      {
         "message": "%s decided to heal the grass <:Healing_Spell:1346563716740808847>.",
         "result": "Apprehended"
       },
