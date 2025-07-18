@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0
+
+Add options to the `bank account` and `lb rank` commands to let users see the balances and rank of other members.
+
 ## 1.2.0
 
 Add a `shop` to the bot, where members can purchase items using their accumulated credits. Administrators add items to the shop, and members can then purchase the items.
