@@ -125,6 +125,12 @@ var (
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    false,
 						},
+						{
+							Name:        "user",
+							Description: "The member.",
+							Type:        discordgo.ApplicationCommandOptionUser,
+							Required:    false,
+						},
 					},
 				},
 			},
@@ -212,29 +218,34 @@ func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	var account *Account
+	memberID := i.Member.User.ID
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
+		if option.Name == "user" {
+			memberID = option.UserValue(s).ID
+			break
+		}
 		if option.Name == "id" {
-			memberID := strings.TrimSpace(option.StringValue())
-			account = GetAccount(i.GuildID, memberID)
-			if account == nil {
-				resp := disgomsg.NewResponse(
-					disgomsg.WithContent("An account with that ID does not exist."),
-				)
-				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-					slog.Error("error sending response",
-						slog.String("guildID", i.GuildID),
-						slog.String("error", err.Error()),
-					)
-				}
-				return
+			if option.UserValue(s) != nil {
+				memberID = option.UserValue(s).ID
 			}
 			break
 		}
 	}
+
+	account := GetAccount(i.GuildID, memberID)
 	if account == nil {
-		account = GetAccount(i.GuildID, i.Member.User.ID)
+		content := p.Sprintf("An account with the ID of %s does not exist.", memberID)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(content),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+		return
 	}
 
 	content := p.Sprintf("**Current Balance**: %d\n**Monthly Balance**: %d\n**Lifetime Balance**: %d\n**Created**: %s\n",

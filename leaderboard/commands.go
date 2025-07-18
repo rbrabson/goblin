@@ -90,6 +90,12 @@ var (
 							Description: "The ID of the member to return the leaderboard.",
 							Required:    false,
 						},
+						{
+							Type:        discordgo.ApplicationCommandOptionUser,
+							Name:        "user",
+							Description: "The member to return the leaderboard.",
+							Required:    false,
+						},
 					},
 				},
 			},
@@ -252,22 +258,28 @@ func sendLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate, title
 
 // rank returns the rank of the member in the leaderboard.
 func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var id string
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	memberID := i.Member.User.ID
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
 		if option.Name == "id" {
-			id = strings.TrimSpace(option.StringValue())
+			memberID = strings.TrimSpace(option.StringValue())
+			break
+		}
+		if option.Name == "user" {
+			if option.UserValue(s) != nil {
+				memberID = option.UserValue(s).ID
+			}
 			break
 		}
 	}
-	if id == "" {
-		id = i.Member.User.ID
-	}
 
-	account := bank.GetAccount(i.GuildID, id)
+	account := bank.GetAccount(i.GuildID, memberID)
 	if account == nil {
+		content := p.Sprintf("An account with the ID of %s does not exist.", memberID)
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("No account found for member ID %s.", id)),
+			disgomsg.WithContent(content),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send the response",
@@ -282,9 +294,9 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	monthlyRank := getMonthlyRanking(lb, account)
 	lifetimeRank := getLifetimeRanking(lb, account)
 
-	p := message.NewPrinter(language.AmericanEnglish)
+	content := p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank)
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank)),
+		disgomsg.WithContent(content),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 		slog.Error("failed to send the response",
