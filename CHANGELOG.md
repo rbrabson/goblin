@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+Change all ocurrences of `id` for a user to `user`. If both options already exist, remove the `id` option, as it is redundant.
+
 ## 2.0.0
 
 Add options to the `bank account` and `lb rank` commands to let users see the balances and rank of other members.
