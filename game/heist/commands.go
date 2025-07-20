@@ -50,9 +50,9 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "id",
-							Description: "ID of the player to clear",
+							Type:        discordgo.ApplicationCommandOptionUser,
+							Name:        "user",
+							Description: "The member to clear.",
 							Required:    true,
 						},
 					},
@@ -197,15 +197,9 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "id",
-							Description: "ID of the player to bail. Defaults to you.",
-							Required:    false,
-						},
-						{
 							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
-							Description: "The player to bail out of jail. Defaults to you.",
+							Description: "The member to bail out of jail. Defaults to you.",
 							Required:    false,
 						},
 					},
@@ -799,18 +793,24 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	var playerID string
+	var memberID string
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
-		if option.Name == "id" {
-			playerID = strings.TrimSpace(option.StringValue())
-			break
-		}
 		if option.Name == "user" {
 			user := option.UserValue(s)
-			if user != nil {
-				playerID = user.ID
+			if user == nil {
+				resp := disgomsg.NewResponse(
+					disgomsg.WithContent("The user you specified does not exist."),
+				)
+				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+					slog.Error("error sending response",
+						slog.String("guildID", i.GuildID),
+						slog.String("error", err.Error()),
+					)
+				}
+				return
 			}
+			memberID = user.ID
 			break
 		}
 	}
@@ -821,10 +821,10 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	var resp disgomsg.Response
 	var heistMember *HeistMember
-	if playerID != "" {
-		heistMember = getHeistMember(i.GuildID, playerID)
+	if memberID != "" {
+		heistMember = getHeistMember(i.GuildID, memberID)
 		if heistMember == nil {
-			content := p.Sprintf("No heist member found with ID %s.", playerID)
+			content := p.Sprintf("No heist member found with ID %s.", memberID)
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(content),
 			)
@@ -1124,7 +1124,21 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // clearMember clears the criminal state of the player.
 func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	memberID := i.ApplicationCommandData().Options[0].Options[0].StringValue()
+	var memberID string
+	user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
+	if user == nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The user you specified does not exist."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+		return
+	}
+	memberID = user.ID
 	member := guild.GetMember(i.GuildID, memberID)
 	heistMember := getHeistMember(i.GuildID, memberID)
 	heistMember.ClearJailAndDeathStatus()
