@@ -64,8 +64,8 @@ var (
 							Options: []*discordgo.ApplicationCommandOption{
 								{
 									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "id",
-									Description: "The ID of the owner to add.",
+									Name:        "user",
+									Description: "The member to add as an owner.",
 									Required:    true,
 								},
 							},
@@ -77,8 +77,8 @@ var (
 							Options: []*discordgo.ApplicationCommandOption{
 								{
 									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "id",
-									Description: "The ID of the owner to remove.",
+									Name:        "user",
+									Description: "The member to remove as an owner.",
 									Required:    true,
 								},
 							},
@@ -102,8 +102,8 @@ var (
 							Options: []*discordgo.ApplicationCommandOption{
 								{
 									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "id",
-									Description: "The ID of the admin to add.",
+									Name:        "member",
+									Description: "The member to add as an admin.",
 									Required:    true,
 								},
 							},
@@ -115,8 +115,8 @@ var (
 							Options: []*discordgo.ApplicationCommandOption{
 								{
 									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "id",
-									Description: "The ID of the admin to remove.",
+									Name:        "user",
+									Description: "The member to remove as an admin.",
 									Required:    true,
 								},
 							},
@@ -371,8 +371,22 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
 	case "add":
-		userID := i.ApplicationCommandData().Options[0].Options[0].Options[0].StringValue()
-		err := server.AddOwner(userID)
+		var memberID string
+		user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
+		if user == nil {
+			resp := disgomsg.NewResponse(
+				disgomsg.WithContent("The requested user cannot be found."),
+			)
+			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+				slog.Error("error sending response",
+					slog.String("guildID", i.GuildID),
+					slog.String("error", err.Error()),
+				)
+			}
+			return
+		}
+
+		err := server.AddOwner(memberID)
 		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -383,13 +397,13 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				)
 			}
 			slog.Error("failed to add owner",
-				slog.String("userID", userID),
+				slog.String("userID", memberID),
 				slog.Any("error", err),
 			)
 			return
 		}
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Added " + userID + " as a a server owner."),
+			disgomsg.WithContent("Added " + memberID + " as a a server owner."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -397,7 +411,7 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 		slog.Info("added owner",
-			slog.String("userID", userID),
+			slog.String("userID", memberID),
 		)
 	case "list":
 		owers := server.ListOwners()
@@ -421,8 +435,21 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 	case "remove":
-		userID := i.ApplicationCommandData().Options[0].Options[0].Options[0].StringValue()
-		err := server.RemoveOwner(userID)
+		var memberID string
+		user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
+		if user == nil {
+			resp := disgomsg.NewResponse(
+				disgomsg.WithContent("The requested user cannot be found."),
+			)
+			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+				slog.Error("error sending response",
+					slog.String("guildID", i.GuildID),
+					slog.String("error", err.Error()),
+				)
+			}
+			return
+		}
+		err := server.RemoveOwner(memberID)
 		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -433,13 +460,13 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				)
 			}
 			slog.Error("failed to remove owner",
-				slog.String("userID", userID),
+				slog.String("userID", memberID),
 				slog.Any("error", err),
 			)
 			return
 		}
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Removed " + userID + " as a server owner."),
+			disgomsg.WithContent("Removed " + memberID + " as a server owner."),
 		)
 		if err := resp.Send(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -447,7 +474,7 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 		slog.Info("removed owner",
-			slog.String("userID", userID),
+			slog.String("userID", memberID),
 		)
 	default:
 		slog.Error("unknown subcommand",
@@ -471,8 +498,21 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
 	case "add":
-		userID := i.ApplicationCommandData().Options[0].Options[0].Options[0].StringValue()
-		err := server.AddAdmin(userID)
+		var memberID string
+		user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
+		if user == nil {
+			resp := disgomsg.NewResponse(
+				disgomsg.WithContent("The requested user cannot be found."),
+			)
+			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+				slog.Error("error sending response",
+					slog.String("guildID", i.GuildID),
+					slog.String("error", err.Error()),
+				)
+			}
+			return
+		}
+		err := server.AddAdmin(memberID)
 		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -483,13 +523,13 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				)
 			}
 			slog.Error("failed to add admin",
-				slog.String("userID", userID),
+				slog.String("userID", memberID),
 				slog.Any("error", err),
 			)
 			return
 		}
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Added " + userID + " as a server admin."),
+			disgomsg.WithContent("Added " + memberID + " as a server admin."),
 		)
 		if err := resp.Send(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -497,7 +537,7 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 		slog.Error("added admin",
-			slog.String("userID", userID),
+			slog.String("userID", memberID),
 		)
 	case "list":
 		owers := server.ListAdmins()
@@ -521,8 +561,21 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 	case "remove":
-		userID := i.ApplicationCommandData().Options[0].Options[0].Options[0].StringValue()
-		err := server.RemoveAdmin(userID)
+		var memberID string
+		user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
+		if user == nil {
+			resp := disgomsg.NewResponse(
+				disgomsg.WithContent("The requested user cannot be found."),
+			)
+			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+				slog.Error("error sending response",
+					slog.String("guildID", i.GuildID),
+					slog.String("error", err.Error()),
+				)
+			}
+			return
+		}
+		err := server.RemoveAdmin(memberID)
 		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -533,13 +586,13 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				)
 			}
 			slog.Error("failed to add admin",
-				slog.String("userID", userID),
+				slog.String("userID", memberID),
 				slog.Any("error", err),
 			)
 			return
 		}
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Removed " + userID + " as an server admin."),
+			disgomsg.WithContent("Removed " + memberID + " as an server admin."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -547,7 +600,7 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 		slog.Error("removed admin",
-			slog.String("userID", userID),
+			slog.String("userID", memberID),
 		)
 	default:
 		slog.Error("unknown subcommand",

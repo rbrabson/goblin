@@ -150,8 +150,8 @@ var (
 					Options: []*discordgo.ApplicationCommandOption{
 						{
 							Type:        discordgo.ApplicationCommandOptionUser,
-							Name:        "id",
-							Description: "The ID of the member to ban from the shop.",
+							Name:        "user",
+							Description: "The user to ban from the shop.",
 							Required:    true,
 						},
 					},
@@ -163,8 +163,8 @@ var (
 					Options: []*discordgo.ApplicationCommandOption{
 						{
 							Type:        discordgo.ApplicationCommandOptionUser,
-							Name:        "id",
-							Description: "The ID of the member to have the ban from the shop removed.",
+							Name:        "user",
+							Description: "The user to have the ban from the shop removed.",
 							Required:    true,
 						},
 					},
@@ -202,8 +202,8 @@ var (
 					Options: []*discordgo.ApplicationCommandOption{
 						{
 							Type:        discordgo.ApplicationCommandOptionChannel,
-							Name:        "id",
-							Description: "The ID of the member to notify when a purchase requires additional action.",
+							Name:        "user",
+							Description: "The user to notify when a purchase requires additional action.",
 							Required:    true,
 						},
 					},
@@ -614,7 +614,21 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	options := i.ApplicationCommandData().Options
-	memberID := options[0].Options[0].UserValue(s).ID
+
+	user := options[0].UserValue(s)
+	if user == nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The user to ban from the shop was not found. Please try again."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+		return
+	}
+	memberID := user.ID
 
 	member := GetMember(i.GuildID, memberID)
 	err := member.AddRestriction(ShopBan)
@@ -649,7 +663,21 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	options := i.ApplicationCommandData().Options
-	memberID := options[0].Options[0].UserValue(s).ID
+	user := options[0].Options[0].UserValue(s)
+	if user == nil {
+		content := p.Sprintf("The user to unban from the shop was not found. Please try again.")
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(content),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+		return
+	}
+	memberID := user.ID
 
 	member, err := getMember(i.GuildID, memberID)
 	if err != nil {
@@ -761,7 +789,22 @@ func setShopModChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // setNotificationID sets the ID of the member to nofify when a purchase requires additional actions.
 func setNotificationID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
-	memberID := options[0].Options[0].ChannelValue(s).ID
+
+	user := options[0].Options[0].ChannelValue(s)
+	if user == nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The account to notify was not found. Please try again."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+		return
+	}
+	memberID := user.ID
+
 	_, err := s.State.Channel(memberID)
 	if err != nil {
 		slog.Error("failed to get member from state",

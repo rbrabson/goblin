@@ -85,12 +85,6 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "id",
-							Description: "The ID of the member to return the leaderboard.",
-							Required:    false,
-						},
-						{
 							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
 							Description: "The member to return the leaderboard.",
@@ -263,14 +257,21 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	memberID := i.Member.User.ID
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
-		if option.Name == "id" {
-			memberID = strings.TrimSpace(option.StringValue())
-			break
-		}
 		if option.Name == "user" {
-			if option.UserValue(s) != nil {
-				memberID = option.UserValue(s).ID
+			user := option.UserValue(s)
+			if user == nil {
+				resp := disgomsg.NewResponse(
+					disgomsg.WithContent("The user you specified does not exist."),
+				)
+				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+					slog.Error("error sending response",
+						slog.String("guildID", i.GuildID),
+						slog.String("error", err.Error()),
+					)
+				}
+				return
 			}
+			memberID = user.ID
 			break
 		}
 	}
