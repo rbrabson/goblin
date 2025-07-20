@@ -258,8 +258,8 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
 		if option.Name == "user" {
-			user := option.UserValue(s)
-			if user == nil {
+			member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+			if err != nil {
 				resp := disgomsg.NewResponse(
 					disgomsg.WithContent("The user you specified does not exist."),
 				)
@@ -271,7 +271,7 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 				return
 			}
-			memberID = user.ID
+			memberID = member.MemberID
 			break
 		}
 	}

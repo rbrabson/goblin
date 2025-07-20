@@ -613,10 +613,9 @@ func removeCustomCommandFromShop(s *discordgo.Session, i *discordgo.InteractionC
 func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	options := i.ApplicationCommandData().Options
-
-	user := options[0].UserValue(s)
-	if user == nil {
+	option := i.ApplicationCommandData().Options[0]
+	member, err := guild.GetMemberByUser(s, i.GuildID, option.Options[0].UserValue(s))
+	if err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The user to ban from the shop was not found. Please try again."),
 		)
@@ -628,9 +627,7 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	memberID := user.ID
-
-	member, err := s.GuildMember(i.GuildID, memberID)
+	memberID := member.MemberID
 	if err != nil {
 		slog.Error("error getting guild member",
 			slog.String("guildID", i.GuildID),
@@ -649,7 +646,6 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	guild.GetMember(i.GuildID, memberID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
 	m := GetMember(i.GuildID, memberID)
 	err = m.AddRestriction(ShopBan)
 	if err != nil {
@@ -682,9 +678,9 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	options := i.ApplicationCommandData().Options
-	user := options[0].Options[0].UserValue(s)
-	if user == nil {
+	option := i.ApplicationCommandData().Options[0].Options[0]
+	guildMember, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+	if err != nil {
 		content := p.Sprintf("The user to unban from the shop was not found. Please try again.")
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(content),
@@ -697,7 +693,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	memberID := user.ID
+	memberID := guildMember.MemberID
 
 	member, err := s.GuildMember(i.GuildID, memberID)
 	if err != nil {
