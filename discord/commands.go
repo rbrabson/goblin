@@ -63,7 +63,7 @@ var (
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
 							Options: []*discordgo.ApplicationCommandOption{
 								{
-									Type:        discordgo.ApplicationCommandOptionString,
+									Type:        discordgo.ApplicationCommandOptionUser,
 									Name:        "user",
 									Description: "The member to add as an owner.",
 									Required:    true,
@@ -76,7 +76,7 @@ var (
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
 							Options: []*discordgo.ApplicationCommandOption{
 								{
-									Type:        discordgo.ApplicationCommandOptionString,
+									Type:        discordgo.ApplicationCommandOptionUser,
 									Name:        "user",
 									Description: "The member to remove as an owner.",
 									Required:    true,
@@ -114,7 +114,7 @@ var (
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
 							Options: []*discordgo.ApplicationCommandOption{
 								{
-									Type:        discordgo.ApplicationCommandOptionString,
+									Type:        discordgo.ApplicationCommandOptionUser,
 									Name:        "user",
 									Description: "The member to remove as an admin.",
 									Required:    true,

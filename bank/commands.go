@@ -29,7 +29,7 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
+							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
 							Description: "The member or member ID.",
 							Required:    true,
@@ -48,7 +48,7 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
+							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
 							Description: "The member or member ID.",
 							Required:    true,
@@ -120,15 +120,9 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
+							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
 							Description: "The member or member ID.",
-							Required:    true,
-						},
-						{
-							Name:        "user",
-							Description: "The member.",
-							Type:        discordgo.ApplicationCommandOptionUser,
 							Required:    false,
 						},
 					},
@@ -295,6 +289,7 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 				return
 			}
+			memberID = user.ID
 		case "amount":
 			amount = int(option.IntValue())
 		}
@@ -313,8 +308,7 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-
-	m := guild.GetMember(i.GuildID, member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+	m := guild.GetMember(i.GuildID, memberID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
 	account := GetAccount(i.GuildID, memberID)
 
 	if err := account.SetBalance(amount); err != nil {
@@ -366,13 +360,24 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 				return
 			}
+			memberID = user.ID
 		case "amount":
 			amount = int(option.IntValue())
+		default:
+			slog.Warn("unknown option in /bank-admin add command",
+				slog.String("option", option.Name),
+			)
 		}
 	}
 
 	member, err := s.GuildMember(i.GuildID, memberID)
 	if err != nil {
+		slog.Error("error getting guild member",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", memberID),
+			slog.Int("amount", amount),
+			slog.Any("error", err),
+		)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("An account with that ID does not exist."),
 		)
@@ -385,7 +390,7 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	m := guild.GetMember(i.GuildID, member.User.ID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
+	m := guild.GetMember(i.GuildID, memberID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
 	account := GetAccount(i.GuildID, memberID)
 
 	if err := account.Deposit(amount); err != nil {
@@ -404,7 +409,7 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	)
 
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(p.Sprintf("Account balance for %s was increased by %d", m.Name, amount)),
+		disgomsg.WithContent(p.Sprintf("Account balance for %s was increased by %d", member, amount)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("error sending response",

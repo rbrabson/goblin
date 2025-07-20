@@ -630,8 +630,28 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	memberID := user.ID
 
-	member := GetMember(i.GuildID, memberID)
-	err := member.AddRestriction(ShopBan)
+	member, err := s.GuildMember(i.GuildID, memberID)
+	if err != nil {
+		slog.Error("error getting guild member",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("An account with that ID does not exist."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+		return
+	}
+
+	guild.GetMember(i.GuildID, memberID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
+	m := GetMember(i.GuildID, memberID)
+	err = m.AddRestriction(ShopBan)
 	if err != nil {
 		slog.Error("failed to ban member from shop",
 			slog.String("guildID", i.GuildID),
@@ -679,7 +699,27 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	memberID := user.ID
 
-	member, err := getMember(i.GuildID, memberID)
+	member, err := s.GuildMember(i.GuildID, memberID)
+	if err != nil {
+		slog.Error("error getting guild member",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("An account with that ID does not exist."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+		return
+	}
+	guild.GetMember(i.GuildID, memberID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
+
+	m, err := getMember(i.GuildID, memberID)
 	if err != nil {
 		slog.Warn("shop member not found in the database",
 			slog.String("guildID", i.GuildID),
@@ -695,7 +735,7 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = member.RemoveRestriction(ShopBan)
+	err = m.RemoveRestriction(ShopBan)
 	if err != nil {
 		slog.Error("failed to ban member from shop",
 			slog.String("guildID", i.GuildID),

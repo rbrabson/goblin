@@ -50,7 +50,7 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
+							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
 							Description: "The member to clear.",
 							Required:    true,
@@ -197,15 +197,9 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "user",
-							Description: "The member to bail out of jail. Defaults to you.",
-							Required:    false,
-						},
-						{
 							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
-							Description: "The player to bail out of jail. Defaults to you.",
+							Description: "The member to bail out of jail. Defaults to you.",
 							Required:    false,
 						},
 					},
