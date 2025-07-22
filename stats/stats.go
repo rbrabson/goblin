@@ -2,99 +2,128 @@ package stats
 
 import (
 	"sync"
+	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-/*
-For each player:
-- Keep track of when they last played. Also keep track of their individual stats
-  for the past day; beyond that, they can be deleted.
-  - Not sure how best to do this, or if it is even necessary. I worry about table row explosion.
-  - The server is keeping track of averages per minute, so do we need much beyond that?
-    - Just report the game stats, and whether it is a new since the last minute reported?
-- No outputs for this right now
-
-For each server:
-- Keep track of:
-  - Average & total number of unique players per period per individual game over a period
-  - Average & total number of members that participate in an individual game over a period
-  - Average & total number of times the average player played an individual game in a period
-  - Average & total earnings per player per period per individual game
-  - Average & total unique outcomes per individual game over a period
-  - Average & total number of times each game is played over a period
-
-Time Periods:
-- Daily, Monthly, Yearly, All-Time
-
-- When a new minute is calculated, redo the current hour
-  - When the new hour reaches 60 minutes, delete the oldest hour and add the newest
-- When a new hour is calculated, redo the current day
-  - When the new day reaches 1, delete the oldest
-- When a new day is calculated, redo the current monthly
-  - When the new month reaches the end of the month, delete the oldest month & add the newest
-- All-Time is updated on an hourly basis. Keep track of the timestamps, and use that to convert the average to
-  an hourly basis. Multiply out by the number of hours in the period, add the new one, and then divide by the number of
-  new hours in the period.
-*/
-
-// Race game outcomes.
-const (
-	Win   = "win"   // The member won the race.
-	Place = "place" // The member came in second in the race.
-	Show  = "show"  // The member came in third in the race.
-	Lose  = "lose"  // The member lost the race.
+var (
+	memberStatsLock = &sync.Mutex{}
 )
 
-// Heist game outcomes.
-const (
-	Escaped     = "escaped"     // The member successfully escaped the heist.
-	Apprehended = "apprehended" // The member was apprehended during the heist.
-	Died        = "died"        // The member died during the heist.
-)
-
-// Stats represents the statistics for a game over a period of time in a guild.
-type Stats struct {
-	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID string             `json:"guild_id" bson:"guild_id"`
-	Game    string             `json:"game" bson:"game"`
-	Daily   *GameStats         `json:"daily,omitempty" bson:"daily,omitempty"`
-	Weekly  *GameStats         `json:"weekly,omitempty" bson:"weekly,omitempty"`
-	Monthly *GameStats         `json:"monthly,omitempty" bson:"monthly,omitempty"`
-	AllTime *GameStats         `json:"all_time,omitempty" bson:"all_time,omitempty"`
-	mutex   sync.Mutex         `json:"-" bson:"-"`
+// MemberStats represents the daily statistics of a member of a guild in a specific game.
+type MemberStats struct {
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID     string             `json:"guild_id" bson:"guild_id"`
+	MemberID    string             `json:"member_id" bson:"member_id"`
+	Game        string             `json:"game" bson:"game"`
+	Earnings    int                `json:"total_earnings" bson:"total_earnings"`
+	TotalPlayed int                `json:"total_played" bson:"total_played"`
+	Day         time.Time          `json:"day" bson:"day"`
 }
 
-// GameStats represents the statistics for a game in a guild over a specific period.
-type GameStats struct {
-	UniqueMembers      int            `json:"unique_members" bson:"unique_members"`
-	TotalMembers       int            `json:"total_members" bson:"total_members"`
-	AverageTimesPlayed int            `json:"average_times_played" bson:"average_times_played"`
-	Earnings           int            `json:"earnings" bson:"earnings"`
-	Outcomes           map[string]int `json:"outcomes" bson:"outcomes"`
-	TotalTimesPlayed   int            `json:"total_times_played" bson:"total_times_played"`
+// getMemberStats retrieves the statistics for a specific member in a guild for a specific game.
+// If the stats do not exist, it creates a new entry for that member.
+func getMemberStats(guildID, memberID, game string) *MemberStats {
+	// Read from the database & return the member stats if found.
+
+	return newMemberStats(guildID, memberID, game)
 }
 
-// NewStats creates a new Stats instance for a specific guild and game.
-func NewStats(guildID, game string) *Stats {
-	return &Stats{
-		GuildID: guildID,
-		Game:    game,
-		Daily:   NewGameStats(),
-		Weekly:  NewGameStats(),
-		Monthly: NewGameStats(),
-		AllTime: NewGameStats(),
+// newMemberStats creates a new MemberStats entry for a member in a guild for a specific game.
+func newMemberStats(guildID, memberID, game string) *MemberStats {
+	ms := &MemberStats{
+		ID:          primitive.NewObjectID(),
+		GuildID:     guildID,
+		MemberID:    memberID,
+		Game:        game,
+		Earnings:    0,
+		TotalPlayed: 0,
+		Day:         getToday(),
 	}
+	// Write the new member stats to the database.
+	return ms
 }
 
-// NewGameStats creates a new GameStats instance for a given period of time with default values.
-func NewGameStats() *GameStats {
-	return &GameStats{
-		UniqueMembers:      0,
-		TotalMembers:       0,
-		AverageTimesPlayed: 0,
-		Earnings:           0,
-		Outcomes:           make(map[string]int),
-		TotalTimesPlayed:   0,
-	}
+// Update updates the earnings and total games played for a member's stats.
+func UpdateMemberStats(guildID, memberID, game string, earnings int) {
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+
+	ms := getMemberStats(guildID, memberID, game)
+	ms.Earnings += earnings
+	ms.TotalPlayed++
+	// Write the updated stats back to the database.
+}
+
+func GetTotalUniquePlayers(guildID, game string, startDate, endDate time.Time) (int, error) {
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+	// This function should query the database to count unique members
+	// for the specified guild and game within the given date range.
+	// Implementation is not provided here.
+	return 0, nil
+}
+
+func GetAverageUniquePlayers(guildID, game string, startDate, endDate time.Time) (float64, error) {
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+	// This function should query the database to calculate the average
+	// unique players per day for the specified guild and game within the
+	// given date range.
+	// Implementation is not provided here.
+	return 0.0, nil
+}
+
+func GetTotalEarningsPerPlayer(guildID, game string, startDate, endDate time.Time) (int, error) {
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+	// This function should query the database to sum the earnings of all
+	// members for the specified guild and game within the given date range.
+	// Implementation is not provided here.
+	return 0, nil
+}
+
+func GetAverageEarningsPerPlayer(guildID, game string, startDate, endDate time.Time) (float64, error) {
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+	// This function should query the database to calculate the average earnings
+	// per player for the specified guild and game within the given date range.
+	// Implementation is not provided here.
+	return 0.0, nil
+}
+
+func GetTotalGamesPlayed(guildID, game string, startDate, endDate time.Time) (int, error) {
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+	// This function should query the database to sum the total games played
+	// by all members for the specified guild and game within the given date range.
+	// Implementation is not provided here.
+	return 0, nil
+}
+
+func GetAverageGamesPlayed(guildID, game string, startDate, endDate time.Time) (float64, error) {
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+	// This function should query the database to calculate the average number of
+	// games played per day for the specified guild and game within the given date range.
+	// Implementation is not provided here.
+	return 0.0, nil
+}
+
+// pruneMemberStats is a daily routine that prunes old member stats that are older than one year.
+func pruneMemberStats() {
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+
+	lastYear := getToday().AddDate(-1, 0, 0)
+	db.DeleteMany(MemberStatsCollection, bson.M{"day": bson.M{"$lt": lastYear}})
+}
+
+// getToday returns the current date with the time set to midnight.
+func getToday() time.Time {
+	now := time.Now()
+	year, month, day := now.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, now.Location())
 }

@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/bwmarrin/discordgo"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/bwmarrin/discordgo"
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/bank"
@@ -18,6 +19,7 @@ import (
 	"github.com/rbrabson/goblin/payday"
 	"github.com/rbrabson/goblin/role"
 	"github.com/rbrabson/goblin/shop"
+	"github.com/rbrabson/goblin/stats"
 )
 
 var (
@@ -46,6 +48,7 @@ func main() {
 	race.Start()
 	role.Start()
 	shop.Start()
+	stats.Start()
 
 	bot := discord.NewBot(BotName, Version, Revision)
 	err = bot.Session.Open()
