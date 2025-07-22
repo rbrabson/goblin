@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	StatsCollection       = "stats"
 	MemberStatsCollection = "member_stats"
 )
 

@@ -57,7 +57,7 @@ func UpdateMemberStats(guildID, memberID, game string, earnings int) {
 	// Write the updated stats back to the database.
 }
 
-func GetTotalUniquePlayers(guildID, game string, startDate, endDate time.Time) (int, error) {
+func GetTotalUniquePlayers(guildID, game, period string) (int, error) {
 	memberStatsLock.Lock()
 	defer memberStatsLock.Unlock()
 	// This function should query the database to count unique members
@@ -66,7 +66,7 @@ func GetTotalUniquePlayers(guildID, game string, startDate, endDate time.Time) (
 	return 0, nil
 }
 
-func GetAverageUniquePlayers(guildID, game string, startDate, endDate time.Time) (float64, error) {
+func GetAverageUniquePlayers(guildID, game, period string) (float64, error) {
 	memberStatsLock.Lock()
 	defer memberStatsLock.Unlock()
 	// This function should query the database to calculate the average
@@ -76,7 +76,7 @@ func GetAverageUniquePlayers(guildID, game string, startDate, endDate time.Time)
 	return 0.0, nil
 }
 
-func GetTotalEarningsPerPlayer(guildID, game string, startDate, endDate time.Time) (int, error) {
+func GetTotalEarningsPerPlayer(guildID, game, period string) (int, error) {
 	memberStatsLock.Lock()
 	defer memberStatsLock.Unlock()
 	// This function should query the database to sum the earnings of all
@@ -85,7 +85,7 @@ func GetTotalEarningsPerPlayer(guildID, game string, startDate, endDate time.Tim
 	return 0, nil
 }
 
-func GetAverageEarningsPerPlayer(guildID, game string, startDate, endDate time.Time) (float64, error) {
+func GetAverageEarningsPerPlayer(guildID, game, period string) (float64, error) {
 	memberStatsLock.Lock()
 	defer memberStatsLock.Unlock()
 	// This function should query the database to calculate the average earnings
@@ -94,7 +94,7 @@ func GetAverageEarningsPerPlayer(guildID, game string, startDate, endDate time.T
 	return 0.0, nil
 }
 
-func GetTotalGamesPlayed(guildID, game string, startDate, endDate time.Time) (int, error) {
+func GetTotalGamesPlayed(guildID, game, period string) (int, error) {
 	memberStatsLock.Lock()
 	defer memberStatsLock.Unlock()
 	// This function should query the database to sum the total games played
@@ -103,7 +103,7 @@ func GetTotalGamesPlayed(guildID, game string, startDate, endDate time.Time) (in
 	return 0, nil
 }
 
-func GetAverageGamesPlayed(guildID, game string, startDate, endDate time.Time) (float64, error) {
+func GetAverageGamesPlayed(guildID, game, period string) (float64, error) {
 	memberStatsLock.Lock()
 	defer memberStatsLock.Unlock()
 	// This function should query the database to calculate the average number of
