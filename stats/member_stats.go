@@ -40,7 +40,7 @@ func newMemberStats(guildID, memberID, game string) *MemberStats {
 		Game:        game,
 		Earnings:    0,
 		TotalPlayed: 0,
-		Day:         getToday(),
+		Day:         today(),
 	}
 	// Write the new member stats to the database.
 	return ms
@@ -117,13 +117,6 @@ func pruneMemberStats() {
 	memberStatsLock.Lock()
 	defer memberStatsLock.Unlock()
 
-	lastYear := getToday().AddDate(-1, 0, 0)
+	lastYear := today().AddDate(-1, 0, 0)
 	db.DeleteMany(MemberStatsCollection, bson.M{"day": bson.M{"$lt": lastYear}})
-}
-
-// getToday returns the current date with the time set to midnight.
-func getToday() time.Time {
-	now := time.Now()
-	year, month, day := now.Date()
-	return time.Date(year, month, day, 0, 0, 0, 0, now.Location())
 }

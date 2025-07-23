@@ -77,10 +77,6 @@ var (
 									Name:  "Monthly",
 									Value: "monthly",
 								},
-								{
-									Name:  "Yearly",
-									Value: "yearly",
-								},
 							},
 						},
 					},
