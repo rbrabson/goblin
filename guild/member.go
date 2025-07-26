@@ -66,7 +66,9 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 		name = username
 	}
 	if member.Name != name || member.UserName != username || member.NickName != nickname || member.GlobalName != globalname {
-		member.Name = strings.Trim(name, "# ")
+		member.Name = strings.TrimFunc(name, func(r rune) bool {
+			return r == '@' || r == '&' || r == ' ' || r == '#'
+		})
 		member.UserName = username
 		member.NickName = nickname
 		member.GlobalName = globalname
