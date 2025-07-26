@@ -114,9 +114,22 @@ func GetAverageGamesPlayed(guildID, game, period string) (float64, error) {
 
 // pruneMemberStats is a daily routine that prunes old member stats that are older than one year.
 func pruneMemberStats() {
+	// TODO: do this daily at the end of the day
 	memberStatsLock.Lock()
 	defer memberStatsLock.Unlock()
 
 	lastYear := today().AddDate(-1, 0, 0)
 	db.DeleteMany(MemberStatsCollection, bson.M{"day": bson.M{"$lt": lastYear}})
+}
+
+func updateAverageStats() {
+	// TODO: do this daily at the end of the day
+	memberStatsLock.Lock()
+	defer memberStatsLock.Unlock()
+
+	// Get daily stats and updat them.
+	// If 1 week has gone by, calculate and update the weekly stats.
+	// If 1 month has gone by, calculate and update the monthly stats.
+
+	// Trick is to figure out when to do the updates. Couild be done at a specific weekday or day of the month.
 }

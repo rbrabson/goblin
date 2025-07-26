@@ -54,8 +54,8 @@ var (
 									Value: "average",
 								},
 								{
-									Name:  "Total",
-									Value: "total",
+									Name:  "Previous",
+									Value: "previous",
 								},
 							},
 						},

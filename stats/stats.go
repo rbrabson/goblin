@@ -21,7 +21,7 @@ type Stats struct {
 	AverageEarnings      float64            `json:"average_earnings" bson:"average_earnings"`
 	AverageGamesPlayed   float64            `json:"average_games_played" bson:"average_games_played"`
 	FirstUpdated         time.Time          `json:"first_updated" bson:"first_updated"`
-	LastUpdated          time.Time          `json:"last_updated" bson:"last_updated"`
+	NumPeriods           int                `json:"num_periods" bson:"num_periods"`
 }
 
 // GetStats retrieves the statistics for a specific guild and game for a given period.
@@ -44,7 +44,7 @@ func newStats(guildID, game, period string) *Stats {
 		AverageEarnings:      0,
 		AverageGamesPlayed:   0,
 		FirstUpdated:         today(),
-		LastUpdated:          today(),
+		NumPeriods:           0,
 	}
 
 	return stats
@@ -52,48 +52,28 @@ func newStats(guildID, game, period string) *Stats {
 
 // Update updates the statistics with the given unique players, earnings, and games played.
 func (s *Stats) Update(uniquePlayers, earnings, gamesPlayed int) {
-	s.LastUpdated = today()
 	s.updateUniquePlayers(uniquePlayers)
 	s.updateEarnings(earnings)
 	s.updateGamesPlayed(gamesPlayed)
+	s.NumPeriods++
 
 	// TODO: write to the database
 }
 
 // updateUniquePlayers updates the average unique players based on the current period.
 func (s *Stats) updateUniquePlayers(count int) {
-	periods := periodsSince(s.FirstUpdated, s.LastUpdated, s.Period)
-
-	oldTotal := s.AverageUniquePlayers * periods
-	s.AverageUniquePlayers = (oldTotal + float64(count)) / (periods + 1)
+	oldTotal := s.AverageUniquePlayers * float64(s.NumPeriods)
+	s.AverageUniquePlayers = (oldTotal + float64(count)) / float64((s.NumPeriods + 1))
 }
 
 // updateEarnings updates the average earnings based on the current period.
 func (s *Stats) updateEarnings(earnings int) {
-	periods := periodsSince(s.FirstUpdated, s.LastUpdated, s.Period)
-
-	oldTotal := s.AverageEarnings * periods
-	s.AverageEarnings = (oldTotal + float64(earnings)) / (periods + 1)
+	oldTotal := s.AverageEarnings * float64(s.NumPeriods)
+	s.AverageEarnings = (oldTotal + float64(earnings)) / float64(s.NumPeriods+1)
 }
 
 // updateGamesPlayed updates the average games played based on the current period.
 func (s *Stats) updateGamesPlayed(count int) {
-	periods := periodsSince(s.FirstUpdated, s.LastUpdated, s.Period)
-
-	oldTotal := s.AverageGamesPlayed * periods
-	s.AverageGamesPlayed = (oldTotal + float64(count)) / (periods + 1)
-}
-
-// / periodsSince calculates the number of periods (days, weeks, or months) since the first update.
-func periodsSince(firstUpdate, lastUpdate time.Time, period string) float64 {
-	switch period {
-	case "daily":
-		return lastUpdate.Sub(firstUpdate).Hours() / HoursPerDay
-	case "weekly":
-		return lastUpdate.Sub(firstUpdate).Hours() / HoursPerWeek
-	case "monthly":
-		return lastUpdate.Sub(firstUpdate).Hours() / HoursPerMonth
-	default:
-		return 0
-	}
+	oldTotal := s.AverageGamesPlayed * float64(s.NumPeriods)
+	s.AverageGamesPlayed = (oldTotal + float64(count)) / float64(s.NumPeriods+1)
 }
