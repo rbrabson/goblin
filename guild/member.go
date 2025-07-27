@@ -49,7 +49,7 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 		nickname = ""
 	}
 	globalname = strings.Trim(globalname, " ")
-	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
+	if strings.HasPrefix(globalname, "<") || strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
 		slog.Debug("ignoring globalname",
 			slog.String("globalname", globalname),
 		)
