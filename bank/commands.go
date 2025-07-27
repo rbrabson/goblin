@@ -407,7 +407,7 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	)
 
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(p.Sprintf("Account balance for %s was increased by %d", member, amount)),
+		disgomsg.WithContent(p.Sprintf("Account balance for %s was increased by %d", m.Name, amount)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("error sending response",
