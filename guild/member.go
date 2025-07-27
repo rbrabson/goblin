@@ -33,11 +33,11 @@ func GetMember(guildID string, memberID string) *Member {
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(username string, nickname string, globalname string) *Member {
 	var name string
-	strings.Trim(nickname, " ")
+	nickname = strings.Trim(nickname, " ")
 	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(nickname, "@") || strings.HasPrefix(nickname, "&") {
 		nickname = ""
 	}
-	strings.Trim(globalname, " ")
+	globalname = strings.Trim(globalname, " ")
 	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
 		globalname = ""
 	}
