@@ -56,22 +56,48 @@ func GetMemberByUser(s *discordgo.Session, guildID string, user *discordgo.User)
 
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(username string, nickname string, globalname string) *Member {
+	slog.Debug("setting member name",
+		slog.String("guildID", member.GuildID),
+		slog.String("memberID", member.MemberID),
+		slog.String("username", username),
+		slog.String("nickname", nickname),
+		slog.String("globalname", globalname),
+	)
+
 	var name string
+	nickname = strings.Trim(nickname, " ")
 	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(nickname, "@") || strings.HasPrefix(nickname, "&") {
+		slog.Debug("ignoring nickname",
+			slog.String("nickname", nickname),
+		)
 		nickname = ""
 	}
-	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
+	globalname = strings.Trim(globalname, " ")
+	if strings.HasPrefix(globalname, "<") || strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
+		slog.Debug("ignoring globalname",
+			slog.String("globalname", globalname),
+		)
 		globalname = ""
 	}
 	switch {
 	case nickname != "":
 		name = nickname
+		slog.Debug("using nickname as name",
+			slog.String("nickname", nickname),
+		)
 	case globalname != "":
 		name = globalname
+		slog.Debug("using globalname as name",
+			slog.String("globalname", globalname),
+		)
 	default:
 		name = username
+		slog.Debug("using username as name",
+			slog.String("username", username),
+		)
 	}
 	if member.Name != name || member.UserName != username || member.NickName != nickname || member.GlobalName != globalname {
+		member.Name = name
 		member.UserName = username
 		member.NickName = nickname
 		member.GlobalName = globalname
@@ -81,6 +107,12 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 			)
 		}
 		slog.Debug("set member name",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.String("name", member.Name),
+		)
+	} else {
+		slog.Debug("member name unchanged",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
 			slog.String("name", member.Name),
