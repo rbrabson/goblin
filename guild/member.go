@@ -32,6 +32,14 @@ func GetMember(guildID string, memberID string) *Member {
 
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(username string, nickname string, globalname string) *Member {
+	slog.Debug("setting member name",
+		slog.String("guildID", member.GuildID),
+		slog.String("memberID", member.MemberID),
+		slog.String("username", username),
+		slog.String("nickname", nickname),
+		slog.String("globalname", globalname),
+	)
+
 	var name string
 	nickname = strings.Trim(nickname, " ")
 	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(nickname, "@") || strings.HasPrefix(nickname, "&") {
