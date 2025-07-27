@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0
+
+Add game stats for server administrators to track game usage.
+
 ## 2.0.1
 
 Change all ocurrences of `id` for a user to `user`. If both options already exist, remove the `id` option, as it is redundant.

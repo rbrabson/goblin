@@ -1,6 +1,6 @@
 # Change this and commit to create new release
 BOT_NAME=Goblin
-VERSION=2.0.1
+VERSION=2.1.0
 REVISION=
 
 GO ?= go
