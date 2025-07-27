@@ -326,6 +326,8 @@ func theme(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // planHeist plans a new heist
 func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {

@@ -58,12 +58,22 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 	switch {
 	case nickname != "":
 		name = nickname
+		slog.Debug("using nickname as name",
+			slog.String("nickname", nickname),
+		)
 	case globalname != "":
 		name = globalname
+		slog.Debug("using globalname as name",
+			slog.String("globalname", globalname),
+		)
 	default:
 		name = username
+		slog.Debug("using username as name",
+			slog.String("username", username),
+		)
 	}
 	if member.Name != name || member.UserName != username || member.NickName != nickname || member.GlobalName != globalname {
+		member.Name = name
 		member.UserName = username
 		member.NickName = nickname
 		member.GlobalName = globalname
@@ -73,6 +83,12 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 			)
 		}
 		slog.Debug("set member name",
+			slog.String("guildID", member.GuildID),
+			slog.String("memberID", member.MemberID),
+			slog.String("name", member.Name),
+		)
+	} else {
+		slog.Debug("member name unchanged",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
 			slog.String("name", member.Name),
