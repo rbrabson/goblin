@@ -343,7 +343,7 @@ func (avatar *Avatar) calculateMovement(currentTurn int) int {
 		} else {
 			return (r.IntN(4) + 2) * 3
 		}
-	case "special":
+	case "special", "babydragon":
 		fallthrough
 	default:
 		switch currentTurn {

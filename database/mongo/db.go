@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -391,6 +392,43 @@ func (m *MongoDB) Close() error {
 		)
 		return err
 	}
+	return nil
+}
+
+// Testing is a test function to show the use of aggregation in MongoDB.
+func (m *MongoDB) Testing(collectionName string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
+	defer cancel()
+
+	coll, err := m.getCollection(ctx, collectionName)
+	if err != nil {
+		return err
+	}
+
+	groupStage := bson.D{
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$category"},
+			{Key: "average_price", Value: bson.D{{Key: "$avg", Value: "$price"}}},
+			{Key: "type_total", Value: bson.D{{Key: "$sum", Value: 1}}},
+		}},
+	}
+
+	// Performs the aggregation and prints the results
+	cursor, err := coll.Aggregate(ctx, mongo.Pipeline{groupStage})
+	if err != nil {
+		return err
+	}
+
+	var results []bson.M
+	if err = cursor.All(ctx, &results); err != nil {
+		return err
+	}
+
+	for _, result := range results {
+		fmt.Printf("Average price of %v tea options: $%v \n", result["_id"], result["average_price"])
+		fmt.Printf("Number of %v tea options: %v \n\n", result["_id"], result["type_total"])
+	}
+
 	return nil
 }
 

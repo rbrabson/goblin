@@ -21,6 +21,7 @@ type Stats struct {
 	AverageEarnings      float64            `json:"average_earnings" bson:"average_earnings"`
 	AverageGamesPlayed   float64            `json:"average_games_played" bson:"average_games_played"`
 	FirstUpdated         time.Time          `json:"first_updated" bson:"first_updated"`
+	LastUpdated          time.Time          `json:"last_updated" bson:"last_updated"`
 	NumPeriods           int                `json:"num_periods" bson:"num_periods"`
 }
 
@@ -44,6 +45,7 @@ func newStats(guildID, game, period string) *Stats {
 		AverageEarnings:      0,
 		AverageGamesPlayed:   0,
 		FirstUpdated:         today(),
+		LastUpdated:          today(),
 		NumPeriods:           0,
 	}
 
@@ -55,6 +57,7 @@ func (s *Stats) Update(uniquePlayers, earnings, gamesPlayed int) {
 	s.updateUniquePlayers(uniquePlayers)
 	s.updateEarnings(earnings)
 	s.updateGamesPlayed(gamesPlayed)
+	s.LastUpdated = today()
 	s.NumPeriods++
 
 	// TODO: write to the database
@@ -76,4 +79,15 @@ func (s *Stats) updateEarnings(earnings int) {
 func (s *Stats) updateGamesPlayed(count int) {
 	oldTotal := s.AverageGamesPlayed * float64(s.NumPeriods)
 	s.AverageGamesPlayed = (oldTotal + float64(count)) / float64(s.NumPeriods+1)
+}
+
+func updateStats(stats *Stats, uniquePlayers, earnings, gamesPlayed int) {
+	// Query the table to get all unique servers in the member_stats collection.
+	// Query the table to get all unique games for each server in the member_stats collection.
+	// For each game on a server, get the first and last timestamp.
+	// Start with the previous day, then work backwards to the first day. Get the start/end dates for each period.
+	// If the start for a period is before the first timestamp, then we can stop.
+
+	// For each period, calculate the average unique players, earnings, and games played. That may be 3 calls to get the
+	// necessary data.
 }
