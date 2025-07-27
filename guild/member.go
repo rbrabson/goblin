@@ -35,10 +35,16 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 	var name string
 	nickname = strings.Trim(nickname, " ")
 	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(nickname, "@") || strings.HasPrefix(nickname, "&") {
+		slog.Debug("ignoring nickname",
+			slog.String("nickname", nickname),
+		)
 		nickname = ""
 	}
 	globalname = strings.Trim(globalname, " ")
 	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
+		slog.Debug("ignoring globalname",
+			slog.String("globalname", globalname),
+		)
 		globalname = ""
 	}
 	switch {
