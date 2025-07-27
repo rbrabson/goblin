@@ -178,7 +178,8 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race.interaction = i
 	raceLock.Unlock()
 
-	member := GetRaceMember(i.GuildID, i.Member.User.ID)
+	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+	member := GetRaceMember(i.GuildID, guildMember)
 	race.addRaceParticipant(member)
 	defer race.End()
 
@@ -317,7 +318,8 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// All is good, add the member to the race
-	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
+	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+	raceMember := GetRaceMember(i.GuildID, guildMember)
 	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	race.addRaceParticipant(raceMember)
 	slog.Info("joined the race",
@@ -356,8 +358,7 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Update the member's name in the guild.
 	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
-
-	raceMember := GetRaceMember(i.GuildID, i.Member.User.ID)
+	raceMember := GetRaceMember(i.GuildID, guildMember)
 
 	var totalRaces float64
 	if raceMember.TotalRaces == 0 {
@@ -476,7 +477,8 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if (participant != nil) && (participant.Member != nil) {
 		raceMember = participant.Member
 	} else {
-		raceMember = GetRaceMember(i.GuildID, i.Member.User.ID)
+		guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+		raceMember = GetRaceMember(i.GuildID, guildMember)
 	}
 	raceParticipant := getCurrentRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
 	err = raceMember.PlaceBet(race.config.BetAmount)
