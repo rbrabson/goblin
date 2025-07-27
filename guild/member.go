@@ -57,10 +57,10 @@ func GetMemberByUser(s *discordgo.Session, guildID string, user *discordgo.User)
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(username string, nickname string, globalname string) *Member {
 	var name string
-	if strings.HasPrefix(nickname, "@") || strings.HasPrefix(nickname, "&") {
+	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(nickname, "@") || strings.HasPrefix(nickname, "&") {
 		nickname = ""
 	}
-	if strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
+	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
 		globalname = ""
 	}
 	switch {
