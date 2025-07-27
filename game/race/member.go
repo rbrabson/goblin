@@ -27,12 +27,12 @@ type RaceMember struct {
 }
 
 // GetRaceMember gets a race member. THe member is created if it doesn't exist.
-func GetRaceMember(guildID string, memberID string) *RaceMember {
-	member := readRaceMember(guildID, memberID)
+func GetRaceMember(guildID string, guildMember *guild.Member) *RaceMember {
+	member := readRaceMember(guildID, guildMember.MemberID)
 	if member == nil {
-		member = newRaceMember(guildID, memberID)
+		member = newRaceMember(guildID, guildMember.MemberID)
 	}
-	member.guildMember = guild.GetMember(guildID, memberID)
+	member.guildMember = guild.GetMember(guildID, guildMember.MemberID)
 	return member
 }
 

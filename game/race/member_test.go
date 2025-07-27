@@ -24,7 +24,8 @@ func init() {
 }
 
 func TestGetRaceMember(t *testing.T) {
-	member := GetRaceMember("123", "456")
+	guildMember := guild.GetMember("123", "456").SetName("TestUser", "TestNick", "TestGlobalName")
+	member := GetRaceMember("123", guildMember)
 	if member == nil {
 		t.Error("expected member to be created")
 		return
@@ -51,7 +52,8 @@ func TestGetRaceMember(t *testing.T) {
 }
 
 func TestRaceMemberWinRace(t *testing.T) {
-	member := GetRaceMember("123", "456")
+	guildMember := guild.GetMember("123", "456").SetName("TestUser", "TestNick", "TestGlobalName")
+	member := GetRaceMember("123", guildMember)
 	if member == nil {
 		t.Error("expected member to be created")
 		return
@@ -86,7 +88,8 @@ func TestRaceMemberWinRace(t *testing.T) {
 }
 
 func TestRaceMemberPlacedInRace(t *testing.T) {
-	member := GetRaceMember("123", "456")
+	guildMember := guild.GetMember("123", "456").SetName("TestUser", "TestNick", "TestGlobalName")
+	member := GetRaceMember("123", guildMember)
 	if member == nil {
 		t.Error("expected member to be created")
 		return
@@ -121,7 +124,8 @@ func TestRaceMemberPlacedInRace(t *testing.T) {
 }
 
 func TestRaceMemberHowedInRace(t *testing.T) {
-	member := GetRaceMember("123", "456")
+	guildMember := guild.GetMember("123", "456").SetName("TestUser", "TestNick", "TestGlobalName")
+	member := GetRaceMember("123", guildMember)
 	if member == nil {
 		t.Error("expected member to be created")
 		return
@@ -156,7 +160,8 @@ func TestRaceMemberHowedInRace(t *testing.T) {
 }
 
 func TestRaceMemberLoseRace(t *testing.T) {
-	member := GetRaceMember("123", "456")
+	guildMember := guild.GetMember("123", "456").SetName("TestUser", "TestNick", "TestGlobalName")
+	member := GetRaceMember("123", guildMember)
 	if member == nil {
 		t.Error("expected member to be created")
 		return
@@ -191,7 +196,8 @@ func TestRaceMemberLoseRace(t *testing.T) {
 }
 
 func TestRaceBetOnRace(t *testing.T) {
-	member := GetRaceMember("123", "456")
+	guildMember := guild.GetMember("123", "456").SetName("TestUser", "TestNick", "TestGlobalName")
+	member := GetRaceMember("123", guildMember)
 	if member == nil {
 		t.Error("expected member to be created")
 		return
@@ -230,7 +236,8 @@ func TestRaceBetOnRace(t *testing.T) {
 }
 
 func TestRaceWinBet(t *testing.T) {
-	member := GetRaceMember("123", "456")
+	guildMember := guild.GetMember("123", "456").SetName("TestUser", "TestNick", "TestGlobalName")
+	member := GetRaceMember("123", guildMember)
 	if member == nil {
 		t.Error("expected member to be created")
 		return
@@ -265,7 +272,8 @@ func TestRaceWinBet(t *testing.T) {
 }
 
 func TestRaceLoseBet(t *testing.T) {
-	member := GetRaceMember("123", "456")
+	guildMember := guild.GetMember("123", "456").SetName("TestUser", "TestNick", "TestGlobalName")
+	member := GetRaceMember("123", guildMember)
 	if member == nil {
 		t.Error("expected member to be created")
 		return
