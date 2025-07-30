@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -395,41 +394,32 @@ func (m *MongoDB) Close() error {
 	return nil
 }
 
-// Testing is a test function to show the use of aggregation in MongoDB.
-func (m *MongoDB) Testing(collectionName string) error {
+// Aggregate performs an aggregation operation on the specified collection using the provided pipeline.
+func (m *MongoDB) Aggregate(collectionName string, pipeline mongo.Pipeline) ([]bson.M, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
-	coll, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(ctx, collectionName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	groupStage := bson.D{
-		{Key: "$group", Value: bson.D{
-			{Key: "_id", Value: "$category"},
-			{Key: "average_price", Value: bson.D{{Key: "$avg", Value: "$price"}}},
-			{Key: "type_total", Value: bson.D{{Key: "$sum", Value: 1}}},
-		}},
-	}
-
-	// Performs the aggregation and prints the results
-	cursor, err := coll.Aggregate(ctx, mongo.Pipeline{groupStage})
+	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		return err
+		slog.Error("unable to perform aggregation on the collection",
+			slog.String("collection", collectionName),
+			slog.Any("error", err),
+			slog.Any("pipeline", pipeline),
+		)
+		return nil, err
 	}
 
 	var results []bson.M
 	if err = cursor.All(ctx, &results); err != nil {
-		return err
+		return nil, err
 	}
 
-	for _, result := range results {
-		fmt.Printf("Average price of %v tea options: $%v \n", result["_id"], result["average_price"])
-		fmt.Printf("Number of %v tea options: %v \n\n", result["_id"], result["type_total"])
-	}
-
-	return nil
+	return results, nil
 }
 
 // getCollection returns a collection from the database that may be used for database operations.
