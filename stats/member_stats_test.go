@@ -11,6 +11,7 @@ import (
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/guild"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	mongodb "go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -185,6 +186,96 @@ func TestAggregate(t *testing.T) {
 	t.Logf("Total number of days all players played is %d", totalPerDay)
 	t.Logf("Average number of days each player played is %f", float64(totalPerDay)/float64(len(docs)))
 }
+
+func TestRentention(t *testing.T) {
+	testSetup(t)
+	defer testTeardown(t)
+
+	today := today()
+	oneDayAgo := today.AddDate(0, 0, -1) // One day ago
+
+	pipeline := mongodb.Pipeline{
+		// Group by member to find their last activity
+		bson.D{
+			{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: "$member_id"},
+				{Key: "last_day", Value: bson.D{{Key: "$max", Value: "$day"}}},
+			}},
+		},
+		// Filter for members inactive for more than a week
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "last_day", Value: bson.D{
+					{Key: "$lt", Value: oneDayAgo},
+				}},
+			}},
+		},
+		// Project just the member_id and last_day
+		bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "member_id", Value: "$_id"},
+				{Key: "last_day", Value: 1},
+				{Key: "_id", Value: 0},
+			}},
+		},
+	}
+
+	docs, err := db.Aggregate("member_stats", pipeline)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("Found %d members inactive for more than %.0f day(s)", len(docs), today.Sub(oneDayAgo).Hours()/24)
+	for _, doc := range docs {
+		lastActive := doc["last_day"].(primitive.DateTime).Time()
+		daysSinceLastActive := today.Sub(lastActive).Hours() / 24
+		t.Logf("Inactive Member: %s, Inactive For: %v days", doc["member_id"], daysSinceLastActive)
+	}
+
+	t.Error("Completed retention test")
+}
+
+// How many players are still active after their first day playing? Their first week playing?
+// Or, in particular, the average number of players.
+
+// how many people are playing a week after their first game? a month? 90 days?
+
+// I should have the information for that. I just need to think through how to structure the queries to the mongo database.
+// I'll also look into the time after they started playing. For instance, how many are still playing after their first week,
+// or first month? Perhaps a few other options for retention. Right now, my periods are daily/weekly/monthly. But I can add quarterly
+// periods as well (perhaps only for retention, perhaps for everything).
+
+/*
+	   - Try getting the first and last day for each player.
+	   - Then add a retention period to the first day, and see if the last day exceeds that period.
+	   - Only do the retention if the first day plus the retention period is greater than today.
+
+
+	   Somethign like:
+	   - today := today()
+	   - retentionPeriod := 7 * 24 * time.Hour // 7 days
+	   - firstDay := today.Add(-retentionPeriod)
+	   - Now do the aggregation, where the first day plus the retention period is greater than today.
+	        AND the last day is greater than the first day plus the retention period.
+	   - That gets the number of players who are still active. To get those who aren't active, we can do somethign similar.
+	        First day plus the rention period is greater than today,
+			    AND the last day is less than the first day plus the retention period.
+
+	   - Can now get any retention stuff I want.
+	     - Percentage of players still active after their first week, month, quarter, etc.
+		 - Number of players who are still active after their first week, month, quarter, etc.
+		 - Number of players who aren't active after their first week, month, quarter, etc.
+
+	   - May want work from the current day backwards as well, to get recent retention trends.
+	     - Number of players who started playing in the past week, month, quater, etc.
+		 - Percentage of players who started a week, month, quarter, etc. ago and are still playing.
+		 - Number of players who are still playing that started a week, month, quarter, etc. ago.
+		 - Number of players who have stopped playing in the past week, month, quarter, etc.
+
+
+		Maybe just get the number of players who have played more than one day in the past week, month, quarter, etc.
+		- And the number who have only played once in the past week, month, quarter, etc.
+*/
 
 func testSetup(t *testing.T) {
 	var ms *MemberStats
