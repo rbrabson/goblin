@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -8,7 +9,7 @@ import (
 )
 
 const (
-	MemberStatsCollection = "member_stats"
+	PlayerStatsCollection = "player_stats"
 )
 
 func countUniqueMembers(guildID string, start time.Time, end time.Time) (int, error) {
@@ -20,14 +21,14 @@ func countUniqueMembers(guildID string, start time.Time, end time.Time) (int, er
 		},
 	}
 
-	return db.DistinctCount(MemberStatsCollection, filter, "member_id")
+	return db.DistinctCount(PlayerStatsCollection, filter, "member_id")
 }
 
 // readMemberStats retrieves the member statistics for a specific member in a guild for a specific game.
 func readPlayerStats(guildID string, memberID string, game string) (*PlayerStats, error) {
 	var ps PlayerStats
 	filter := bson.M{"guild_id": guildID, "member_id": memberID, "game": game}
-	err := db.FindOne(MemberStatsCollection, filter, &ps)
+	err := db.FindOne(PlayerStatsCollection, filter, &ps)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +44,9 @@ func writePlayerStats(ps *PlayerStats) error {
 		filter = bson.M{"guild_id": ps.GuildID, "member_id": ps.MemberID, "game": ps.Game}
 	}
 
-	err := db.UpdateOrInsert(MemberStatsCollection, filter, ps)
+	err := db.UpdateOrInsert(PlayerStatsCollection, filter, ps)
 	if err != nil {
+		slog.Info("Writing player stats", "collection", PlayerStatsCollection, "PlayerStats", ps, "filter", filter, "error", err)
 		return err
 	}
 	return nil
@@ -52,8 +54,13 @@ func writePlayerStats(ps *PlayerStats) error {
 
 // deletePlayerStats removes the player statistics for a specific member in a guild.
 func deletePlayerStats(ps *PlayerStats) error {
-	filter := bson.M{"_id": ps.ID}
-	err := db.DeleteMany(MemberStatsCollection, filter)
+	var filter bson.M
+	if ps.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": ps.ID}
+	} else {
+		filter = bson.M{"guild_id": ps.GuildID, "member_id": ps.MemberID, "game": ps.Game}
+	}
+	err := db.DeleteMany(PlayerStatsCollection, filter)
 	if err != nil {
 		return err
 	}

@@ -1,16 +1,30 @@
 package stats
 
 import (
+	"log/slog"
+	"os"
 	"testing"
+
+	"github.com/joho/godotenv"
+	"github.com/rbrabson/goblin/database/mongo"
 )
 
 var (
 	playerStats []*PlayerStats
 )
 
+func init() {
+	err := godotenv.Load("../.env_test")
+	if err != nil {
+		slog.Error("Error loading .env file")
+		os.Exit(1)
+	}
+	db = mongo.NewDatabase()
+}
+
 func TestInactivePlayersLastMonth(t *testing.T) {
-	testSetup2(t)
-	defer testTeardown2(t)
+	playerTestSetup(t)
+	defer playerTestTeardown(t)
 
 	today := today()
 	startDate := today.AddDate(-10, 0, 0)
@@ -35,8 +49,8 @@ func TestInactivePlayersLastMonth(t *testing.T) {
 }
 
 func TestPlayersWhoQuitAfterOneMonth(t *testing.T) {
-	testSetup2(t)
-	defer testTeardown2(t)
+	playerTestSetup(t)
+	defer playerTestTeardown(t)
 
 	today := today()
 	endDate := today.AddDate(0, -1, 0)
@@ -60,7 +74,7 @@ func TestPlayersWhoQuitAfterOneMonth(t *testing.T) {
 }
 
 // testSetup initializes the test environment, including database connections and any necessary data.
-func testSetup2(t *testing.T) {
+func playerTestSetup(t *testing.T) {
 	t.Log("Setting up test environment...")
 	var ps *PlayerStats
 	today := today()
@@ -123,7 +137,7 @@ func testSetup2(t *testing.T) {
 }
 
 // testTeardown cleans up the test environment, closing database connections and removing test data.
-func testTeardown2(t *testing.T) {
+func playerTestTeardown(t *testing.T) {
 	t.Log("Tearing down test environment...")
 
 	// Remove all player_stats from the database

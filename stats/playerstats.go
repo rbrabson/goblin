@@ -109,7 +109,7 @@ func GetPlayerRetention(guildID string, game string, startDate time.Time, durati
 		},
 	}
 
-	docs, err := db.Aggregate("member_stats", pipeline)
+	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func GetPlayerRetentionDuration(guildID string, game string, duration time.Durat
 		},
 	}
 
-	docs, err := db.Aggregate("member_stats", pipeline)
+	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
 	if err != nil {
 		return nil, err
 	}
