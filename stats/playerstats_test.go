@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	memberStats2 []*PlayerStats
+	playerStats []*PlayerStats
 )
 
 func TestInactivePlayersLastMonth(t *testing.T) {
@@ -62,10 +62,10 @@ func TestPlayersWhoQuitAfterOneMonth(t *testing.T) {
 // testSetup initializes the test environment, including database connections and any necessary data.
 func testSetup2(t *testing.T) {
 	t.Log("Setting up test environment...")
-	var ms *PlayerStats
+	var ps *PlayerStats
 	today := today()
 
-	ms = &PlayerStats{
+	ps = &PlayerStats{
 		GuildID:             "test_guild",
 		MemberID:            "test_member_1",
 		Game:                "test_game",
@@ -73,13 +73,13 @@ func testSetup2(t *testing.T) {
 		LastPlayed:          today.AddDate(0, -8, 0),
 		NumberOfTimesPlayed: 5,
 	}
-	if err := writeMemberStats2(ms); err != nil {
+	if err := writePlayerStats(ps); err != nil {
 		t.Error("Error writing member stats", "error", err)
 		return
 	}
-	memberStats2 = append(memberStats2, ms)
+	playerStats = append(playerStats, ps)
 
-	ms = &PlayerStats{
+	ps = &PlayerStats{
 		GuildID:             "test_guild",
 		MemberID:            "test_member_2",
 		Game:                "test_game",
@@ -87,13 +87,13 @@ func testSetup2(t *testing.T) {
 		LastPlayed:          today.AddDate(0, 0, 0),   // One day ago
 		NumberOfTimesPlayed: 5,
 	}
-	if err := writeMemberStats2(ms); err != nil {
+	if err := writePlayerStats(ps); err != nil {
 		t.Error("Error writing member stats", "error", err)
 		return
 	}
-	memberStats2 = append(memberStats2, ms)
+	playerStats = append(playerStats, ps)
 
-	ms = &PlayerStats{
+	ps = &PlayerStats{
 		GuildID:             "test_guild",
 		MemberID:            "test_member_3",
 		Game:                "test_game",
@@ -101,13 +101,13 @@ func testSetup2(t *testing.T) {
 		LastPlayed:          today.AddDate(0, -48, 0), // One day ago
 		NumberOfTimesPlayed: 5,
 	}
-	if err := writeMemberStats2(ms); err != nil {
+	if err := writePlayerStats(ps); err != nil {
 		t.Error("Error writing member stats", "error", err)
 		return
 	}
-	memberStats2 = append(memberStats2, ms)
+	playerStats = append(playerStats, ps)
 
-	ms = &PlayerStats{
+	ps = &PlayerStats{
 		GuildID:             "test_guild",
 		MemberID:            "test_member_4",
 		Game:                "test_game",
@@ -115,23 +115,23 @@ func testSetup2(t *testing.T) {
 		LastPlayed:          today.AddDate(0, -23, 0), // One day ago
 		NumberOfTimesPlayed: 5,
 	}
-	if err := writeMemberStats2(ms); err != nil {
+	if err := writePlayerStats(ps); err != nil {
 		t.Error("Error writing member stats", "error", err)
 		return
 	}
-	memberStats2 = append(memberStats2, ms)
+	playerStats = append(playerStats, ps)
 }
 
 // testTeardown cleans up the test environment, closing database connections and removing test data.
 func testTeardown2(t *testing.T) {
 	t.Log("Tearing down test environment...")
 
-	// Remove all member_stats from the database
-	for _, ms := range memberStats2 {
-		err := deleteMemberStats2(ms)
+	// Remove all player_stats from the database
+	for _, ps := range playerStats {
+		err := deletePlayerStats(ps)
 		if err != nil {
 			t.Error("Error deleting member stats", "error", err)
 		}
 	}
-	memberStats2 = nil
+	playerStats = nil
 }

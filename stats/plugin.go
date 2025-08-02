@@ -36,7 +36,6 @@ func Start() {
 // Initialize saves the Discord bot to be used by the banking system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
-	go pruneMemberStats()
 }
 
 // Stop stops the banking system. This is called when the bot is shutting down.

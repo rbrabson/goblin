@@ -24,66 +24,35 @@ func countUniqueMembers(guildID string, start time.Time, end time.Time) (int, er
 }
 
 // readMemberStats retrieves the member statistics for a specific member in a guild for a specific game.
-func readMemberStats(guildID string, memberID string, game string) (*MemberStats, error) {
-	var ms MemberStats
+func readPlayerStats(guildID string, memberID string, game string) (*PlayerStats, error) {
+	var ps PlayerStats
 	filter := bson.M{"guild_id": guildID, "member_id": memberID, "game": game}
-	err := db.FindOne(MemberStatsCollection, filter, &ms)
+	err := db.FindOne(MemberStatsCollection, filter, &ps)
 	if err != nil {
 		return nil, err
 	}
-	return &ms, nil
+	return &ps, nil
 }
 
-// writeMemberStats updates or inserts the member statistics for a specific member in a guild.
-func writeMemberStats(ms *MemberStats) error {
+// writePlayerStats updates or inserts the player statistics for a specific member in a guild.
+func writePlayerStats(ps *PlayerStats) error {
 	var filter bson.M
-	if ms.ID != primitive.NilObjectID {
-		filter = bson.M{"_id": ms.ID}
+	if ps.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": ps.ID}
 	} else {
-		filter = bson.M{"guild_id": ms.GuildID, "member_id": ms.MemberID, "game": ms.Game, "day": ms.Day}
+		filter = bson.M{"guild_id": ps.GuildID, "member_id": ps.MemberID, "game": ps.Game}
 	}
 
-	err := db.UpdateOrInsert(MemberStatsCollection, filter, ms)
+	err := db.UpdateOrInsert(MemberStatsCollection, filter, ps)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// deleteMemberStats removes the member statistics for a specific member in a guild.
-func deleteMemberStats(ms *MemberStats) error {
-	filter := bson.M{"_id": ms.ID}
-	err := db.DeleteMany(MemberStatsCollection, filter)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// writeMemberStats updates or inserts the member statistics for a specific member in a guild.
-func writeMemberStats2(ms *PlayerStats) error {
-	var filter bson.M
-	if ms.ID != primitive.NilObjectID {
-		filter = bson.M{"_id": ms.ID}
-	} else {
-		filter = bson.M{"guild_id": ms.GuildID, "member_id": ms.MemberID, "game": ms.Game}
-	}
-
-	err := db.UpdateOrInsert(MemberStatsCollection, filter, ms)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// deleteMemberStats removes the member statistics for a specific member in a guild.
-func deleteMemberStats2(ms *PlayerStats) error {
-	var filter bson.M
-	if ms.ID != primitive.NilObjectID {
-		filter = bson.M{"_id": ms.ID}
-	} else {
-		filter = bson.M{"guild_id": ms.GuildID, "member_id": ms.MemberID, "game": ms.Game}
-	}
+// deletePlayerStats removes the player statistics for a specific member in a guild.
+func deletePlayerStats(ps *PlayerStats) error {
+	filter := bson.M{"_id": ps.ID}
 	err := db.DeleteMany(MemberStatsCollection, filter)
 	if err != nil {
 		return err
