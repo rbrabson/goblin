@@ -8,15 +8,15 @@ var (
 	memberStats2 []*PlayerStats
 )
 
-func TestPercentageOfInactivePlayersLastMonth(t *testing.T) {
+func TestInactivePlayersLastMonth(t *testing.T) {
 	testSetup2(t)
 	defer testTeardown2(t)
 
 	today := today()
-	startDate := today.AddDate(-10, 0, 0) // Ten years ago
-	endDate := today.AddDate(0, -3, 0)    // Three months ago
+	startDate := today.AddDate(-10, 0, 0)
+	endDate := today.AddDate(0, -1, 0)
 	duration := today.Sub(endDate)
-	retention, err := GetPlayerRetention(startDate, duration)
+	retention, err := GetPlayerRetention("test_guild", "test_game", startDate, duration)
 	if err != nil {
 		t.Error("Error calculating retention", "error", err)
 		return
@@ -30,6 +30,31 @@ func TestPercentageOfInactivePlayersLastMonth(t *testing.T) {
 	t.Logf("Total Players: %d", retention.ActivePlayers+retention.InactivePlayers)
 	t.Logf("Active Players: %d (%.2f%%)", retention.ActivePlayers, retention.ActivePercentage)
 	t.Logf("Inactive Players: %d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage)
+
+	t.Errorf("Inactive Players analysis completed.")
+}
+
+func TestPlayersWhoQuitAfterOneMonth(t *testing.T) {
+	testSetup2(t)
+	defer testTeardown2(t)
+
+	today := today()
+	endDate := today.AddDate(0, -1, 0)
+	duration := today.Sub(endDate)
+	retention, err := GetPlayerRetentionDuration("test_guild", "test_game", duration)
+	if err != nil {
+		t.Error("Error calculating retention", "error", err)
+		return
+	}
+	if retention == nil {
+		t.Error("Retention data is nil")
+		return
+	}
+
+	t.Logf("Player Activity Summary (Past Month):")
+	t.Logf("Total Players: %d", retention.ActivePlayers+retention.InactivePlayers)
+	t.Logf("Players Still Playing: %d (%.2f%%)", retention.ActivePlayers, retention.ActivePercentage)
+	t.Logf("Players No Longer Playing: %d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage)
 
 	t.Errorf("Inactive Players analysis completed.")
 }
