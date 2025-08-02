@@ -59,3 +59,34 @@ func deleteMemberStats(ms *MemberStats) error {
 	}
 	return nil
 }
+
+// writeMemberStats updates or inserts the member statistics for a specific member in a guild.
+func writeMemberStats2(ms *MemberStats2) error {
+	var filter bson.M
+	if ms.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": ms.ID}
+	} else {
+		filter = bson.M{"guild_id": ms.GuildID, "member_id": ms.MemberID, "game": ms.Game}
+	}
+
+	err := db.UpdateOrInsert(MemberStatsCollection, filter, ms)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// deleteMemberStats removes the member statistics for a specific member in a guild.
+func deleteMemberStats2(ms *MemberStats2) error {
+	var filter bson.M
+	if ms.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": ms.ID}
+	} else {
+		filter = bson.M{"guild_id": ms.GuildID, "member_id": ms.MemberID, "game": ms.Game}
+	}
+	err := db.DeleteMany(MemberStatsCollection, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
