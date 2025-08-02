@@ -1,0 +1,112 @@
+package stats
+
+import (
+	"testing"
+)
+
+var (
+	memberStats2 []*PlayerStats
+)
+
+func TestPercentageOfInactivePlayersLastMonth(t *testing.T) {
+	testSetup2(t)
+	defer testTeardown2(t)
+
+	today := today()
+	startDate := today.AddDate(-10, 0, 0) // Ten years ago
+	endDate := today.AddDate(0, -3, 0)    // Three months ago
+	duration := today.Sub(endDate)
+	retention, err := GetPlayerRetention(startDate, duration)
+	if err != nil {
+		t.Error("Error calculating retention", "error", err)
+		return
+	}
+	if retention == nil {
+		t.Error("Retention data is nil")
+		return
+	}
+
+	t.Logf("Player Activity Summary (Past Month):")
+	t.Logf("Total Players: %d", retention.ActivePlayers+retention.InactivePlayers)
+	t.Logf("Active Players: %d (%.2f%%)", retention.ActivePlayers, retention.ActivePercentage)
+	t.Logf("Inactive Players: %d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage)
+
+	t.Errorf("Inactive Players analysis completed.")
+}
+
+// testSetup initializes the test environment, including database connections and any necessary data.
+func testSetup2(t *testing.T) {
+	t.Log("Setting up test environment...")
+	var ms *PlayerStats
+	today := today()
+
+	ms = &PlayerStats{
+		GuildID:             "test_guild",
+		MemberID:            "test_member_1",
+		Game:                "test_game",
+		FirstPlayed:         today.AddDate(0, -14, 0),
+		LastPlayed:          today.AddDate(0, -8, 0),
+		NumberOfTimesPlayed: 5,
+	}
+	if err := writeMemberStats2(ms); err != nil {
+		t.Error("Error writing member stats", "error", err)
+		return
+	}
+	memberStats2 = append(memberStats2, ms)
+
+	ms = &PlayerStats{
+		GuildID:             "test_guild",
+		MemberID:            "test_member_2",
+		Game:                "test_game",
+		FirstPlayed:         today.AddDate(0, -13, 0), // Two days ago
+		LastPlayed:          today.AddDate(0, 0, 0),   // One day ago
+		NumberOfTimesPlayed: 5,
+	}
+	if err := writeMemberStats2(ms); err != nil {
+		t.Error("Error writing member stats", "error", err)
+		return
+	}
+	memberStats2 = append(memberStats2, ms)
+
+	ms = &PlayerStats{
+		GuildID:             "test_guild",
+		MemberID:            "test_member_3",
+		Game:                "test_game",
+		FirstPlayed:         today.AddDate(0, -48, 0), // Two days ago
+		LastPlayed:          today.AddDate(0, -48, 0), // One day ago
+		NumberOfTimesPlayed: 5,
+	}
+	if err := writeMemberStats2(ms); err != nil {
+		t.Error("Error writing member stats", "error", err)
+		return
+	}
+	memberStats2 = append(memberStats2, ms)
+
+	ms = &PlayerStats{
+		GuildID:             "test_guild",
+		MemberID:            "test_member_4",
+		Game:                "test_game",
+		FirstPlayed:         today.AddDate(0, -96, 0), // Two days ago
+		LastPlayed:          today.AddDate(0, -23, 0), // One day ago
+		NumberOfTimesPlayed: 5,
+	}
+	if err := writeMemberStats2(ms); err != nil {
+		t.Error("Error writing member stats", "error", err)
+		return
+	}
+	memberStats2 = append(memberStats2, ms)
+}
+
+// testTeardown cleans up the test environment, closing database connections and removing test data.
+func testTeardown2(t *testing.T) {
+	t.Log("Tearing down test environment...")
+
+	// Remove all member_stats from the database
+	for _, ms := range memberStats2 {
+		err := deleteMemberStats2(ms)
+		if err != nil {
+			t.Error("Error deleting member stats", "error", err)
+		}
+	}
+	memberStats2 = nil
+}

@@ -61,7 +61,7 @@ func deleteMemberStats(ms *MemberStats) error {
 }
 
 // writeMemberStats updates or inserts the member statistics for a specific member in a guild.
-func writeMemberStats2(ms *MemberStats2) error {
+func writeMemberStats2(ms *PlayerStats) error {
 	var filter bson.M
 	if ms.ID != primitive.NilObjectID {
 		filter = bson.M{"_id": ms.ID}
@@ -77,7 +77,7 @@ func writeMemberStats2(ms *MemberStats2) error {
 }
 
 // deleteMemberStats removes the member statistics for a specific member in a guild.
-func deleteMemberStats2(ms *MemberStats2) error {
+func deleteMemberStats2(ms *PlayerStats) error {
 	var filter bson.M
 	if ms.ID != primitive.NilObjectID {
 		filter = bson.M{"_id": ms.ID}
