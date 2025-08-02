@@ -65,7 +65,7 @@ func TestPlayersWhoQuitAfterOneMonth(t *testing.T) {
 		return
 	}
 
-	t.Logf("Player Activity Summary (Past Month):")
+	t.Logf("Players Who Quit After One Month:")
 	t.Logf("Total Players: %d", retention.ActivePlayers+retention.InactivePlayers)
 	t.Logf("Players Still Playing: %d (%.2f%%)", retention.ActivePlayers, retention.ActivePercentage)
 	t.Logf("Players No Longer Playing: %d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage)
