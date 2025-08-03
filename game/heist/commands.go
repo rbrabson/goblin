@@ -23,6 +23,7 @@ import (
 	"github.com/rbrabson/goblin/internal/channel"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
+	"github.com/rbrabson/goblin/stats"
 )
 
 const (
@@ -453,6 +454,11 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sendHeistResults(s, i, res)
 
 	res.Target.StealFromValut(res.TotalStolen)
+
+	for _, member := range heist.Crew {
+		ps := stats.GetPlayerStats(member.GuildID, member.MemberID, "heist")
+		ps.GamePlayed()
+	}
 }
 
 // waitForHeistToStart waits until the planning stage for the heist expires.

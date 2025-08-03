@@ -14,6 +14,7 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
+	"github.com/rbrabson/goblin/stats"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -229,16 +230,21 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sendRace(s, race)
 
 	if err := raceMessage(s, race, "ended"); err != nil {
-		slog.Error("failed to send the race admin command",
+		slog.Error("failed to send the race end message",
 			slog.Any("error", err),
 		)
 	}
-	slog.Info("race ended",
+	slog.Debug("race ended",
 		slog.String("guildID", i.GuildID),
 	)
 
 	sendRaceResults(s, i.ChannelID, race)
 	removeRaceButtons(race)
+
+	for _, racer := range race.Racers {
+		ps := stats.GetPlayerStats(racer.Member.GuildID, racer.Member.MemberID, "race")
+		ps.GamePlayed()
+	}
 }
 
 // waitForMembersToJoin waits until members join the race before proceeding
