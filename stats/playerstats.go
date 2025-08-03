@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// PlayerStats holds the statistics of a player in a game.
 type PlayerStats struct {
 	ID                  primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID             string             `json:"guild_id" bson:"guild_id"`
@@ -18,6 +19,7 @@ type PlayerStats struct {
 	NumberOfTimesPlayed int                `json:"number_of_times_played" bson:"number_of_times_played"`
 }
 
+// PlayerRetention holds the retention statistics of players in a game.
 type PlayerRetention struct {
 	InactivePlayers    int     `json:"inactive_players"`
 	InactivePercentage float64 `json:"inactive_percentage"`
@@ -25,6 +27,40 @@ type PlayerRetention struct {
 	ActivePercentage   float64 `json:"active_percentage"`
 }
 
+// GetPlayerStats retrieves the player statistics for a specific guild, member, and game.
+// If the player stats do not exist, it creates a new PlayerStats instance.
+func GetPlayerStats(guildID string, memberID string, game string) *PlayerStats {
+	ps, _ := readPlayerStats(guildID, memberID, game)
+	if ps == nil {
+		ps = newPlayerStats(guildID, memberID, game)
+	}
+
+	return ps
+}
+
+// newPlayerStats creates a new PlayerStats instance with the current date as FirstPlayed and LastPlayed.
+func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
+	today := today()
+	ps := &PlayerStats{
+		GuildID:             guildID,
+		MemberID:            memberID,
+		Game:                game,
+		FirstPlayed:         today,
+		LastPlayed:          today,
+		NumberOfTimesPlayed: 0,
+	}
+	writePlayerStats(ps)
+	return ps
+}
+
+// GamePlayed updates the PlayerStats when a game is played.
+func (ps *PlayerStats) GamePlayed() {
+	ps.LastPlayed = today()
+	ps.NumberOfTimesPlayed++
+	writePlayerStats(ps)
+}
+
+// GetPlayerRetention retrieves the retention statistics of players in a game for a specific guild.
 func GetPlayerRetention(guildID string, game string, startDate time.Time, duration time.Duration) (*PlayerRetention, error) {
 	cutoffDate := startDate.Add(duration)
 
@@ -134,6 +170,7 @@ func GetPlayerRetention(guildID string, game string, startDate time.Time, durati
 	return retention, nil
 }
 
+// GetPlayerRetentionDuration retrieves the retention statistics of players in a game for a specific guild
 func GetPlayerRetentionDuration(guildID string, game string, duration time.Duration) (*PlayerRetention, error) {
 	// Pipeline to find the percentage of players who played longer than the duration
 	pipeline := mongo.Pipeline{
