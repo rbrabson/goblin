@@ -52,7 +52,7 @@ var (
 							Name:        "after",
 							Description: "The time period to check the player activity.",
 							Type:        discordgo.ApplicationCommandOptionString,
-							Required:    false,
+							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
 								{
 									Name:  "One Day",
@@ -169,6 +169,13 @@ func playerActivity(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			since = option.StringValue()
 		}
 	}
+
+	slog.Debug("Player activity command received",
+		slog.String("guild_id", i.GuildID),
+		slog.String("game", game),
+		slog.String("after", after),
+		slog.String("since", since),
+	)
 
 	duration := getDuration(after)
 	checkAfter := getTime(since)
