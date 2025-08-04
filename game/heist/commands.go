@@ -372,6 +372,9 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
+	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "heist")
+	ps.GamePlayed()
+
 	waitForHeistToStart(s, i, heist)
 
 	if len(heist.Crew) < 2 {
@@ -454,11 +457,6 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sendHeistResults(s, i, res)
 
 	res.Target.StealFromValut(res.TotalStolen)
-
-	for _, member := range heist.Crew {
-		ps := stats.GetPlayerStats(member.GuildID, member.MemberID, "heist")
-		ps.GamePlayed()
-	}
 }
 
 // waitForHeistToStart waits until the planning stage for the heist expires.
@@ -705,6 +703,9 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
+
+	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "heist")
+	ps.GamePlayed()
 }
 
 // playerStats shows a player's heist stats

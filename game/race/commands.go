@@ -193,6 +193,10 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("guiildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 	)
+
+	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "race")
+	ps.GamePlayed()
+
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
@@ -240,11 +244,6 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	sendRaceResults(s, i.ChannelID, race)
 	removeRaceButtons(race)
-
-	for _, racer := range race.Racers {
-		ps := stats.GetPlayerStats(racer.Member.GuildID, racer.Member.MemberID, "race")
-		ps.GamePlayed()
-	}
 }
 
 // waitForMembersToJoin waits until members join the race before proceeding
@@ -343,6 +342,9 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
+
+	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "race")
+	ps.GamePlayed()
 
 	err = raceMessage(s, race, "join")
 	if err != nil {
