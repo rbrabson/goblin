@@ -14,6 +14,7 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
+	"github.com/rbrabson/goblin/stats"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -192,6 +193,10 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("guiildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 	)
+
+	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "race")
+	ps.GamePlayed()
+
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
@@ -229,11 +234,11 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sendRace(s, race)
 
 	if err := raceMessage(s, race, "ended"); err != nil {
-		slog.Error("failed to send the race admin command",
+		slog.Error("failed to send the race end message",
 			slog.Any("error", err),
 		)
 	}
-	slog.Info("race ended",
+	slog.Debug("race ended",
 		slog.String("guildID", i.GuildID),
 	)
 
@@ -337,6 +342,9 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
+
+	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "race")
+	ps.GamePlayed()
 
 	err = raceMessage(s, race, "join")
 	if err != nil {

@@ -368,14 +368,14 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	options := i.ApplicationCommandData().Options[0].Options
-	switch options[0].Name {
+	option := i.ApplicationCommandData().Options[0].Options[0]
+	switch option.Name {
 	case "add":
 		var memberID string
-		user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
-		if user == nil {
+		member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+		if err != nil {
 			resp := disgomsg.NewResponse(
-				disgomsg.WithContent("The requested user cannot be found."),
+				disgomsg.WithContent("The user to get the account for was not found. Please try again."),
 			)
 			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 				slog.Error("error sending response",
@@ -385,8 +385,9 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 			return
 		}
+		memberID = member.MemberID
 
-		err := server.AddOwner(memberID)
+		err = server.AddOwner(memberID)
 		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -435,9 +436,9 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 	case "remove":
-		var memberID string
-		user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
-		if user == nil {
+		option := i.ApplicationCommandData().Options[0].Options[0].Options[0]
+		member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent("The requested user cannot be found."),
 			)
@@ -449,7 +450,8 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 			return
 		}
-		err := server.RemoveOwner(memberID)
+		memberID := member.MemberID
+		err = server.RemoveOwner(memberID)
 		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -478,10 +480,10 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	default:
 		slog.Error("unknown subcommand",
-			slog.String("subCommand", options[0].Name),
+			slog.String("subCommand", option.Name),
 		)
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Unknown subcommand: " + options[0].Name),
+			disgomsg.WithContent("Unknown subcommand: " + option.Name),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -498,9 +500,9 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
 	case "add":
-		var memberID string
-		user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
-		if user == nil {
+		option := i.ApplicationCommandData().Options[0].Options[0].Options[0]
+		member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent("The requested user cannot be found."),
 			)
@@ -512,7 +514,8 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 			return
 		}
-		err := server.AddAdmin(memberID)
+		memberID := member.MemberID
+		err = server.AddAdmin(memberID)
 		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
@@ -561,9 +564,9 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 	case "remove":
-		var memberID string
-		user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
-		if user == nil {
+		option := i.ApplicationCommandData().Options[0].Options[0].Options[0]
+		member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent("The requested user cannot be found."),
 			)
@@ -575,7 +578,8 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 			return
 		}
-		err := server.RemoveAdmin(memberID)
+		memberID := member.MemberID
+		err = server.RemoveAdmin(memberID)
 		if err != nil {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),

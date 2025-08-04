@@ -23,6 +23,7 @@ import (
 	"github.com/rbrabson/goblin/internal/channel"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
+	"github.com/rbrabson/goblin/stats"
 )
 
 const (
@@ -371,6 +372,9 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
+	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "heist")
+	ps.GamePlayed()
+
 	waitForHeistToStart(s, i, heist)
 
 	if len(heist.Crew) < 2 {
@@ -699,6 +703,9 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
+
+	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "heist")
+	ps.GamePlayed()
 }
 
 // playerStats shows a player's heist stats
@@ -799,8 +806,8 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
 		if option.Name == "user" {
-			user := option.UserValue(s)
-			if user == nil {
+			member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+			if err != nil {
 				resp := disgomsg.NewResponse(
 					disgomsg.WithContent("The user you specified does not exist."),
 				)
@@ -812,7 +819,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 				return
 			}
-			memberID = user.ID
+			memberID = member.MemberID
 			break
 		}
 	}
@@ -1126,9 +1133,9 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // clearMember clears the criminal state of the player.
 func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var memberID string
-	user := i.ApplicationCommandData().Options[0].Options[0].Options[0].UserValue(s)
-	if user == nil {
+	option := i.ApplicationCommandData().Options[0].Options[0].Options[0]
+	member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+	if err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The user you specified does not exist."),
 		)
@@ -1140,9 +1147,7 @@ func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	memberID = user.ID
-	member := guild.GetMember(i.GuildID, memberID)
-	heistMember := getHeistMember(i.GuildID, memberID)
+	heistMember := getHeistMember(i.GuildID, member.MemberID)
 	heistMember.ClearJailAndDeathStatus()
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Cleared %s's criminal record", member.Name)),

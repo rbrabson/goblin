@@ -213,11 +213,13 @@ func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	memberID := i.Member.User.ID
+	var member *guild.Member
 	options := i.ApplicationCommandData().Options[0].Options
 	for _, option := range options {
 		if option.Name == "user" {
-			user := option.UserValue(s)
-			if user == nil {
+			var err error
+			member, err = guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+			if err != nil {
 				resp := disgomsg.NewResponse(
 					disgomsg.WithContent("The user to get the account for was not found. Please try again."),
 				)
@@ -229,7 +231,7 @@ func account(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 				return
 			}
-			memberID = user.ID
+			memberID = member.MemberID
 			break
 		}
 	}
@@ -276,8 +278,8 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for _, option := range options {
 		switch option.Name {
 		case "user":
-			user := option.UserValue(s)
-			if user == nil {
+			member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+			if err != nil {
 				resp := disgomsg.NewResponse(
 					disgomsg.WithContent("The account to set the balance for was not found. Please try again."),
 				)
@@ -289,7 +291,7 @@ func setAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 				return
 			}
-			memberID = user.ID
+			memberID = member.MemberID
 		case "amount":
 			amount = int(option.IntValue())
 		}
@@ -347,10 +349,10 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for _, option := range options {
 		switch option.Name {
 		case "user":
-			user := option.UserValue(s)
-			if user == nil {
+			member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+			if err != nil {
 				resp := disgomsg.NewResponse(
-					disgomsg.WithContent("The account to add credits to was not found. Please try again."),
+					disgomsg.WithContent("The user to get the account for was not found. Please try again."),
 				)
 				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 					slog.Error("error sending response",
@@ -360,13 +362,9 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 				return
 			}
-			memberID = user.ID
+			memberID = member.MemberID
 		case "amount":
 			amount = int(option.IntValue())
-		default:
-			slog.Warn("unknown option in /bank-admin add command",
-				slog.String("option", option.Name),
-			)
 		}
 	}
 

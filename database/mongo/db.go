@@ -60,7 +60,7 @@ func NewDatabase() *MongoDB {
 }
 
 // FindAllIDs returns the ID of each document in a collection in the database.
-func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]string, error) {
+func (m *MongoDB) FindAllIDs(collectionName string, filter any) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
@@ -118,7 +118,7 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter interface{}) ([]strin
 }
 
 // FindMany reads all documents from the database that match the filter
-func (m *MongoDB) FindMany(collectionName string, filter interface{}, data interface{}, sortBy interface{}, limit int64) error {
+func (m *MongoDB) FindMany(collectionName string, filter any, data any, sortBy any, limit int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
@@ -165,7 +165,7 @@ func (m *MongoDB) FindMany(collectionName string, filter interface{}, data inter
 }
 
 // FindOne loads a document identified by documentID from the collection into data.
-func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interface{}) error {
+func (m *MongoDB) FindOne(collectionName string, filter any, data any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
@@ -205,7 +205,7 @@ func (m *MongoDB) FindOne(collectionName string, filter interface{}, data interf
 }
 
 // UpdateOrInsert stores data into a documeent within the specified collection.
-func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data interface{}) error {
+func (m *MongoDB) UpdateOrInsert(collectionName string, filter any, data any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -230,7 +230,7 @@ func (m *MongoDB) UpdateOrInsert(collectionName string, filter interface{}, data
 }
 
 // UpdateMany stores data into multiple documeents within the specified collection.
-func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data interface{}) error {
+func (m *MongoDB) UpdateMany(collectionName string, filter any, data any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -260,7 +260,7 @@ func (m *MongoDB) UpdateMany(collectionName string, filter interface{}, data int
 }
 
 // Count returns the count of documents that match the filter.
-func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) {
+func (m *MongoDB) Count(collectionName string, filter any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
@@ -288,8 +288,32 @@ func (m *MongoDB) Count(collectionName string, filter interface{}) (int, error) 
 	return int(count), nil
 }
 
+// Distinct returns a list of distinct values for the specified field in the collection that match the filter.
+func (m *MongoDB) DistinctCount(collectionName string, filter any, field string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
+	defer cancel()
+
+	collection, err := m.getCollection(ctx, collectionName)
+	if err != nil {
+		return 0, err
+	}
+
+	distinctValues, err := collection.Distinct(ctx, field, filter)
+	if err != nil {
+		slog.Error("Failed to read the collection",
+			slog.String("collection", collectionName),
+			slog.Any("error", err),
+			slog.Any("filter", filter),
+			slog.String("field", field),
+		)
+		return 0, ErrCollectionNotAccessible
+	}
+
+	return len(distinctValues), nil
+}
+
 // Delete removes a document from the collection that matches the filter.
-func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
+func (m *MongoDB) Delete(collectionName string, filter any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
@@ -323,7 +347,7 @@ func (m *MongoDB) Delete(collectionName string, filter interface{}) error {
 }
 
 // DeleteMany removes all documents from the collection that matche the filter.
-func (m *MongoDB) DeleteMany(collectionName string, filter interface{}) error {
+func (m *MongoDB) DeleteMany(collectionName string, filter any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
@@ -368,6 +392,34 @@ func (m *MongoDB) Close() error {
 		return err
 	}
 	return nil
+}
+
+// Aggregate performs an aggregation operation on the specified collection using the provided pipeline.
+func (m *MongoDB) Aggregate(collectionName string, pipeline mongo.Pipeline) ([]bson.M, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
+	defer cancel()
+
+	collection, err := m.getCollection(ctx, collectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		slog.Error("unable to perform aggregation on the collection",
+			slog.String("collection", collectionName),
+			slog.Any("error", err),
+			slog.Any("pipeline", pipeline),
+		)
+		return nil, err
+	}
+
+	var results []bson.M
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 // getCollection returns a collection from the database that may be used for database operations.

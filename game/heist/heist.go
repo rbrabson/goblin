@@ -373,16 +373,14 @@ func calculateCredits(results *HeistResult) {
 
 	// Get a "base amount" of loot stolen. If you are apprehended, this is what you get. If you escaped you get 2x as much.
 	baseStolen := totalStolen / (2*numEscaped + numApprehended)
-
-	results.TotalStolen = 0
-	// Caculate a "base amount". Those who escape get 2x those who don't. So Divide the
 	slog.Debug("looted",
-
 		slog.String("target", results.Target.Name),
 		slog.Int("vault", results.Target.Vault),
 		slog.Int("survivors", numSurvived),
 		slog.Int("base", baseStolen),
 	)
+
+	results.TotalStolen = 0
 	for _, heistMemberResult := range results.Escaped {
 		heistMemberResult.StolenCredits = 2 * baseStolen
 		results.TotalStolen += heistMemberResult.StolenCredits

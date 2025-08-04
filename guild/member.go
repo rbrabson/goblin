@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/bwmarrin/discordgo"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,6 +30,28 @@ func GetMember(guildID string, memberID string) *Member {
 	}
 
 	return member
+}
+
+// GetMemberByUser retrieves a member by the user in the guild (server). If the user is nil, or the member cannot be found, it returns an error.
+func GetMemberByUser(s *discordgo.Session, guildID string, user *discordgo.User) (*Member, error) {
+	if user == nil {
+		slog.Error("user is nil",
+			slog.String("guildID", guildID),
+		)
+		return nil, ErrUserNotFound
+	}
+	memberID := user.ID
+	member, err := s.GuildMember(guildID, memberID)
+	if err != nil {
+		slog.Error("failed to get guild member",
+			slog.String("guildID", guildID),
+			slog.String("memberID", memberID),
+			slog.Any("error", err),
+		)
+		return nil, err
+	}
+	m := GetMember(guildID, memberID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
+	return m, nil
 }
 
 // SetName updates the name of the member as known on this guild (server).
