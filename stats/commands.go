@@ -208,9 +208,9 @@ func playerActivity(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	sb := strings.Builder{}
 	sb.WriteString(p.Sprintf("**Player Activity for %s**", game))
-	sb.WriteString(p.Sprintf("\nAfter: %s", after))
+	sb.WriteString(p.Sprintf("\nAfter: %s", timeToString(after)))
 	if since != "" {
-		sb.WriteString(p.Sprintf("\nSince: %s", since))
+		sb.WriteString(p.Sprintf("\nSince: %s", timeToString(since)))
 	}
 	sb.WriteString(p.Sprintf("\nTotal Players: %d", activity.ActivePlayers+activity.InactivePlayers))
 	sb.WriteString(p.Sprintf("\nActive Players: %d (%.2f%%)", activity.ActivePlayers, activity.ActivePercentage))

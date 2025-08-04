@@ -75,3 +75,36 @@ func getTime(period string) time.Time {
 		return time.Time{}
 	}
 }
+
+func timeToString(timeString string) string {
+	switch timeString {
+	case OneDay:
+		return "1 Eay"
+	case OneWeek:
+		return "1 Week"
+	case OneMonth:
+		return "1 Month"
+	case ThreeMonths:
+		return "3 Months"
+	case SixMonths:
+		return "6 Months"
+	case NineMonths:
+		return "9 Months"
+	case TwelveMonths:
+		return "12 Months"
+	case LastWeek:
+		return "Last Week"
+	case LastMonth:
+		return "Last Month"
+	case ThreeMonthsAgo:
+		return "3 Months ago"
+	case SixMonthsAgo:
+		return "6 Months ago"
+	case NineMonthsAgo:
+		return "9 Months ago"
+	case TwelveMonthsAgo:
+		return "12 Months ago"
+	default:
+		return ""
+	}
+}
