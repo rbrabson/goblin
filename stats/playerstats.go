@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -60,9 +61,16 @@ func (ps *PlayerStats) GamePlayed() {
 	writePlayerStats(ps)
 }
 
-// GetPlayerRetention retrieves the retention statistics of players in a game for a specific guild.
-func GetPlayerRetention(guildID string, game string, startDate time.Time, duration time.Duration) (*PlayerRetention, error) {
-	cutoffDate := startDate.Add(duration)
+// GetPlayerActivity retrieves the activity statistics of players in a game for a specific guild.
+func GetPlayerActivity(guildID string, game string, checkAfter time.Time, duration time.Duration) (*PlayerRetention, error) {
+	pastDate := today().Add(-duration)
+
+	slog.Debug("Calculating player activity",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Duration("duration", duration),
+		slog.Time("past_date", pastDate),
+	)
 
 	// Pipeline to find the percentage of players who played longer than the duration
 	pipeline := mongo.Pipeline{
@@ -71,8 +79,8 @@ func GetPlayerRetention(guildID string, game string, startDate time.Time, durati
 			{Key: "$match", Value: bson.D{
 				{Key: "guild_id", Value: guildID},
 				{Key: "game", Value: game},
-				{Key: "first_played", Value: bson.D{
-					{Key: "$gte", Value: startDate},
+				{Key: "last_played", Value: bson.D{
+					{Key: "$gte", Value: checkAfter},
 				}},
 			}},
 		},
@@ -90,8 +98,7 @@ func GetPlayerRetention(guildID string, game string, startDate time.Time, durati
 				{Key: "played_duration", Value: bson.D{
 					{Key: "$subtract", Value: bson.A{"$last_played", "$first_played"}},
 				}},
-				{Key: "duration_threshold", Value: duration.Milliseconds()},
-				{Key: "cutoff_date", Value: cutoffDate},
+				{Key: "past_date", Value: pastDate},
 			}},
 		},
 		// Stage 4: Categorize players as retained or not retained
@@ -102,9 +109,7 @@ func GetPlayerRetention(guildID string, game string, startDate time.Time, durati
 						{Key: "if", Value: bson.D{
 							{Key: "$and", Value: bson.A{
 								// Player must have played past the cutoff date
-								bson.D{{Key: "$gte", Value: bson.A{"$last_played", "$cutoff_date"}}},
-								// Player's playing duration must exceed the threshold
-								bson.D{{Key: "$gte", Value: bson.A{"$played_duration", "$duration_threshold"}}},
+								bson.D{{Key: "$gte", Value: bson.A{"$last_played", "$past_date"}}},
 							}},
 						}},
 						{Key: "then", Value: 1},
@@ -164,107 +169,6 @@ func GetPlayerRetention(guildID string, game string, startDate time.Time, durati
 		InactivePlayers:    getInt(result["not_retained_players"]),
 		InactivePercentage: getFloat64(result["not_retained_percentage"]),
 		ActivePlayers:      getInt(result["retained_players"]),
-		ActivePercentage:   getFloat64(result["retained_percentage"]),
-	}
-
-	return retention, nil
-}
-
-// GetPlayerRetentionDuration retrieves the retention statistics of players in a game for a specific guild
-func GetPlayerRetentionDuration(guildID string, game string, duration time.Duration) (*PlayerRetention, error) {
-	// Pipeline to find the percentage of players who played longer than the duration
-	pipeline := mongo.Pipeline{
-		// Stage 1: Match documents for players who started on or after the start date
-		bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "guild_id", Value: guildID},
-				{Key: "game", Value: game},
-			}},
-		},
-		// Stage 2: Group by member_id to get their first and last played dates
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: "$member_id"},
-				{Key: "first_played", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
-				{Key: "last_played", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
-			}},
-		},
-		// Stage 3: Add fields to calculate if player is retained
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "played_duration", Value: bson.D{
-					{Key: "$subtract", Value: bson.A{"$last_played", "$first_played"}},
-				}},
-				{Key: "duration_threshold", Value: duration.Milliseconds()},
-			}},
-		},
-		// Stage 4: Categorize players as retained or not retained
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "is_retained", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$and", Value: bson.A{
-								bson.D{{Key: "$gte", Value: bson.A{"$played_duration", "$duration_threshold"}}},
-							}},
-						}},
-						{Key: "then", Value: 1},
-						{Key: "else", Value: 0},
-					}},
-				}},
-			}},
-		},
-		// Stage 5: Group all players to calculate totals and percentages
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: nil}, // Group all documents together
-				{Key: "total_players", Value: bson.D{{Key: "$sum", Value: 1}}},
-				{Key: "retained_players", Value: bson.D{{Key: "$sum", Value: "$is_retained"}}},
-				{Key: "not_retained_players", Value: bson.D{
-					{Key: "$sum", Value: bson.D{
-						{Key: "$subtract", Value: bson.A{1, "$is_retained"}},
-					}},
-				}},
-			}},
-		},
-		// Stage 6: Calculate percentages
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "retained_percentage", Value: bson.D{
-					{Key: "$multiply", Value: bson.A{
-						bson.D{{Key: "$divide", Value: bson.A{"$retained_players", "$total_players"}}},
-						100,
-					}},
-				}},
-				{Key: "not_retained_percentage", Value: bson.D{
-					{Key: "$multiply", Value: bson.A{
-						bson.D{{Key: "$divide", Value: bson.A{"$not_retained_players", "$total_players"}}},
-						100,
-					}},
-				}},
-			}},
-		},
-	}
-
-	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(docs) == 0 {
-		return &PlayerRetention{
-			InactivePlayers:    0,
-			InactivePercentage: 0,
-			ActivePlayers:      0,
-			ActivePercentage:   0,
-		}, nil
-	}
-
-	result := docs[0]
-	retention := &PlayerRetention{
-		InactivePlayers:    getInt(result["not_retained_players"]), // Players who didn't play long enough
-		InactivePercentage: getFloat64(result["not_retained_percentage"]),
-		ActivePlayers:      getInt(result["retained_players"]), // Players who played longer than duration
 		ActivePercentage:   getFloat64(result["retained_percentage"]),
 	}
 
