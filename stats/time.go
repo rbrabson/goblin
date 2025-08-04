@@ -3,22 +3,22 @@ package stats
 import "time"
 
 const (
-	OneDay       = "One Day"
-	OneWeek      = "One Week"
-	OneMonth     = "One Month"
-	ThreeMonths  = "Three Months"
-	SixMonths    = "Six Months"
-	NineMonths   = "Nine Months"
-	TwelveMonths = "Twelve Months"
+	OneDay       = "one_day"
+	OneWeek      = "one_week"
+	OneMonth     = "one_month"
+	ThreeMonths  = "three_months"
+	SixMonths    = "six_months"
+	NineMonths   = "nine_months"
+	TwelveMonths = "twelve_months"
 )
 
 const (
-	LastWeek        = "Last Week"
-	LastMonth       = "Last Month"
-	ThreeMonthsAgo  = "Three Months Ago"
-	SixMonthsAgo    = "Six Months Ago"
-	NineMonthsAgo   = "Nine Months Ago"
-	TwelveMonthsAgo = "Twelve Months Ago"
+	LastWeek        = "last_week"
+	LastMonth       = "last_month"
+	ThreeMonthsAgo  = "three_months_ago"
+	SixMonthsAgo    = "six_months_ago"
+	NineMonthsAgo   = "nine_months_ago"
+	TwelveMonthsAgo = "twelve_months_ago"
 )
 
 // today returns the current date with the time set to midnight.
