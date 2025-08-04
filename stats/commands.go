@@ -2,7 +2,6 @@ package stats
 
 import (
 	"log/slog"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
@@ -206,22 +205,45 @@ func playerActivity(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("inactive_players", p.Sprintf("%d (%.2f%%)", activity.InactivePlayers, activity.InactivePercentage)),
 	)
 
-	sb := strings.Builder{}
-	sb.WriteString(p.Sprintf("**Player Activity for %s**", game))
-	sb.WriteString(p.Sprintf("\nAfter: %s", timeToString(after)))
-	if since != "" {
-		sb.WriteString(p.Sprintf("\nSince: %s", timeToString(since)))
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:  "Player Activity for " + game,
+			Fields: []*discordgo.MessageEmbedField{},
+		},
 	}
-	sb.WriteString(p.Sprintf("\nTotal Players: %d", activity.ActivePlayers+activity.InactivePlayers))
-	sb.WriteString(p.Sprintf("\nActive Players: %d (%.2f%%)", activity.ActivePlayers, activity.ActivePercentage))
-	sb.WriteString(p.Sprintf("\nInactive Players: %d (%.2f%%)", activity.InactivePlayers, activity.InactivePercentage))
-	content := sb.String()
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "After",
+		Value:  timeToString(after),
+		Inline: false,
+	})
+	if since != "" {
+		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+			Name:   "Since",
+			Value:  timeToString(since),
+			Inline: false,
+		})
+	}
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Total Players",
+		Value:  p.Sprintf("%d", activity.ActivePlayers+activity.InactivePlayers),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Active Players",
+		Value:  p.Sprintf("%d (%.2f%%)", activity.ActivePlayers, activity.ActivePercentage),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Inactive Players",
+		Value:  p.Sprintf("%d (%.2f%%)", activity.InactivePlayers, activity.InactivePercentage),
+		Inline: false,
+	})
 
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(content),
+		disgomsg.WithEmbeds(embeds),
 	)
 
-	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("failed to send response",
 			slog.Any("error", err),
 		)

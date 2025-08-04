@@ -79,7 +79,7 @@ func getTime(period string) time.Time {
 func timeToString(timeString string) string {
 	switch timeString {
 	case OneDay:
-		return "1 Eay"
+		return "1 Day"
 	case OneWeek:
 		return "1 Week"
 	case OneMonth:
