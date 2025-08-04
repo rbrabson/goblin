@@ -1,14 +1,9 @@
 package stats
 
 import (
-	"fmt"
-	"slices"
-
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/discord"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 const (
@@ -79,32 +74,22 @@ func (plugin *Plugin) GetName() string {
 
 // GetHelp returns the member help for the banking system
 func (plugin *Plugin) GetHelp() []string {
-	help := make([]string, 0, 1)
-
-	commandPrefix := memberCommands[0].Name
-	for _, command := range memberCommands[0].Options {
-		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
-		help = append(help, commandDescription)
-	}
-	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
-	help = append([]string{title}, help...)
-
-	return help
+	return nil
 }
 
 // GetAdminHelp returns the admin help for the banking system
 func (plugin *Plugin) GetAdminHelp() []string {
-	help := make([]string, 0, len(adminCommands[0].Options))
+	// help := make([]string, 0, len(adminCommands[0].Options))
 
-	commandPrefix := adminCommands[0].Name
-	for _, command := range adminCommands[0].Options {
-		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
-		help = append(help, commandDescription)
-	}
-	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
-	help = append([]string{title}, help...)
+	// commandPrefix := adminCommands[0].Name
+	// for _, command := range adminCommands[0].Options {
+	// 	commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
+	// 	help = append(help, commandDescription)
+	// }
+	// slices.Sort(help)
+	// title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
+	// help = append([]string{title}, help...)
 
-	return help
+	// return help
+	return nil
 }
