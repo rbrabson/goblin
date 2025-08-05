@@ -2,7 +2,6 @@ package stats
 
 import (
 	"log/slog"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
@@ -489,21 +488,4 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-}
-
-// GetGamesPlayedAllTime calculates the games played statistics for all time
-func GetGamesPlayedAllTime(guildID string, game string) (*GamesPlayed, error) {
-	// Use a very early start date and current time as end date
-	startDate := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
-	endDate := time.Now()
-
-	return GetGamesPlayed(guildID, game, startDate, endDate)
-}
-
-// GetGamesPlayedLastDays calculates the games played statistics for the last N days
-func GetGamesPlayedLastDays(guildID string, game string, days int) (*GamesPlayed, error) {
-	endDate := time.Now()
-	startDate := endDate.AddDate(0, 0, -days)
-
-	return GetGamesPlayed(guildID, game, startDate, endDate)
 }
