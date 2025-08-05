@@ -116,7 +116,7 @@ var (
 					},
 				},
 				{
-					Name:        "games",
+					Name:        "played",
 					Description: "View the number of games played.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
@@ -208,7 +208,7 @@ func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch options[0].Name {
 	case "retention":
 		playerRetention(s, i)
-	case "games":
+	case "played":
 		gamesPlayed(s, i)
 	}
 }
