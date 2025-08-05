@@ -1,6 +1,8 @@
 package stats
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	OneDay       = "one_day"
@@ -29,25 +31,25 @@ func today() time.Time {
 }
 
 func getDuration(guildID string, game string, period string) time.Duration {
-	today := today()
+	today := today().UTC()
 	firstGameDate := getFirstGameDate(guildID, game)
 
 	var startDate time.Time
 	switch period {
 	case OneDay:
-		startDate = today.AddDate(0, 0, -1)
+		startDate = today.AddDate(0, 0, -1).UTC()
 	case OneWeek:
-		startDate = today.AddDate(0, 0, -7)
+		startDate = today.AddDate(0, 0, -7).UTC()
 	case OneMonth:
-		startDate = today.AddDate(0, -1, 0)
+		startDate = today.AddDate(0, -1, 0).UTC()
 	case ThreeMonths:
-		startDate = today.AddDate(0, -3, 0)
+		startDate = today.AddDate(0, -3, 0).UTC()
 	case SixMonths:
-		startDate = today.AddDate(0, -6, 0)
+		startDate = today.AddDate(0, -6, 0).UTC()
 	case NineMonths:
-		startDate = today.AddDate(0, -9, 0)
+		startDate = today.AddDate(0, -9, 0).UTC()
 	case TwelveMonths:
-		startDate = today.AddDate(-1, 0, 0)
+		startDate = today.AddDate(-1, 0, 0).UTC()
 	default:
 		startDate = firstGameDate
 	}
@@ -60,23 +62,23 @@ func getDuration(guildID string, game string, period string) time.Duration {
 }
 
 func getTime(guildID string, game string, period string) time.Time {
-	today := today()
+	today := today().UTC()
 	firstGameDate := getFirstGameDate(guildID, game)
 
 	var timePeriod time.Time
 	switch period {
 	case LastWeek:
-		timePeriod = today.AddDate(0, 0, -7)
+		timePeriod = today.AddDate(0, 0, -7).UTC()
 	case LastMonth:
-		timePeriod = today.AddDate(0, -1, 0)
+		timePeriod = today.AddDate(0, -1, 0).UTC()
 	case ThreeMonthsAgo:
-		timePeriod = today.AddDate(0, -3, 0)
+		timePeriod = today.AddDate(0, -3, 0).UTC()
 	case SixMonthsAgo:
-		timePeriod = today.AddDate(0, -6, 0)
+		timePeriod = today.AddDate(0, -6, 0).UTC()
 	case NineMonthsAgo:
-		timePeriod = today.AddDate(0, -9, 0)
+		timePeriod = today.AddDate(0, -9, 0).UTC()
 	case TwelveMonthsAgo:
-		timePeriod = today.AddDate(-1, 0, 0)
+		timePeriod = today.AddDate(-1, 0, 0).UTC()
 	default:
 		timePeriod = firstGameDate
 	}

@@ -56,6 +56,7 @@ func deletePlayerStats(ps *PlayerStats) error {
 	return nil
 }
 
+// getFirstGameDate retrieves the earliest date a game was played by any member in a guild.
 func getFirstGameDate(guildID string, game string) time.Time {
 	// Use aggregation pipeline to find the minimum first_played date
 	pipeline := mongo.Pipeline{
