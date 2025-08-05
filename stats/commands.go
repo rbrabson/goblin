@@ -50,7 +50,7 @@ var (
 							},
 						},
 						{
-							Name:        "games",
+							Name:        "after",
 							Description: "The time period to get the number of games.",
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    true,
@@ -213,6 +213,7 @@ func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+// playerRetention handles the /stats-admin retention command.
 func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
@@ -268,7 +269,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title:  strings.ToTitle("Player Retention for " + game),
+			Title:  strings.Title("Player Retention for " + game),
 			Fields: []*discordgo.MessageEmbedField{},
 		},
 	}
@@ -291,12 +292,12 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Active Players",
-		Value:  p.Sprintf("%d (%.2f%%)", retention.ActivePlayers, retention.ActivePercentage),
+		Value:  p.Sprintf("%d (%.0f%%)", retention.ActivePlayers, retention.ActivePercentage),
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Inactive Players",
-		Value:  p.Sprintf("%d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage),
+		Value:  p.Sprintf("%d (%.0f%%)", retention.InactivePlayers, retention.InactivePercentage),
 		Inline: false,
 	})
 
@@ -312,6 +313,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 }
 
+// gamesPlayed handles the /stats-admin games command.
 func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
@@ -361,7 +363,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title:  strings.ToTitle("Games Played for " + game),
+			Title:  strings.Title("Games Played for " + game),
 			Fields: []*discordgo.MessageEmbedField{},
 		},
 	}
