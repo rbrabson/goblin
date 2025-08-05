@@ -249,3 +249,15 @@ func playerActivity(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 }
+
+// // Find players who played in the last 6 months but haven't played in 30 days
+// sixMonthsAgo := time.Now().AddDate(0, -6, 0)
+// churn, err := GetPlayerChurn("guild123", "heist", sixMonthsAgo, 30*24*time.Hour)
+
+// // Find players who played this year but haven't played in 2 weeks
+// startOfYear := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+// churn, err := GetPlayerChurn("guild123", "heist", startOfYear, 14*24*time.Hour)
+
+// // Find recent players (last month) who haven't played in a week
+// lastMonth := time.Now().AddDate(0, -1, 0)
+// churn, err := GetPlayerChurn("guild123", "heist", lastMonth, 7*24*time.Hour)
