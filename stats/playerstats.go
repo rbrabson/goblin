@@ -75,7 +75,7 @@ func GetPlayerRetention(guildID string, game string, afterDate time.Time, inacti
 	today := today()
 	inactiveThreshold := today.Add(-inactiveDuration)
 
-	slog.Debug("Calculating player churn",
+	slog.Debug("calculating player retention",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
 		slog.Time("after_date", afterDate),
@@ -191,7 +191,7 @@ func GetPlayerRetention(guildID string, game string, afterDate time.Time, inacti
 		ActivePercentage:   getFloat64(result["active_percentage"]),
 	}
 
-	slog.Debug("player retentiono calculated",
+	slog.Debug("player retention calculated",
 		slog.Int("total_eligible_players", getInt(result["total_players"])),
 		slog.Int("inactive_players", retention.InactivePlayers),
 		slog.Float64("inactive_percentage", retention.InactivePercentage),

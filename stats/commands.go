@@ -231,7 +231,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	slog.Debug("Player retention command received",
+	slog.Debug("player retention command received",
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.String("after", after),
@@ -330,7 +330,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	slog.Debug("Games played command received",
+	slog.Debug("games played command received",
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.String("since", since),

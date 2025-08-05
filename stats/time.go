@@ -25,11 +25,11 @@ const (
 func today() time.Time {
 	now := time.Now().UTC()
 	year, month, day := now.Date()
-	return time.Date(year, month, day, 0, 0, 0, 0, now.Location())
+	return time.Date(year, month, day, 0, 0, 0, 0, now.Location()).UTC()
 }
 
 func getDuration(guildID string, game string, period string) time.Duration {
-	today := today().UTC()
+	today := today()
 	firstGameDate := getFirstGameDate(guildID, game)
 
 	var startDate time.Time
@@ -60,7 +60,7 @@ func getDuration(guildID string, game string, period string) time.Duration {
 }
 
 func getTime(guildID string, game string, period string) time.Time {
-	today := today().UTC()
+	today := today()
 	firstGameDate := getFirstGameDate(guildID, game)
 
 	var timePeriod time.Time

@@ -97,18 +97,25 @@ func getFirstGameDate(guildID string, game string) time.Time {
 
 	result := docs[0]
 	if firstGameDate, ok := result["first_game_date"].(primitive.DateTime); ok {
+		t := firstGameDate.Time().UTC()
 		slog.Debug("found first game date",
 			slog.String("guild_id", guildID),
 			slog.String("game", game),
-			slog.Time("first_game_date", firstGameDate.Time()),
+			slog.Time("first_game_date", t),
 		)
-		return firstGameDate.Time()
+		return t
 	}
-
 	slog.Warn("unexpected data type for first_game_date",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
 		slog.Any("value", result["first_game_date"]),
 	)
-	return today().AddDate(-1, 0, 0) // Default to 1 years ago if no data found
+
+	firstGameDate := today().AddDate(-1, 0, 0)
+	slog.Debug("defaulting to 1 year ago for first game date",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Time("default_first_game_date", firstGameDate),
+	)
+	return firstGameDate
 }
