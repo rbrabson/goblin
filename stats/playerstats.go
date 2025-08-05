@@ -317,7 +317,7 @@ func GetPlayerRetention(guildID string, game string, afterDate time.Time, inacti
 
 // GetGamesPlayed calculates the games played statistics for a specific guild and game.
 func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate time.Time) (*GamesPlayed, error) {
-	slog.Debug("Calculating games played statistics",
+	slog.Debug("calculating games played statistics",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
 		slog.Time("start_date", startDate),

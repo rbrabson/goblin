@@ -2,6 +2,7 @@ package stats
 
 import (
 	"log/slog"
+	"math"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
@@ -48,7 +49,7 @@ var (
 							},
 						},
 						{
-							Name:        "played",
+							Name:        "games",
 							Description: "The time period to get the number of games.",
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    true,
@@ -114,7 +115,7 @@ var (
 					},
 				},
 				{
-					Name:        "played",
+					Name:        "games",
 					Description: "View the number of games played.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
@@ -208,7 +209,7 @@ func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		playerActivity(s, i)
 	case "retention":
 		playerRetention(s, i)
-	case "played":
+	case "games":
 		gamesPlayed(s, i)
 	}
 }
@@ -236,11 +237,12 @@ func playerActivity(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	duration := getDuration(after)
-	checkAfter := getTime(since)
-
 	// guildID := i.GuildID
 	guildID := "236523452230533121"
+
+	duration := getDuration(guildID, game, after)
+	checkAfter := getTime(guildID, game, since)
+
 	activity, err := GetPlayerActivity(guildID, game, checkAfter, duration)
 	if err != nil {
 		slog.Error("failed to get player activity",
@@ -273,13 +275,13 @@ func playerActivity(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "After",
-		Value:  timeToString(after),
+		Value:  timeToString(guildID, game, after),
 		Inline: false,
 	})
 	if since != "" {
 		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 			Name:   "Since",
-			Value:  timeToString(since),
+			Value:  timeToString(guildID, game, since),
 			Inline: false,
 		})
 	}
@@ -333,11 +335,12 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	duration := getDuration(after)
-	checkAfter := getTime(since)
-
 	// guildID := i.GuildID
 	guildID := "236523452230533121"
+
+	duration := getDuration(guildID, game, after)
+	checkAfter := getTime(guildID, game, since)
+
 	retention, err := GetPlayerRetention(guildID, game, checkAfter, duration)
 	if err != nil {
 		slog.Error("failed to get player retention",
@@ -370,13 +373,13 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "After",
-		Value:  timeToString(after),
+		Value:  timeToString(guildID, game, after),
 		Inline: false,
 	})
 	if since != "" {
 		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 			Name:   "Since",
-			Value:  timeToString(since),
+			Value:  timeToString(guildID, game, since),
 			Inline: false,
 		})
 	}
@@ -428,10 +431,11 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	checkAfter := getTime(since)
-
 	// guildID := i.GuildID
 	guildID := "236523452230533121"
+
+	checkAfter := getTime(guildID, game, since)
+
 	gamesPlayed, err := GetGamesPlayed(guildID, game, checkAfter, today())
 	if err != nil {
 		slog.Error("failed to get games played",
@@ -446,7 +450,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 	}
-	slog.Debug("Player retention retrieved",
+	slog.Debug("games played retrieved",
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.Time("check_after", checkAfter),
@@ -456,25 +460,35 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title:  "Player Churn for " + game,
+			Title:  "Games Played for " + game,
 			Fields: []*discordgo.MessageEmbedField{},
 		},
 	}
 	if since != "" {
 		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 			Name:   "Since",
-			Value:  timeToString(since),
+			Value:  timeToString(guildID, game, since),
 			Inline: false,
 		})
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Games Played",
-		Value:  p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalGamesPlayed, gamesPlayed.AverageGamesPlayedPerDay),
+		Name:   "Total Games Played",
+		Value:  p.Sprintf("%d", gamesPlayed.TotalGamesPlayed),
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Games Per Player",
-		Value:  p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalNumberOfPlayers, gamesPlayed.AverageGamesPerPlayer),
+		Name:   "Average Games Per Day",
+		Value:  p.Sprintf("%.0f", math.Round(gamesPlayed.AverageGamesPlayedPerDay)),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Total Number of Players",
+		Value:  p.Sprintf("%d", gamesPlayed.TotalNumberOfPlayers),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Average Games Per Player",
+		Value:  p.Sprintf("%.2f", gamesPlayed.AverageGamesPerPlayer),
 		Inline: false,
 	})
 

@@ -28,55 +28,67 @@ func today() time.Time {
 	return time.Date(year, month, day, 0, 0, 0, 0, now.Location())
 }
 
-func getDuration(period string) time.Duration {
+func getDuration(guildID string, game string, period string) time.Duration {
 	today := today().UTC()
+	firstGameDate := getFirstGameDate(guildID, game)
+
+	var startDate time.Time
 	switch period {
 	case OneDay:
-		oneDay := today.AddDate(0, 0, -1)
-		return today.Sub(oneDay)
+		startDate = today.AddDate(0, 0, -1)
 	case OneWeek:
-		oneWeek := today.AddDate(0, 0, -7)
-		return today.Sub(oneWeek)
+		startDate = today.AddDate(0, 0, -7)
 	case OneMonth:
-		oneMonth := today.AddDate(0, -1, 0)
-		return today.Sub(oneMonth)
+		startDate = today.AddDate(0, -1, 0)
 	case ThreeMonths:
-		threeMonths := today.AddDate(0, -3, 0)
-		return today.Sub(threeMonths)
+		startDate = today.AddDate(0, -3, 0)
 	case SixMonths:
-		sixMonths := today.AddDate(0, -6, 0)
-		return today.Sub(sixMonths)
+		startDate = today.AddDate(0, -6, 0)
 	case NineMonths:
-		nineMonths := today.AddDate(0, -9, 0)
-		return today.Sub(nineMonths)
+		startDate = today.AddDate(0, -9, 0)
 	case TwelveMonths:
-		twelveMonths := today.AddDate(-1, 0, 0)
-		return today.Sub(twelveMonths)
+		startDate = today.AddDate(-1, 0, 0)
 	default:
-		return today.Sub(time.Time{})
+		startDate = firstGameDate
 	}
+
+	if firstGameDate.After(startDate) {
+		startDate = firstGameDate
+	}
+
+	return today.Sub(startDate)
 }
 
-func getTime(period string) time.Time {
+func getTime(guildID string, game string, period string) time.Time {
+	today := today().UTC()
+	firstGameDate := getFirstGameDate(guildID, game)
+
+	var timePeriod time.Time
 	switch period {
 	case LastWeek:
-		return today().AddDate(0, 0, -7)
+		timePeriod = today.AddDate(0, 0, -7)
 	case LastMonth:
-		return today().AddDate(0, -1, 0)
+		timePeriod = today.AddDate(0, -1, 0)
 	case ThreeMonthsAgo:
-		return today().AddDate(0, -3, 0)
+		timePeriod = today.AddDate(0, -3, 0)
 	case SixMonthsAgo:
-		return today().AddDate(0, -6, 0)
+		timePeriod = today.AddDate(0, -6, 0)
 	case NineMonthsAgo:
-		return today().AddDate(0, -9, 0)
+		timePeriod = today.AddDate(0, -9, 0)
 	case TwelveMonthsAgo:
-		return today().AddDate(-1, 0, 0)
+		timePeriod = today.AddDate(-1, 0, 0)
 	default:
-		return time.Time{}
+		timePeriod = firstGameDate
 	}
+
+	if firstGameDate.After(timePeriod) {
+		timePeriod = firstGameDate
+	}
+
+	return timePeriod
 }
 
-func timeToString(timeString string) string {
+func timeToString(guildID string, game string, timeString string) string {
 	switch timeString {
 	case OneDay:
 		return "1 Day"
