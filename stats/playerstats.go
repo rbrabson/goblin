@@ -28,6 +28,14 @@ type PlayerRetention struct {
 	ActivePercentage   float64 `json:"active_percentage"`
 }
 
+// GamesPlayed holds the statistics of games played in a guild.
+type GamesPlayed struct {
+	TotalGamesPlayed         int     `json:"total_games_played"`
+	AverageGamesPlayedPerDay float64 `json:"average_games_played_per_day"`
+	TotalNumberOfPlayers     int     `json:"total_number_of_players"`
+	AverageGamesPerPlayer    float64 `json:"average_games_per_player"`
+}
+
 // GetPlayerStats retrieves the player statistics for a specific guild, member, and game.
 // If the player stats do not exist, it creates a new PlayerStats instance.
 func GetPlayerStats(guildID string, memberID string, game string) *PlayerStats {
@@ -175,9 +183,9 @@ func GetPlayerActivity(guildID string, game string, checkAfter time.Time, durati
 	return retention, nil
 }
 
-// GetPlayerChurn finds players who played after a specific date but haven't played
+// GetPlayerRetention finds players who played after a specific date but haven't played
 // recently for the duration provided (i.e., players who became inactive)
-func GetPlayerChurn(guildID string, game string, afterDate time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
+func GetPlayerRetention(guildID string, game string, afterDate time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
 	today := today()
 	inactiveThreshold := today.Add(-inactiveDuration)
 
@@ -305,4 +313,126 @@ func GetPlayerChurn(guildID string, game string, afterDate time.Time, inactiveDu
 	)
 
 	return retention, nil
+}
+
+// GetGamesPlayed calculates the games played statistics for a specific guild and game.
+func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate time.Time) (*GamesPlayed, error) {
+	slog.Debug("Calculating games played statistics",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Time("start_date", startDate),
+		slog.Time("end_date", endDate),
+	)
+
+	// Pipeline to calculate games played statistics
+	pipeline := mongo.Pipeline{
+		// Stage 1: Match documents for the specific guild, game, and date range
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "game", Value: game},
+				{Key: "last_played", Value: bson.D{
+					{Key: "$gte", Value: startDate},
+					{Key: "$lte", Value: endDate},
+				}},
+			}},
+		},
+		// Stage 2: Group by member_id to get total games per player
+		bson.D{
+			{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: "$member_id"},
+				{Key: "total_games_by_player", Value: bson.D{{Key: "$sum", Value: "$number_of_times_played"}}},
+				{Key: "first_played", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
+				{Key: "last_played", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
+			}},
+		},
+		// Stage 3: Group all players to calculate overall statistics
+		bson.D{
+			{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: nil}, // Group all documents together
+				{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$total_games_by_player"}}},
+				{Key: "total_number_of_players", Value: bson.D{{Key: "$sum", Value: 1}}},
+				{Key: "earliest_game", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
+				{Key: "latest_game", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
+				{Key: "games_per_player", Value: bson.D{{Key: "$push", Value: "$total_games_by_player"}}},
+			}},
+		},
+		// Stage 4: Calculate averages and additional metrics
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "date_range_days", Value: bson.D{
+					{Key: "$divide", Value: bson.A{
+						bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
+						1000 * 60 * 60 * 24, // Convert milliseconds to days
+					}},
+				}},
+				{Key: "actual_activity_days", Value: bson.D{
+					{Key: "$divide", Value: bson.A{
+						bson.D{{Key: "$subtract", Value: bson.A{"$latest_game", "$earliest_game"}}},
+						1000 * 60 * 60 * 24, // Convert milliseconds to days
+					}},
+				}},
+			}},
+		},
+		// Stage 5: Calculate final averages
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "average_games_played_per_day", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$gt", Value: bson.A{"$date_range_days", 0}},
+						}},
+						{Key: "then", Value: bson.D{
+							{Key: "$divide", Value: bson.A{"$total_games_played", "$date_range_days"}},
+						}},
+						{Key: "else", Value: 0},
+					}},
+				}},
+				{Key: "average_games_per_player", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$gt", Value: bson.A{"$total_number_of_players", 0}},
+						}},
+						{Key: "then", Value: bson.D{
+							{Key: "$divide", Value: bson.A{"$total_games_played", "$total_number_of_players"}},
+						}},
+						{Key: "else", Value: 0},
+					}},
+				}},
+			}},
+		},
+	}
+
+	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(docs) == 0 {
+		return &GamesPlayed{
+			TotalGamesPlayed:         0,
+			AverageGamesPlayedPerDay: 0,
+			TotalNumberOfPlayers:     0,
+			AverageGamesPerPlayer:    0,
+		}, nil
+	}
+
+	result := docs[0]
+	gamesPlayed := &GamesPlayed{
+		TotalGamesPlayed:         getInt(result["total_games_played"]),
+		AverageGamesPlayedPerDay: getFloat64(result["average_games_played_per_day"]),
+		TotalNumberOfPlayers:     getInt(result["total_number_of_players"]),
+		AverageGamesPerPlayer:    getFloat64(result["average_games_per_player"]),
+	}
+
+	slog.Debug("Games played statistics calculated",
+		slog.Int("total_games", gamesPlayed.TotalGamesPlayed),
+		slog.Int("total_players", gamesPlayed.TotalNumberOfPlayers),
+		slog.Float64("avg_games_per_day", gamesPlayed.AverageGamesPlayedPerDay),
+		slog.Float64("avg_games_per_player", gamesPlayed.AverageGamesPerPlayer),
+		slog.Float64("date_range_days", getFloat64(result["date_range_days"])),
+		slog.Float64("actual_activity_days", getFloat64(result["actual_activity_days"])),
+	)
+
+	return gamesPlayed, nil
 }

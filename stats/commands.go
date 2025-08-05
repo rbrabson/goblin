@@ -2,6 +2,7 @@ package stats
 
 import (
 	"log/slog"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
@@ -27,13 +28,13 @@ var (
 			Description: "Commands used to interact with the stats system.",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Name:        "activity",
-					Description: "View player activity stats.",
+					Name:        "retention",
+					Description: "View player retention.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
 							Name:        "game",
-							Description: "The game for which to retrieve the stats.",
+							Description: "The game for which to determine the retention.",
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
@@ -48,8 +49,8 @@ var (
 							},
 						},
 						{
-							Name:        "after",
-							Description: "The time period to check the player activity.",
+							Name:        "played",
+							Description: "The time period to get the number of games.",
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
@@ -81,7 +82,7 @@ var (
 						},
 						{
 							Name:        "since",
-							Description: "The time period to check the player activity.",
+							Description: "The time period to check the player retention.",
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    false,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
@@ -114,13 +115,13 @@ var (
 					},
 				},
 				{
-					Name:        "churn",
-					Description: "View player churn.",
+					Name:        "played",
+					Description: "View the number of games played.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
 							Name:        "game",
-							Description: "The game for which to determine the churn.",
+							Description: "The game for which to get the number of games played.",
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
@@ -135,40 +136,8 @@ var (
 							},
 						},
 						{
-							Name:        "after",
-							Description: "The time period to check the player churn.",
-							Type:        discordgo.ApplicationCommandOptionString,
-							Required:    true,
-							Choices: []*discordgo.ApplicationCommandOptionChoice{
-								{
-									Name:  "One Day",
-									Value: OneDay,
-								},
-								{
-									Name:  "One Week",
-									Value: OneWeek,
-								},
-								{
-									Name:  "Three Months",
-									Value: ThreeMonths,
-								},
-								{
-									Name:  "Six Months",
-									Value: SixMonths,
-								},
-								{
-									Name:  "Nine Months",
-									Value: NineMonths,
-								},
-								{
-									Name:  "Twelve Months",
-									Value: TwelveMonths,
-								},
-							},
-						},
-						{
 							Name:        "since",
-							Description: "The time period to check the player churn.",
+							Description: "The time period to check the number of games played.",
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    false,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
@@ -233,12 +202,15 @@ func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	// TODO: playerActivity isn't being used, so it can be removed.
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {
 	case "activity":
 		playerActivity(s, i)
-	case "churn":
-		playerChurn(s, i)
+	case "retention":
+		playerRetention(s, i)
+	case "played":
+		gamesPlayed(s, i)
 	}
 }
 
@@ -339,7 +311,7 @@ func playerActivity(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func playerChurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	var game, after, since string
@@ -355,7 +327,7 @@ func playerChurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	slog.Debug("Player churn command received",
+	slog.Debug("Player retention command received",
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.String("after", after),
@@ -367,13 +339,13 @@ func playerChurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// guildID := i.GuildID
 	guildID := "236523452230533121"
-	churn, err := GetPlayerChurn(guildID, game, checkAfter, duration)
+	retention, err := GetPlayerRetention(guildID, game, checkAfter, duration)
 	if err != nil {
-		slog.Error("failed to get player churn",
+		slog.Error("failed to get player retention",
 			slog.Any("error", err),
 		)
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Failed to get player churn: " + err.Error()),
+			disgomsg.WithContent("Failed to get player retention: " + err.Error()),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -381,14 +353,14 @@ func playerChurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 	}
-	slog.Debug("Player churn retrieved",
+	slog.Debug("Player retention retrieved",
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.String("after", after),
 		slog.Time("check_after", checkAfter),
-		slog.Int("total_players", churn.ActivePlayers+churn.InactivePlayers),
-		slog.String("active_players", p.Sprintf("%d (%.2f%%)", churn.ActivePlayers, churn.ActivePercentage)),
-		slog.String("inactive_players", p.Sprintf("%d (%.2f%%)", churn.InactivePlayers, churn.InactivePercentage)),
+		slog.Int("total_players", retention.ActivePlayers+retention.InactivePlayers),
+		slog.String("active_players", p.Sprintf("%d (%.2f%%)", retention.ActivePlayers, retention.ActivePercentage)),
+		slog.String("inactive_players", p.Sprintf("%d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage)),
 	)
 
 	embeds := []*discordgo.MessageEmbed{
@@ -411,17 +383,17 @@ func playerChurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Total Players",
-		Value:  p.Sprintf("%d", churn.ActivePlayers+churn.InactivePlayers),
+		Value:  p.Sprintf("%d", retention.ActivePlayers+retention.InactivePlayers),
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Active Players",
-		Value:  p.Sprintf("%d (%.2f%%)", churn.ActivePlayers, churn.ActivePercentage),
+		Value:  p.Sprintf("%d (%.2f%%)", retention.ActivePlayers, retention.ActivePercentage),
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Inactive Players",
-		Value:  p.Sprintf("%d (%.2f%%)", churn.InactivePlayers, churn.InactivePercentage),
+		Value:  p.Sprintf("%d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage),
 		Inline: false,
 	})
 
@@ -435,4 +407,103 @@ func playerChurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
+}
+
+func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	var game, since string
+	options := i.ApplicationCommandData().Options[0].Options
+	for _, option := range options {
+		switch option.Name {
+		case "game":
+			game = option.StringValue()
+		case "since":
+			since = option.StringValue()
+		}
+	}
+
+	slog.Debug("Games played command received",
+		slog.String("guild_id", i.GuildID),
+		slog.String("game", game),
+		slog.String("since", since),
+	)
+
+	checkAfter := getTime(since)
+
+	// guildID := i.GuildID
+	guildID := "236523452230533121"
+	gamesPlayed, err := GetGamesPlayed(guildID, game, checkAfter, today())
+	if err != nil {
+		slog.Error("failed to get games played",
+			slog.Any("error", err),
+		)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("Failed to get games played: " + err.Error()),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send response",
+				slog.Any("error", err),
+			)
+		}
+	}
+	slog.Debug("Player retention retrieved",
+		slog.String("guild_id", i.GuildID),
+		slog.String("game", game),
+		slog.Time("check_after", checkAfter),
+		slog.String("games", p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalGamesPlayed, gamesPlayed.AverageGamesPlayedPerDay)),
+		slog.String("players", p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalNumberOfPlayers, gamesPlayed.AverageGamesPerPlayer)),
+	)
+
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title:  "Player Churn for " + game,
+			Fields: []*discordgo.MessageEmbedField{},
+		},
+	}
+	if since != "" {
+		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+			Name:   "Since",
+			Value:  timeToString(since),
+			Inline: false,
+		})
+	}
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Games Played",
+		Value:  p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalGamesPlayed, gamesPlayed.AverageGamesPlayedPerDay),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Games Per Player",
+		Value:  p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalNumberOfPlayers, gamesPlayed.AverageGamesPerPlayer),
+		Inline: false,
+	})
+
+	resp := disgomsg.NewResponse(
+		disgomsg.WithEmbeds(embeds),
+	)
+
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("failed to send response",
+			slog.Any("error", err),
+		)
+	}
+
+}
+
+// GetGamesPlayedAllTime calculates the games played statistics for all time
+func GetGamesPlayedAllTime(guildID string, game string) (*GamesPlayed, error) {
+	// Use a very early start date and current time as end date
+	startDate := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	endDate := time.Now()
+
+	return GetGamesPlayed(guildID, game, startDate, endDate)
+}
+
+// GetGamesPlayedLastDays calculates the games played statistics for the last N days
+func GetGamesPlayedLastDays(guildID string, game string, days int) (*GamesPlayed, error) {
+	endDate := time.Now()
+	startDate := endDate.AddDate(0, 0, -days)
+
+	return GetGamesPlayed(guildID, game, startDate, endDate)
 }
