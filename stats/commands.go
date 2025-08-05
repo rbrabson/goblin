@@ -3,12 +3,12 @@ package stats
 import (
 	"log/slog"
 	"math"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
+	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -216,6 +216,7 @@ func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // playerRetention handles the /stats-admin retention command.
 func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
+	titleCaser := cases.Title(language.AmericanEnglish)
 
 	var game, after, since string
 	options := i.ApplicationCommandData().Options[0].Options
@@ -257,7 +258,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 	}
-	slog.Debug("Player retention retrieved",
+	slog.Debug("player retention retrieved",
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.String("after", after),
@@ -269,7 +270,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title:  strings.Title("Player Retention for " + game),
+			Title:  titleCaser.String("Player Retention for " + game),
 			Fields: []*discordgo.MessageEmbedField{},
 		},
 	}
@@ -316,6 +317,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // gamesPlayed handles the /stats-admin games command.
 func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
+	titleCaser := cases.Title(language.AmericanEnglish)
 
 	var game, since string
 	options := i.ApplicationCommandData().Options[0].Options
@@ -363,7 +365,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title:  strings.Title("Games Played for " + game),
+			Title:  titleCaser.String("Games Played for " + game),
 			Fields: []*discordgo.MessageEmbedField{},
 		},
 	}
