@@ -90,7 +90,7 @@ func getTime(guildID string, game string, period string) time.Time {
 	return timePeriod
 }
 
-func timeToString(guildID string, game string, timeString string) string {
+func timeToString(timeString string) string {
 	switch timeString {
 	case OneDay:
 		return "1 Day"

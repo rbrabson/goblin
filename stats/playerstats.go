@@ -75,17 +75,16 @@ func (ps *PlayerStats) GamePlayed() {
 
 // GetPlayerRetention finds players who played after a specific date but haven't played
 // recently for the duration provided (i.e., players who became inactive)
-func GetPlayerRetention(guildID string, game string, afterDate time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
+func GetPlayerRetention(guildID string, game string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
 	slog.Debug("calculating player retention",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
-		slog.Time("after", afterDate),
+		slog.Time("cuttoff", cuttoff),
 		slog.Duration("inactive_duration", inactiveDuration),
 	)
 
-	today := primitive.NewDateTimeFromTime(today())
-	cutoff := primitive.NewDateTimeFromTime(afterDate)
-	inactiveDays := int(inactiveDuration.Hours() / 24) // Convert duration to the number of days
+	today := today()
+	inactiveDays := int(inactiveDuration.Hours()/24) + 1 // Convert duration to the number of days
 
 	// Pipeline to find players who were active after the date but are now inactive
 	pipeline := mongo.Pipeline{
@@ -109,11 +108,11 @@ func GetPlayerRetention(guildID string, game string, afterDate time.Time, inacti
 		bson.D{
 			{Key: "$match", Value: bson.D{
 				{Key: "last_played", Value: bson.D{
-					{Key: "$gte", Value: cutoff},
+					{Key: "$gte", Value: cuttoff},
 				}},
 			}},
 		},
-		// Stage 4: Add fields to calculate churn status
+		// Stage 4: Add fields to calculate inactive status
 		bson.D{
 			{Key: "$addFields", Value: bson.D{
 				{Key: "days_since_last_played", Value: bson.D{
@@ -122,16 +121,24 @@ func GetPlayerRetention(guildID string, game string, afterDate time.Time, inacti
 						millisToDays, // Convert milliseconds to days
 					}},
 				}},
-				{Key: "inactive_days", Value: inactiveDays},
 			}},
 		},
 		// Stage 5: Categorize players as inactive or active
 		bson.D{
 			{Key: "$addFields", Value: bson.D{
+				{Key: "is_active", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$lt", Value: bson.A{"$days_since_last_played", inactiveDays}},
+						}},
+						{Key: "then", Value: 1},
+						{Key: "else", Value: 0},
+					}},
+				}},
 				{Key: "is_inactive", Value: bson.D{
 					{Key: "$cond", Value: bson.D{
 						{Key: "if", Value: bson.D{
-							{Key: "$lt", Value: bson.A{"$days_since_last_played", "$inactive_days"}},
+							{Key: "$gte", Value: bson.A{"$days_since_last_played", inactiveDays}},
 						}},
 						{Key: "then", Value: 1},
 						{Key: "else", Value: 0},
@@ -144,12 +151,8 @@ func GetPlayerRetention(guildID string, game string, afterDate time.Time, inacti
 			{Key: "$group", Value: bson.D{
 				{Key: "_id", Value: nil}, // Group all documents together
 				{Key: "total_players", Value: bson.D{{Key: "$sum", Value: 1}}},
+				{Key: "active_players", Value: bson.D{{Key: "$sum", Value: "$is_active"}}},
 				{Key: "inactive_players", Value: bson.D{{Key: "$sum", Value: "$is_inactive"}}},
-				{Key: "active_players", Value: bson.D{
-					{Key: "$sum", Value: bson.D{
-						{Key: "$subtract", Value: bson.A{1, "$is_inactive"}},
-					}},
-				}},
 			}},
 		},
 		// Stage 7: Calculate percentages
@@ -186,9 +189,6 @@ func GetPlayerRetention(guildID string, game string, afterDate time.Time, inacti
 	}
 
 	result := docs[0]
-	slog.Debug("PLAYER RETENTION RESULT",
-		slog.Any("result", result),
-	)
 	retention := &PlayerRetention{
 		InactivePlayers:    getInt(result["inactive_players"]), // Players who became inactive
 		InactivePercentage: getFloat64(result["inactive_percentage"]),

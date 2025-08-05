@@ -238,13 +238,19 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
+	// guildID := i.GuildID
+	guildID := "236523452230533121"
 
 	duration := getDuration(guildID, game, after)
-	checkAfter := getTime(guildID, game, since)
+	cuttoff := getTime(guildID, game, since)
 
-	retention, err := GetPlayerRetention(guildID, game, checkAfter, duration)
+	slog.Debug("duration and cutoff calculated",
+		slog.String("guild_id", i.GuildID),
+		slog.String("game", game),
+		slog.Time("cutoff", cuttoff),
+	)
+
+	retention, err := GetPlayerRetention(guildID, game, cuttoff, duration)
 	if err != nil {
 		slog.Error("failed to get player retention",
 			slog.Any("error", err),
@@ -262,7 +268,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.String("after", after),
-		slog.Time("check_after", checkAfter),
+		slog.Time("cutoff", cuttoff),
 		slog.Int("total_players", retention.ActivePlayers+retention.InactivePlayers),
 		slog.String("active_players", p.Sprintf("%d (%.2f%%)", retention.ActivePlayers, retention.ActivePercentage)),
 		slog.String("inactive_players", p.Sprintf("%d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage)),
@@ -276,13 +282,13 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "After",
-		Value:  timeToString(guildID, game, after),
+		Value:  timeToString(after),
 		Inline: false,
 	})
 	if since != "" {
 		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 			Name:   "Since",
-			Value:  timeToString(guildID, game, since),
+			Value:  timeToString(since),
 			Inline: false,
 		})
 	}
@@ -336,8 +342,8 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
+	// guildID := i.GuildID
+	guildID := "236523452230533121"
 
 	checkAfter := getTime(guildID, game, since)
 
@@ -372,7 +378,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if since != "" {
 		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 			Name:   "Since",
-			Value:  timeToString(guildID, game, since),
+			Value:  timeToString(since),
 			Inline: false,
 		})
 	}
