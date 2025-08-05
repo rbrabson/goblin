@@ -3,6 +3,7 @@ package stats
 import (
 	"log/slog"
 	"math"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
@@ -205,110 +206,10 @@ func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// TODO: playerActivity isn't being used, so it can be removed.
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {
-	case "activity":
-		playerActivity(s, i)
 	case "retention":
 		playerRetention(s, i)
 	case "games":
 		gamesPlayed(s, i)
-	}
-}
-
-func playerActivity(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	p := message.NewPrinter(language.AmericanEnglish)
-
-	var game, after, since string
-	options := i.ApplicationCommandData().Options[0].Options
-	for _, option := range options {
-		switch option.Name {
-		case "game":
-			game = option.StringValue()
-		case "after":
-			after = option.StringValue()
-		case "since":
-			since = option.StringValue()
-		}
-	}
-
-	slog.Debug("Player activity command received",
-		slog.String("guild_id", i.GuildID),
-		slog.String("game", game),
-		slog.String("after", after),
-		slog.String("since", since),
-	)
-
-	// guildID := i.GuildID
-	guildID := "236523452230533121"
-
-	duration := getDuration(guildID, game, after)
-	checkAfter := getTime(guildID, game, since)
-
-	activity, err := GetPlayerActivity(guildID, game, checkAfter, duration)
-	if err != nil {
-		slog.Error("failed to get player activity",
-			slog.Any("error", err),
-		)
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Failed to get player activity: " + err.Error()),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response",
-				slog.Any("error", err),
-			)
-		}
-	}
-	slog.Debug("Player activity retrieved",
-		slog.String("guild_id", i.GuildID),
-		slog.String("game", game),
-		slog.String("after", after),
-		slog.Time("check_after", checkAfter),
-		slog.Int("total_players", activity.ActivePlayers+activity.InactivePlayers),
-		slog.String("active_players", p.Sprintf("%d (%.2f%%)", activity.ActivePlayers, activity.ActivePercentage)),
-		slog.String("inactive_players", p.Sprintf("%d (%.2f%%)", activity.InactivePlayers, activity.InactivePercentage)),
-	)
-
-	embeds := []*discordgo.MessageEmbed{
-		{
-			Title:  "Player Activity for " + game,
-			Fields: []*discordgo.MessageEmbedField{},
-		},
-	}
-	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "After",
-		Value:  timeToString(guildID, game, after),
-		Inline: false,
-	})
-	if since != "" {
-		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-			Name:   "Since",
-			Value:  timeToString(guildID, game, since),
-			Inline: false,
-		})
-	}
-	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Total Players",
-		Value:  p.Sprintf("%d", activity.ActivePlayers+activity.InactivePlayers),
-		Inline: false,
-	})
-	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Active Players",
-		Value:  p.Sprintf("%d (%.2f%%)", activity.ActivePlayers, activity.ActivePercentage),
-		Inline: false,
-	})
-	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Inactive Players",
-		Value:  p.Sprintf("%d (%.2f%%)", activity.InactivePlayers, activity.InactivePercentage),
-		Inline: false,
-	})
-
-	resp := disgomsg.NewResponse(
-		disgomsg.WithEmbeds(embeds),
-	)
-
-	if err := resp.Send(s, i.Interaction); err != nil {
-		slog.Error("failed to send response",
-			slog.Any("error", err),
-		)
 	}
 }
 
@@ -367,7 +268,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title:  "Player Churn for " + game,
+			Title:  strings.ToTitle("Player Retention for " + game),
 			Fields: []*discordgo.MessageEmbedField{},
 		},
 	}
@@ -460,7 +361,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title:  "Games Played for " + game,
+			Title:  strings.ToTitle("Games Played for " + game),
 			Fields: []*discordgo.MessageEmbedField{},
 		},
 	}
