@@ -29,6 +29,7 @@ go.work
 .env_test
 .env_mongo
 .env_prod
+.env_dev
 
 # vscode
 .vscode
