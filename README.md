@@ -197,9 +197,17 @@ If the bot is already running, stop it before reinstalling.
 
 ## Configuring Discord
 
+### Setting the server owners
+
+By default, a newly installed `Goblin` bot does not have any configured owners. This means that any user on the server may issue the most privlidged `/server owner` commands. Therefore, the first step in setting up the server is to set the server owner(s). Use the `/server owner add` command to add one or more server owners. It is recommended that the person installing the server start by adding themself as a server owner, and can then optionally add one or more additional owners.
+
+A server owner can list the current set of server owners using the `/server owner list` command. A server owner can also remove any server owner using the`/server owner remove` command. Since any server owner can remove the person who initially setup the server, you must be extremely careful in who is added as a server owner.
+
+Server owners have the ability to safely shut down the server using the `/server shutdown` command. The owners can then check the status of the server using the `/server status` command. Once all services on the server are in the `Stopped` state, it is safe to apply maintenance and/or reboot the server.
+
 ### Setting administrator permissions
 
-In order to use administrative commands with the Goblin bot, users must have an administrative role assigned to them. When first installed, the Goblin bot assigns the following roles for admin users: `Admin`, `Admins`, `Administrator`, `Mod`, `Mods`, and `Moderator`. You can add additional roles or remove existing ones using the `/server role add` command, or remove an existing role using the `/server role remove` command. At any time, you can see the list of existing administrative roles using the `/server role list` command.
+In order to use administrative commands with the Goblin bot, users must have an administrative role assigned to them. When first installed, the Goblin bot assigns the following roles for admin users: `Admin`, `Admins`, `Administrator`, `Mod`, `Mods`, and `Moderator`. You can add additional roles or remove existing ones using the `/guild-admin role add` command, or remove an existing role using the `/guild-admin role remove` command. At any time, you can see the list of existing administrative roles using the `/guild-admin role list` command.
 
 ### Setting up Goblin permissions in the game channels
 
@@ -207,8 +215,18 @@ The Goblin bot requires the ability to mute and unmute the channel in which the 
 
 ### Segregating administration and member commands to separate channels
 
-There are two sets of commands used by the `Goblin` bot: administrative commands and member commands. All administrative commands start with `/admin-`, while the help command is `/adminhelp`. This allows a user to easily configure the integration settings for the Goblin bot to only allow the use of administrative commands in a channel accessible only to administrators. Failing to do so won't allow general users to use administrative commands, as this is protected via the administration roles. However, the administrative commands will show up in the list of available commands to the users, which may not be desirable.
+There are two sets of commands used by the `Goblin` bot: administrative commands and member commands. All administrative commands start with `/<command>-admin`, while the help command is `/adminhelp`. This allows a user to easily configure the integration settings for the Goblin bot to only allow the use of administrative commands in a channel accessible only to administrators. Failing to do so won't allow general users to use administrative commands, as this is protected via the administration roles. However, the administrative commands will show up in the list of available commands to the users, which may not be desirable.
 
 ### Setting the leaderboard channel
 
 The leaderboard is posted once a month, at the start of the month using UTC time. To have the leaderboard posted, you must first set a channel to which the leaderboard is sent. This is accomplished using the `/lb-admin channel` command. Not doing so will result in no leaderboard being sent to your Discord server.
+
+### Setting up the shop
+
+The `Goblin` bot is capable of providing a shop that may be used to purchase roles on the server using in-game credits. There are two types of roles that may be configured: permanent roles, and temporary roles. *Permanent* roles are, as the name implies, roles that are granted to the user and are intended to remain active indefinitely. *Temporary* roles are intended to be granted to the user for a period of time and then automatically removed when the time expires.
+
+To setup a shop, two channels are required. The first is the channel to which to publish the shop. Each item that is added to the shop will appear in a message, with buttons that may be used to purchase the item. It is recommended that this channel be setup so that only members with admin priviledges on the server can post or delete messages. The `Goblin` bot must also be able to post and edit messages in this channel. To set the shop channel, use the `/shop-admin channel` command.
+
+The second channel is to capture a log of all purchases made from the shop, as well as to log when a purchase expires. This channel should be visible to server admins and moderators, but no one else. To set the shop log channel, use the `/shop-admin mod-channel` command.
+
+The shop also supports a `/shop-admin ban` command, which allows server admins and moderators to keep specific members from being able to purchase items from the shop. This is useful if you don't want alternate user accounts from being able to purchase shop items.
