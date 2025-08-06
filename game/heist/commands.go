@@ -510,9 +510,11 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	// Process the results
 	for _, result := range res.AllResults {
 		guildMember := result.Player.guildMember
-		msg = p.Sprintf(result.Message+"\n", "**"+guildMember.Name+"**")
+		name := strings.ReplaceAll(guildMember.Name, "#", "")
+		name = strings.ReplaceAll(name, "*", "")
+		msg = p.Sprintf(result.Message+"\n", "**"+name+"**")
 		if result.Status == Apprehended {
-			msg += p.Sprintf("`%s dropped out of the game.`", guildMember.Name)
+			msg += p.Sprintf("`%s dropped out of the game.`", name)
 		}
 		if _, err := s.ChannelMessageSend(i.ChannelID, msg); err != nil {
 			slog.Error("failed to send message",
