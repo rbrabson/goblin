@@ -343,6 +343,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	)
 
 	// guildID := i.GuildID
+	guildID := "236523452230533121"
 
 	checkAfter := getTime(guildID, game, since)
 
