@@ -15,6 +15,7 @@ const (
 )
 
 const (
+	OneDayAgo       = "one_day_ago"
 	LastWeek        = "last_week"
 	LastMonth       = "last_month"
 	ThreeMonthsAgo  = "three_months_ago"
@@ -67,6 +68,8 @@ func getTime(guildID string, game string, period string) time.Time {
 
 	var timePeriod time.Time
 	switch period {
+	case OneDayAgo:
+		timePeriod = today.AddDate(0, 0, -1).UTC()
 	case LastWeek:
 		timePeriod = today.AddDate(0, 0, -7).UTC()
 	case LastMonth:
@@ -106,6 +109,8 @@ func timeToString(timeString string) string {
 		return "9 Months"
 	case TwelveMonths:
 		return "12 Months"
+	case OneDayAgo:
+		return "Yesterday"
 	case LastWeek:
 		return "Last Week"
 	case LastMonth:

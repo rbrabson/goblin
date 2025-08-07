@@ -132,6 +132,10 @@ var (
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
 								{
+									Name:  "All",
+									Value: All,
+								},
+								{
 									Name:  "Heist",
 									Value: Heist,
 								},
@@ -147,6 +151,10 @@ var (
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    false,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
+								{
+									Name:  "Yesterday",
+									Value: OneDayAgo,
+								},
 								{
 									Name:  "Last Week",
 									Value: LastWeek,
@@ -243,8 +251,8 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	// guildID := i.GuildID
-	guildID := "236523452230533121"
+	guildID := i.GuildID
+	// guildID := "236523452230533121"
 
 	duration := getDuration(guildID, game, after)
 	cuttoff := getTime(guildID, game, since)
@@ -364,12 +372,18 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	// guildID := i.GuildID
-	guildID := "236523452230533121"
+	guildID := i.GuildID
+	// guildID := "236523452230533121"
 
 	checkAfter := getTime(guildID, game, since)
 
-	gamesPlayed, err := GetGamesPlayed(guildID, game, checkAfter, today())
+	var gamesPlayed *GamesPlayed
+	var err error
+	if game == "" || game == "all" {
+		gamesPlayed, err = GetAllGamesPlayed(guildID, checkAfter, today())
+	} else {
+		gamesPlayed, err = GetGamesPlayed(guildID, game, checkAfter, today())
+	}
 	if err != nil {
 		slog.Error("failed to get games played",
 			slog.Any("error", err),
@@ -391,11 +405,21 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("players", p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalNumberOfPlayers, gamesPlayed.AverageGamesPerPlayer)),
 	)
 
-	embeds := []*discordgo.MessageEmbed{
-		{
-			Title:  titleCaser.String("Games Played for " + game),
-			Fields: []*discordgo.MessageEmbedField{},
-		},
+	var embeds []*discordgo.MessageEmbed
+	if game == "" || game == "all" {
+		embeds = []*discordgo.MessageEmbed{
+			{
+				Title:  titleCaser.String("Games Played"),
+				Fields: []*discordgo.MessageEmbedField{},
+			},
+		}
+	} else {
+		embeds = []*discordgo.MessageEmbed{
+			{
+				Title:  titleCaser.String("Games Played for " + game),
+				Fields: []*discordgo.MessageEmbedField{},
+			},
+		}
 	}
 	if since != "" {
 		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
@@ -409,11 +433,13 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Value:  p.Sprintf("%d", gamesPlayed.TotalGamesPlayed),
 		Inline: false,
 	})
-	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Average Games Per Day",
-		Value:  p.Sprintf("%.0f", math.Round(gamesPlayed.AverageGamesPlayedPerDay)),
-		Inline: false,
-	})
+	if since != OneDayAgo {
+		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+			Name:   "Average Games Per Day",
+			Value:  p.Sprintf("%.0f", math.Round(gamesPlayed.AverageGamesPlayedPerDay)),
+			Inline: false,
+		})
+	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Total Number of Players",
 		Value:  p.Sprintf("%d", gamesPlayed.TotalNumberOfPlayers),
