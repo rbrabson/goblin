@@ -251,8 +251,8 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
+	// guildID := i.GuildID
+	guildID := "236523452230533121"
 
 	duration := getDuration(guildID, game, after)
 	cuttoff := getTime(guildID, game, since)
@@ -372,8 +372,8 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
+	// guildID := i.GuildID
+	guildID := "236523452230533121"
 
 	checkAfter := getTime(guildID, game, since)
 
