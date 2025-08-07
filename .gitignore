@@ -37,6 +37,8 @@ go.work
 # DS store
 .DS_Store
 
-#Test output
+# Test output
 .output.txt
+
+# IntelliJ IDEA
 .idea/

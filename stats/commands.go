@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	All   = "all"
 	Heist = "heist"
 	Race  = "race"
 )
@@ -39,6 +40,10 @@ var (
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
+								{
+									Name:  "All",
+									Value: All,
+								},
 								{
 									Name:  "Heist",
 									Value: Heist,
@@ -250,7 +255,13 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.Time("cutoff", cuttoff),
 	)
 
-	retention, err := GetPlayerRetention(guildID, game, cuttoff, duration)
+	var retention *PlayerRetention
+	var err error
+	if game == "" || game == "all" {
+		retention, err = GetPlayerRetentionForAllGames(guildID, cuttoff, duration)
+	} else {
+		retention, err = GetPlayerRetention(guildID, game, cuttoff, duration)
+	}
 	if err != nil {
 		slog.Error("failed to get player retention",
 			slog.Any("error", err),
@@ -274,11 +285,22 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("inactive_players", p.Sprintf("%d (%.2f%%)", retention.InactivePlayers, retention.InactivePercentage)),
 	)
 
-	embeds := []*discordgo.MessageEmbed{
-		{
-			Title:  titleCaser.String("Player Retention for " + game),
-			Fields: []*discordgo.MessageEmbedField{},
-		},
+	var embeds []*discordgo.MessageEmbed
+
+	if game == "" || game == "all" {
+		embeds = []*discordgo.MessageEmbed{
+			{
+				Title:  titleCaser.String("Player Retention"),
+				Fields: []*discordgo.MessageEmbedField{},
+			},
+		}
+	} else {
+		embeds = []*discordgo.MessageEmbed{
+			{
+				Title:  titleCaser.String("Player Retention for " + game),
+				Fields: []*discordgo.MessageEmbedField{},
+			},
+		}
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "After",
