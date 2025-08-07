@@ -1,5 +1,7 @@
 {
     "bail_base": 250,
+    "boost_enabled": false,
+    "boost_multiplier": 0.0,
     "crew_output": "None",
     "death_timer": 45000000000,
     "heist_cost": 1000,

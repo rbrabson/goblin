@@ -189,12 +189,17 @@ func (h *Heist) Start() (*HeistResult, error) {
 				goodResults = append(goodResults, h.theme.EscapedMessages...)
 			}
 
+			bonus := goodResult.BonusAmount
+			if h.config.BoostEnabled && h.config.BoostPercentage > 0 {
+				multiplier := 1.0 + h.config.BoostPercentage
+				bonus = int(float64(goodResult.BonusAmount) * multiplier)
+			}
 			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
 			result := &HeistMemberResult{
 				Player:       heistMember,
 				Status:       Free,
 				Message:      goodResult.Message,
-				BonusCredits: goodResult.BonusAmount,
+				BonusCredits: bonus,
 				heist:        h,
 			}
 			results.Escaped = append(results.Escaped, result)
@@ -369,6 +374,12 @@ func calculateCredits(results *HeistResult) {
 	numApprehended := len(results.Apprehended)
 	numSurvived := numEscaped + numApprehended
 	stolenPerSurivor := int(math.Round(float64(results.Target.Vault) * 0.75 / float64(numSurvived)))
+
+	config := results.heist.config
+	if config.BoostEnabled && config.BoostPercentage > 0 {
+		multiplier := 1.0 + config.BoostPercentage
+		stolenPerSurivor = int(float64(stolenPerSurivor) * multiplier)
+	}
 	totalStolen := numSurvived * stolenPerSurivor
 
 	// Get a "base amount" of loot stolen. If you are apprehended, this is what you get. If you escaped you get 2x as much.

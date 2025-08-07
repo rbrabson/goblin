@@ -30,6 +30,11 @@ const (
 	MaxWinningsPerPage = 30
 )
 
+const (
+	Enable  = "enable"
+	Disable = "disable"
+)
+
 // componentHandlers are the buttons that appear on messages sent by this bot.
 var (
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -45,6 +50,19 @@ var (
 			Name:        "heist-admin",
 			Description: "Heist admin commands.",
 			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "boost",
+					Description: "Enables or disables boosts for the heist game.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Name:        "enable",
+							Description: "The status of the boost.",
+							Type:        discordgo.ApplicationCommandOptionBoolean,
+							Required:    true,
+						},
+					},
+				},
 				{
 					Name:        "clear",
 					Description: "Clears the criminal settings for the user.",
@@ -77,6 +95,19 @@ var (
 									Type:        discordgo.ApplicationCommandOptionInteger,
 									Name:        "amount",
 									Description: "The base cost of bail.",
+									Required:    true,
+								},
+							},
+						},
+						{
+							Name:        "boost",
+							Description: "Sets the boost percentage.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionNumber,
+									Name:        "percentage",
+									Description: "The percentage to increase payouts when boosts are enabled.",
 									Required:    true,
 								},
 							},
@@ -237,6 +268,8 @@ func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		configPatrol(s, i)
 	case "bail":
 		configBail(s, i)
+	case "boost":
+		configBoost(s, i)
 	case "death":
 		configDeath(s, i)
 	case "wait":
@@ -276,6 +309,8 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch options[0].Name {
 	case "clear":
 		clearMember(s, i)
+	case "boost":
+		enableBoost(s, i)
 	case "config":
 		config(s, i)
 	case "reset":
@@ -311,6 +346,26 @@ func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		playerStats(s, i)
 	case "targets":
 		listTargets(s, i)
+	}
+}
+
+func enableBoost(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	options := i.ApplicationCommandData().Options[0].Options
+	boost := options[0].Value.(float64)
+
+	config := GetConfig(i.GuildID)
+	config.BoostPercentage = boost
+	writeConfig(config)
+
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Boost percentage set to %.2f", boost)),
+	)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("failed to send response",
+			slog.Any("error", err),
+		)
 	}
 }
 
@@ -1356,6 +1411,26 @@ func configBail(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	writeConfig(config)
 }
 
+// configBail sets the percentage to increase payouts when boosts are enabled.
+func configBoost(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := GetConfig(i.GuildID)
+	options := i.ApplicationCommandData().Options[0].Options[0].Options
+	boost := options[0].FloatValue()
+	config.BoostPercentage = boost
+
+	p := message.NewPrinter(language.AmericanEnglish)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Boost perce tage set to %.2f", boost)),
+	)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("failed to send the response",
+			slog.Any("error", err),
+		)
+	}
+
+	writeConfig(config)
+}
+
 // configDeath sets how long players remain dead.
 func configDeath(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := GetConfig(i.GuildID)
@@ -1405,6 +1480,11 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "bail",
 				Value:  fmt.Sprintf("%d", config.BailBase),
+				Inline: true,
+			},
+			{
+				Name:   "boost",
+				Value:  fmt.Sprintf("%.2f%%, enabled=%t", config.BoostPercentage, config.BoostEnabled),
 				Inline: true,
 			},
 			{

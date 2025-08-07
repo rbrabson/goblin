@@ -23,17 +23,19 @@ const (
 
 // Config is the configuration data for new heists
 type Config struct {
-	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID      string             `json:"guild_id" bson:"guild_id"`
-	Theme        string             `json:"theme" bson:"theme"`
-	BailBase     int                `json:"bail_base" bson:"bail_base"`
-	CrewOutput   string             `json:"crew_output" bson:"crew_output"`
-	DeathTimer   time.Duration      `json:"death_timer" bson:"death_timer"`
-	HeistCost    int                `json:"heist_cost" bson:"heist_cost"`
-	PoliceAlert  time.Duration      `json:"police_alert" bson:"police_alert"`
-	SentenceBase time.Duration      `json:"sentence_base" bson:"sentence_base"`
-	Targets      string             `json:"targets" bson:"targets"`
-	WaitTime     time.Duration      `json:"wait_time" bson:"wait_time"`
+	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID         string             `json:"guild_id" bson:"guild_id"`
+	Theme           string             `json:"theme" bson:"theme"`
+	BailBase        int                `json:"bail_base" bson:"bail_base"`
+	BoostPercentage float64            `json:"boost_percentage" bson:"boost_percentage"`
+	BoostEnabled    bool               `json:"boost_enabled" bson:"boost_enabled"`
+	CrewOutput      string             `json:"crew_output" bson:"crew_output"`
+	DeathTimer      time.Duration      `json:"death_timer" bson:"death_timer"`
+	HeistCost       int                `json:"heist_cost" bson:"heist_cost"`
+	PoliceAlert     time.Duration      `json:"police_alert" bson:"police_alert"`
+	SentenceBase    time.Duration      `json:"sentence_base" bson:"sentence_base"`
+	Targets         string             `json:"targets" bson:"targets"`
+	WaitTime        time.Duration      `json:"wait_time" bson:"wait_time"`
 }
 
 // GetConfig retrieves the heist configuration for the specified guild. If
