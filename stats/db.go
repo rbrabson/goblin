@@ -58,24 +58,45 @@ func deletePlayerStats(ps *PlayerStats) error {
 
 // getFirstGameDate retrieves the earliest date a game was played by any member in a guild.
 func getFirstGameDate(guildID string, game string) time.Time {
-	// Use aggregation pipeline to find the minimum first_played date
-	pipeline := mongo.Pipeline{
-		// Stage 1: Match documents for the specific guild and game
-		bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "guild_id", Value: guildID},
-				{Key: "game", Value: game},
-			}},
-		},
-		// Stage 2: Group all documents and find the minimum first_played date
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: nil},
-				{Key: "first_game_date", Value: bson.D{
-					{Key: "$min", Value: "$first_played"},
+	var pipeline mongo.Pipeline
+	if game == "" || game == "all" {
+		pipeline = mongo.Pipeline{
+			// Stage 1: Match documents for the specific guild for all games
+			bson.D{
+				{Key: "$match", Value: bson.D{
+					{Key: "guild_id", Value: guildID},
 				}},
-			}},
-		},
+			},
+			// Stage 2: Group all documents and find the minimum first_played date
+			bson.D{
+				{Key: "$group", Value: bson.D{
+					{Key: "_id", Value: nil},
+					{Key: "first_game_date", Value: bson.D{
+						{Key: "$min", Value: "$first_played"},
+					}},
+				}},
+			},
+		}
+	} else {
+		// Use aggregation pipeline to find the minimum first_played date
+		pipeline = mongo.Pipeline{
+			// Stage 1: Match documents for the specific guild and game
+			bson.D{
+				{Key: "$match", Value: bson.D{
+					{Key: "guild_id", Value: guildID},
+					{Key: "game", Value: game},
+				}},
+			},
+			// Stage 2: Group all documents and find the minimum first_played date
+			bson.D{
+				{Key: "$group", Value: bson.D{
+					{Key: "_id", Value: nil},
+					{Key: "first_game_date", Value: bson.D{
+						{Key: "$min", Value: "$first_played"},
+					}},
+				}},
+			},
+		}
 	}
 
 	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
