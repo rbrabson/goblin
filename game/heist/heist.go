@@ -6,11 +6,14 @@ import (
 	"math"
 	"math/rand/v2"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 var (
@@ -189,16 +192,35 @@ func (h *Heist) Start() (*HeistResult, error) {
 				goodResults = append(goodResults, h.theme.EscapedMessages...)
 			}
 
+			msg := goodResult.Message
 			bonus := goodResult.BonusAmount
 			if h.config.BoostEnabled && h.config.BoostPercentage > 0 {
-				multiplier := 1.0 + h.config.BoostPercentage
+				multiplier := 1.0 + (h.config.BoostPercentage / 100.0)
 				bonus = int(float64(goodResult.BonusAmount) * multiplier)
+				slog.Debug("applying boost to bonus amount",
+					slog.String("guildID", h.GuildID),
+					slog.String("memberID", guildMember.MemberID),
+					slog.Int("originalBonus", goodResult.BonusAmount),
+					slog.Float64("boostPercentage", h.config.BoostPercentage),
+					slog.Int("multiplier", int(multiplier*100)),
+					slog.Int("newBonus", bonus),
+				)
+
+				// Update the message to reflect the new bonus amount
+				strs := strings.Split(msg, "+")
+				if len(strs) > 1 {
+					strs2 := strings.Split(strings.TrimSpace(strs[1]), " ")
+					if len(strs2) > 1 {
+						p := message.NewPrinter(language.AmericanEnglish)
+						msg = p.Sprintf("%s +%d %s", strings.TrimSpace(strs[0]), bonus, strings.TrimSpace(strs2[1]))
+					}
+				}
 			}
 			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
 			result := &HeistMemberResult{
 				Player:       heistMember,
 				Status:       Free,
-				Message:      goodResult.Message,
+				Message:      msg,
 				BonusCredits: bonus,
 				heist:        h,
 			}
@@ -377,10 +399,30 @@ func calculateCredits(results *HeistResult) {
 
 	config := results.heist.config
 	if config.BoostEnabled && config.BoostPercentage > 0 {
-		multiplier := 1.0 + config.BoostPercentage
+		multiplier := 1.0 + (config.BoostPercentage / 100.0)
+		oldStolenPerSurivor := stolenPerSurivor
 		stolenPerSurivor = int(float64(stolenPerSurivor) * multiplier)
+		slog.Debug("applying boost to stolen amount",
+			slog.String("guildID", results.Target.GuildID),
+			slog.String("target", results.Target.Name),
+			slog.Int("originalStolenPerSurvivor", oldStolenPerSurivor),
+			slog.Float64("boostPercentage", config.BoostPercentage),
+			slog.Int("multiplier", int(multiplier*100)),
+			slog.Int("newStolenPerSurvivor", stolenPerSurivor),
+		)
 	}
 	totalStolen := numSurvived * stolenPerSurivor
+	if totalStolen > results.Target.Vault {
+		slog.Warn("total stolen exceeds vault amount",
+			slog.String("guildID", results.Target.GuildID),
+			slog.String("target", results.Target.Name),
+			slog.Int("vault", results.Target.Vault),
+			slog.Int("totalStolen", totalStolen),
+			slog.Int("numSurvived", numSurvived),
+			slog.Int("stolenPerSurvivor", stolenPerSurivor),
+		)
+		totalStolen = results.Target.Vault
+	}
 
 	// Get a "base amount" of loot stolen. If you are apprehended, this is what you get. If you escaped you get 2x as much.
 	baseStolen := totalStolen / (2*numEscaped + numApprehended)

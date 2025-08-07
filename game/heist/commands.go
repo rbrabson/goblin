@@ -349,18 +349,24 @@ func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+// enableBoost enables or disables the boost for the heist game.
 func enableBoost(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	p := message.NewPrinter(language.AmericanEnglish)
-
 	options := i.ApplicationCommandData().Options[0].Options
-	boost := options[0].Value.(float64)
+	boostEnabled := options[0].BoolValue()
 
 	config := GetConfig(i.GuildID)
-	config.BoostPercentage = boost
+	config.BoostEnabled = boostEnabled
 	writeConfig(config)
 
+	var content string
+	if boostEnabled {
+		content = "Boosts have been enabled for the heist game."
+	} else {
+		content = "Boosts have been disabled for the heist game."
+	}
+
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(p.Sprintf("Boost percentage set to %.2f", boost)),
+		disgomsg.WithContent(content),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("failed to send response",
@@ -1420,7 +1426,7 @@ func configBoost(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(p.Sprintf("Boost perce tage set to %.2f", boost)),
+		disgomsg.WithContent(p.Sprintf("Boost percentage set to %.2f%%", boost)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("failed to send the response",
@@ -1484,7 +1490,12 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name:   "boost",
-				Value:  fmt.Sprintf("%.2f%%, enabled=%t", config.BoostPercentage, config.BoostEnabled),
+				Value:  fmt.Sprintf("%.2f%%", config.BoostPercentage),
+				Inline: true,
+			},
+			{
+				Name:   "boost enabled",
+				Value:  fmt.Sprintf("%t", config.BoostEnabled),
 				Inline: true,
 			},
 			{

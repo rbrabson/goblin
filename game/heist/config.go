@@ -86,16 +86,18 @@ func readConfigFromFile(guildID string) *Config {
 // NewConfig creates a new default configuration for the specified guild.
 func getDefaultConfig(guildID string) *Config {
 	config := &Config{
-		GuildID:      guildID,
-		BailBase:     BailBase,
-		CrewOutput:   CrewOutput,
-		DeathTimer:   DeathTimer,
-		HeistCost:    HeistCost,
-		PoliceAlert:  PoliceAlert,
-		SentenceBase: SentenceBase,
-		Targets:      HeistDefaultTheme,
-		Theme:        HeistDefaultTheme,
-		WaitTime:     WaitTime,
+		GuildID:         guildID,
+		BailBase:        BailBase,
+		BoostPercentage: 0,
+		BoostEnabled:    false,
+		CrewOutput:      CrewOutput,
+		DeathTimer:      DeathTimer,
+		HeistCost:       HeistCost,
+		PoliceAlert:     PoliceAlert,
+		SentenceBase:    SentenceBase,
+		Targets:         HeistDefaultTheme,
+		Theme:           HeistDefaultTheme,
+		WaitTime:        WaitTime,
 	}
 	writeConfig(config)
 
