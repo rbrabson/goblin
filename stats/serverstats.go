@@ -16,7 +16,7 @@ var (
 
 // ServerStats represents the statistics for a specific game in a guild on a specific day.
 type ServerStats struct {
-	ID          primitive.ObjectID `json:"_id" bson:"_id"`
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID     string             `json:"guild_id" bson:"guild_id"`
 	Game        string             `json:"game" bson:"game"`
 	Day         time.Time          `json:"day" bson:"day"`
