@@ -251,8 +251,8 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
+	// guildID := i.GuildID
+	guildID := "236523452230533121"
 
 	firstGameDate := getFirstGameDate(guildID, game)
 	duration := getDuration(guildID, game, after, firstGameDate)
@@ -373,19 +373,19 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
+	// guildID := i.GuildID
+	guildID := "236523452230533121"
 
 	firstGameDate := getFirstServerGameDate(guildID, game)
 	checkAfter := getTime(guildID, game, since, firstGameDate)
 
 	var gamesPlayed *ServerGamesPlayed
 	var err error
-	if game == "" || game == "all" {
-		gamesPlayed, err = GetGamesPlayed(guildID, checkAfter, today())
-	} else {
-		gamesPlayed, err = GetGamesPlayedForGame(guildID, game, checkAfter, today())
+	if game == "" {
+		game = "all"
 	}
+	gamesPlayed, err = GetGamesPlayedForGame(guildID, game, checkAfter, today())
+
 	if err != nil {
 		slog.Error("failed to get games played",
 			slog.Any("error", err),
