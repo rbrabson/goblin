@@ -78,10 +78,11 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 func (ps *PlayerStats) GamePlayed() {
 	statsLock.Lock()
 	defer statsLock.Unlock()
+	today := today()
 
 	lastDatePlayed := getLastDatePlayed(ps.GuildID, ps.MemberID)
 
-	ps.LastPlayed = today()
+	ps.LastPlayed = today
 	ps.NumberOfTimesPlayed++
 	writePlayerStats(ps)
 
@@ -92,7 +93,7 @@ func (ps *PlayerStats) GamePlayed() {
 	}
 	writeServerStats(ss)
 
-	ss = GetServerStats(ps.GuildID, "all", ps.FirstPlayed)
+	ss = GetServerStats(ps.GuildID, "all", today)
 	ss.GamesPlayed++
 	if lastDatePlayed.Before(ss.Day) {
 		ss.Players++
