@@ -122,11 +122,9 @@ func getLastDatePlayed(guildID string, memberID string) time.Time {
 	lastDatePlayed := time.Time{}
 	for _, p := range ps {
 		if p.LastPlayed.After(lastDatePlayed) {
-			slog.Error("*****", "last_played", p.LastPlayed)
 			lastDatePlayed = p.LastPlayed
 		}
 	}
-	slog.Error("#####", "last_date_played", lastDatePlayed)
 
 	return lastDatePlayed
 }
