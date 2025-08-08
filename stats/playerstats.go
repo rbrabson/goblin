@@ -2,6 +2,7 @@ package stats
 
 import (
 	"log/slog"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,6 +12,10 @@ import (
 
 const (
 	millisToDays = 1000 * 60 * 60 * 24
+)
+
+var (
+	statsLock = sync.Mutex{}
 )
 
 // PlayerStats holds the statistics of a player in a game.
@@ -43,6 +48,9 @@ type GamesPlayed struct {
 // GetPlayerStats retrieves the player statistics for a specific guild, member, and game.
 // If the player stats do not exist, it creates a new PlayerStats instance.
 func GetPlayerStats(guildID string, memberID string, game string) *PlayerStats {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
 	ps, _ := readPlayerStats(guildID, memberID, game)
 	if ps == nil {
 		ps = newPlayerStats(guildID, memberID, game)
@@ -68,14 +76,27 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 
 // GamePlayed updates the PlayerStats when a game is played.
 func (ps *PlayerStats) GamePlayed() {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
 	ps.LastPlayed = today()
 	ps.NumberOfTimesPlayed++
 	writePlayerStats(ps)
+
+	ss := GetServerStats(ps.GuildID, ps.Game, ps.LastPlayed)
+	ss.GamesPlayed++
+	if ps.NumberOfTimesPlayed == 1 {
+		ss.Players++
+	}
+	writeServerStats(ss)
 }
 
 // GetPlayerRetention finds players who played after a specific date but haven't played
 // recently for the duration provided (i.e., players who became inactive)
 func GetPlayerRetention(guildID string, game string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
 	slog.Debug("calculating player retention",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
@@ -209,6 +230,9 @@ func GetPlayerRetention(guildID string, game string, cuttoff time.Time, inactive
 // GetPlayerRetentionForAllGames finds players who played after a specific date but haven't played
 // recently for the duration provided (i.e., players who became inactive)
 func GetPlayerRetentionForAllGames(guildID string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
 	slog.Debug("calculating player retention",
 		slog.String("guild_id", guildID),
 		slog.Time("cuttoff", cuttoff),
@@ -339,6 +363,9 @@ func GetPlayerRetentionForAllGames(guildID string, cuttoff time.Time, inactiveDu
 
 // GetGamesPlayed calculates the games played statistics for a specific guild and game.
 func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate time.Time) (*GamesPlayed, error) {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
 	slog.Debug("calculating games played statistics",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
@@ -461,6 +488,9 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 
 // GetAllGamesPlayed calculates the games played statistics for a specific guild and game.
 func GetAllGamesPlayed(guildID string, startDate time.Time, endDate time.Time) (*GamesPlayed, error) {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
 	slog.Debug("calculating games played statistics",
 		slog.String("guild_id", guildID),
 		slog.Time("start_date", startDate),

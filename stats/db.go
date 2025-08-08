@@ -11,6 +11,7 @@ import (
 
 const (
 	PlayerStatsCollection = "player_stats"
+	ServerStatsCollection = "server_stats"
 )
 
 // readMemberStats retrieves the member statistics for a specific member in a guild for a specific game.
@@ -50,6 +51,49 @@ func deletePlayerStats(ps *PlayerStats) error {
 		filter = bson.M{"guild_id": ps.GuildID, "member_id": ps.MemberID, "game": ps.Game}
 	}
 	err := db.DeleteMany(PlayerStatsCollection, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// readServerStats retrieves the server statistics for a specific game in a guild.
+func readServerStats(guildID string, game string, day time.Time) (*ServerStats, error) {
+	var ss ServerStats
+	filter := bson.M{"guild_id": guildID, "game": game, "day": day}
+	err := db.FindOne(ServerStatsCollection, filter, &ss)
+	if err != nil {
+		return nil, err
+	}
+	return &ss, nil
+}
+
+// writeServerStats updates or inserts the server statistics a specific game in a guild.
+func writeServerStats(ss *ServerStats) error {
+	var filter bson.M
+	if ss.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": ss.ID}
+	} else {
+		filter = bson.M{"guild_id": ss.GuildID, "game": ss.Game}
+	}
+
+	err := db.UpdateOrInsert(ServerStatsCollection, filter, ss)
+	if err != nil {
+		slog.Info("Writing server stats", "collection", ServerStatsCollection, "ServerStats", ss, "filter", filter, "error", err)
+		return err
+	}
+	return nil
+}
+
+// deleteServerrStats removes the server statistics for specific game in a guild.
+func deleteServerrStats(ss *ServerStats) error {
+	var filter bson.M
+	if ss.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": ss.ID}
+	} else {
+		filter = bson.M{"guild_id": ss.GuildID, "game": ss.Game}
+	}
+	err := db.DeleteMany(ServerStatsCollection, filter)
 	if err != nil {
 		return err
 	}
