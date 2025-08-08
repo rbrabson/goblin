@@ -628,21 +628,20 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	memberID := member.MemberID
-	if err != nil {
-		slog.Error("error getting guild member",
+
+	slog.Error("error getting guild member",
+		slog.String("guildID", i.GuildID),
+		slog.String("memberID", memberID),
+		slog.Any("error", err),
+	)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent("An account with that ID does not exist."),
+	)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
 			slog.String("guildID", i.GuildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
+			slog.String("error", err.Error()),
 		)
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("An account with that ID does not exist."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.String("guildID", i.GuildID),
-				slog.String("error", err.Error()),
-			)
-		}
 		return
 	}
 

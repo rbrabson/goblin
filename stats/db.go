@@ -185,3 +185,89 @@ func getFirstGameDate(guildID string, game string) time.Time {
 	)
 	return firstGameDate
 }
+
+// getFirstGameDate retrieves the earliest date a game was played by any member in a guild.
+func getFirstServerGameDate(guildID string, game string) time.Time {
+	var pipeline mongo.Pipeline
+	if game == "" || game == "all" {
+		pipeline = mongo.Pipeline{
+			// Stage 1: Match documents for the specific guild for all games
+			bson.D{
+				{Key: "$match", Value: bson.D{
+					{Key: "guild_id", Value: guildID},
+				}},
+			},
+			// Stage 2: Group all documents and find the minimum first_played date
+			bson.D{
+				{Key: "$group", Value: bson.D{
+					{Key: "_id", Value: nil},
+					{Key: "day", Value: bson.D{
+						{Key: "$min", Value: "$day"},
+					}},
+				}},
+			},
+		}
+	} else {
+		// Use aggregation pipeline to find the minimum first_played date
+		pipeline = mongo.Pipeline{
+			// Stage 1: Match documents for the specific guild and game
+			bson.D{
+				{Key: "$match", Value: bson.D{
+					{Key: "guild_id", Value: guildID},
+					{Key: "game", Value: game},
+				}},
+			},
+			// Stage 2: Group all documents and find the minimum first_played date
+			bson.D{
+				{Key: "$group", Value: bson.D{
+					{Key: "_id", Value: nil},
+					{Key: "day", Value: bson.D{
+						{Key: "$min", Value: "$day"},
+					}},
+				}},
+			},
+		}
+	}
+
+	docs, err := db.Aggregate(ServerStatsCollection, pipeline)
+	if err != nil {
+		slog.Error("failed to get first game date",
+			slog.String("guild_id", guildID),
+			slog.String("game", game),
+			slog.Any("error", err),
+		)
+		return today().AddDate(-1, 0, 0) // Default to 1 years ago if no data found
+	}
+
+	if len(docs) == 0 {
+		slog.Debug("no game data found",
+			slog.String("guild_id", guildID),
+			slog.String("game", game),
+		)
+		return today().AddDate(-1, 0, 0) // Default to 1 years ago if no data found
+	}
+
+	result := docs[0]
+	if firstGameDate, ok := result["day"].(primitive.DateTime); ok {
+		t := firstGameDate.Time().UTC()
+		slog.Debug("found first game date",
+			slog.String("guild_id", guildID),
+			slog.String("game", game),
+			slog.Time("day", t),
+		)
+		return t
+	}
+	slog.Warn("unexpected data type for first_game_date",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Any("value", result["day"]),
+	)
+
+	firstGameDate := today().AddDate(-1, 0, 0)
+	slog.Debug("defaulting to 1 year ago for first game date",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Time("day", firstGameDate),
+	)
+	return firstGameDate
+}

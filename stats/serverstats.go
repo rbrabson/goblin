@@ -2,11 +2,16 @@ package stats
 
 import (
 	"log/slog"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+)
+
+var (
+	serverStatsLock = &sync.Mutex{}
 )
 
 // ServerStats represents the statistics for a specific game in a guild on a specific day.
@@ -21,14 +26,17 @@ type ServerStats struct {
 
 // ServerStatsGamesPlayed represents the number of players and games played for a specific game in a guild.
 type ServerGamesPlayed struct {
-	Players     int `json:"players" bson:"players"`
-	GamesPlayed int `json:"games_played" bson:"games_played"`
+	Players                     int     `json:"players" bson:"players"`
+	AverageGamesPerPlayer       float64 `json:"average_games_per_player" bson:"average_games_per_player"`
+	GamesPlayed                 int     `json:"games_played" bson:"games_played"`
+	AverageGamesPlayedPerDay    float64 `json:"average_games_played_per_day" bson:"average_games_played_per_day"`
+	AverageGamesPerPlayerPerDay float64 `json:"average_games_per_player_per_day" bson:"average_games_per_player_per_day"`
 }
 
 // GetServerStats retrieves the server statistics for a specific game in a guild on a specific day.
 func GetServerStats(guildID string, game string, day time.Time) *ServerStats {
-	statsLock.Lock()
-	defer statsLock.Unlock()
+	serverStatsLock.Lock()
+	defer serverStatsLock.Unlock()
 
 	ss, _ := readServerStats(guildID, game, day)
 	if ss == nil {
@@ -49,18 +57,21 @@ func newServerStats(guildID string, game string, day time.Time) *ServerStats {
 	}
 }
 
-// GetServerGamesPlayed retrieves the aggregated games played statistics for a specific game in a guild.
-func GetServerGamesPlayed(guildID string, game string, startDate time.Time, endDate time.Time) (*ServerGamesPlayed, error) {
-	slog.Debug("Calculating server games played statistics",
+// GetGamesPlayedForGame retrieves the aggregated games played statistics for all games in a guild.
+func GetGamesPlayedForGame(guildID string, game string, startDate time.Time, endDate time.Time) (*ServerGamesPlayed, error) {
+	serverStatsLock.Lock()
+	defer serverStatsLock.Unlock()
+
+	slog.Debug("calculating server games played statistics for all games",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
 		slog.Time("start_date", startDate),
 		slog.Time("end_date", endDate),
 	)
 
-	// Pipeline to aggregate server statistics
+	// Pipeline to aggregate server statistics across all games
 	pipeline := mongo.Pipeline{
-		// Stage 1: Match documents for the specific guild, game, and date range
+		// Stage 1: Match documents for the specific guild and date range
 		bson.D{
 			{Key: "$match", Value: bson.D{
 				{Key: "guild_id", Value: guildID},
@@ -82,6 +93,61 @@ func GetServerGamesPlayed(guildID string, game string, startDate time.Time, endD
 				{Key: "avg_games_per_day", Value: bson.D{{Key: "$avg", Value: "$games_played"}}},
 			}},
 		},
+		// Stage 3: Calculate additional averages
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "date_range_days", Value: bson.D{
+					{Key: "$divide", Value: bson.A{
+						bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
+						1000 * 60 * 60 * 24, // Convert milliseconds to days
+					}},
+				}},
+			}},
+		},
+		// Stage 4: Calculate final averages
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "average_games_played_per_day", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$gt", Value: bson.A{"$date_range_days", 0}},
+						}},
+						{Key: "then", Value: bson.D{
+							{Key: "$divide", Value: bson.A{"$total_games_played", "$date_range_days"}},
+						}},
+						{Key: "else", Value: 0},
+					}},
+				}},
+				{Key: "average_games_per_player", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$gt", Value: bson.A{"$total_players", 0}},
+						}},
+						{Key: "then", Value: bson.D{
+							{Key: "$divide", Value: bson.A{"$total_games_played", "$total_players"}},
+						}},
+						{Key: "else", Value: 0},
+					}},
+				}},
+				{Key: "average_games_per_player_per_day", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$and", Value: bson.A{
+								bson.D{{Key: "$gt", Value: bson.A{"$total_players", 0}}},
+								bson.D{{Key: "$gt", Value: bson.A{"$date_range_days", 0}}},
+							}},
+						}},
+						{Key: "then", Value: bson.D{
+							{Key: "$divide", Value: bson.A{
+								bson.D{{Key: "$divide", Value: bson.A{"$total_games_played", "$total_players"}}},
+								"$date_range_days",
+							}},
+						}},
+						{Key: "else", Value: 0},
+					}},
+				}},
+			}},
+		},
 	}
 
 	docs, err := db.Aggregate(ServerStatsCollection, pipeline)
@@ -91,39 +157,50 @@ func GetServerGamesPlayed(guildID string, game string, startDate time.Time, endD
 
 	if len(docs) == 0 {
 		return &ServerGamesPlayed{
-			Players:     0,
-			GamesPlayed: 0,
+			Players:                     0,
+			AverageGamesPerPlayer:       0,
+			GamesPlayed:                 0,
+			AverageGamesPlayedPerDay:    0,
+			AverageGamesPerPlayerPerDay: 0,
 		}, nil
 	}
 
 	result := docs[0]
 	gamesPlayed := &ServerGamesPlayed{
-		Players:     getInt(result["total_players"]),
-		GamesPlayed: getInt(result["total_games_played"]),
+		Players:                     getInt(result["total_players"]),
+		AverageGamesPerPlayer:       getFloat64(result["average_games_per_player"]),
+		GamesPlayed:                 getInt(result["total_games_played"]),
+		AverageGamesPlayedPerDay:    getFloat64(result["average_games_played_per_day"]),
+		AverageGamesPerPlayerPerDay: getFloat64(result["average_games_per_player_per_day"]),
 	}
 
-	slog.Debug("Server games played statistics calculated",
+	slog.Debug("server games played statistics calculated for all games",
 		slog.Int("total_players", gamesPlayed.Players),
 		slog.Int("total_games", gamesPlayed.GamesPlayed),
+		slog.Float64("avg_games_per_player", gamesPlayed.AverageGamesPerPlayer),
+		slog.Float64("avg_games_per_day", gamesPlayed.AverageGamesPlayedPerDay),
+		slog.Float64("avg_games_per_player_per_day", gamesPlayed.AverageGamesPerPlayerPerDay),
 		slog.Int("unique_days", getInt(result["unique_days"])),
-		slog.Float64("avg_players_per_day", getFloat64(result["avg_players_per_day"])),
-		slog.Float64("avg_games_per_day", getFloat64(result["avg_games_per_day"])),
+		slog.Float64("date_range_days", getFloat64(result["date_range_days"])),
 	)
 
 	return gamesPlayed, nil
 }
 
-// GetServerGamesPlayed retrieves the aggregated games played statistics for a specific game in a guild.
-func GetServerGamesPlayedAllGames(guildID string, startDate time.Time, endDate time.Time) (*ServerGamesPlayed, error) {
-	slog.Debug("Calculating server games played statistics",
+// GetGamesPlayed retrieves the aggregated games played statistics for all games in a guild.
+func GetGamesPlayed(guildID string, startDate time.Time, endDate time.Time) (*ServerGamesPlayed, error) {
+	serverStatsLock.Lock()
+	defer serverStatsLock.Unlock()
+
+	slog.Debug("calculating server games played statistics for all games",
 		slog.String("guild_id", guildID),
 		slog.Time("start_date", startDate),
 		slog.Time("end_date", endDate),
 	)
 
-	// Pipeline to aggregate server statistics
+	// Pipeline to aggregate server statistics across all games
 	pipeline := mongo.Pipeline{
-		// Stage 1: Match documents for the specific guild, game, and date range
+		// Stage 1: Match documents for the specific guild and date range
 		bson.D{
 			{Key: "$match", Value: bson.D{
 				{Key: "guild_id", Value: guildID},
@@ -144,6 +221,61 @@ func GetServerGamesPlayedAllGames(guildID string, startDate time.Time, endDate t
 				{Key: "avg_games_per_day", Value: bson.D{{Key: "$avg", Value: "$games_played"}}},
 			}},
 		},
+		// Stage 3: Calculate additional averages
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "date_range_days", Value: bson.D{
+					{Key: "$divide", Value: bson.A{
+						bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
+						1000 * 60 * 60 * 24, // Convert milliseconds to days
+					}},
+				}},
+			}},
+		},
+		// Stage 4: Calculate final averages
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "average_games_played_per_day", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$gt", Value: bson.A{"$date_range_days", 0}},
+						}},
+						{Key: "then", Value: bson.D{
+							{Key: "$divide", Value: bson.A{"$total_games_played", "$date_range_days"}},
+						}},
+						{Key: "else", Value: 0},
+					}},
+				}},
+				{Key: "average_games_per_player", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$gt", Value: bson.A{"$total_players", 0}},
+						}},
+						{Key: "then", Value: bson.D{
+							{Key: "$divide", Value: bson.A{"$total_games_played", "$total_players"}},
+						}},
+						{Key: "else", Value: 0},
+					}},
+				}},
+				{Key: "average_games_per_player_per_day", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$and", Value: bson.A{
+								bson.D{{Key: "$gt", Value: bson.A{"$total_players", 0}}},
+								bson.D{{Key: "$gt", Value: bson.A{"$date_range_days", 0}}},
+							}},
+						}},
+						{Key: "then", Value: bson.D{
+							{Key: "$divide", Value: bson.A{
+								bson.D{{Key: "$divide", Value: bson.A{"$total_games_played", "$total_players"}}},
+								"$date_range_days",
+							}},
+						}},
+						{Key: "else", Value: 0},
+					}},
+				}},
+			}},
+		},
 	}
 
 	docs, err := db.Aggregate(ServerStatsCollection, pipeline)
@@ -153,23 +285,31 @@ func GetServerGamesPlayedAllGames(guildID string, startDate time.Time, endDate t
 
 	if len(docs) == 0 {
 		return &ServerGamesPlayed{
-			Players:     0,
-			GamesPlayed: 0,
+			Players:                     0,
+			AverageGamesPerPlayer:       0,
+			GamesPlayed:                 0,
+			AverageGamesPlayedPerDay:    0,
+			AverageGamesPerPlayerPerDay: 0,
 		}, nil
 	}
 
 	result := docs[0]
 	gamesPlayed := &ServerGamesPlayed{
-		Players:     getInt(result["total_players"]),
-		GamesPlayed: getInt(result["total_games_played"]),
+		Players:                     getInt(result["total_players"]),
+		AverageGamesPerPlayer:       getFloat64(result["average_games_per_player"]),
+		GamesPlayed:                 getInt(result["total_games_played"]),
+		AverageGamesPlayedPerDay:    getFloat64(result["average_games_played_per_day"]),
+		AverageGamesPerPlayerPerDay: getFloat64(result["average_games_per_player_per_day"]),
 	}
 
-	slog.Debug("Server games played statistics calculated",
+	slog.Debug("server games played statistics calculated for all games",
 		slog.Int("total_players", gamesPlayed.Players),
 		slog.Int("total_games", gamesPlayed.GamesPlayed),
+		slog.Float64("avg_games_per_player", gamesPlayed.AverageGamesPerPlayer),
+		slog.Float64("avg_games_per_day", gamesPlayed.AverageGamesPlayedPerDay),
+		slog.Float64("avg_games_per_player_per_day", gamesPlayed.AverageGamesPerPlayerPerDay),
 		slog.Int("unique_days", getInt(result["unique_days"])),
-		slog.Float64("avg_players_per_day", getFloat64(result["avg_players_per_day"])),
-		slog.Float64("avg_games_per_day", getFloat64(result["avg_games_per_day"])),
+		slog.Float64("date_range_days", getFloat64(result["date_range_days"])),
 	)
 
 	return gamesPlayed, nil

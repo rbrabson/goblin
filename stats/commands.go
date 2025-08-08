@@ -251,11 +251,12 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	// guildID := i.GuildID
-	guildID := "236523452230533121"
+	guildID := i.GuildID
+	// guildID := "236523452230533121"
 
-	duration := getDuration(guildID, game, after)
-	cuttoff := getTime(guildID, game, since)
+	firstGameDate := getFirstGameDate(guildID, game)
+	duration := getDuration(guildID, game, after, firstGameDate)
+	cuttoff := getTime(guildID, game, since, firstGameDate)
 
 	slog.Debug("duration and cutoff calculated",
 		slog.String("guild_id", i.GuildID),
@@ -266,9 +267,9 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var retention *PlayerRetention
 	var err error
 	if game == "" || game == "all" {
-		retention, err = GetPlayerRetentionForAllGames(guildID, cuttoff, duration)
+		retention, err = GetPlayerRetention(guildID, cuttoff, duration)
 	} else {
-		retention, err = GetPlayerRetention(guildID, game, cuttoff, duration)
+		retention, err = GetPlayerRetentionForGame(guildID, game, cuttoff, duration)
 	}
 	if err != nil {
 		slog.Error("failed to get player retention",
@@ -372,17 +373,18 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	// guildID := i.GuildID
-	guildID := "236523452230533121"
+	guildID := i.GuildID
+	// guildID := "236523452230533121"
 
-	checkAfter := getTime(guildID, game, since)
+	firstGameDate := getFirstServerGameDate(guildID, game)
+	checkAfter := getTime(guildID, game, since, firstGameDate)
 
-	var gamesPlayed *GamesPlayed
+	var gamesPlayed *ServerGamesPlayed
 	var err error
 	if game == "" || game == "all" {
-		gamesPlayed, err = GetAllGamesPlayed(guildID, checkAfter, today())
+		gamesPlayed, err = GetGamesPlayed(guildID, checkAfter, today())
 	} else {
-		gamesPlayed, err = GetGamesPlayed(guildID, game, checkAfter, today())
+		gamesPlayed, err = GetGamesPlayedForGame(guildID, game, checkAfter, today())
 	}
 	if err != nil {
 		slog.Error("failed to get games played",
@@ -401,8 +403,8 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.Time("check_after", checkAfter),
-		slog.String("games", p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalGamesPlayed, gamesPlayed.AverageGamesPlayedPerDay)),
-		slog.String("players", p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalNumberOfPlayers, gamesPlayed.AverageGamesPerPlayer)),
+		slog.String("games", p.Sprintf("%d (%.2f%%)", gamesPlayed.GamesPlayed, gamesPlayed.AverageGamesPlayedPerDay)),
+		slog.String("players", p.Sprintf("%d (%.2f%%)", gamesPlayed.Players, gamesPlayed.AverageGamesPerPlayerPerDay)),
 	)
 
 	var embeds []*discordgo.MessageEmbed
@@ -430,7 +432,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Total Games Played",
-		Value:  p.Sprintf("%d", gamesPlayed.TotalGamesPlayed),
+		Value:  p.Sprintf("%d", gamesPlayed.GamesPlayed),
 		Inline: false,
 	})
 	if since != OneDayAgo {
@@ -442,12 +444,17 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Total Number of Players",
-		Value:  p.Sprintf("%d", gamesPlayed.TotalNumberOfPlayers),
+		Value:  p.Sprintf("%d", gamesPlayed.Players),
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Average Games Per Player",
 		Value:  p.Sprintf("%.2f", gamesPlayed.AverageGamesPerPlayer),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Average Games Per Player Per Day",
+		Value:  p.Sprintf("%.2f", gamesPlayed.AverageGamesPerPlayerPerDay),
 		Inline: false,
 	})
 

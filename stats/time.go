@@ -31,9 +31,8 @@ func today() time.Time {
 	return time.Date(year, month, day, 0, 0, 0, 0, now.Location()).UTC()
 }
 
-func getDuration(guildID string, game string, period string) time.Duration {
+func getDuration(guildID string, game string, period string, firstGameDate time.Time) time.Duration {
 	today := today().UTC()
-	firstGameDate := getFirstGameDate(guildID, game)
 
 	var startDate time.Time
 	switch period {
@@ -62,9 +61,8 @@ func getDuration(guildID string, game string, period string) time.Duration {
 	return today.Sub(startDate)
 }
 
-func getTime(guildID string, game string, period string) time.Time {
+func getTime(guildID string, game string, period string, firstGameDate time.Time) time.Time {
 	today := today().UTC()
-	firstGameDate := getFirstGameDate(guildID, game)
 
 	var timePeriod time.Time
 	switch period {
@@ -88,6 +86,10 @@ func getTime(guildID string, game string, period string) time.Time {
 
 	if firstGameDate.After(timePeriod) {
 		timePeriod = firstGameDate
+	}
+
+	if firstGameDate.Equal(timePeriod) {
+		timePeriod = timePeriod.AddDate(0, 0, -1).UTC()
 	}
 
 	return timePeriod
