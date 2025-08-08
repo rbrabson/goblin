@@ -100,6 +100,31 @@ func deleteServerrStats(ss *ServerStats) error {
 	return nil
 }
 
+// getLastDatePlayed retrieves the last date a member played a game in a guild.
+func getLastDatePlayed(guildID string, memberID string) time.Time {
+	filter := bson.M{"guild_id": guildID, "game": memberID, "day": today()}
+	sort := bson.D{{Key: "game", Value: 1}}
+	var ps []*PlayerStats
+	err := db.FindMany(PlayerStatsCollection, filter, &ps, sort, 0)
+	if err != nil {
+		slog.Error("failed to get last date played",
+			slog.String("guild_id", guildID),
+			slog.String("member_id", memberID),
+			slog.Any("error", err),
+		)
+		return time.Time{}
+	}
+
+	lastDatePlayed := time.Time{}
+	for _, p := range ps {
+		if p.LastPlayed.After(lastDatePlayed) {
+			lastDatePlayed = p.LastPlayed
+		}
+	}
+
+	return lastDatePlayed
+}
+
 // getFirstGameDate retrieves the earliest date a game was played by any member in a guild.
 func getFirstGameDate(guildID string, game string) time.Time {
 	var pipeline mongo.Pipeline
