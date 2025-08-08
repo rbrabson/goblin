@@ -2,6 +2,7 @@ package stats
 
 import (
 	"log/slog"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,6 +12,10 @@ import (
 
 const (
 	millisToDays = 1000 * 60 * 60 * 24
+)
+
+var (
+	statsLock = sync.Mutex{}
 )
 
 // PlayerStats holds the statistics of a player in a game.
@@ -43,6 +48,9 @@ type GamesPlayed struct {
 // GetPlayerStats retrieves the player statistics for a specific guild, member, and game.
 // If the player stats do not exist, it creates a new PlayerStats instance.
 func GetPlayerStats(guildID string, memberID string, game string) *PlayerStats {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
 	ps, _ := readPlayerStats(guildID, memberID, game)
 	if ps == nil {
 		ps = newPlayerStats(guildID, memberID, game)
@@ -68,147 +76,166 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 
 // GamePlayed updates the PlayerStats when a game is played.
 func (ps *PlayerStats) GamePlayed() {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
 	ps.LastPlayed = today()
 	ps.NumberOfTimesPlayed++
 	writePlayerStats(ps)
+
+	ss := GetServerStats(ps.GuildID, ps.Game, ps.LastPlayed)
+	ss.GamesPlayed++
+	if ps.NumberOfTimesPlayed == 1 {
+		ss.Players++
+	}
+	if ss.Players == 0 {
+		ss.Players = ss.GamesPlayed
+	}
+	writeServerStats(ss)
+}
+
+// GetPlayerRetentionForGame finds players who played after a specific date but haven't played
+// recently for the duration provided (i.e., players who became inactive)
+func GetPlayerRetentionForGame(guildID string, game string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
+	slog.Debug("calculating player retention",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Time("cuttoff", cuttoff),
+		slog.Duration("inactive_duration", inactiveDuration),
+	)
+
+	today := today()
+	inactiveDays := int(inactiveDuration.Hours()/24) + 1 // Convert duration to the number of days
+
+	// Pipeline to find players who were active after the date but are now inactive
+	pipeline := mongo.Pipeline{
+		// Stage 1: Match documents for the specific guild and game
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "game", Value: game},
+			}},
+		},
+		// Stage 2: Group by member_id to get their first and last played dates
+		bson.D{
+			{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: "$member_id"},
+				{Key: "first_played", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
+				{Key: "last_played", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
+				{Key: "total_games", Value: bson.D{{Key: "$sum", Value: "$number_of_times_played"}}},
+			}},
+		},
+		// Stage 3: Filter players who played after the specified date
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "last_played", Value: bson.D{
+					{Key: "$gte", Value: cuttoff},
+				}},
+			}},
+		},
+		// Stage 4: Add fields to calculate inactive status
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "days_since_last_played", Value: bson.D{
+					{Key: "$divide", Value: bson.A{
+						bson.D{{Key: "$subtract", Value: bson.A{today, "$last_played"}}},
+						millisToDays, // Convert milliseconds to days
+					}},
+				}},
+			}},
+		},
+		// Stage 5: Categorize players as inactive or active
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "is_active", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$lt", Value: bson.A{"$days_since_last_played", inactiveDays}},
+						}},
+						{Key: "then", Value: 1},
+						{Key: "else", Value: 0},
+					}},
+				}},
+				{Key: "is_inactive", Value: bson.D{
+					{Key: "$cond", Value: bson.D{
+						{Key: "if", Value: bson.D{
+							{Key: "$gte", Value: bson.A{"$days_since_last_played", inactiveDays}},
+						}},
+						{Key: "then", Value: 1},
+						{Key: "else", Value: 0},
+					}},
+				}},
+			}},
+		},
+		// Stage 6: Group all players to calculate totals and percentages
+		bson.D{
+			{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: nil}, // Group all documents together
+				{Key: "total_players", Value: bson.D{{Key: "$sum", Value: 1}}},
+				{Key: "active_players", Value: bson.D{{Key: "$sum", Value: "$is_active"}}},
+				{Key: "inactive_players", Value: bson.D{{Key: "$sum", Value: "$is_inactive"}}},
+			}},
+		},
+		// Stage 7: Calculate percentages
+		bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "inactive_percentage", Value: bson.D{
+					{Key: "$multiply", Value: bson.A{
+						bson.D{{Key: "$divide", Value: bson.A{"$inactive_players", "$total_players"}}},
+						100,
+					}},
+				}},
+				{Key: "active_percentage", Value: bson.D{
+					{Key: "$multiply", Value: bson.A{
+						bson.D{{Key: "$divide", Value: bson.A{"$active_players", "$total_players"}}},
+						100,
+					}},
+				}},
+			}},
+		},
+	}
+
+	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(docs) == 0 {
+		return &PlayerRetention{
+			InactivePlayers:    0,
+			InactivePercentage: 0,
+			ActivePlayers:      0,
+			ActivePercentage:   0,
+		}, nil
+	}
+
+	result := docs[0]
+	retention := &PlayerRetention{
+		InactivePlayers:    getInt(result["inactive_players"]), // Players who became inactive
+		InactivePercentage: getFloat64(result["inactive_percentage"]),
+		ActivePlayers:      getInt(result["active_players"]), // Players still active
+		ActivePercentage:   getFloat64(result["active_percentage"]),
+	}
+
+	slog.Debug("player retention calculated",
+		slog.Int("total_eligible_players", getInt(result["total_players"])),
+		slog.Int("inactive_players", retention.InactivePlayers),
+		slog.Float64("inactive_percentage", retention.InactivePercentage),
+		slog.Float64("avg_days_since_last_played", getFloat64(result["avg_days_since_last_played"])),
+	)
+
+	return retention, nil
 }
 
 // GetPlayerRetention finds players who played after a specific date but haven't played
 // recently for the duration provided (i.e., players who became inactive)
-func GetPlayerRetention(guildID string, game string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
-	slog.Debug("calculating player retention",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Time("cuttoff", cuttoff),
-		slog.Duration("inactive_duration", inactiveDuration),
-	)
+func GetPlayerRetention(guildID string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
+	statsLock.Lock()
+	defer statsLock.Unlock()
 
-	today := today()
-	inactiveDays := int(inactiveDuration.Hours()/24) + 1 // Convert duration to the number of days
-
-	// Pipeline to find players who were active after the date but are now inactive
-	pipeline := mongo.Pipeline{
-		// Stage 1: Match documents for the specific guild and game
-		bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "guild_id", Value: guildID},
-				{Key: "game", Value: game},
-			}},
-		},
-		// Stage 2: Group by member_id to get their first and last played dates
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: "$member_id"},
-				{Key: "first_played", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
-				{Key: "last_played", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
-				{Key: "total_games", Value: bson.D{{Key: "$sum", Value: "$number_of_times_played"}}},
-			}},
-		},
-		// Stage 3: Filter players who played after the specified date
-		bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "last_played", Value: bson.D{
-					{Key: "$gte", Value: cuttoff},
-				}},
-			}},
-		},
-		// Stage 4: Add fields to calculate inactive status
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "days_since_last_played", Value: bson.D{
-					{Key: "$divide", Value: bson.A{
-						bson.D{{Key: "$subtract", Value: bson.A{today, "$last_played"}}},
-						millisToDays, // Convert milliseconds to days
-					}},
-				}},
-			}},
-		},
-		// Stage 5: Categorize players as inactive or active
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "is_active", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$lt", Value: bson.A{"$days_since_last_played", inactiveDays}},
-						}},
-						{Key: "then", Value: 1},
-						{Key: "else", Value: 0},
-					}},
-				}},
-				{Key: "is_inactive", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$gte", Value: bson.A{"$days_since_last_played", inactiveDays}},
-						}},
-						{Key: "then", Value: 1},
-						{Key: "else", Value: 0},
-					}},
-				}},
-			}},
-		},
-		// Stage 6: Group all players to calculate totals and percentages
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: nil}, // Group all documents together
-				{Key: "total_players", Value: bson.D{{Key: "$sum", Value: 1}}},
-				{Key: "active_players", Value: bson.D{{Key: "$sum", Value: "$is_active"}}},
-				{Key: "inactive_players", Value: bson.D{{Key: "$sum", Value: "$is_inactive"}}},
-			}},
-		},
-		// Stage 7: Calculate percentages
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "inactive_percentage", Value: bson.D{
-					{Key: "$multiply", Value: bson.A{
-						bson.D{{Key: "$divide", Value: bson.A{"$inactive_players", "$total_players"}}},
-						100,
-					}},
-				}},
-				{Key: "active_percentage", Value: bson.D{
-					{Key: "$multiply", Value: bson.A{
-						bson.D{{Key: "$divide", Value: bson.A{"$active_players", "$total_players"}}},
-						100,
-					}},
-				}},
-			}},
-		},
-	}
-
-	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(docs) == 0 {
-		return &PlayerRetention{
-			InactivePlayers:    0,
-			InactivePercentage: 0,
-			ActivePlayers:      0,
-			ActivePercentage:   0,
-		}, nil
-	}
-
-	result := docs[0]
-	retention := &PlayerRetention{
-		InactivePlayers:    getInt(result["inactive_players"]), // Players who became inactive
-		InactivePercentage: getFloat64(result["inactive_percentage"]),
-		ActivePlayers:      getInt(result["active_players"]), // Players still active
-		ActivePercentage:   getFloat64(result["active_percentage"]),
-	}
-
-	slog.Debug("player retention calculated",
-		slog.Int("total_eligible_players", getInt(result["total_players"])),
-		slog.Int("inactive_players", retention.InactivePlayers),
-		slog.Float64("inactive_percentage", retention.InactivePercentage),
-		slog.Float64("avg_days_since_last_played", getFloat64(result["avg_days_since_last_played"])),
-	)
-
-	return retention, nil
-}
-
-// GetPlayerRetentionForAllGames finds players who played after a specific date but haven't played
-// recently for the duration provided (i.e., players who became inactive)
-func GetPlayerRetentionForAllGames(guildID string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
 	slog.Debug("calculating player retention",
 		slog.String("guild_id", guildID),
 		slog.Time("cuttoff", cuttoff),
@@ -335,248 +362,4 @@ func GetPlayerRetentionForAllGames(guildID string, cuttoff time.Time, inactiveDu
 	)
 
 	return retention, nil
-}
-
-// GetGamesPlayed calculates the games played statistics for a specific guild and game.
-func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate time.Time) (*GamesPlayed, error) {
-	slog.Debug("calculating games played statistics",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Time("start_date", startDate),
-		slog.Time("end_date", endDate),
-	)
-
-	// Pipeline to calculate games played statistics
-	pipeline := mongo.Pipeline{
-		// Stage 1: Match documents for the specific guild, game, and date range
-		bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "guild_id", Value: guildID},
-				{Key: "game", Value: game},
-				{Key: "last_played", Value: bson.D{
-					{Key: "$gte", Value: startDate},
-					{Key: "$lte", Value: endDate},
-				}},
-			}},
-		},
-		// Stage 2: Group by member_id to get total games per player
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: "$member_id"},
-				{Key: "total_games_by_player", Value: bson.D{{Key: "$sum", Value: "$number_of_times_played"}}},
-				{Key: "first_played", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
-				{Key: "last_played", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
-			}},
-		},
-		// Stage 3: Group all players to calculate overall statistics
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: nil}, // Group all documents together
-				{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$total_games_by_player"}}},
-				{Key: "total_number_of_players", Value: bson.D{{Key: "$sum", Value: 1}}},
-				{Key: "earliest_game", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
-				{Key: "latest_game", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
-				{Key: "games_per_player", Value: bson.D{{Key: "$push", Value: "$total_games_by_player"}}},
-			}},
-		},
-		// Stage 4: Calculate averages and additional metrics
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "date_range_days", Value: bson.D{
-					{Key: "$divide", Value: bson.A{
-						bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
-						1000 * 60 * 60 * 24, // Convert milliseconds to days
-					}},
-				}},
-				{Key: "actual_activity_days", Value: bson.D{
-					{Key: "$divide", Value: bson.A{
-						bson.D{{Key: "$subtract", Value: bson.A{"$latest_game", "$earliest_game"}}},
-						1000 * 60 * 60 * 24, // Convert milliseconds to days
-					}},
-				}},
-			}},
-		},
-		// Stage 5: Calculate final averages
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "average_games_played_per_day", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$gt", Value: bson.A{"$date_range_days", 0}},
-						}},
-						{Key: "then", Value: bson.D{
-							{Key: "$divide", Value: bson.A{"$total_games_played", "$date_range_days"}},
-						}},
-						{Key: "else", Value: 0},
-					}},
-				}},
-				{Key: "average_games_per_player", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$gt", Value: bson.A{"$total_number_of_players", 0}},
-						}},
-						{Key: "then", Value: bson.D{
-							{Key: "$divide", Value: bson.A{"$total_games_played", "$total_number_of_players"}},
-						}},
-						{Key: "else", Value: 0},
-					}},
-				}},
-			}},
-		},
-	}
-
-	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(docs) == 0 {
-		return &GamesPlayed{
-			TotalGamesPlayed:         0,
-			AverageGamesPlayedPerDay: 0,
-			TotalNumberOfPlayers:     0,
-			AverageGamesPerPlayer:    0,
-		}, nil
-	}
-
-	result := docs[0]
-	gamesPlayed := &GamesPlayed{
-		TotalGamesPlayed:         getInt(result["total_games_played"]),
-		AverageGamesPlayedPerDay: getFloat64(result["average_games_played_per_day"]),
-		TotalNumberOfPlayers:     getInt(result["total_number_of_players"]),
-		AverageGamesPerPlayer:    getFloat64(result["average_games_per_player"]),
-	}
-
-	slog.Debug("games played statistics calculated",
-		slog.Int("total_games", gamesPlayed.TotalGamesPlayed),
-		slog.Int("total_players", gamesPlayed.TotalNumberOfPlayers),
-		slog.Float64("avg_games_per_day", gamesPlayed.AverageGamesPlayedPerDay),
-		slog.Float64("avg_games_per_player", gamesPlayed.AverageGamesPerPlayer),
-		slog.Float64("date_range_days", getFloat64(result["date_range_days"])),
-		slog.Float64("actual_activity_days", getFloat64(result["actual_activity_days"])),
-	)
-
-	return gamesPlayed, nil
-}
-
-// GetAllGamesPlayed calculates the games played statistics for a specific guild and game.
-func GetAllGamesPlayed(guildID string, startDate time.Time, endDate time.Time) (*GamesPlayed, error) {
-	slog.Debug("calculating games played statistics",
-		slog.String("guild_id", guildID),
-		slog.Time("start_date", startDate),
-		slog.Time("end_date", endDate),
-	)
-
-	// Pipeline to calculate games played statistics
-	pipeline := mongo.Pipeline{
-		// Stage 1: Match documents for the specific guild, game, and date range
-		bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "guild_id", Value: guildID},
-				{Key: "last_played", Value: bson.D{
-					{Key: "$gte", Value: startDate},
-				}},
-				{Key: "last_played", Value: bson.D{
-					{Key: "$lte", Value: endDate},
-				}},
-			}},
-		},
-		// Stage 2: Group by member_id to get total games per player
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: "$member_id"},
-				{Key: "total_games_by_player", Value: bson.D{{Key: "$sum", Value: "$number_of_times_played"}}},
-				{Key: "first_played", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
-				{Key: "last_played", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
-			}},
-		},
-		// Stage 3: Group all players to calculate overall statistics
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: nil}, // Group all documents together
-				{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$total_games_by_player"}}},
-				{Key: "total_number_of_players", Value: bson.D{{Key: "$sum", Value: 1}}},
-				{Key: "earliest_game", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
-				{Key: "latest_game", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
-				{Key: "games_per_player", Value: bson.D{{Key: "$push", Value: "$total_games_by_player"}}},
-			}},
-		},
-		// Stage 4: Calculate averages and additional metrics
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "date_range_days", Value: bson.D{
-					{Key: "$divide", Value: bson.A{
-						bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
-						1000 * 60 * 60 * 24, // Convert milliseconds to days
-					}},
-				}},
-				{Key: "actual_activity_days", Value: bson.D{
-					{Key: "$divide", Value: bson.A{
-						bson.D{{Key: "$subtract", Value: bson.A{"$latest_game", "$earliest_game"}}},
-						1000 * 60 * 60 * 24, // Convert milliseconds to days
-					}},
-				}},
-			}},
-		},
-		// Stage 5: Calculate final averages
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "average_games_played_per_day", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$gt", Value: bson.A{"$date_range_days", 0}},
-						}},
-						{Key: "then", Value: bson.D{
-							{Key: "$divide", Value: bson.A{"$total_games_played", "$date_range_days"}},
-						}},
-						{Key: "else", Value: 0},
-					}},
-				}},
-				{Key: "average_games_per_player", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$gt", Value: bson.A{"$total_number_of_players", 0}},
-						}},
-						{Key: "then", Value: bson.D{
-							{Key: "$divide", Value: bson.A{"$total_games_played", "$total_number_of_players"}},
-						}},
-						{Key: "else", Value: 0},
-					}},
-				}},
-			}},
-		},
-	}
-
-	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(docs) == 0 {
-		return &GamesPlayed{
-			TotalGamesPlayed:         0,
-			AverageGamesPlayedPerDay: 0,
-			TotalNumberOfPlayers:     0,
-			AverageGamesPerPlayer:    0,
-		}, nil
-	}
-
-	result := docs[0]
-	gamesPlayed := &GamesPlayed{
-		TotalGamesPlayed:         getInt(result["total_games_played"]),
-		AverageGamesPlayedPerDay: getFloat64(result["average_games_played_per_day"]),
-		TotalNumberOfPlayers:     getInt(result["total_number_of_players"]),
-		AverageGamesPerPlayer:    getFloat64(result["average_games_per_player"]),
-	}
-
-	slog.Debug("games played statistics calculated",
-		slog.Int("total_games", gamesPlayed.TotalGamesPlayed),
-		slog.Int("total_players", gamesPlayed.TotalNumberOfPlayers),
-		slog.Float64("avg_games_per_day", gamesPlayed.AverageGamesPlayedPerDay),
-		slog.Float64("avg_games_per_player", gamesPlayed.AverageGamesPerPlayer),
-		slog.Float64("date_range_days", getFloat64(result["date_range_days"])),
-		slog.Float64("actual_activity_days", getFloat64(result["actual_activity_days"])),
-	)
-
-	return gamesPlayed, nil
 }
