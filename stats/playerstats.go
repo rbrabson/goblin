@@ -85,7 +85,13 @@ func (ps *PlayerStats) GamePlayed() {
 
 	ss := GetServerStats(ps.GuildID, ps.Game, ps.LastPlayed)
 	ss.GamesPlayed++
+	if ps.NumberOfTimesPlayed == 1 {
+		ss.Players++
+	}
+	writeServerStats(ss)
 
+	ss = GetServerStats(ps.GuildID, "all", ps.FirstPlayed)
+	ss.GamesPlayed++
 	if ps.NumberOfTimesPlayed == 1 {
 		ss.Players++
 	}
