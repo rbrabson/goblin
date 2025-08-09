@@ -78,6 +78,7 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 func (ps *PlayerStats) GamePlayed() {
 	statsLock.Lock()
 	defer statsLock.Unlock()
+
 	today := today()
 
 	lastDatePlayed := getLastDatePlayed(ps.GuildID, ps.MemberID)

@@ -102,9 +102,27 @@ func deleteServerrStats(ss *ServerStats) error {
 
 // getLastDatePlayed retrieves the last date a member played a game in a guild.
 func getLastDatePlayed(guildID string, memberID string) time.Time {
-	filter := bson.M{"guild_id": guildID, "member_id": memberID, "last_played": today()}
-	var ps []*PlayerStats
-	err := db.FindMany(PlayerStatsCollection, filter, &ps, bson.D{}, 0)
+	// Use aggregation pipeline to find the maximum last_played date
+	pipeline := mongo.Pipeline{
+		// Stage 1: Match documents for the specific guild and member
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "member_id", Value: memberID},
+			}},
+		},
+		// Stage 2: Group all documents and find the maximum last_played date
+		bson.D{
+			{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: nil},
+				{Key: "last_date_played", Value: bson.D{
+					{Key: "$max", Value: "$last_played"},
+				}},
+			}},
+		},
+	}
+
+	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
 	if err != nil {
 		slog.Error("failed to get last date played",
 			slog.String("guild_id", guildID),
@@ -113,20 +131,32 @@ func getLastDatePlayed(guildID string, memberID string) time.Time {
 		)
 		return time.Time{}
 	}
-	slog.Error("////",
-		slog.String("collection", PlayerStatsCollection),
-		slog.Any("filter", filter),
-		slog.Any("player_stats", ps),
-	)
 
-	lastDatePlayed := time.Time{}
-	for _, p := range ps {
-		if p.LastPlayed.After(lastDatePlayed) {
-			lastDatePlayed = p.LastPlayed
-		}
+	if len(docs) == 0 {
+		slog.Debug("no game data found for member",
+			slog.String("guild_id", guildID),
+			slog.String("member_id", memberID),
+		)
+		return time.Time{}
 	}
 
-	return lastDatePlayed
+	result := docs[0]
+	if lastDatePlayed, ok := result["last_date_played"].(primitive.DateTime); ok {
+		t := lastDatePlayed.Time().UTC()
+		slog.Debug("found last date played",
+			slog.String("guild_id", guildID),
+			slog.String("member_id", memberID),
+			slog.Time("last_date_played", t),
+		)
+		return t
+	}
+
+	slog.Warn("unexpected data type for last_date_played",
+		slog.String("guild_id", guildID),
+		slog.String("member_id", memberID),
+		slog.Any("value", result["last_date_played"]),
+	)
+	return time.Time{}
 }
 
 // getFirstGameDate retrieves the earliest date a game was played by any member in a guild.
