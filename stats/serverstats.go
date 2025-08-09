@@ -33,8 +33,8 @@ type ServerGamesPlayed struct {
 	AverageGamesPerPlayerPerDay float64 `json:"average_games_per_player_per_day" bson:"average_games_per_player_per_day"`
 }
 
-// GetServerStats retrieves the server statistics for a specific game in a guild on a specific day.
-func GetServerStats(guildID string, game string, day time.Time) *ServerStats {
+// getServerStats retrieves the server statistics for a specific game in a guild on a specific day.
+func getServerStats(guildID string, game string, day time.Time) *ServerStats {
 	serverStatsLock.Lock()
 	defer serverStatsLock.Unlock()
 

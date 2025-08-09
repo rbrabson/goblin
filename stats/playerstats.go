@@ -92,7 +92,7 @@ func GamePlayed(guildID string, memberID string, game string) {
 		slog.Int("number_of_times_played", ps.NumberOfTimesPlayed),
 	)
 
-	ss := GetServerStats(guildID, game, today)
+	ss := getServerStats(guildID, game, today)
 	ss.GamesPlayed++
 	if oldLastPlayed.Before(today) {
 		ss.Players++
@@ -112,7 +112,7 @@ func GamePlayed(guildID string, memberID string, game string) {
 		slog.Int("players", ss.Players),
 	)
 
-	ss = GetServerStats(guildID, "all", today)
+	ss = getServerStats(guildID, "all", today)
 	ss.GamesPlayed++
 	if lastDatePlayed.Before(today) {
 		ss.Players++
