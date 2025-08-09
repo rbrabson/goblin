@@ -67,7 +67,7 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 		MemberID:            memberID,
 		Game:                game,
 		FirstPlayed:         today,
-		LastPlayed:          today,
+		LastPlayed:          time.Time{},
 		NumberOfTimesPlayed: 0,
 	}
 	writePlayerStats(ps)
