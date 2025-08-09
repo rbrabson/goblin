@@ -74,7 +74,7 @@ func writeServerStats(ss *ServerStats) error {
 	if ss.ID != primitive.NilObjectID {
 		filter = bson.M{"_id": ss.ID}
 	} else {
-		filter = bson.M{"guild_id": ss.GuildID, "game": ss.Game}
+		filter = bson.M{"guild_id": ss.GuildID, "game": ss.Game, "day": ss.Day}
 	}
 
 	err := db.UpdateOrInsert(ServerStatsCollection, filter, ss)
