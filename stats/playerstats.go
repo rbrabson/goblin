@@ -84,7 +84,7 @@ func GamePlayed(guildID string, memberID string, game string) {
 	ps.LastPlayed = today
 	ps.NumberOfTimesPlayed++
 	writePlayerStats(ps)
-	slog.Info("player stats updated",
+	slog.Debug("player stats updated",
 		slog.String("guild_id", guildID),
 		slog.String("member_id", memberID),
 		slog.String("game", game),
@@ -96,7 +96,7 @@ func GamePlayed(guildID string, memberID string, game string) {
 	ss.GamesPlayed++
 	if oldLastPlayed.Before(today) {
 		ss.Players++
-		slog.Info("first game played by member for today",
+		slog.Debug("first game played by member for today",
 			slog.String("guild_id", guildID),
 			slog.String("member_id", memberID),
 			slog.String("game", game),
@@ -104,7 +104,7 @@ func GamePlayed(guildID string, memberID string, game string) {
 		)
 	}
 	writeServerStats(ss)
-	slog.Info("server stats updated",
+	slog.Debug("server stats updated",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
 		slog.Time("day", today),
@@ -116,14 +116,14 @@ func GamePlayed(guildID string, memberID string, game string) {
 	ss.GamesPlayed++
 	if lastDatePlayed.Before(today) {
 		ss.Players++
-		slog.Info("first time playing any game by member for today",
+		slog.Debug("first time playing any game by member for today",
 			slog.String("guild_id", guildID),
 			slog.String("member_id", memberID),
 			slog.Time("day", ss.Day),
 		)
 	}
 	writeServerStats(ss)
-	slog.Info("server stats updated",
+	slog.Debug("server stats updated",
 		slog.String("guild_id", guildID),
 		slog.String("game", game),
 		slog.Time("day", today),
