@@ -102,7 +102,7 @@ func deleteServerrStats(ss *ServerStats) error {
 
 // getLastDatePlayed retrieves the last date a member played a game in a guild.
 func getLastDatePlayed(guildID string, memberID string) time.Time {
-	// Use aggregation pipeline to find the maximum last_played date
+	// Use aggregation pipeline to find the maximum last_played date for the member
 	pipeline := mongo.Pipeline{
 		// Stage 1: Match documents for the specific guild and member
 		bson.D{
@@ -140,23 +140,25 @@ func getLastDatePlayed(guildID string, memberID string) time.Time {
 		return time.Time{}
 	}
 
+	var t time.Time
 	result := docs[0]
 	if lastDatePlayed, ok := result["last_date_played"].(primitive.DateTime); ok {
-		t := lastDatePlayed.Time().UTC()
+		t = lastDatePlayed.Time().UTC()
 		slog.Debug("found last date played",
 			slog.String("guild_id", guildID),
 			slog.String("member_id", memberID),
 			slog.Time("last_date_played", t),
 		)
-		return t
+	} else {
+		slog.Warn("unexpected data type for last_date_played",
+			slog.String("guild_id", guildID),
+			slog.String("member_id", memberID),
+			slog.Any("value", result["last_date_played"]),
+		)
+		t = time.Time{}
 	}
 
-	slog.Warn("unexpected data type for last_date_played",
-		slog.String("guild_id", guildID),
-		slog.String("member_id", memberID),
-		slog.Any("value", result["last_date_played"]),
-	)
-	return time.Time{}
+	return t
 }
 
 // getFirstGameDate retrieves the earliest date a game was played by any member in a guild.

@@ -433,8 +433,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "heist")
-	ps.GamePlayed()
+	stats.GamePlayed(i.GuildID, i.Member.User.ID, "heist")
 
 	waitForHeistToStart(s, i, heist)
 
@@ -767,8 +766,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "heist")
-	ps.GamePlayed()
+	stats.GamePlayed(i.GuildID, i.Member.User.ID, "heist")
 }
 
 // playerStats shows a player's heist stats

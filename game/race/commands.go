@@ -194,8 +194,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("memberID", i.Member.User.ID),
 	)
 
-	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "race")
-	ps.GamePlayed()
+	stats.GamePlayed(i.GuildID, i.Member.User.ID, "race")
 
 	waitForMembersToJoin(s, race)
 
@@ -343,8 +342,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	ps := stats.GetPlayerStats(i.GuildID, i.Member.User.ID, "race")
-	ps.GamePlayed()
+	stats.GamePlayed(i.GuildID, i.Member.User.ID, "race")
 
 	err = raceMessage(s, race, "join")
 	if err != nil {
