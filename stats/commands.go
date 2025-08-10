@@ -403,7 +403,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("guild_id", i.GuildID),
 		slog.String("game", game),
 		slog.Time("check_after", checkAfter),
-		slog.String("games", p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalGamesPlayed, gamesPlayed.AverageGamesPlayedPerDay)),
+		slog.String("games", p.Sprintf("%d (%.2f%%)", gamesPlayed.TotalGamesPlayed, gamesPlayed.AverageGamesPerDay)),
 		slog.String("unique_players", p.Sprintf("%d (%.2f%%)", gamesPlayed.UniquePlayers, gamesPlayed.AverageGamesPerPlayerPerDay)),
 		slog.String("avg_games_per_player", p.Sprintf("%.2f", gamesPlayed.AverageGamesPerPlayer)),
 	)
@@ -432,20 +432,45 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Total Games Played",
+		Name:   "Number of Days",
+		Value:  p.Sprintf("%d", gamesPlayed.NumberOfDays),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Total Games",
 		Value:  p.Sprintf("%d", gamesPlayed.TotalGamesPlayed),
 		Inline: false,
 	})
-	if since != OneDayAgo {
+	if checkAfter.Before(today()) {
 		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 			Name:   "Average Games Per Day",
-			Value:  p.Sprintf("%.0f", math.Round(gamesPlayed.AverageGamesPlayedPerDay)),
+			Value:  p.Sprintf("%.0f", math.Round(gamesPlayed.AverageGamesPerDay)),
 			Inline: false,
 		})
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Total Number of Players",
+		Name:   "Total Players",
 		Value:  p.Sprintf("%d", gamesPlayed.TotalPlayers),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Average Players Per Day",
+		Value:  p.Sprintf("%.0f", math.Round(gamesPlayed.TotalPlayersPerDay)),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Unique Players Each Day",
+		Value:  p.Sprintf("%d", gamesPlayed.UniquePlayers),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Average Unique Players Per Day",
+		Value:  p.Sprintf("%.0f", math.Round(gamesPlayed.UniquePlayersPerDay)),
+		Inline: false,
+	})
+	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "Average Players Per Game",
+		Value:  p.Sprintf("%.2f", gamesPlayed.AveragePlayersPerGame),
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
@@ -456,11 +481,6 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
 		Name:   "Average Games Per Player Per Day",
 		Value:  p.Sprintf("%.2f", gamesPlayed.AverageGamesPerPlayerPerDay),
-		Inline: false,
-	})
-	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Average Players Per Game",
-		Value:  p.Sprintf("%.2f", gamesPlayed.AveragePlayersPerGame),
 		Inline: false,
 	})
 

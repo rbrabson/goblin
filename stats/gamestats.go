@@ -22,11 +22,14 @@ type GameStats struct {
 
 // GamesPlayed represents the statistics for games played in a guild on a specific day.
 type GamesPlayed struct {
+	NumberOfDays                int
 	UniquePlayers               int
+	UniquePlayersPerDay         float64
 	TotalPlayers                int
+	TotalPlayersPerDay          float64
 	TotalGamesPlayed            int
 	AverageGamesPerPlayer       float64
-	AverageGamesPlayedPerDay    float64
+	AverageGamesPerDay          float64
 	AverageGamesPerPlayerPerDay float64
 	AveragePlayersPerGame       float64
 }
@@ -153,7 +156,7 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 				{Key: "total_unique_players", Value: bson.D{{Key: "$sum", Value: "$unique_players"}}},
 				{Key: "total_players", Value: bson.D{{Key: "$sum", Value: "$total_players"}}},
 				{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$games_played"}}},
-				{Key: "unique_days", Value: bson.D{{Key: "$sum", Value: 1}}},
+				{Key: "number_of_days", Value: bson.D{{Key: "$sum", Value: 1}}},
 				{Key: "avg_unique_players_per_day", Value: bson.D{{Key: "$avg", Value: "$unique_players"}}},
 				{Key: "avg_total_players_per_day", Value: bson.D{{Key: "$avg", Value: "$total_players"}}},
 				{Key: "avg_games_per_day", Value: bson.D{{Key: "$avg", Value: "$games_played"}}},
@@ -173,6 +176,9 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 		// Stage 4: Calculate final averages
 		bson.D{
 			{Key: "$addFields", Value: bson.D{
+				{Key: "unique_players_per_day", Value: "$avg_unique_players_per_day"},
+				{Key: "total_players_per_day", Value: "$avg_total_players_per_day"},
+				{Key: "average_games_per_day", Value: "$avg_games_per_day"},
 				{Key: "average_games_played_per_day", Value: bson.D{
 					{Key: "$cond", Value: bson.D{
 						{Key: "if", Value: bson.D{
@@ -233,37 +239,34 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 	}
 
 	if len(docs) == 0 {
-		return &GamesPlayed{
-			UniquePlayers:               0,
-			TotalPlayers:                0,
-			TotalGamesPlayed:            0,
-			AverageGamesPerPlayer:       0,
-			AverageGamesPlayedPerDay:    0,
-			AverageGamesPerPlayerPerDay: 0,
-			AveragePlayersPerGame:       0,
-		}, nil
+		return &GamesPlayed{}, nil
 	}
 
 	result := docs[0]
 	gamesPlayed := &GamesPlayed{
+		NumberOfDays:                getInt(result["number_of_days"]),
 		UniquePlayers:               getInt(result["total_unique_players"]),
+		UniquePlayersPerDay:         getFloat64(result["unique_players_per_day"]),
 		TotalPlayers:                getInt(result["total_players"]),
+		TotalPlayersPerDay:          getFloat64(result["total_players_per_day"]),
 		TotalGamesPlayed:            getInt(result["total_games_played"]),
 		AverageGamesPerPlayer:       getFloat64(result["average_games_per_player"]),
-		AverageGamesPlayedPerDay:    getFloat64(result["average_games_played_per_day"]),
+		AverageGamesPerDay:          getFloat64(result["average_games_per_day"]),
 		AverageGamesPerPlayerPerDay: getFloat64(result["average_games_per_player_per_day"]),
 		AveragePlayersPerGame:       getFloat64(result["average_players_per_game"]),
 	}
 
 	slog.Debug("games played statistics calculated from game_stats",
-		slog.Int("total_unique_players", gamesPlayed.UniquePlayers),
+		slog.Int("number_of_days", gamesPlayed.NumberOfDays),
+		slog.Int("unique_players", gamesPlayed.UniquePlayers),
+		slog.Float64("unique_players_per_day", gamesPlayed.UniquePlayersPerDay),
 		slog.Int("total_players", gamesPlayed.TotalPlayers),
+		slog.Float64("total_players_per_day", gamesPlayed.TotalPlayersPerDay),
 		slog.Int("total_games_played", gamesPlayed.TotalGamesPlayed),
 		slog.Float64("avg_games_per_player", gamesPlayed.AverageGamesPerPlayer),
-		slog.Float64("avg_games_per_day", gamesPlayed.AverageGamesPlayedPerDay),
+		slog.Float64("avg_games_per_day", gamesPlayed.AverageGamesPerDay),
 		slog.Float64("avg_games_per_player_per_day", gamesPlayed.AverageGamesPerPlayerPerDay),
 		slog.Float64("avg_players_per_game", gamesPlayed.AveragePlayersPerGame),
-		slog.Int("unique_days", getInt(result["unique_days"])),
 		slog.Float64("date_range_days", getFloat64(result["date_range_days"])),
 	)
 
