@@ -33,6 +33,7 @@ func today() time.Time {
 	return time.Date(year, month, day, 0, 0, 0, 0, now.Location()).UTC()
 }
 
+// getDuration calculates the duration from the start date to today based on the specified period.
 func getDuration(guildID string, game string, period string, firstGameDate time.Time) time.Duration {
 	today := today().UTC()
 
@@ -63,6 +64,7 @@ func getDuration(guildID string, game string, period string, firstGameDate time.
 	return today.Sub(startDate)
 }
 
+// getTime calculates the time period based on the specified period and first game date.
 func getTime(guildID string, game string, period string, firstGameDate time.Time) time.Time {
 	today := today().UTC()
 
@@ -137,6 +139,7 @@ func fmtDuration(d time.Duration) string {
 	return strings.Join(dateParts, " ")
 }
 
+// timeToString converts a time period string to a human-readable format.
 func timeToString(timeString string) string {
 	switch timeString {
 	case OneDay:
