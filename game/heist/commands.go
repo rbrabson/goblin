@@ -435,7 +435,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	waitForHeistToStart(s, i, heist)
 
 	if len(heist.Crew) < 2 {
-		heist.Cancel()
+		heist.End()
 
 		if err := heistMessage(s, heist); err != nil {
 			slog.Error("failed to send heist message",
@@ -451,7 +451,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				slog.Any("error", err),
 			)
 		}
-		slog.Info("Heist cancelled due to lack of interest",
+		slog.Info("heist cancelled due to lack of interest",
 			slog.String("guild", heist.GuildID),
 			slog.String("heist", heist.theme.Heist),
 		)
@@ -1090,7 +1090,7 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	heist.Cancel()
+	heist.End()
 	if err := heistMessage(s, heist); err != nil {
 		slog.Error("unable to send heist message",
 			slog.Any("error", err),
