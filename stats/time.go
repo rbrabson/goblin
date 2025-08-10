@@ -1,6 +1,8 @@
 package stats
 
 import (
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -93,6 +95,46 @@ func getTime(guildID string, game string, period string, firstGameDate time.Time
 	}
 
 	return timePeriod
+}
+
+// fmtDuration formats a duration into a string.
+func fmtDuration(d time.Duration) string {
+	today := today()
+	previousDate := today.Add(-d)
+	currentYear, currentMonth, currentDay := today.Date()
+	previousYear, previousMonth, previousDay := previousDate.Date()
+	years := currentYear - previousYear
+	months := currentMonth - previousMonth
+	days := currentDay - previousDay
+
+	dateParts := make([]string, 0, 3)
+	if years > 0 {
+		if years == 1 {
+			dateParts = append(dateParts, "1 Year")
+		} else {
+			dateParts = append(dateParts, fmt.Sprintf("%d Years", years))
+		}
+	}
+	if months > 0 {
+		if months == 1 {
+			dateParts = append(dateParts, "1 Month")
+		} else {
+			dateParts = append(dateParts, fmt.Sprintf("%d Months", months))
+		}
+	}
+	if days > 0 {
+		if days == 1 {
+			dateParts = append(dateParts, "1 Day")
+		} else {
+			dateParts = append(dateParts, fmt.Sprintf("%d Days", days))
+		}
+	}
+
+	if len(dateParts) == 0 {
+		return "0 Days"
+	}
+
+	return strings.Join(dateParts, " ")
 }
 
 func timeToString(timeString string) string {

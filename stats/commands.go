@@ -424,16 +424,9 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 	}
-	if since != "" {
-		embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-			Name:   "Since",
-			Value:  timeToString(since),
-			Inline: false,
-		})
-	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Number of Days",
-		Value:  p.Sprintf("%d", gamesPlayed.NumberOfDays),
+		Name:   "Since",
+		Value:  p.Sprintf("%s Ago", fmtDuration(today().Sub(checkAfter))),
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
