@@ -23,7 +23,6 @@ import (
 	"github.com/rbrabson/goblin/internal/channel"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
-	"github.com/rbrabson/goblin/stats"
 )
 
 const (
@@ -433,8 +432,6 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	stats.GamePlayed(i.GuildID, i.Member.User.ID, "heist")
-
 	waitForHeistToStart(s, i, heist)
 
 	if len(heist.Crew) < 2 {
@@ -700,7 +697,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	}
 
 	h := GetHeist(i.GuildID)
-	h.End()
+	// h.End()
 
 	if err := heistMessage(s, h); err != nil {
 		slog.Error("failed to heist send message",
@@ -765,8 +762,6 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
-
-	stats.GamePlayed(i.GuildID, i.Member.User.ID, "heist")
 }
 
 // playerStats shows a player's heist stats

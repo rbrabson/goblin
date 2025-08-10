@@ -12,6 +12,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/stats"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -283,6 +284,12 @@ func (h *Heist) End() {
 	slog.Debug("heist ended",
 		slog.String("guildID", h.GuildID),
 	)
+
+	memberIDs := make([]string, 0, len(h.Crew))
+	for _, member := range h.Crew {
+		memberIDs = append(memberIDs, member.MemberID)
+	}
+	stats.UpdateGameStats(h.GuildID, "heist", memberIDs)
 }
 
 // Cancel cancels the current heist, allowing for the cleanup of the heist.
@@ -299,6 +306,12 @@ func (h *Heist) Cancel() {
 	slog.Debug("heist cancelled",
 		slog.String("guildID", h.GuildID),
 	)
+
+	memberIDs := make([]string, 0, len(h.Crew))
+	for _, member := range h.Crew {
+		memberIDs = append(memberIDs, member.MemberID)
+	}
+	stats.UpdateGameStats(h.GuildID, "heist", memberIDs)
 }
 
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.

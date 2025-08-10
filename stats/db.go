@@ -12,6 +12,7 @@ import (
 const (
 	PlayerStatsCollection = "player_stats"
 	ServerStatsCollection = "server_stats"
+	GameStatsCollection   = "game_stats"
 )
 
 // readMemberStats retrieves the member statistics for a specific member in a guild for a specific game.
@@ -57,43 +58,43 @@ func deletePlayerStats(ps *PlayerStats) error {
 	return nil
 }
 
-// readServerStats retrieves the server statistics for a specific game in a guild.
-func readServerStats(guildID string, game string, day time.Time) (*ServerStats, error) {
-	var ss ServerStats
+// readGameStats retrieves the game statistics for a specific game in a guild.
+func readGameStats(guildID string, game string, day time.Time) (*GameStats, error) {
+	var gs GameStats
 	filter := bson.M{"guild_id": guildID, "game": game, "day": day}
-	err := db.FindOne(ServerStatsCollection, filter, &ss)
+	err := db.FindOne(GameStatsCollection, filter, &gs)
 	if err != nil {
 		return nil, err
 	}
-	return &ss, nil
+	return &gs, nil
 }
 
-// writeServerStats updates or inserts the server statistics a specific game in a guild.
-func writeServerStats(ss *ServerStats) error {
+// writeGameStats updates or inserts the game statistics a guild.
+func writeGameStats(gs *GameStats) error {
 	var filter bson.M
-	if ss.ID != primitive.NilObjectID {
-		filter = bson.M{"_id": ss.ID}
+	if gs.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": gs.ID}
 	} else {
-		filter = bson.M{"guild_id": ss.GuildID, "game": ss.Game, "day": ss.Day}
+		filter = bson.M{"guild_id": gs.GuildID, "game": gs.Game, "day": gs.Day}
 	}
 
-	err := db.UpdateOrInsert(ServerStatsCollection, filter, ss)
+	err := db.UpdateOrInsert(GameStatsCollection, filter, gs)
 	if err != nil {
-		slog.Info("Writing server stats", "collection", ServerStatsCollection, "ServerStats", ss, "filter", filter, "error", err)
+		slog.Info("writing game stats", "collection", GameStatsCollection, "GameStats", gs, "filter", filter, "error", err)
 		return err
 	}
 	return nil
 }
 
-// deleteServerrStats removes the server statistics for specific game in a guild.
-func deleteServerrStats(ss *ServerStats) error {
+// deleteGameStats removes the game statistics for a specific game in a guild.
+func deleteGameStats(gs *GameStats) error {
 	var filter bson.M
-	if ss.ID != primitive.NilObjectID {
-		filter = bson.M{"_id": ss.ID}
+	if gs.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": gs.ID}
 	} else {
-		filter = bson.M{"guild_id": ss.GuildID, "game": ss.Game}
+		filter = bson.M{"guild_id": gs.GuildID, "game": gs.Game, "day": gs.Day}
 	}
-	err := db.DeleteMany(ServerStatsCollection, filter)
+	err := db.DeleteMany(GameStatsCollection, filter)
 	if err != nil {
 		return err
 	}
@@ -290,7 +291,7 @@ func getFirstServerGameDate(guildID string, game string) time.Time {
 		}
 	}
 
-	docs, err := db.Aggregate(ServerStatsCollection, pipeline)
+	docs, err := db.Aggregate(GameStatsCollection, pipeline)
 	if err != nil {
 		slog.Error("failed to get first game date",
 			slog.String("guild_id", guildID),
