@@ -14,7 +14,6 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
-	"github.com/rbrabson/goblin/stats"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -194,8 +193,6 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("memberID", i.Member.User.ID),
 	)
 
-	stats.GamePlayed(i.GuildID, i.Member.User.ID, "race")
-
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
@@ -341,8 +338,6 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
-
-	stats.GamePlayed(i.GuildID, i.Member.User.ID, "race")
 
 	err = raceMessage(s, race, "join")
 	if err != nil {

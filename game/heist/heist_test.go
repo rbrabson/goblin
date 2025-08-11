@@ -707,7 +707,7 @@ func TestHeistCancel(t *testing.T) {
 	}
 
 	// Cancel the heist
-	heist.Cancel()
+	heist.End()
 
 	// Verify the heist is removed from the active heists
 	if GetHeist(GuildId) != nil {

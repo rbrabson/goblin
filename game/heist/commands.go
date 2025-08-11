@@ -23,7 +23,6 @@ import (
 	"github.com/rbrabson/goblin/internal/channel"
 	"github.com/rbrabson/goblin/internal/format"
 	"github.com/rbrabson/goblin/internal/unicode"
-	"github.com/rbrabson/goblin/stats"
 )
 
 const (
@@ -433,12 +432,10 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	stats.GamePlayed(i.GuildID, i.Member.User.ID, "heist")
-
 	waitForHeistToStart(s, i, heist)
 
 	if len(heist.Crew) < 2 {
-		heist.Cancel()
+		heist.End()
 
 		if err := heistMessage(s, heist); err != nil {
 			slog.Error("failed to send heist message",
@@ -454,7 +451,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				slog.Any("error", err),
 			)
 		}
-		slog.Info("Heist cancelled due to lack of interest",
+		slog.Info("heist cancelled due to lack of interest",
 			slog.String("guild", heist.GuildID),
 			slog.String("heist", heist.theme.Heist),
 		)
@@ -700,7 +697,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res 
 	}
 
 	h := GetHeist(i.GuildID)
-	h.End()
+	// h.End()
 
 	if err := heistMessage(s, h); err != nil {
 		slog.Error("failed to heist send message",
@@ -765,8 +762,6 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
-
-	stats.GamePlayed(i.GuildID, i.Member.User.ID, "heist")
 }
 
 // playerStats shows a player's heist stats
@@ -1095,7 +1090,7 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	heist.Cancel()
+	heist.End()
 	if err := heistMessage(s, heist); err != nil {
 		slog.Error("unable to send heist message",
 			slog.Any("error", err),

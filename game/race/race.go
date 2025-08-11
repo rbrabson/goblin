@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/goblin/stats"
 )
 
 var (
@@ -258,6 +259,12 @@ func (r *Race) End() {
 			}
 		}
 	}
+
+	memberIDs := make([]string, 0, len(r.Racers))
+	for _, racer := range r.Racers {
+		memberIDs = append(memberIDs, racer.Member.MemberID)
+	}
+	stats.UpdateGameStats(r.GuildID, "race", memberIDs)
 
 	slog.Info("end race",
 		slog.String("guildID", r.GuildID),

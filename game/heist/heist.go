@@ -12,6 +12,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
+	"github.com/rbrabson/goblin/stats"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -273,32 +274,30 @@ func (h *Heist) Start() (*HeistResult, error) {
 func (h *Heist) End() {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-	h.State = Completed
 
-	heistLock.Lock()
-	delete(currentHeists, h.GuildID)
-	alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
-	heistLock.Unlock()
-
-	slog.Debug("heist ended",
-		slog.String("guildID", h.GuildID),
-	)
-}
-
-// Cancel cancels the current heist, allowing for the cleanup of the heist.
-// This is used when a heist is started, but the heist cannot be run for some reason.
-func (h *Heist) Cancel() {
-	h.mutex.Lock()
-	defer h.mutex.Unlock()
-	h.State = Cancelled
+	heistCancelled := len(h.Crew) <= 1
+	if heistCancelled {
+		h.State = Cancelled
+		slog.Debug("heist cancelled",
+			slog.String("guildID", h.GuildID),
+		)
+	} else {
+		h.State = Completed
+		alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
+		slog.Debug("heist ended",
+			slog.String("guildID", h.GuildID),
+		)
+	}
 
 	heistLock.Lock()
 	delete(currentHeists, h.GuildID)
 	heistLock.Unlock()
 
-	slog.Debug("heist cancelled",
-		slog.String("guildID", h.GuildID),
-	)
+	memberIDs := make([]string, 0, len(h.Crew))
+	for _, member := range h.Crew {
+		memberIDs = append(memberIDs, member.MemberID)
+	}
+	stats.UpdateGameStats(h.GuildID, "heist", memberIDs)
 }
 
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.

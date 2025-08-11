@@ -37,14 +37,6 @@ type PlayerRetention struct {
 	ActivePercentage   float64 `json:"active_percentage"`
 }
 
-// GamesPlayed holds the statistics of games played in a guild.
-type GamesPlayed struct {
-	TotalGamesPlayed         int     `json:"total_games_played"`
-	AverageGamesPlayedPerDay float64 `json:"average_games_played_per_day"`
-	TotalNumberOfPlayers     int     `json:"total_number_of_players"`
-	AverageGamesPerPlayer    float64 `json:"average_games_per_player"`
-}
-
 // getPlayerStats retrieves the player statistics for a specific guild, member, and game.
 // If the player stats do not exist, it creates a new PlayerStats instance.
 func getPlayerStats(guildID string, memberID string, game string) *PlayerStats {
@@ -69,67 +61,6 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 	}
 	writePlayerStats(ps)
 	return ps
-}
-
-// GamePlayed updates the PlayerStats when a game is played.
-func GamePlayed(guildID string, memberID string, game string) {
-	statsLock.Lock()
-	defer statsLock.Unlock()
-
-	today := today()
-	lastDatePlayed := getLastDatePlayed(guildID, memberID)
-
-	ps := getPlayerStats(guildID, memberID, game)
-	oldLastPlayed := ps.LastPlayed
-	ps.LastPlayed = today
-	ps.NumberOfTimesPlayed++
-	writePlayerStats(ps)
-	slog.Debug("player stats updated",
-		slog.String("guild_id", guildID),
-		slog.String("member_id", memberID),
-		slog.String("game", game),
-		slog.Time("last_played", ps.LastPlayed),
-		slog.Int("number_of_times_played", ps.NumberOfTimesPlayed),
-	)
-
-	ss := getServerStats(guildID, game, today)
-	ss.GamesPlayed++
-	if oldLastPlayed.Before(today) {
-		ss.Players++
-		slog.Debug("first game played by member for today",
-			slog.String("guild_id", guildID),
-			slog.String("member_id", memberID),
-			slog.String("game", game),
-			slog.Time("day", ss.Day),
-		)
-	}
-	writeServerStats(ss)
-	slog.Debug("server stats updated",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Time("day", today),
-		slog.Int("games_played", ss.GamesPlayed),
-		slog.Int("players", ss.Players),
-	)
-
-	ss = getServerStats(guildID, "all", today)
-	ss.GamesPlayed++
-	if lastDatePlayed.Before(today) {
-		ss.Players++
-		slog.Debug("first time playing any game by member for today",
-			slog.String("guild_id", guildID),
-			slog.String("member_id", memberID),
-			slog.Time("day", ss.Day),
-		)
-	}
-	writeServerStats(ss)
-	slog.Debug("server stats updated",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Time("day", today),
-		slog.Int("games_played", ss.GamesPlayed),
-		slog.Int("players", ss.Players),
-	)
 }
 
 // GetPlayerRetentionForGame finds players who played after a specific date but haven't played
