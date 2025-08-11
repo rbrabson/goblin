@@ -3,8 +3,13 @@ package stats
 import (
 	"log/slog"
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
@@ -219,6 +224,29 @@ var (
 							Name:        "user",
 							Description: "The member or member ID.",
 							Required:    false,
+						},
+					},
+				},
+				{
+					Name:        "active",
+					Description: "View the players who play the most games.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Name:        "game",
+							Description: "The game for which to determine the number of games played.",
+							Type:        discordgo.ApplicationCommandOptionString,
+							Required:    true,
+							Choices: []*discordgo.ApplicationCommandOptionChoice{
+								{
+									Name:  "Heist",
+									Value: Heist,
+								},
+								{
+									Name:  "Race",
+									Value: Race,
+								},
+							},
 						},
 					},
 				},
@@ -539,10 +567,12 @@ func stats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	// TODO: playerActivity isn't being used, so it can be removed.
 	options := i.ApplicationCommandData().Options
-	if options[0].Name == "played" {
+	switch options[0].Name {
+	case "played":
 		playerGames(s, i)
+	case "active":
+		activePlayers(s, i)
 	}
 }
 
@@ -647,8 +677,104 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+func activePlayers(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	titleCaser := cases.Title(language.AmericanEnglish)
+
+	// Get the guild ID from the interaction
+	guildID := getGuildID(i)
+
+	var game string
+	options := i.ApplicationCommandData().Options[0].Options
+	for _, option := range options {
+		if option.Name == "game" {
+			game = option.StringValue()
+		}
+	}
+
+	// Get the player stats for the most active members
+	playerStats := getPlayerStatsForMostActiveMembers(guildID, game)
+
+	// Make sure the guild member's name is updated
+	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+
+	p := message.NewPrinter(language.AmericanEnglish)
+	title := titleCaser.String(p.Sprintf("Most Active Players for %ss", game))
+	embeds := formatPlayerStats(title, playerStats)
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: embeds,
+			Flags:  discordgo.MessageFlagsEphemeral,
+		},
+	})
+	if err != nil {
+		slog.Error("failed to send the response",
+			slog.Any("error", err),
+		)
+	}
+}
+
+// formatPlayerStats formats the player stats to be sent to a Discord server
+func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.MessageEmbed {
+	var tableBuffer strings.Builder
+	table := tablewriter.NewTable(&tableBuffer,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.BorderNone,
+			Symbols: tw.NewSymbols(tw.StyleASCII),
+			Settings: tw.Settings{
+				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+				Lines:      tw.Lines{ShowHeaderLine: tw.Off},
+			},
+		})),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
+				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
+			},
+			Header: tw.CellConfig{
+				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
+				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
+			},
+		}),
+	)
+
+	table.Header([]string{"#", "Name", "Games"})
+
+	p := message.NewPrinter(language.AmericanEnglish)
+	// A bit of a hack, but good enough....
+	for i, ps := range playerStats {
+		member := guild.GetMember(ps.GuildID, ps.MemberID)
+		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", ps.NumberOfTimesPlayed)}
+		if err := table.Append(data); err != nil {
+			slog.Error("failed to append data to the table",
+				slog.Any("error", err),
+			)
+		}
+	}
+	if err := table.Render(); err != nil {
+		slog.Error("failed to render the table",
+			slog.Any("error", err),
+		)
+	}
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Type:  discordgo.EmbedTypeRich,
+			Title: title,
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Value: p.Sprintf("```\n%s```\n", tableBuffer.String()),
+				},
+			},
+		},
+	}
+
+	return embeds
+}
+
 // getGuildID returns the guild ID from the interaction.
 func getGuildID(i *discordgo.InteractionCreate) string {
-	return i.GuildID
-	// return "236523452230533121"
+	// return i.GuildID
+	return "236523452230533121"
 }

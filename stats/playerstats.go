@@ -2,6 +2,7 @@ package stats
 
 import (
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -61,6 +62,29 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 	}
 	writePlayerStats(ps)
 	return ps
+}
+
+// GetCurrentRanking returns the global rankings based on the current balance.
+func getPlayerStatsForMostActiveMembers(guildID string, game string) []*PlayerStats {
+	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "game", Value: game}}
+	sort := bson.D{{Key: "NumberOfTimesPlayed", Value: -1}, {Key: "_id", Value: 1}}
+	limit := int64(10)
+
+	playerStats := readMultiplePlayerStats(guildID, filter, sort, limit)
+	slices.SortFunc(playerStats, func(a, b *PlayerStats) int {
+		switch {
+		case a.NumberOfTimesPlayed > b.NumberOfTimesPlayed:
+			return -1
+		case a.NumberOfTimesPlayed < b.NumberOfTimesPlayed:
+			return 1
+		case a.MemberID < b.MemberID:
+			return -1
+		default:
+			return 1
+		}
+	})
+
+	return playerStats
 }
 
 // GetPlayerRetentionForGame finds players who played after a specific date but haven't played
