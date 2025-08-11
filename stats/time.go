@@ -133,7 +133,7 @@ func fmtDuration(d time.Duration) string {
 	}
 
 	if len(dateParts) == 0 {
-		return "0 Days"
+		return "Today"
 	}
 
 	return strings.Join(dateParts, " ")

@@ -601,6 +601,14 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	firstPlayedDate := fmtDuration(today.Sub(ps.FirstPlayed))
+	if firstPlayedDate != "Today" {
+		firstPlayedDate += " Ago"
+	}
+	lastPlayedDate := fmtDuration(today.Sub(ps.LastPlayed))
+	if lastPlayedDate != "Today" {
+		lastPlayedDate += " Ago"
+	}
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Title: titleCaser.String("Games Played for " + game),
@@ -612,12 +620,12 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "First Played",
-					Value:  p.Sprintf("%s Ago", fmtDuration(today.Sub(ps.FirstPlayed))),
+					Value:  firstPlayedDate,
 					Inline: false,
 				},
 				{
 					Name:   "Last Played",
-					Value:  p.Sprintf("%s Ago", fmtDuration(today.Sub(ps.LastPlayed))),
+					Value:  lastPlayedDate,
 					Inline: false,
 				},
 				{
