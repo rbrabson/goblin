@@ -79,7 +79,18 @@ func (plugin *Plugin) GetName() string {
 
 // GetHelp returns the member help for the banking system
 func (plugin *Plugin) GetHelp() []string {
-	return nil
+	help := make([]string, 0, len(memberCommands[0].Options))
+
+	commandPrefix := memberCommands[0].Name
+	for _, command := range memberCommands[0].Options {
+		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
+		help = append(help, commandDescription)
+	}
+	slices.Sort(help)
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
+	help = append([]string{title}, help...)
+
+	return help
 }
 
 // GetAdminHelp returns the admin help for the banking system
