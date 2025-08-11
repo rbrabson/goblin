@@ -641,7 +641,6 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // getGuildID returns the guild ID from the interaction.
 func getGuildID(i *discordgo.InteractionCreate) string {
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
-	return guildID
+	return i.GuildID
+	// return "236523452230533121"
 }
