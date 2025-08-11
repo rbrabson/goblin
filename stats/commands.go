@@ -22,6 +22,7 @@ const (
 var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"stats-admin": statsAdmin,
+		"stats":       stats,
 	}
 
 	adminCommands = []*discordgo.ApplicationCommand{
@@ -187,7 +188,43 @@ var (
 		},
 	}
 
-	memberCommands = []*discordgo.ApplicationCommand{}
+	memberCommands = []*discordgo.ApplicationCommand{
+		{
+			Name:        "stats",
+			Description: "Commands used to interact with the stats system.",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "played",
+					Description: "View games played by a player.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Name:        "game",
+							Description: "The game for which to determine the number of games played.",
+							Type:        discordgo.ApplicationCommandOptionString,
+							Required:    true,
+							Choices: []*discordgo.ApplicationCommandOptionChoice{
+								{
+									Name:  "Heist",
+									Value: Heist,
+								},
+								{
+									Name:  "Race",
+									Value: Race,
+								},
+							},
+						},
+						{
+							Type:        discordgo.ApplicationCommandOptionUser,
+							Name:        "user",
+							Description: "The member or member ID.",
+							Required:    false,
+						},
+					},
+				},
+			},
+		},
+	}
 )
 
 // statsAdmin handles the /stats-admin command.
@@ -251,8 +288,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
+	guildID := getGuildID(i)
 
 	firstGameDate := getFirstGameDate(guildID, game)
 	duration := getDuration(guildID, game, after, firstGameDate)
@@ -374,8 +410,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("since", since),
 	)
 
-	guildID := i.GuildID
-	// guildID := "236523452230533121"
+	guildID := getGuildID(i)
 
 	firstGameDate := getFirstServerGameDate(guildID, game)
 	checkAfter := getTime(guildID, game, since, firstGameDate)
@@ -488,4 +523,124 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
+}
+
+// stats handles the /stats command.
+func stats(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if status == discord.STOPPING || status == discord.STOPPED {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send response",
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
+
+	// TODO: playerActivity isn't being used, so it can be removed.
+	options := i.ApplicationCommandData().Options
+	if options[0].Name == "played" {
+		playerGames(s, i)
+	}
+}
+
+// playerGames handles the /stats played command.
+func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+	titleCaser := cases.Title(language.AmericanEnglish)
+	today := today()
+
+	memberID := i.Member.User.ID
+	var game string
+	var member *guild.Member
+	options := i.ApplicationCommandData().Options[0].Options
+	for _, option := range options {
+		if option.Name == "user" {
+			var err error
+			member, err = guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+			if err != nil {
+				resp := disgomsg.NewResponse(
+					disgomsg.WithContent("The user to get the account for was not found. Please try again."),
+				)
+				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+					slog.Error("error sending response",
+						slog.String("guildID", i.GuildID),
+						slog.String("error", err.Error()),
+					)
+				}
+				return
+			}
+			memberID = member.MemberID
+		}
+		if option.Name == "game" {
+			game = option.StringValue()
+		}
+	}
+
+	guildID := getGuildID(i)
+	var guildMember *guild.Member
+	if member == nil {
+		guildMember = guild.GetMember(guildID, memberID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+	} else {
+		guildMember = guild.GetMember(guildID, memberID).SetName(member.UserName, member.NickName, member.GlobalName)
+	}
+
+	ps, _ := readPlayerStats(guildID, memberID, game)
+	if ps == nil {
+		content := p.Sprintf("No player stats found for %s in the %s game.", guildMember.Name, game)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(content),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send response",
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
+
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Title: titleCaser.String("Games Played for " + game),
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:   "Member",
+					Value:  p.Sprintf("%s", guildMember.Name),
+					Inline: false,
+				},
+				{
+					Name:   "First Played",
+					Value:  p.Sprintf("%s Ago", fmtDuration(today.Sub(ps.FirstPlayed))),
+					Inline: false,
+				},
+				{
+					Name:   "Last Played",
+					Value:  p.Sprintf("%s Ago", fmtDuration(today.Sub(ps.LastPlayed))),
+					Inline: false,
+				},
+				{
+					Name:   "Games Played",
+					Value:  p.Sprintf("%d", ps.NumberOfTimesPlayed),
+					Inline: false,
+				},
+			},
+		},
+	}
+
+	resp := disgomsg.NewResponse(
+		disgomsg.WithEmbeds(embeds),
+	)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("failed to send response",
+			slog.Any("error", err),
+		)
+	}
+}
+
+// getGuildID returns the guild ID from the interaction.
+func getGuildID(i *discordgo.InteractionCreate) string {
+	return i.GuildID
+	// return "236523452230533121"
 }
