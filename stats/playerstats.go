@@ -67,7 +67,7 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 // GetCurrentRanking returns the global rankings based on the current balance.
 func getPlayerStatsForMostActiveMembers(guildID string, game string) []*PlayerStats {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "game", Value: game}}
-	sort := bson.D{{Key: "NumberOfTimesPlayed", Value: -1}, {Key: "_id", Value: 1}}
+	sort := bson.D{{Key: "number_of_times_played", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
 
 	playerStats := readMultiplePlayerStats(guildID, filter, sort, limit)
