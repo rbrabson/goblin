@@ -206,6 +206,10 @@ var (
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
 								{
+									Name:  "All",
+									Value: All,
+								},
+								{
 									Name:  "Heist",
 									Value: Heist,
 								},
@@ -234,6 +238,10 @@ var (
 							Type:        discordgo.ApplicationCommandOptionString,
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
+								{
+									Name:  "All",
+									Value: All,
+								},
 								{
 									Name:  "Heist",
 									Value: Heist,
@@ -607,7 +615,7 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		guildMember = guild.GetMember(guildID, memberID).SetName(member.UserName, member.NickName, member.GlobalName)
 	}
 
-	ps, _ := readPlayerStats(guildID, memberID, game)
+	ps, _ := getAggregatePlayerStats(guildID, memberID, game)
 	if ps == nil {
 		content := p.Sprintf("No player stats found for %s in the %s game.", guildMember.Name, game)
 		resp := disgomsg.NewResponse(
@@ -667,6 +675,7 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+// activePlayers handles the /stats active command.
 func activePlayers(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	titleCaser := cases.Title(language.AmericanEnglish)
 
@@ -688,7 +697,12 @@ func activePlayers(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	_ = guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 
 	p := message.NewPrinter(language.AmericanEnglish)
-	title := titleCaser.String(p.Sprintf("Most Active Players for %ss", game))
+	var title string
+	if game == "" || game == "all" {
+		title = titleCaser.String("Most Active Players")
+	} else {
+		title = titleCaser.String(p.Sprintf("Most Active Players for %ss", game))
+	}
 	embeds := formatPlayerStats(title, playerStats)
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -765,6 +779,6 @@ func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.Me
 
 // getGuildID returns the guild ID from the interaction.
 func getGuildID(i *discordgo.InteractionCreate) string {
-	return i.GuildID
-	// return "236523452230533121"
+	// return i.GuildID
+	return "236523452230533121"
 }
