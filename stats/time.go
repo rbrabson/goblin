@@ -34,7 +34,7 @@ func today() time.Time {
 }
 
 // getDuration calculates the duration from the start date to today based on the specified period.
-func getDuration(guildID string, game string, period string, firstGameDate time.Time) time.Duration {
+func getDuration(period string, firstGameDate time.Time) time.Duration {
 	today := today().UTC()
 
 	var startDate time.Time
@@ -65,7 +65,7 @@ func getDuration(guildID string, game string, period string, firstGameDate time.
 }
 
 // getTime calculates the time period based on the specified period and first game date.
-func getTime(guildID string, game string, period string, firstGameDate time.Time) time.Time {
+func getTime(period string, firstGameDate time.Time) time.Time {
 	today := today().UTC()
 
 	var timePeriod time.Time

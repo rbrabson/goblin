@@ -67,10 +67,6 @@ var (
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
 								{
-									Name:  "One Day",
-									Value: OneDay,
-								},
-								{
 									Name:  "One Week",
 									Value: OneWeek,
 								},
@@ -319,8 +315,8 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := getGuildID(i)
 
 	firstGameDate := getFirstGameDate(guildID, game)
-	duration := getDuration(guildID, game, after, firstGameDate)
-	cuttoff := getTime(guildID, game, since, firstGameDate)
+	duration := getDuration(after, firstGameDate)
+	cuttoff := getTime(since, firstGameDate)
 
 	slog.Debug("duration and cutoff calculated",
 		slog.String("guild_id", i.GuildID),
@@ -328,13 +324,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.Time("cutoff", cuttoff),
 	)
 
-	var retention *PlayerRetention
-	var err error
-	if game == "" || game == "all" {
-		retention, err = GetPlayerRetention(guildID, cuttoff, duration)
-	} else {
-		retention, err = GetPlayerRetentionForGame(guildID, game, cuttoff, duration)
-	}
+	retention, err := GetPlayerRetention(guildID, game, cuttoff, duration)
 	if err != nil {
 		slog.Error("failed to get player retention",
 			slog.Any("error", err),
@@ -441,7 +431,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := getGuildID(i)
 
 	firstGameDate := getFirstServerGameDate(guildID, game)
-	checkAfter := getTime(guildID, game, since, firstGameDate)
+	checkAfter := getTime(since, firstGameDate)
 
 	var gamesPlayed *GamesPlayed
 	var err error
