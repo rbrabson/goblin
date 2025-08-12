@@ -328,13 +328,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.Time("cutoff", cuttoff),
 	)
 
-	var retention *PlayerRetention
-	var err error
-	if game == "" || game == "all" {
-		retention, err = GetPlayerRetentionForAllGames(guildID, cuttoff, duration)
-	} else {
-		retention, err = GetPlayerRetentionForGame(guildID, game, cuttoff, duration)
-	}
+	retention, err := GetPlayerRetention(guildID, game, cuttoff, duration)
 	if err != nil {
 		slog.Error("failed to get player retention",
 			slog.Any("error", err),
