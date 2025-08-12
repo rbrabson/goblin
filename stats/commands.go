@@ -67,10 +67,6 @@ var (
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
 								{
-									Name:  "One Day",
-									Value: OneDay,
-								},
-								{
 									Name:  "One Week",
 									Value: OneWeek,
 								},
