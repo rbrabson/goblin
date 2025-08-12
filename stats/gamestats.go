@@ -136,10 +136,22 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 		slog.Time("end_date", endDate),
 	)
 
-	// Pipeline to aggregate game statistics
-	pipeline := mongo.Pipeline{
+	pipeline := make(mongo.Pipeline, 0, 4)
+
+	if game == "" || game == "all" {
+		// Stage 1: Match documents for the specific guild and date range
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "day", Value: bson.D{
+					{Key: "$gte", Value: startDate},
+					{Key: "$lte", Value: endDate},
+				}},
+			}},
+		})
+	} else {
 		// Stage 1: Match documents for the specific guild, game, and date range
-		bson.D{
+		pipeline = append(pipeline, bson.D{
 			{Key: "$match", Value: bson.D{
 				{Key: "guild_id", Value: guildID},
 				{Key: "game", Value: game},
@@ -148,90 +160,90 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 					{Key: "$lte", Value: endDate},
 				}},
 			}},
-		},
-		// Stage 2: Group all documents and sum the statistics
-		bson.D{
-			{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: nil},
-				{Key: "total_unique_players", Value: bson.D{{Key: "$sum", Value: "$unique_players"}}},
-				{Key: "total_players", Value: bson.D{{Key: "$sum", Value: "$total_players"}}},
-				{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$games_played"}}},
-				{Key: "number_of_days", Value: bson.D{{Key: "$sum", Value: 1}}},
-				{Key: "avg_unique_players_per_day", Value: bson.D{{Key: "$avg", Value: "$unique_players"}}},
-				{Key: "avg_total_players_per_day", Value: bson.D{{Key: "$avg", Value: "$total_players"}}},
-				{Key: "avg_games_per_day", Value: bson.D{{Key: "$avg", Value: "$games_played"}}},
-			}},
-		},
-		// Stage 3: Calculate date range in days
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "date_range_days", Value: bson.D{
-					{Key: "$divide", Value: bson.A{
-						bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
-						1000 * 60 * 60 * 24, // Convert milliseconds to days
-					}},
-				}},
-			}},
-		},
-		// Stage 4: Calculate final averages
-		bson.D{
-			{Key: "$addFields", Value: bson.D{
-				{Key: "unique_players_per_day", Value: "$avg_unique_players_per_day"},
-				{Key: "total_players_per_day", Value: "$avg_total_players_per_day"},
-				{Key: "average_games_per_day", Value: "$avg_games_per_day"},
-				{Key: "average_games_played_per_day", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$gt", Value: bson.A{"$date_range_days", 0}},
-						}},
-						{Key: "then", Value: bson.D{
-							{Key: "$divide", Value: bson.A{"$total_games_played", "$date_range_days"}},
-						}},
-						{Key: "else", Value: 0},
-					}},
-				}},
-				{Key: "average_games_per_player", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$gt", Value: bson.A{"$total_unique_players", 0}},
-						}},
-						{Key: "then", Value: bson.D{
-							{Key: "$divide", Value: bson.A{"$total_games_played", "$total_unique_players"}},
-						}},
-						{Key: "else", Value: 0},
-					}},
-				}},
-				{Key: "average_games_per_player_per_day", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$and", Value: bson.A{
-								bson.D{{Key: "$gt", Value: bson.A{"$total_unique_players", 0}}},
-								bson.D{{Key: "$gt", Value: bson.A{"$date_range_days", 0}}},
-							}},
-						}},
-						{Key: "then", Value: bson.D{
-							{Key: "$divide", Value: bson.A{
-								bson.D{{Key: "$divide", Value: bson.A{"$total_games_played", "$total_unique_players"}}},
-								"$date_range_days",
-							}},
-						}},
-						{Key: "else", Value: 0},
-					}},
-				}},
-				{Key: "average_players_per_game", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{
-							{Key: "$gt", Value: bson.A{"$total_games_played", 0}},
-						}},
-						{Key: "then", Value: bson.D{
-							{Key: "$divide", Value: bson.A{"$total_players", "$total_games_played"}},
-						}},
-						{Key: "else", Value: 0},
-					}},
-				}},
-			}},
-		},
+		})
 	}
+	// Stage 2: Group all documents and sum the statistics
+	pipeline = append(pipeline, bson.D{
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: nil},
+			{Key: "total_unique_players", Value: bson.D{{Key: "$sum", Value: "$unique_players"}}},
+			{Key: "total_players", Value: bson.D{{Key: "$sum", Value: "$total_players"}}},
+			{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$games_played"}}},
+			{Key: "number_of_days", Value: bson.D{{Key: "$sum", Value: 1}}},
+			{Key: "avg_unique_players_per_day", Value: bson.D{{Key: "$avg", Value: "$unique_players"}}},
+			{Key: "avg_total_players_per_day", Value: bson.D{{Key: "$avg", Value: "$total_players"}}},
+			{Key: "avg_games_per_day", Value: bson.D{{Key: "$avg", Value: "$games_played"}}},
+		}},
+	})
+	// Stage 3: Calculate date range in days
+	pipeline = append(pipeline, bson.D{
+		{Key: "$addFields", Value: bson.D{
+			{Key: "date_range_days", Value: bson.D{
+				{Key: "$divide", Value: bson.A{
+					bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
+					1000 * 60 * 60 * 24, // Convert milliseconds to days
+				}},
+			}},
+		}},
+	})
+	// Stage 4: Calculate final averages
+	pipeline = append(pipeline, bson.D{
+		{Key: "$addFields", Value: bson.D{
+			{Key: "unique_players_per_day", Value: "$avg_unique_players_per_day"},
+			{Key: "total_players_per_day", Value: "$avg_total_players_per_day"},
+			{Key: "average_games_per_day", Value: "$avg_games_per_day"},
+			{Key: "average_games_played_per_day", Value: bson.D{
+				{Key: "$cond", Value: bson.D{
+					{Key: "if", Value: bson.D{
+						{Key: "$gt", Value: bson.A{"$date_range_days", 0}},
+					}},
+					{Key: "then", Value: bson.D{
+						{Key: "$divide", Value: bson.A{"$total_games_played", "$date_range_days"}},
+					}},
+					{Key: "else", Value: 0},
+				}},
+			}},
+			{Key: "average_games_per_player", Value: bson.D{
+				{Key: "$cond", Value: bson.D{
+					{Key: "if", Value: bson.D{
+						{Key: "$gt", Value: bson.A{"$total_unique_players", 0}},
+					}},
+					{Key: "then", Value: bson.D{
+						{Key: "$divide", Value: bson.A{"$total_games_played", "$total_unique_players"}},
+					}},
+					{Key: "else", Value: 0},
+				}},
+			}},
+			{Key: "average_games_per_player_per_day", Value: bson.D{
+				{Key: "$cond", Value: bson.D{
+					{Key: "if", Value: bson.D{
+						{Key: "$and", Value: bson.A{
+							bson.D{{Key: "$gt", Value: bson.A{"$total_unique_players", 0}}},
+							bson.D{{Key: "$gt", Value: bson.A{"$date_range_days", 0}}},
+						}},
+					}},
+					{Key: "then", Value: bson.D{
+						{Key: "$divide", Value: bson.A{
+							bson.D{{Key: "$divide", Value: bson.A{"$total_games_played", "$total_unique_players"}}},
+							"$date_range_days",
+						}},
+					}},
+					{Key: "else", Value: 0},
+				}},
+			}},
+			{Key: "average_players_per_game", Value: bson.D{
+				{Key: "$cond", Value: bson.D{
+					{Key: "if", Value: bson.D{
+						{Key: "$gt", Value: bson.A{"$total_games_played", 0}},
+					}},
+					{Key: "then", Value: bson.D{
+						{Key: "$divide", Value: bson.A{"$total_players", "$total_games_played"}},
+					}},
+					{Key: "else", Value: 0},
+				}},
+			}},
+		}},
+	})
 
 	docs, err := db.Aggregate(GameStatsCollection, pipeline)
 	if err != nil {

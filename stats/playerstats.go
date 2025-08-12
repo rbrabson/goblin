@@ -2,7 +2,6 @@ package stats
 
 import (
 	"log/slog"
-	"slices"
 	"sync"
 	"time"
 
@@ -62,29 +61,6 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 	}
 	writePlayerStats(ps)
 	return ps
-}
-
-// GetCurrentRanking returns the global rankings based on the current balance.
-func getPlayerStatsForMostActiveMembers(guildID string, game string) []*PlayerStats {
-	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "game", Value: game}}
-	sort := bson.D{{Key: "number_of_times_played", Value: -1}, {Key: "_id", Value: 1}}
-	limit := int64(10)
-
-	playerStats := readMultiplePlayerStats(guildID, filter, sort, limit)
-	slices.SortFunc(playerStats, func(a, b *PlayerStats) int {
-		switch {
-		case a.NumberOfTimesPlayed > b.NumberOfTimesPlayed:
-			return -1
-		case a.NumberOfTimesPlayed < b.NumberOfTimesPlayed:
-			return 1
-		case a.MemberID < b.MemberID:
-			return -1
-		default:
-			return 1
-		}
-	})
-
-	return playerStats
 }
 
 // GetPlayerRetention finds players who played after a specific date but haven't played
@@ -233,4 +209,245 @@ func GetPlayerRetention(guildID string, game string, cuttoff time.Time, inactive
 	)
 
 	return retention, nil
+}
+
+// getAggregatePlayerStats retrieves aggregated player stats for a specific member and game
+func getAggregatePlayerStats(guildID string, memberID string, game string) (*PlayerStats, error) {
+	slog.Debug("getting aggregated player stats",
+		slog.String("guild_id", guildID),
+		slog.String("member_id", memberID),
+		slog.String("game", game),
+	)
+
+	pipeline := make(mongo.Pipeline, 0, 4)
+
+	if game == "" || game == "all" {
+		// Stage 1: Match documents for the specific guild and member
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "member_id", Value: memberID},
+			}},
+		})
+	} else {
+		// Stage 1: Match documents for the specific guild, member, and game
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "member_id", Value: memberID},
+				{Key: "game", Value: game},
+			}},
+		})
+	}
+
+	// Stage 2: Group by member_id and aggregate stats across all matching games
+	pipeline = append(pipeline, bson.D{
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$member_id"},
+			{Key: "guild_id", Value: bson.D{{Key: "$first", Value: "$guild_id"}}},
+			{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$number_of_times_played"}}},
+			{Key: "first_played", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
+			{Key: "last_played", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
+			{Key: "games", Value: bson.D{{Key: "$addToSet", Value: "$game"}}}, // Track which games they played
+		}},
+	})
+
+	// Stage 3: Project fields for the result
+	pipeline = append(pipeline, bson.D{
+		{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 0},
+			{Key: "member_id", Value: "$_id"},
+			{Key: "guild_id", Value: 1},
+			{Key: "game", Value: bson.D{
+				{Key: "$cond", Value: bson.D{
+					{Key: "if", Value: bson.D{
+						{Key: "$eq", Value: bson.A{bson.D{{Key: "$size", Value: "$games"}}, 1}},
+					}},
+					{Key: "then", Value: bson.D{{Key: "$arrayElemAt", Value: bson.A{"$games", 0}}}},
+					{Key: "else", Value: game}, // Use the requested game parameter
+				}},
+			}},
+			{Key: "first_played", Value: 1},
+			{Key: "last_played", Value: 1},
+			{Key: "number_of_times_played", Value: "$total_games_played"},
+		}},
+	})
+
+	// Stage 4: Limit to 1 result (should only be one member anyway)
+	pipeline = append(pipeline, bson.D{
+		{Key: "$limit", Value: 1},
+	})
+
+	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
+	if err != nil {
+		slog.Error("failed to get aggregated player stats",
+			slog.String("guild_id", guildID),
+			slog.String("member_id", memberID),
+			slog.String("game", game),
+			slog.Any("error", err),
+		)
+		return nil, err
+	}
+
+	if len(docs) == 0 {
+		slog.Debug("no player stats found",
+			slog.String("guild_id", guildID),
+			slog.String("member_id", memberID),
+			slog.String("game", game),
+		)
+		return nil, nil // No stats found
+	}
+
+	doc := docs[0]
+	ps := &PlayerStats{
+		ID:                  primitive.NewObjectID(), // Generate new ID since this is aggregated data
+		GuildID:             getString(doc["guild_id"]),
+		MemberID:            getString(doc["member_id"]),
+		Game:                getString(doc["game"]),
+		FirstPlayed:         getTimeFromDateTime(doc["first_played"]),
+		LastPlayed:          getTimeFromDateTime(doc["last_played"]),
+		NumberOfTimesPlayed: getInt(doc["number_of_times_played"]),
+	}
+
+	slog.Debug("aggregated player stats retrieved",
+		slog.String("guild_id", ps.GuildID),
+		slog.String("member_id", ps.MemberID),
+		slog.String("game", ps.Game),
+		slog.Int("total_games_played", ps.NumberOfTimesPlayed),
+		slog.Time("first_played", ps.FirstPlayed),
+		slog.Time("last_played", ps.LastPlayed),
+	)
+
+	return ps, nil
+}
+
+// getPlayerStatsForMostActiveMembers returns the most active players using aggregation pipeline
+func getPlayerStatsForMostActiveMembers(guildID string, game string) []*PlayerStats {
+	slog.Debug("getting most active members",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+	)
+
+	pipeline := make(mongo.Pipeline, 0, 5)
+
+	if game == "" || game == "all" {
+		// Stage 1: Match documents for the specific guild
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+			}},
+		})
+	} else {
+		// Stage 1: Match documents for the specific guild and game
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "game", Value: game},
+			}},
+		})
+	}
+
+	// Stage 2: Group by member_id and sum number_of_times_played across all games
+	pipeline = append(pipeline, bson.D{
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$member_id"},
+			{Key: "guild_id", Value: bson.D{{Key: "$first", Value: "$guild_id"}}},
+			{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$number_of_times_played"}}},
+			{Key: "first_played", Value: bson.D{{Key: "$min", Value: "$first_played"}}},
+			{Key: "last_played", Value: bson.D{{Key: "$max", Value: "$last_played"}}},
+			{Key: "games", Value: bson.D{{Key: "$addToSet", Value: "$game"}}}, // Track which games they played
+		}},
+	})
+
+	// Stage 3: Sort by total_games_played (descending) and _id (ascending for tie-breaking)
+	pipeline = append(pipeline, bson.D{
+		{Key: "$sort", Value: bson.D{
+			{Key: "total_games_played", Value: -1},
+			{Key: "_id", Value: 1},
+		}},
+	})
+
+	// Stage 4: Limit to top 10 players
+	pipeline = append(pipeline, bson.D{
+		{Key: "$limit", Value: 10},
+	})
+
+	// Stage 5: Project fields for the result
+	pipeline = append(pipeline, bson.D{
+		{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 0},
+			{Key: "member_id", Value: "$_id"},
+			{Key: "guild_id", Value: 1},
+			{Key: "game", Value: bson.D{
+				{Key: "$cond", Value: bson.D{
+					{Key: "if", Value: bson.D{
+						{Key: "$eq", Value: bson.A{bson.D{{Key: "$size", Value: "$games"}}, 1}},
+					}},
+					{Key: "then", Value: bson.D{{Key: "$arrayElemAt", Value: bson.A{"$games", 0}}}},
+					{Key: "else", Value: "all"},
+				}},
+			}},
+			{Key: "first_played", Value: 1},
+			{Key: "last_played", Value: 1},
+			{Key: "number_of_times_played", Value: "$total_games_played"},
+		}},
+	})
+
+	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
+	if err != nil {
+		slog.Error("failed to get most active members",
+			slog.String("guild_id", guildID),
+			slog.String("game", game),
+			slog.Any("error", err),
+		)
+		return []*PlayerStats{}
+	}
+
+	var playerStats []*PlayerStats
+	for _, doc := range docs {
+		ps := &PlayerStats{
+			ID:                  primitive.NewObjectID(), // Generate new ID since this is aggregated data
+			GuildID:             getString(doc["guild_id"]),
+			MemberID:            getString(doc["member_id"]),
+			Game:                getString(doc["game"]),
+			FirstPlayed:         getTimeFromDateTime(doc["first_played"]),
+			LastPlayed:          getTimeFromDateTime(doc["last_played"]),
+			NumberOfTimesPlayed: getInt(doc["number_of_times_played"]),
+		}
+		playerStats = append(playerStats, ps)
+	}
+
+	slog.Debug("most active members retrieved",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Int("count", len(playerStats)),
+	)
+
+	return playerStats
+}
+
+// Helper functions for type conversion
+func getString(value interface{}) string {
+	if str, ok := value.(string); ok {
+		return str
+	}
+	return ""
+}
+
+func getObjectID(value interface{}) primitive.ObjectID {
+	if id, ok := value.(primitive.ObjectID); ok {
+		return id
+	}
+	return primitive.NilObjectID
+}
+
+func getTimeFromDateTime(value interface{}) time.Time {
+	switch v := value.(type) {
+	case time.Time:
+		return v
+	case primitive.DateTime:
+		return v.Time()
+	default:
+		return time.Time{}
+	}
 }
