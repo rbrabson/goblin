@@ -331,7 +331,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var retention *PlayerRetention
 	var err error
 	if game == "" || game == "all" {
-		retention, err = GetPlayerRetention(guildID, cuttoff, duration)
+		retention, err = GetPlayerRetentionForAllGames(guildID, cuttoff, duration)
 	} else {
 		retention, err = GetPlayerRetentionForGame(guildID, game, cuttoff, duration)
 	}

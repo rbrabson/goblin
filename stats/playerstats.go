@@ -223,9 +223,9 @@ func GetPlayerRetentionForGame(guildID string, game string, cuttoff time.Time, i
 	return retention, nil
 }
 
-// GetPlayerRetention finds players who played after a specific date but haven't played
+// GetPlayerRetentionForAllGames finds players who played after a specific date but haven't played
 // recently for the duration provided (i.e., players who became inactive)
-func GetPlayerRetention(guildID string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
+func GetPlayerRetentionForAllGames(guildID string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
 	statsLock.Lock()
 	defer statsLock.Unlock()
 
