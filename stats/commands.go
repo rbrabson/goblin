@@ -319,7 +319,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := getGuildID(i)
 
 	firstGameDate := getFirstGameDate(guildID, game)
-	duration := getDuration(guildID, game, after, firstGameDate)
+	duration := getDuration(after, firstGameDate)
 	cuttoff := getTime(since, firstGameDate)
 
 	slog.Debug("duration and cutoff calculated",
