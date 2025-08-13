@@ -443,7 +443,9 @@ func getTimeFromPipeline(value interface{}) time.Time {
 	case time.Time:
 		t = v
 	default:
-		slog.Error("unknown type for time conversion", slog.Any("value", value))
+		slog.Error("unknown type for time conversion",
+			slog.Any("value", value),
+		)
 		t = time.Time{}
 	}
 
