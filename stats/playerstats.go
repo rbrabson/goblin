@@ -434,19 +434,13 @@ func getString(value interface{}) string {
 	return ""
 }
 
-func getObjectID(value interface{}) primitive.ObjectID {
-	if id, ok := value.(primitive.ObjectID); ok {
-		return id
-	}
-	return primitive.NilObjectID
-}
-
+// getTimeFromDateTime retrieves a time.Time from a BSON DateTime or a time.Time.
 func getTimeFromDateTime(value interface{}) time.Time {
 	switch v := value.(type) {
-	case time.Time:
-		return v
 	case primitive.DateTime:
 		return v.Time()
+	case time.Time:
+		return v
 	default:
 		return time.Time{}
 	}

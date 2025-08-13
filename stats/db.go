@@ -58,25 +58,6 @@ func deletePlayerStats(ps *PlayerStats) error {
 	return nil
 }
 
-// Get all the matching player stats for the guild.
-func readMultiplePlayerStats(guildID string, filter interface{}, sortBy interface{}, limit int64) []*PlayerStats {
-	var playerStats []*PlayerStats
-	err := db.FindMany(PlayerStatsCollection, filter, &playerStats, sortBy, limit)
-	if err != nil {
-		slog.Error("unable to read player stats from the database",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
-		return nil
-	}
-	slog.Debug("read player stats from the database",
-		slog.String("guildID", guildID),
-		slog.Int("count", len(playerStats)),
-	)
-
-	return playerStats
-}
-
 // readGameStats retrieves the game statistics for a specific game in a guild.
 func readGameStats(guildID string, game string, day time.Time) (*GameStats, error) {
 	var gs GameStats
