@@ -436,13 +436,16 @@ func getString(value interface{}) string {
 
 // getTimeFromPipeline retrieves a time.Time from a BSON DateTime or a time.Time.
 func getTimeFromPipeline(value interface{}) time.Time {
+	var t time.Time
 	switch v := value.(type) {
 	case primitive.DateTime:
-		return v.Time()
+		t = v.Time()
 	case time.Time:
-		return v
+		t = v
 	default:
 		slog.Error("unknown type for time conversion", slog.Any("value", value))
-		return time.Time{}
+		t = time.Time{}
 	}
+
+	return t.UTC()
 }
