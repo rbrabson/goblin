@@ -304,8 +304,8 @@ func getAggregatePlayerStats(guildID string, memberID string, game string) (*Pla
 		GuildID:             getString(doc["guild_id"]),
 		MemberID:            getString(doc["member_id"]),
 		Game:                getString(doc["game"]),
-		FirstPlayed:         getTimeFromDateTime(doc["first_played"]),
-		LastPlayed:          getTimeFromDateTime(doc["last_played"]),
+		FirstPlayed:         getTimeFromPipeline(doc["first_played"]),
+		LastPlayed:          getTimeFromPipeline(doc["last_played"]),
 		NumberOfTimesPlayed: getInt(doc["number_of_times_played"]),
 	}
 
@@ -410,8 +410,8 @@ func getPlayerStatsForMostActiveMembers(guildID string, game string) []*PlayerSt
 			GuildID:             getString(doc["guild_id"]),
 			MemberID:            getString(doc["member_id"]),
 			Game:                getString(doc["game"]),
-			FirstPlayed:         getTimeFromDateTime(doc["first_played"]),
-			LastPlayed:          getTimeFromDateTime(doc["last_played"]),
+			FirstPlayed:         getTimeFromPipeline(doc["first_played"]),
+			LastPlayed:          getTimeFromPipeline(doc["last_played"]),
 			NumberOfTimesPlayed: getInt(doc["number_of_times_played"]),
 		}
 		playerStats = append(playerStats, ps)
@@ -434,14 +434,15 @@ func getString(value interface{}) string {
 	return ""
 }
 
-// getTimeFromDateTime retrieves a time.Time from a BSON DateTime or a time.Time.
-func getTimeFromDateTime(value interface{}) time.Time {
+// getTimeFromPipeline retrieves a time.Time from a BSON DateTime or a time.Time.
+func getTimeFromPipeline(value interface{}) time.Time {
 	switch v := value.(type) {
 	case primitive.DateTime:
 		return v.Time()
 	case time.Time:
 		return v
 	default:
+		slog.Error("unknown type for time conversion", slog.Any("value", value))
 		return time.Time{}
 	}
 }
