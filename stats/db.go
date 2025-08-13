@@ -58,25 +58,6 @@ func deletePlayerStats(ps *PlayerStats) error {
 	return nil
 }
 
-// Get all the matching player stats for the guild.
-func readMultiplePlayerStats(guildID string, filter interface{}, sortBy interface{}, limit int64) []*PlayerStats {
-	var playerStats []*PlayerStats
-	err := db.FindMany(PlayerStatsCollection, filter, &playerStats, sortBy, limit)
-	if err != nil {
-		slog.Error("unable to read player stats from the database",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
-		return nil
-	}
-	slog.Debug("read player stats from the database",
-		slog.String("guildID", guildID),
-		slog.Int("count", len(playerStats)),
-	)
-
-	return playerStats
-}
-
 // readGameStats retrieves the game statistics for a specific game in a guild.
 func readGameStats(guildID string, game string, day time.Time) (*GameStats, error) {
 	var gs GameStats
@@ -160,25 +141,10 @@ func getLastDatePlayed(guildID string, memberID string) time.Time {
 		return time.Time{}
 	}
 
-	var t time.Time
 	result := docs[0]
-	if lastDatePlayed, ok := result["last_date_played"].(primitive.DateTime); ok {
-		t = lastDatePlayed.Time().UTC()
-		slog.Debug("found last date played",
-			slog.String("guild_id", guildID),
-			slog.String("member_id", memberID),
-			slog.Time("last_date_played", t),
-		)
-	} else {
-		slog.Warn("unexpected data type for last_date_played",
-			slog.String("guild_id", guildID),
-			slog.String("member_id", memberID),
-			slog.Any("value", result["last_date_played"]),
-		)
-		t = time.Time{}
-	}
+	lastPlayed := getTimeFromPipeline(result["last_played"])
 
-	return t
+	return lastPlayed
 }
 
 // getFirstGameDate retrieves the earliest date a game was played by any member in a guild.
@@ -243,27 +209,8 @@ func getFirstGameDate(guildID string, game string) time.Time {
 	}
 
 	result := docs[0]
-	if firstGameDate, ok := result["first_game_date"].(primitive.DateTime); ok {
-		t := firstGameDate.Time().UTC()
-		slog.Debug("found first game date",
-			slog.String("guild_id", guildID),
-			slog.String("game", game),
-			slog.Time("first_game_date", t),
-		)
-		return t
-	}
-	slog.Warn("unexpected data type for first_game_date",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Any("value", result["first_game_date"]),
-	)
+	firstGameDate := getTimeFromPipeline(result["first_game_date"])
 
-	firstGameDate := today().AddDate(-1, 0, 0)
-	slog.Debug("defaulting to 1 year ago for first game date",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Time("default_first_game_date", firstGameDate),
-	)
 	return firstGameDate
 }
 
@@ -329,26 +276,7 @@ func getFirstServerGameDate(guildID string, game string) time.Time {
 	}
 
 	result := docs[0]
-	if firstGameDate, ok := result["day"].(primitive.DateTime); ok {
-		t := firstGameDate.Time().UTC()
-		slog.Debug("found first game date",
-			slog.String("guild_id", guildID),
-			slog.String("game", game),
-			slog.Time("day", t),
-		)
-		return t
-	}
-	slog.Warn("unexpected data type for first_game_date",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Any("value", result["day"]),
-	)
+	firstGameDate := getTimeFromPipeline(result["day"])
 
-	firstGameDate := today().AddDate(-1, 0, 0)
-	slog.Debug("defaulting to 1 year ago for first game date",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Time("day", firstGameDate),
-	)
 	return firstGameDate
 }
