@@ -617,7 +617,12 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	ps, _ := getAggregatePlayerStats(guildID, memberID, game)
 	if ps == nil {
-		content := p.Sprintf("No player stats found for %s in the %s game.", guildMember.Name, game)
+		var content string
+		if game == "" || game == "all" {
+			content = p.Sprintf("No player stats found for %s", guildMember.Name, game)
+		} else {
+			content = p.Sprintf("No player stats found for %s in the %s game.", guildMember.Name, game)
+		}
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(content),
 		)
@@ -637,9 +642,15 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if lastPlayedDate != "Today" {
 		lastPlayedDate += " Ago"
 	}
+	var title string
+	if game == "" || game == "all" {
+		title = "Games Played"
+	} else {
+		title = "Games Played For " + game
+	}
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Title: titleCaser.String("Games Played for " + game),
+			Title: titleCaser.String(title),
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "Member",
