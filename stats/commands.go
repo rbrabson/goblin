@@ -619,7 +619,7 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if ps == nil {
 		var content string
 		if game == "" || game == "all" {
-			content = p.Sprintf("No player stats found for %s", guildMember.Name, game)
+			content = p.Sprintf("No player stats found for %s", guildMember.Name)
 		} else {
 			content = p.Sprintf("No player stats found for %s in the %s game.", guildMember.Name, game)
 		}
