@@ -157,15 +157,6 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 			{Key: "total_players", Value: bson.D{{Key: "$sum", Value: "$total_players"}}},
 			{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$games_played"}}},
 		}}},
-		// Stage 3: Calculate date range in days
-		{{Key: "$addFields", Value: bson.D{
-			{Key: "date_range_days", Value: bson.D{
-				{Key: "$divide", Value: bson.A{
-					bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
-					millisToDays,
-				}},
-			}},
-		}}},
 	}
 
 	docs, err := db.Aggregate(GameStatsCollection, pipeline)
@@ -179,11 +170,11 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 
 	result := docs[0]
 	gamesPlayed := &GamesPlayed{
-		NumberOfDays:       getFloat64(result["date_range_days"]),
 		TotalUniquePlayers: getInt(result["total_unique_players"]),
 		TotalPlayers:       getInt(result["total_players"]),
 		TotalGamesPlayed:   getInt(result["total_games_played"]),
 	}
+	gamesPlayed.NumberOfDays = float64(endDate.Sub(startDate).Hours() / 24)
 	gamesPlayed.TotalPlayersPerDay = float64(gamesPlayed.TotalPlayers) / gamesPlayed.NumberOfDays
 	gamesPlayed.UniquePlayersPerDay = float64(gamesPlayed.TotalUniquePlayers) / gamesPlayed.NumberOfDays
 	gamesPlayed.AverageGamesPerDay = float64(gamesPlayed.TotalGamesPlayed) / gamesPlayed.NumberOfDays
