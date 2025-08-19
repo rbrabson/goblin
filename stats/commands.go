@@ -413,7 +413,7 @@ func playerRetention(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 }
 
-// gamesPlayed handles the /stats-admin games command.
+// gamesPlayed handles the /stats-admin played command.
 func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 	titleCaser := cases.Title(language.AmericanEnglish)
@@ -492,7 +492,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Total Games",
+		Name:   "Total Games Played",
 		Value:  p.Sprintf("%d", gamesPlayed.TotalGamesPlayed),
 		Inline: false,
 	})
@@ -504,7 +504,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Total Players",
+		Name:   "Total Players In All Games",
 		Value:  p.Sprintf("%d", gamesPlayed.TotalPlayers),
 		Inline: false,
 	})
@@ -514,7 +514,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Inline: false,
 	})
 	embeds[0].Fields = append(embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "Unique Players For Every Day",
+		Name:   "Total Unique Players For All Days",
 		Value:  p.Sprintf("%d", gamesPlayed.UniquePlayers),
 		Inline: false,
 	})
@@ -790,6 +790,6 @@ func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.Me
 
 // getGuildID returns the guild ID from the interaction.
 func getGuildID(i *discordgo.InteractionCreate) string {
-	return i.GuildID
-	// return "236523452230533121"
+	// return i.GuildID
+	return "236523452230533121"
 }

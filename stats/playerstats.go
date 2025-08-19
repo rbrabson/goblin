@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	millisToDays = 1000 * 60 * 60 * 24
+	millisToDays int = 1000 * 60 * 60 * 24
 )
 
 var (

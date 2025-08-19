@@ -2,6 +2,7 @@ package stats
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 )
@@ -95,6 +96,12 @@ func getTime(period string, firstGameDate time.Time) time.Time {
 	if firstGameDate.Equal(timePeriod) {
 		timePeriod = timePeriod.AddDate(0, 0, -1).UTC()
 	}
+
+	slog.Error("getTime",
+		slog.String("period", period),
+		slog.Time("first_game_date", firstGameDate),
+		slog.Time("calculated_time_period", timePeriod),
+	)
 
 	return timePeriod
 }

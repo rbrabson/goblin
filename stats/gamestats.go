@@ -181,7 +181,7 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 			{Key: "date_range_days", Value: bson.D{
 				{Key: "$divide", Value: bson.A{
 					bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
-					1000 * 60 * 60 * 24, // Convert milliseconds to days
+					millisToDays, // Convert milliseconds to days
 				}},
 			}},
 		}},
