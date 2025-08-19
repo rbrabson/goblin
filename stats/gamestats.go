@@ -6,7 +6,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // GameStats represents the statistics for a specific game in a guild on a specific day.
@@ -22,7 +21,7 @@ type GameStats struct {
 
 // GamesPlayed represents the statistics for games played in a guild on a specific day.
 type GamesPlayed struct {
-	NumberOfDays                int
+	NumberOfDays                float64
 	UniquePlayers               int
 	UniquePlayersPerDay         float64
 	TotalPlayers                int
@@ -136,114 +135,38 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 		slog.Time("end_date", endDate),
 	)
 
-	pipeline := make(mongo.Pipeline, 0, 4)
-
-	if game == "" || game == "all" {
-		// Stage 1: Match documents for the specific guild and date range
-		pipeline = append(pipeline, bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "guild_id", Value: guildID},
-				{Key: "day", Value: bson.D{
-					{Key: "$gte", Value: startDate},
-					{Key: "$lte", Value: endDate},
-				}},
-			}},
-		})
-	} else {
-		// Stage 1: Match documents for the specific guild, game, and date range
-		pipeline = append(pipeline, bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "guild_id", Value: guildID},
-				{Key: "game", Value: game},
-				{Key: "day", Value: bson.D{
-					{Key: "$gte", Value: startDate},
-					{Key: "$lte", Value: endDate},
-				}},
-			}},
-		})
+	// Default to all games
+	if game == "" {
+		game = "all"
 	}
-	// Stage 2: Group all documents and sum the statistics
-	pipeline = append(pipeline, bson.D{
-		{Key: "$group", Value: bson.D{
+
+	// Stage 1: Match documents for the specific guild, game, and date range
+	pipeline := []bson.D{
+		{{Key: "$match", Value: bson.D{
+			{Key: "guild_id", Value: guildID},
+			{Key: "game", Value: game},
+			{Key: "day", Value: bson.D{
+				{Key: "$gte", Value: startDate},
+				{Key: "$lte", Value: endDate},
+			}},
+		}}},
+		// Stage 2: Group all documents and sum the statistics
+		{{Key: "$group", Value: bson.D{
 			{Key: "_id", Value: nil},
 			{Key: "total_unique_players", Value: bson.D{{Key: "$sum", Value: "$unique_players"}}},
 			{Key: "total_players", Value: bson.D{{Key: "$sum", Value: "$total_players"}}},
 			{Key: "total_games_played", Value: bson.D{{Key: "$sum", Value: "$games_played"}}},
-			{Key: "number_of_days", Value: bson.D{{Key: "$sum", Value: 1}}},
-			{Key: "avg_unique_players_per_day", Value: bson.D{{Key: "$avg", Value: "$unique_players"}}},
-			{Key: "avg_total_players_per_day", Value: bson.D{{Key: "$avg", Value: "$total_players"}}},
-			{Key: "avg_games_per_day", Value: bson.D{{Key: "$avg", Value: "$games_played"}}},
-		}},
-	})
-	// Stage 3: Calculate date range in days
-	pipeline = append(pipeline, bson.D{
-		{Key: "$addFields", Value: bson.D{
+		}}},
+		// Stage 3: Calculate date range in days
+		{{Key: "$addFields", Value: bson.D{
 			{Key: "date_range_days", Value: bson.D{
 				{Key: "$divide", Value: bson.A{
 					bson.D{{Key: "$subtract", Value: bson.A{endDate, startDate}}},
-					millisToDays, // Convert milliseconds to days
+					millisToDays,
 				}},
 			}},
-		}},
-	})
-	// Stage 4: Calculate final averages
-	pipeline = append(pipeline, bson.D{
-		{Key: "$addFields", Value: bson.D{
-			{Key: "unique_players_per_day", Value: "$avg_unique_players_per_day"},
-			{Key: "total_players_per_day", Value: "$avg_total_players_per_day"},
-			{Key: "average_games_per_day", Value: "$avg_games_per_day"},
-			{Key: "average_games_played_per_day", Value: bson.D{
-				{Key: "$cond", Value: bson.D{
-					{Key: "if", Value: bson.D{
-						{Key: "$gt", Value: bson.A{"$date_range_days", 0}},
-					}},
-					{Key: "then", Value: bson.D{
-						{Key: "$divide", Value: bson.A{"$total_games_played", "$date_range_days"}},
-					}},
-					{Key: "else", Value: 0},
-				}},
-			}},
-			{Key: "average_games_per_player", Value: bson.D{
-				{Key: "$cond", Value: bson.D{
-					{Key: "if", Value: bson.D{
-						{Key: "$gt", Value: bson.A{"$total_unique_players", 0}},
-					}},
-					{Key: "then", Value: bson.D{
-						{Key: "$divide", Value: bson.A{"$total_games_played", "$total_unique_players"}},
-					}},
-					{Key: "else", Value: 0},
-				}},
-			}},
-			{Key: "average_games_per_player_per_day", Value: bson.D{
-				{Key: "$cond", Value: bson.D{
-					{Key: "if", Value: bson.D{
-						{Key: "$and", Value: bson.A{
-							bson.D{{Key: "$gt", Value: bson.A{"$total_unique_players", 0}}},
-							bson.D{{Key: "$gt", Value: bson.A{"$date_range_days", 0}}},
-						}},
-					}},
-					{Key: "then", Value: bson.D{
-						{Key: "$divide", Value: bson.A{
-							bson.D{{Key: "$divide", Value: bson.A{"$total_games_played", "$total_unique_players"}}},
-							"$date_range_days",
-						}},
-					}},
-					{Key: "else", Value: 0},
-				}},
-			}},
-			{Key: "average_players_per_game", Value: bson.D{
-				{Key: "$cond", Value: bson.D{
-					{Key: "if", Value: bson.D{
-						{Key: "$gt", Value: bson.A{"$total_games_played", 0}},
-					}},
-					{Key: "then", Value: bson.D{
-						{Key: "$divide", Value: bson.A{"$total_players", "$total_games_played"}},
-					}},
-					{Key: "else", Value: 0},
-				}},
-			}},
-		}},
-	})
+		}}},
+	}
 
 	docs, err := db.Aggregate(GameStatsCollection, pipeline)
 	if err != nil {
@@ -256,29 +179,30 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 
 	result := docs[0]
 	gamesPlayed := &GamesPlayed{
-		NumberOfDays:                getInt(result["number_of_days"]),
-		UniquePlayers:               getInt(result["total_unique_players"]),
-		UniquePlayersPerDay:         getFloat64(result["unique_players_per_day"]),
-		TotalPlayers:                getInt(result["total_players"]),
-		TotalPlayersPerDay:          getFloat64(result["total_players_per_day"]),
-		TotalGamesPlayed:            getInt(result["total_games_played"]),
-		AverageGamesPerPlayer:       getFloat64(result["average_games_per_player"]),
-		AverageGamesPerDay:          getFloat64(result["average_games_per_day"]),
-		AverageGamesPerPlayerPerDay: getFloat64(result["average_games_per_player_per_day"]),
-		AveragePlayersPerGame:       getFloat64(result["average_players_per_game"]),
+		NumberOfDays:     getFloat64(result["date_range_days"]),
+		UniquePlayers:    getInt(result["total_unique_players"]),
+		TotalPlayers:     getInt(result["total_players"]),
+		TotalGamesPlayed: getInt(result["total_games_played"]),
 	}
+	gamesPlayed.UniquePlayersPerDay = float64(gamesPlayed.UniquePlayers) / gamesPlayed.NumberOfDays
+	gamesPlayed.TotalPlayersPerDay = float64(gamesPlayed.TotalPlayers) / gamesPlayed.NumberOfDays
+	gamesPlayed.AverageGamesPerDay = float64(gamesPlayed.TotalGamesPlayed) / gamesPlayed.NumberOfDays
+	gamesPlayed.AverageGamesPerDay = float64(gamesPlayed.TotalGamesPlayed) / gamesPlayed.NumberOfDays
+	gamesPlayed.AverageGamesPerPlayer = float64(gamesPlayed.TotalGamesPlayed) / float64(gamesPlayed.UniquePlayers)
+	gamesPlayed.AverageGamesPerPlayerPerDay = gamesPlayed.AverageGamesPerPlayer / gamesPlayed.NumberOfDays
+	gamesPlayed.AveragePlayersPerGame = float64(gamesPlayed.TotalPlayers) / float64(gamesPlayed.TotalGamesPlayed)
 
 	slog.Debug("games played statistics calculated from game_stats",
-		slog.Int("number_of_days", gamesPlayed.NumberOfDays),
+		slog.Float64("number_of_days", gamesPlayed.NumberOfDays),
 		slog.Int("unique_players", gamesPlayed.UniquePlayers),
 		slog.Float64("unique_players_per_day", gamesPlayed.UniquePlayersPerDay),
 		slog.Int("total_players", gamesPlayed.TotalPlayers),
 		slog.Float64("total_players_per_day", gamesPlayed.TotalPlayersPerDay),
 		slog.Int("total_games_played", gamesPlayed.TotalGamesPlayed),
-		slog.Float64("avg_games_per_player", gamesPlayed.AverageGamesPerPlayer),
-		slog.Float64("avg_games_per_day", gamesPlayed.AverageGamesPerDay),
-		slog.Float64("avg_games_per_player_per_day", gamesPlayed.AverageGamesPerPlayerPerDay),
-		slog.Float64("avg_players_per_game", gamesPlayed.AveragePlayersPerGame),
+		slog.Float64("average_games_per_player", gamesPlayed.AverageGamesPerPlayer),
+		slog.Float64("average_games_per_day", gamesPlayed.AverageGamesPerDay),
+		slog.Float64("average_games_per_player_per_day", gamesPlayed.AverageGamesPerPlayerPerDay),
+		slog.Float64("average_players_per_game", gamesPlayed.AveragePlayersPerGame),
 		slog.Float64("date_range_days", getFloat64(result["date_range_days"])),
 	)
 

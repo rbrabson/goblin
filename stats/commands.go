@@ -669,7 +669,7 @@ func playerGames(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "Games Played",
-					Value:  p.Sprintf("%d", ps.NumberOfTimesPlayed),
+					Value:  p.Sprintf("%0.f", ps.NumberOfTimesPlayed),
 					Inline: false,
 				},
 			},
@@ -790,6 +790,6 @@ func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.Me
 
 // getGuildID returns the guild ID from the interaction.
 func getGuildID(i *discordgo.InteractionCreate) string {
-	// return i.GuildID
-	return "236523452230533121"
+	return i.GuildID
+	// return "236523452230533121"
 }
