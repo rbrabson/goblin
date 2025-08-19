@@ -170,8 +170,8 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 
 	result := docs[0]
 	gamesPlayed := &GamesPlayed{
-		TotalUniquePlayers: getInt(result["total_unique_players"]),
 		TotalPlayers:       getInt(result["total_players"]),
+		TotalUniquePlayers: getInt(result["total_unique_players"]),
 		TotalGamesPlayed:   getInt(result["total_games_played"]),
 	}
 	gamesPlayed.NumberOfDays = float64(endDate.Sub(startDate).Hours() / 24)
