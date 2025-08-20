@@ -21,16 +21,16 @@ type GameStats struct {
 
 // GamesPlayed represents the statistics for games played in a guild on a specific day.
 type GamesPlayed struct {
-	NumberOfDays                float64
-	TotalUniquePlayers          int
-	UniquePlayersPerDay         float64
-	TotalPlayers                int
-	TotalPlayersPerDay          float64
-	TotalGamesPlayed            int
-	AverageGamesPerPlayer       float64
-	AverageGamesPerDay          float64
-	AverageGamesPerPlayerPerDay float64
-	AveragePlayersPerGame       float64
+	NumberOfDays          float64
+	TotalUniquePlayers    int
+	UniquePlayers         int
+	UniquePlayersPerDay   float64
+	TotalPlayers          int
+	TotalPlayersPerDay    float64
+	TotalGamesPlayed      int
+	AverageGamesPerDay    float64
+	AveragePlayersPerGame float64
+	AverageGamesPerPlayer float64
 }
 
 // getGameStats retrieves the game statistics for a specific game in a guild on a specific day.
@@ -174,25 +174,25 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 		TotalUniquePlayers: getInt(result["total_unique_players"]),
 		TotalGamesPlayed:   getInt(result["total_games_played"]),
 	}
+	gamesPlayed.UniquePlayers, _ = GetUniquePlayers(guildID, game, startDate, endDate)
 	gamesPlayed.NumberOfDays = float64(endDate.Sub(startDate).Hours() / 24)
 	gamesPlayed.TotalPlayersPerDay = float64(gamesPlayed.TotalPlayers) / gamesPlayed.NumberOfDays
 	gamesPlayed.UniquePlayersPerDay = float64(gamesPlayed.TotalUniquePlayers) / gamesPlayed.NumberOfDays
 	gamesPlayed.AverageGamesPerDay = float64(gamesPlayed.TotalGamesPlayed) / gamesPlayed.NumberOfDays
 	gamesPlayed.AveragePlayersPerGame = float64(gamesPlayed.TotalPlayers) / float64(gamesPlayed.TotalGamesPlayed)
-	gamesPlayed.AverageGamesPerPlayer = float64(gamesPlayed.TotalGamesPlayed) / float64(gamesPlayed.UniquePlayersPerDay)
-	gamesPlayed.AverageGamesPerPlayerPerDay = gamesPlayed.AverageGamesPerPlayer / gamesPlayed.NumberOfDays
+	gamesPlayed.AverageGamesPerPlayer = float64(gamesPlayed.TotalGamesPlayed) / float64(gamesPlayed.UniquePlayers)
 
 	slog.Debug("games played statistics calculated from game_stats",
 		slog.Float64("number_of_days", gamesPlayed.NumberOfDays),
 		slog.Int("total_players", gamesPlayed.TotalPlayers),
 		slog.Int("total_unique_players", gamesPlayed.TotalUniquePlayers),
+		slog.Int("unique_players", gamesPlayed.UniquePlayers),
 		slog.Int("total_games_played", gamesPlayed.TotalGamesPlayed),
 		slog.Float64("total_players_per_day", gamesPlayed.TotalPlayersPerDay),
 		slog.Float64("unique_players_per_day", gamesPlayed.UniquePlayersPerDay),
 		slog.Float64("average_games_per_day", gamesPlayed.AverageGamesPerDay),
 		slog.Float64("average_players_per_game", gamesPlayed.AveragePlayersPerGame),
 		slog.Float64("average_games_per_player", gamesPlayed.AverageGamesPerPlayer),
-		slog.Float64("average_games_per_player_per_day", gamesPlayed.AverageGamesPerPlayerPerDay),
 	)
 
 	return gamesPlayed, nil

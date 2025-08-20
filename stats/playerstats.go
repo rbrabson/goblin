@@ -63,6 +63,86 @@ func newPlayerStats(guildID string, memberID string, game string) *PlayerStats {
 	return ps
 }
 
+func GetUniquePlayers(guildID string, game string, startDate time.Time, endDate time.Time) (int, error) {
+	statsLock.Lock()
+	defer statsLock.Unlock()
+
+	slog.Debug("getting unique players",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Time("start_date", startDate),
+		slog.Time("end_date", endDate),
+	)
+
+	// Create aggregation pipeline to get unique players
+	pipeline := make(mongo.Pipeline, 0, 3)
+
+	if game == "" || game == "all" {
+		// Stage 1: Match documents for the specific guild and date range
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "last_played", Value: bson.D{
+					{Key: "$gte", Value: startDate},
+					{Key: "$lte", Value: endDate},
+				}},
+			}},
+		})
+	} else {
+		// Stage 1: Match documents for the specific guild, date range, and game
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "guild_id", Value: guildID},
+				{Key: "game", Value: game},
+				{Key: "last_played", Value: bson.D{
+					{Key: "$gte", Value: startDate},
+					{Key: "$lte", Value: endDate},
+				}},
+			}},
+		})
+	}
+
+	// Stage 2: Group by member_id to get unique players
+	pipeline = append(pipeline, bson.D{
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$member_id"},
+		}},
+	})
+
+	// Stage 3: Count the unique players
+	pipeline = append(pipeline, bson.D{
+		{Key: "$count", Value: "unique_players"},
+	})
+
+	docs, err := db.Aggregate(PlayerStatsCollection, pipeline)
+	if err != nil {
+		slog.Error("failed to get unique players count",
+			slog.String("guild_id", guildID),
+			slog.String("game", game),
+			slog.Any("error", err),
+		)
+		return 0, err
+	}
+
+	if len(docs) == 0 {
+		slog.Debug("no unique players found",
+			slog.String("guild_id", guildID),
+			slog.String("game", game),
+		)
+		return 0, nil
+	}
+
+	count := getInt(docs[0]["unique_players"])
+
+	slog.Debug("unique players count retrieved",
+		slog.String("guild_id", guildID),
+		slog.String("game", game),
+		slog.Int("unique_players", count),
+	)
+
+	return count, nil
+}
+
 // GetPlayerRetention finds players who played after a specific date but haven't played
 // recently for the duration provided (i.e., players who became inactive)
 func GetPlayerRetention(guildID string, game string, cuttoff time.Time, inactiveDuration time.Duration) (*PlayerRetention, error) {
