@@ -1,0 +1,16 @@
+{
+    "guild_id": "236523452230533121",
+    "bet_amount": 100,
+    "currency": "credit",
+    "ending_line": "<:gems:312346463453708289>",
+    "max_num_racers": 10,
+    "max_prize_amount": 1250,
+    "min_num_racers": 2,
+    "min_price_amount": 750,
+    "starting_line": ":checkered_flag:",
+    "theme": "clash",
+    "track": "•   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   •   ",
+    "wait_between_races": 60000000000,
+    "wait_for_bets": 30000000000,
+    "wait_to_start": 45000000000
+}

@@ -1,0 +1,10 @@
+{
+    "admin_roles": [
+      "Admin",
+      "Admins",
+      "Administrator",
+      "Mod",
+      "Mods",
+      "Moderator"
+    ]
+  }

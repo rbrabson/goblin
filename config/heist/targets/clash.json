@@ -1,0 +1,92 @@
+[
+    {
+        "target_id": "Goblin Forest",
+        "crew": 2,
+        "success": 29.3,
+        "vault_max": 16000
+    },
+    {
+        "target_id": "Goblin Outpost",
+        "crew": 3,
+        "success": 20.65,
+        "vault_max": 24000
+    },
+    {
+        "target_id": "Rocky Fort",
+        "crew": 5,
+        "success": 14.5,
+        "vault_max": 42000
+    },
+    {
+        "target_id": "Goblin Gauntlet",
+        "crew": 8,
+        "success": 9.5,
+        "vault_max": 71000
+    },
+    {
+        "target_id": "Gobbotown",
+        "crew": 11,
+        "success": 6.75,
+        "vault_max": 101000
+    },
+    {
+        "target_id": "Fort Knobs",
+        "crew": 14,
+        "success": 5.2,
+        "vault_max": 133000
+    },
+    {
+        "target_id": "Bouncy Castle",
+        "crew": 17,
+        "success": 4.25,
+        "vault_max": 167000
+    },
+    {
+        "target_id": "Gobbo Campus",
+        "crew": 21,
+        "success": 3.5,
+        "vault_max": 213000
+    },
+    {
+        "target_id": "Walls Of Steel",
+        "crew": 25,
+        "success": 2.91,
+        "vault_max": 263000
+    },
+    {
+        "target_id": "Obsidian Tower",
+        "crew": 29,
+        "success": 2.49,
+        "vault_max": 314000
+    },
+    {
+        "target_id": "Queen's Gambit",
+        "crew": 34,
+        "success": 2.15,
+        "vault_max": 379000
+    },
+    {
+        "target_id": "Faulty Towers",
+        "crew": 39,
+        "success": 1.86,
+        "vault_max": 448000
+    },
+    {
+        "target_id": "Megamansion",
+        "crew": 44,
+        "success": 1.64,
+        "vault_max": 512000
+    },
+    {
+        "target_id": "P.e.k.k.a's Playhouse",
+        "crew": 49,
+        "success": 1.46,
+        "vault_max": 598000
+    },
+    {
+        "target_id": "Sherbet Towers",
+        "crew": 55,
+        "success": 1.31,
+        "vault_max": 688000
+    }
+]
