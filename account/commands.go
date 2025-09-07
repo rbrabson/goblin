@@ -1,4 +1,4 @@
-package alt
+package account
 
 import (
 	"fmt"
@@ -14,13 +14,13 @@ import (
 
 var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"alt-admin": altAdmin,
+		"account": accountAdmin,
 	}
 
 	adminCommands = []*discordgo.ApplicationCommand{
 		{
-			Name:        "alt-admin",
-			Description: "Commands used to manage alt accounts for the server.",
+			Name:        "account-admin",
+			Description: "Commands used to manage accounts for the server.",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Name:        "alt-id",
@@ -85,8 +85,8 @@ var (
 	}
 )
 
-// altAdmin handles the /alt-admin command.
-func altAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// accountAdmin handles the `/account-admin` command.
+func accountAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
@@ -123,7 +123,7 @@ func altAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// altID handles the /alt-admin alt-id subcommands for the server command.
+// altID handles the `/account-admin alt-id` subcommands for the server command.
 func altID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
@@ -142,7 +142,7 @@ func altID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// addAltID adds an alt ID to the list of alt IDs for the server.
+// addAltID handles the `/account-admin alt-id add` command.
 func addAltID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
@@ -192,7 +192,7 @@ func addAltID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// removeAltID removes an alt ID from the list of alt IDs for the server.
+// removeAltID handles the `/account-admin alt-id remove` command.
 func removeAltID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
@@ -242,7 +242,7 @@ func removeAltID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// listAltIDs lists the alt IDs for the server.
+// listAltIDs handles the `/account-admin alt-id list` command.
 func listAltIDs(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
 	options := i.ApplicationCommandData().Options[0].Options[0].Options

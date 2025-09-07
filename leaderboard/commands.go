@@ -40,7 +40,7 @@ var (
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Name:        "channel",
-					Description: "Sets the channel ID where the monthly leaderboard is published at the end of the month.",
+					Description: "Sets the channel ID where the monthly leaderboard is published.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{

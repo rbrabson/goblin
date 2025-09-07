@@ -1,4 +1,4 @@
-package alt
+package account
 
 import (
 	"log/slog"
