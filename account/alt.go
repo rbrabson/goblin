@@ -58,6 +58,9 @@ func DeleteAltID(guildID string, altID string) error {
 
 // IsAltID checks if the given alt ID exists in the database for the specified guild.
 func IsAltID(guildID string, altID string) bool {
+	lock.Lock()
+	defer lock.Unlock()
+
 	alt := readAltID(guildID, altID)
 	return alt != nil
 }
