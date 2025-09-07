@@ -219,7 +219,7 @@ func removeAltID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err := deleteAltID(guildID, altID)
+	err := DeleteAltID(guildID, altID)
 	if err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Error deleting alt ID."),
@@ -254,7 +254,7 @@ func listAltIDs(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	alts := readAllAltIDs(guildID, ownerID)
+	alts := GetAllAltIDsForOwner(guildID, ownerID)
 	if len(alts) == 0 {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("No alt IDs found for this server."),
