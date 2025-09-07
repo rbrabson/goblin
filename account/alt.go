@@ -21,21 +21,17 @@ type AltID struct {
 // GetAltID retrieves an existing alt ID from the database, or creates a new one if it does not exist.
 func GetAltID(guildID string, ownerID string, altID string) *AltID {
 	lock.Lock()
+	defer lock.Unlock()
 
 	alt := readAltID(guildID, altID)
 	if alt != nil {
-		lock.Unlock()
 		return alt
 	}
-	lock.Unlock()
 	return newAltID(guildID, ownerID, altID)
 }
 
 // newAltID creates a new alt ID and writes it to the database.
 func newAltID(guildID string, ownerID string, altID string) *AltID {
-	lock.Lock()
-	defer lock.Unlock()
-
 	alt := &AltID{
 		GuildID: guildID,
 		AltID:   altID,
@@ -45,12 +41,9 @@ func newAltID(guildID string, ownerID string, altID string) *AltID {
 	return alt
 }
 
-// GetAllAltIDsForOwner retrieves all alt IDs for a given owner in a guild from the database.
+// GetAllAltIDs retrieves all alt IDs for a given owner in a guild from the database.
 // If ownerID is an empty string, it retrieves all alt IDs for the guild.
-func GetAllAltIDsForOwner(guildID string, ownerID string) []*AltID {
-	lock.Lock()
-	defer lock.Unlock()
-
+func GetAllAltIDs(guildID string, ownerID string) []*AltID {
 	altIDs := readAllAltIDs(guildID, ownerID)
 	return altIDs
 }
@@ -65,9 +58,6 @@ func DeleteAltID(guildID string, altID string) error {
 
 // IsAltID checks if the given alt ID exists in the database for the specified guild.
 func IsAltID(guildID string, altID string) bool {
-	lock.Lock()
-	defer lock.Unlock()
-
 	alt := readAltID(guildID, altID)
 	return alt != nil
 }

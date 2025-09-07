@@ -169,7 +169,7 @@ func addAltID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	alt := newAltID(guildID, ownerID, altID)
+	alt := GetAltID(guildID, ownerID, altID)
 	if alt == nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Error creating alt ID."),
@@ -254,7 +254,7 @@ func listAltIDs(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	alts := GetAllAltIDsForOwner(guildID, ownerID)
+	alts := GetAllAltIDs(guildID, ownerID)
 	if len(alts) == 0 {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("No alt IDs found for this server."),
