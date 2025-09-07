@@ -10,6 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/joho/godotenv"
+	"github.com/rbrabson/goblin/alt"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/game/heist"
@@ -41,6 +42,7 @@ func main() {
 	}
 
 	// Start the plugins
+	alt.Start()
 	bank.Start()
 	heist.Start()
 	leaderboard.Start()
