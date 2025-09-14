@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"slices"
 	"strings"
 	"time"
@@ -51,11 +52,17 @@ func main() {
 
 	log.Initialize()
 
+	guildID := os.Getenv("ACCOUNT_GUILD_ID")
+	if guildID == "" {
+		slog.Error("DISCORD_GUILD_ID environment variable not set")
+		os.Exit(1)
+	}
+
 	db = mongo.NewDatabase()
 	defer db.Close()
 	guild.SetDB(db)
 
-	guildID := "236523452230533121"
+	// Get all players who have
 
 	heistStats := getPlayerStats(guildID, "heist")
 	raceStats := getPlayerStats(guildID, "race")
