@@ -1,6 +1,7 @@
 [
     {
         "symbol": "red 7",
+        "name": "Archer Queen",
         "emojis": [
             "<:Archer_Queen:1346562884720922707>"
         ],
@@ -8,6 +9,7 @@
     },
     {
         "symbol": "white 7",
+        "name": "Grand Warden",
         "emojis": [
             "<:Grand_Warden:1346563596058103962>"
         ],
@@ -15,6 +17,7 @@
     },
     {
         "symbol": "blue 7",
+        "name": "Barbarian King",
         "emojis": [
             "<:Barbarian_King:1346562986810146826>"
         ],
@@ -22,32 +25,31 @@
     },
     {
         "symbol": "1 bar",
+        "name": "Archer",
         "emojis": [
-            "<:Archer:1346562917713186856>",
-            "<:Sneaky_Archer:1346564629815492699>"
+            "<:Archer:1346562917713186856>"
         ],
         "color": "red"
     },
     {
         "symbol": "2 bar",
+        "name": "Wizard",
         "emojis": [
-            "<:Barbarian:1346563008968654963>",
-            "<:Raged_Barbarian:1346564384062705715>"
+            "<:Wizard:1346565389743816704>"
         ],
         "color": "white"
     },
     {
         "symbol": "3 bar",
+        "name": "Barbarian",
         "emojis": [
-            "<:Book_of_Building:1416129008432582789>",
-            "<:Book_of_Heroes:1416129010975769600>",
-            "<:Book_of_Fighting:1416129721095164104>",
-            "<:Wizard:1346565389743816704>"
+            "<:Barbarian:1346563008968654963>"
         ],
         "color": "blue"
     },
     {
         "symbol": "blank",
+        "name": "Troops",
         "emojis": [
             "<:Miner:1346564114243391528>",
             "<:Goblin:1346563510733373490>",
