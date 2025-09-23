@@ -1,76 +1,37 @@
-[
-    {
-        "symbol": "red 7",
+{
+    "red 7": {
         "name": "Archer Queen",
-        "emojis": [
-            "<:Archer_Queen:1346562884720922707>"
-        ],
+        "emoji": "<:Archer_Queen:1346562884720922707>",
         "color": "red"
     },
-    {
-        "symbol": "white 7",
+    "white 7": {
         "name": "Grand Warden",
-        "emojis": [
-            "<:Grand_Warden:1346563596058103962>"
-        ],
+        "emoji": "<:Grand_Warden:1346563596058103962>",
         "color": "white"
     },
-    {
-        "symbol": "blue 7",
+    "blue 7": {
         "name": "Barbarian King",
-        "emojis": [
-            "<:Barbarian_King:1346562986810146826>"
-        ],
+        "emoji": "<:Barbarian_King:1346562986810146826>",
         "color": "blue"
     },
-    {
-        "symbol": "1 bar",
+    "1 bar": {
         "name": "Archer",
-        "emojis": [
-            "<:Archer:1346562917713186856>"
-        ],
+        "emoji": "<:Archer:1346562917713186856>",
         "color": "red"
     },
-    {
-        "symbol": "2 bar",
+    "2 bar": {
         "name": "Wizard",
-        "emojis": [
-            "<:Wizard:1346565389743816704>"
-        ],
+        "emoji": "<:Wizard:1346565389743816704>",
         "color": "white"
     },
-    {
-        "symbol": "3 bar",
+    "3 bar": {
         "name": "Barbarian",
-        "emojis": [
-            "<:Barbarian:1346563008968654963>"
-        ],
+        "emoji": "<:Barbarian:1346563008968654963>",
         "color": "blue"
     },
-    {
-        "symbol": "blank",
-        "name": "Troops",
-        "emojis": [
-            "<:Miner:1346564114243391528>",
-            "<:Goblin:1346563510733373490>",
-            "<:Beta_Minion:1346563119044100096>",
-            "<:Wall_Breaker:1346565268087771217>",
-            "<:Valkrie:1346565227755602103>",
-            "<:Hog_Rider:1346563786408071239>",
-            "<:Cannon_Cart:1346563222085570751>",
-            "<:Healer:1346563687137280081>",
-            "<:Witch:1346565453295146270>",
-            "<:Electro_Dragon:1346563641917034066>",
-            "<:P.E.K.K.A:1346564156224904060>",
-            "<:Dragon:1346563755125809152>",
-            "<:Golem:1346563335765739594>",
-            "<:Lava_Hound:1346564045765730846>",
-            "<:Ice_Golem:1346563961945735680>",
-            "<:Balloon:1346562899073176064>",
-            "<:Baby_Dragon:1346562929472047184>",
-            "<:Electro_Minion:1346563669470614096>",
-            "<:Night_Witch:1346564130307324170>"
-        ],
+    "blank": {
+        "name": "Trap",
+        "emoji": "<:Poison_Spell:1346564302341017643>",
         "color": "black"
     }
-]
+}

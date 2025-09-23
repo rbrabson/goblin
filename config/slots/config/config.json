@@ -1,0 +1,8 @@
+{
+    "bets": {
+        "1_coin": 100,
+        "2_coins": 200,
+        "3_coins": 300
+    },
+    "symbols": "clash"
+}
