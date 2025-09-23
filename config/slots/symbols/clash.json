@@ -1,30 +1,30 @@
 {
-    "red 7": {
+    "red_7": {
         "name": "Archer Queen",
         "emoji": "<:Archer_Queen:1346562884720922707>",
         "color": "red"
     },
-    "white 7": {
+    "white_7": {
         "name": "Grand Warden",
         "emoji": "<:Grand_Warden:1346563596058103962>",
         "color": "white"
     },
-    "blue 7": {
+    "blue_7": {
         "name": "Barbarian King",
         "emoji": "<:Barbarian_King:1346562986810146826>",
         "color": "blue"
     },
-    "1 bar": {
+    "1_bar": {
         "name": "Archer",
         "emoji": "<:Archer:1346562917713186856>",
         "color": "red"
     },
-    "2 bar": {
+    "2_bar": {
         "name": "Wizard",
         "emoji": "<:Wizard:1346565389743816704>",
         "color": "white"
     },
-    "3 bar": {
+    "3_bar": {
         "name": "Barbarian",
         "emoji": "<:Barbarian:1346563008968654963>",
         "color": "blue"

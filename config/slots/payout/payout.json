@@ -2,9 +2,9 @@
     "payouts": [
         {
             "win": [
-                "Red 7",
-                "White 7",
-                "Blue 7"
+                "red_7",
+                "white_7",
+                "blue_7"
             ],
             "1_coin": 2400,
             "2_coins": 4800,
@@ -12,9 +12,9 @@
         },
         {
             "win": [
-                "Red 7",
-                "Red 7",
-                "Red 7"
+                "red_7",
+                "red_7",
+                "red_7"
             ],
             "1_coin": 1199,
             "2_coins": 2400,
@@ -22,9 +22,9 @@
         },
         {
             "win": [
-                "White 7",
-                "White 7",
-                "White 7"
+                "white_7",
+                "white_7",
+                "white_7"
             ],
             "1_coin": 200,
             "2_coins": 400,
@@ -32,9 +32,9 @@
         },
         {
             "win": [
-                "Blue 7",
-                "Blue 7",
-                "Blue 7"
+                "blue_7",
+                "blue_7",
+                "blue_7"
             ],
             "1_coin": 150,
             "2_coins": 300,
@@ -52,9 +52,9 @@
         },
         {
             "win": [
-                "1 bar",
-                "2 bar",
-                "3 bar"
+                "1_bar",
+                "2_bar",
+                "3_bar"
             ],
             "1_coin": 50,
             "2_coins": 100,
@@ -62,9 +62,9 @@
         },
         {
             "win": [
-                "3 bar",
-                "3 bar",
-                "3 bar"
+                "3_bar",
+                "3_bar",
+                "3_bar"
             ],
             "1_coin": 40,
             "2_coins": 80,
@@ -72,9 +72,9 @@
         },
         {
             "win": [
-                "2 bar",
-                "2 bar",
-                "2 bar"
+                "2_bar",
+                "2_bar",
+                "2_bar"
             ],
             "1_coin": 25,
             "2_coins": 50,
@@ -92,9 +92,9 @@
         },
         {
             "win": [
-                "1 bar",
-                "1 bar",
-                "1 bar"
+                "1_bar",
+                "1_bar",
+                "1_bar"
             ],
             "1_coin": 10,
             "2_coins": 20,
