@@ -44,7 +44,7 @@ var (
 				},
 				{
 					Name:        "add",
-					Description: "Adds the amount of credits to a given member's bank account.",
+					Description: "Adds the credits to a given member's bank account.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{

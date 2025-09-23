@@ -41,6 +41,7 @@ func main() {
 	}
 
 	// Start the plugins
+	// account.Start()
 	bank.Start()
 	heist.Start()
 	leaderboard.Start()
