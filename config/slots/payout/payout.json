@@ -1,0 +1,93 @@
+{
+    "payouts": [
+        {
+            "win": "Red 7, white 7, blue 7",
+            "1_coin": 2400,
+            "2_coins": 4800,
+            "3_coins": 10000
+        },
+        {
+            "win": "Red 7, red 7, red 7",
+            "1_coin": 1199,
+            "2_coins": 2400,
+            "3_coins": 5000
+        },
+        {
+            "win": "White 7, white 7, white 7",
+            "1_coin": 200,
+            "2_coins": 400,
+            "3_coins": 600
+        },
+        {
+            "win": "Blue 7, blue 7, blue 7",
+            "1_coin": 150,
+            "2_coins": 300,
+            "3_coins": 450
+        },
+        {
+            "win": "Any 3 sevens",
+            "1_coin": 80,
+            "2_coins": 160,
+            "3_coins": 240
+        },
+        {
+            "win": "1 bar, 2 bar, 3 bar",
+            "1_coin": 50,
+            "2_coins": 100,
+            "3_coins": 150
+        },
+        {
+            "win": "3 bar, 3 bar, 3 bar",
+            "1_coin": 40,
+            "2_coins": 80,
+            "3_coins": 120
+        },
+        {
+            "win": "2 bar, 2 bar, 2 bar",
+            "1_coin": 25,
+            "2_coins": 50,
+            "3_coins": 75
+        },
+        {
+            "win": "Any red, any white, any blue",
+            "1_coin": 20,
+            "2_coins": 40,
+            "3_coins": 60
+        },
+        {
+            "win": "1 bar, 1 bar, 1 bar",
+            "1_coin": 10,
+            "2_coins": 20,
+            "3_coins": 30
+        },
+        {
+            "win": "Any 3 bars",
+            "1_coin": 5,
+            "2_coins": 10
+        },
+        {
+            "win": "Any 3 reds",
+            "1_coin": 2,
+            "2_coins": 4,
+            "3_coins": 6
+        },
+        {
+            "win": "Any 3 whites",
+            "1_coin": 2,
+            "2_coins": 4,
+            "3_coins": 6
+        },
+        {
+            "win": "Any 3 blues",
+            "1_coin": 2,
+            "2_coins": 4,
+            "3_coins": 6
+        },
+        {
+            "win": "blank, blank, blank",
+            "1_coin": 1,
+            "2_coins": 2,
+            "3_coins": 3
+        }
+    ]
+}
