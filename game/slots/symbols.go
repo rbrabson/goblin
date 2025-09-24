@@ -11,9 +11,7 @@ import (
 
 type Symbol struct {
 	Name  string `json:"name" bson:"name"`
-	Value string `json:"value,omitempty" bson:"value,omitempty"`
 	Emoji string `json:"emoji" bson:"emoji"`
-	Type  string `json:"type" bson:"type"`
 }
 
 type SymbolTable struct {
@@ -65,9 +63,7 @@ func readSymbolsFromFile(guildID string) *SymbolTable {
 	}
 
 	for _, symbol := range *symbols {
-		key := symbol.Value
-		symbol.Value = ""
-		symbolTable.Symbols[key] = symbol
+		symbolTable.Symbols[symbol.Name] = symbol
 
 	}
 

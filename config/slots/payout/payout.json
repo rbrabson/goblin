@@ -41,9 +41,9 @@
     },
     {
         "win": [
-            "Hero",
-            "Hero",
-            "Hero"
+            "Archer Queen or Grand Warden or Barbarian King",
+            "Archer Queen or Grand Warden or Barbarian King",
+            "Archer Queen or Grand Warden or Barbarian King"
         ],
         "100": 8000,
         "200": 16000,
@@ -141,9 +141,9 @@
     },
     {
         "win": [
-            "Trap",
-            "Trap",
-            "Trap"
+            "Spell",
+            "Spell",
+            "Spell"
         ],
         "100": 100,
         "200": 200,
