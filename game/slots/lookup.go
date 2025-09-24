@@ -2,7 +2,6 @@ package slots
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"math/rand"
 	"os"
@@ -103,7 +102,6 @@ func (lt *LookupTable) Spin() *Spin {
 	}
 
 	currentIndices, currentSpin := lt.GetCurrentSpin()
-	fmt.Println("Spin:", currentSpin)
 	_, previousSpin := lt.GetPreviousSpin(currentIndices)
 	spin.Spins = append(spin.Spins, previousSpin)
 	spin.Spins = append(spin.Spins, currentSpin)
