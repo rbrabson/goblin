@@ -1,37 +1,44 @@
-{
-    "red_7": {
+[
+    {
         "name": "Archer Queen",
+        "value": "red_7",
         "emoji": "<:Archer_Queen:1346562884720922707>",
         "color": "red"
     },
-    "white_7": {
+    {
         "name": "Grand Warden",
+        "value": "white_7",
         "emoji": "<:Grand_Warden:1346563596058103962>",
         "color": "white"
     },
-    "blue_7": {
+    {
         "name": "Barbarian King",
+        "value": "blue_7",
         "emoji": "<:Barbarian_King:1346562986810146826>",
         "color": "blue"
     },
-    "1_bar": {
+    {
         "name": "Archer",
+        "value": "1_bar",
         "emoji": "<:Archer:1346562917713186856>",
         "color": "red"
     },
-    "2_bar": {
+    {
         "name": "Wizard",
+        "value": "2_bar",
         "emoji": "<:Wizard:1346565389743816704>",
         "color": "white"
     },
-    "3_bar": {
+    {
         "name": "Barbarian",
+        "value": "3_bar",
         "emoji": "<:Barbarian:1346563008968654963>",
         "color": "blue"
     },
-    "blank": {
+    {
         "name": "Trap",
+        "value": "blank",
         "emoji": "<:Poison_Spell:1346564302341017643>",
         "color": "black"
     }
-}
+]

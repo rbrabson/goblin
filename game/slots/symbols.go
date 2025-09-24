@@ -11,29 +11,30 @@ import (
 
 type Symbol struct {
 	Name  string `json:"name" bson:"name"`
+	Value string `json:"value" bson:"value"`
 	Emoji string `json:"emoji" bson:"emoji"`
 	Color string `json:"color" bson:"color"`
 }
 
-type Symbols struct {
+type SymbolTable struct {
 	ID      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Name    string             `json:"name" bson:"name"`
 	GuildID string             `json:"guild_id" bson:"guild_id"`
+	Name    string             `json:"name" bson:"name"`
 	Symbols []Symbol           `json:"symbols" bson:"symbols"`
 }
 
-func GetSymbols(guildID string) *Symbols {
+func GetSymbols(guildID string) *SymbolTable {
 	// TODO: try to read from the DB
 	return newSymbols(guildID)
 }
 
-func newSymbols(guildID string) *Symbols {
+func newSymbols(guildID string) *SymbolTable {
 	symbols := readSymbolsFromFile(guildID)
 	// TODO: write to DB
 	return symbols
 }
 
-func readSymbolsFromFile(guildID string) *Symbols {
+func readSymbolsFromFile(guildID string) *SymbolTable {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	symbolsTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configFileName := filepath.Join(configDir, "slots", "symbols", symbolsTheme+".json")
@@ -47,7 +48,7 @@ func readSymbolsFromFile(guildID string) *Symbols {
 		return nil
 	}
 
-	symbols := &Symbols{
+	symbols := &SymbolTable{
 		GuildID: guildID,
 		Name:    symbolsTheme,
 	}
@@ -63,7 +64,7 @@ func readSymbolsFromFile(guildID string) *Symbols {
 
 	slog.Info("loaded symbols",
 		slog.String("guildID", symbols.GuildID),
-		slog.Int("count", len(symbols.Symbols)),
+		slog.String("name", symbols.Name),
 	)
 
 	return symbols

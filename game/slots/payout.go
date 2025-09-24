@@ -9,6 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const (
+	PAYOUT_FILE_NAME = "payout"
+)
+
 type Payout struct {
 	Win        []Slot `json:"win"`
 	OneCoin    int    `json:"1_coin"`
@@ -42,8 +46,7 @@ func newPayoutTable(guildID string) *PayoutTable {
 
 func readPayoutTableFromFile(guildID string) *PayoutTable {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	payoutTheme := os.Getenv("DISCORD_DEFAULT_THEME")
-	configFileName := filepath.Join(configDir, "slots", "lookuptable", payoutTheme+".json")
+	configFileName := filepath.Join(configDir, "slots", "payout", PAYOUT_FILE_NAME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default payout table",

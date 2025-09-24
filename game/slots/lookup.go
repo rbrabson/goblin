@@ -13,14 +13,12 @@ const (
 
 type Slot string
 
-type Reel struct {
-	Slots []Slot
-}
+type Reel []Slot
 
 type LookupTable struct {
-	GuildID string
-	Name    string
-	Reels   []Reel
+	GuildID string `json:"guild_id"`
+	Name    string `json:"name"`
+	Reels   []Reel `json:"reels"`
 }
 
 func GetLookupTable(guildID string) *LookupTable {
@@ -61,6 +59,7 @@ func readLookupTableFromFile(guildID string) *LookupTable {
 		GuildID: guildID,
 		Name:    LOOKUP_TABLE_NAME,
 	}
+	// reels := &[][]Slot{}
 	err = json.Unmarshal(bytes, &lookupTable.Reels)
 	if err != nil {
 		slog.Error("failed to unmarshal lookup table",
