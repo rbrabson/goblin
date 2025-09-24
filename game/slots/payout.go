@@ -95,14 +95,14 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 		payoutTable.Payouts = append(payoutTable.Payouts, payoutAmount)
 	}
 
-	slog.Info("create new payout table",
+	slog.Debug("create new payout table",
 		slog.String("guildID", payoutTable.GuildID),
 	)
 
 	return payoutTable
 }
 
-func (pt *PayoutTable) GetPayoutAmount(bet int, spin []string) int {
+func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 	for _, payout := range pt.Payouts {
 		if len(payout.Win) != len(spin) {
 			slog.Warn("payout win length does not match spin length",
@@ -116,7 +116,7 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []string) int {
 		match := true
 		for i := range payout.Win {
 			winningSymbols := strings.Split(payout.Win[i], " or ")
-			if !slices.Contains(winningSymbols, spin[i]) {
+			if !slices.Contains(winningSymbols, spin[i].Name) {
 				match = false
 				break
 			}

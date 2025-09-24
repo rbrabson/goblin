@@ -17,7 +17,6 @@ type Symbol struct {
 type SymbolTable struct {
 	ID      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	GuildID string             `json:"guild_id" bson:"guild_id"`
-	Name    string             `json:"name" bson:"name"`
 	Symbols map[string]Symbol  `json:"symbols" bson:"symbols"`
 }
 
@@ -48,7 +47,6 @@ func readSymbolsFromFile(guildID string) *SymbolTable {
 
 	symbolTable := &SymbolTable{
 		GuildID: guildID,
-		Name:    symbolsTheme,
 		Symbols: make(map[string]Symbol),
 	}
 	symbols := &[]Symbol{}
@@ -56,7 +54,6 @@ func readSymbolsFromFile(guildID string) *SymbolTable {
 	if err != nil {
 		slog.Error("failed to unmarshal symbols",
 			slog.String("guildID", symbolTable.GuildID),
-			slog.String("name", symbolTable.Name),
 			slog.Any("error", err),
 		)
 		return nil
@@ -67,9 +64,8 @@ func readSymbolsFromFile(guildID string) *SymbolTable {
 
 	}
 
-	slog.Info("loaded symbols",
+	slog.Debug("loaded symbols",
 		slog.String("guildID", symbolTable.GuildID),
-		slog.String("name", symbolTable.Name),
 	)
 
 	return symbolTable
