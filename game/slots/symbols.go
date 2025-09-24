@@ -13,7 +13,7 @@ type Symbol struct {
 	Name  string `json:"name" bson:"name"`
 	Value string `json:"value,omitempty" bson:"value,omitempty"`
 	Emoji string `json:"emoji" bson:"emoji"`
-	Color string `json:"color" bson:"color"`
+	Type  string `json:"type" bson:"type"`
 }
 
 type SymbolTable struct {

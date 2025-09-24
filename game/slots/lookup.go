@@ -13,12 +13,10 @@ const (
 
 type Slot string
 
-type Reel []Slot
-
 type LookupTable struct {
-	GuildID string `json:"guild_id"`
-	Name    string `json:"name"`
-	Reels   []Reel `json:"reels"`
+	GuildID string     `json:"guild_id"`
+	Name    string     `json:"name"`
+	Reels   [][]Symbol `json:"reels"`
 }
 
 func GetLookupTable(guildID string) *LookupTable {
@@ -34,7 +32,7 @@ func newLookupTable(guildID string) *LookupTable {
 		)
 		return nil
 	}
-	// write lookup table to the DB
+	// TODO: write lookup table to the DB
 	return lookupTable
 }
 
@@ -47,28 +45,42 @@ func readLookupTableFromFile(guildID string) *LookupTable {
 	configFileName := filepath.Join(configDir, "slots", "lookuptable", LOOKUP_TABLE_NAME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		slog.Error("failed to read default theme",
-			slog.String("guildID", guildID),
-			slog.String("file", configFileName),
-			slog.Any("error", err),
-		)
+		return nil
+	}
+
+	reels := &[][]Slot{}
+	err = json.Unmarshal(bytes, reels)
+	if err != nil {
 		return nil
 	}
 
 	lookupTable := &LookupTable{
 		GuildID: guildID,
 		Name:    LOOKUP_TABLE_NAME,
+		Reels:   make([][]Symbol, 0, len(*reels)),
 	}
-	// reels := &[][]Slot{}
-	err = json.Unmarshal(bytes, &lookupTable.Reels)
-	if err != nil {
-		slog.Error("failed to unmarshal lookup table",
-			slog.String("guildID", guildID),
-			slog.String("file", configFileName),
-			slog.String("data", string(bytes)),
-			slog.Any("error", err),
-		)
+	for range len(*reels) {
+		reels := make([]Symbol, 0, 64)
+		lookupTable.Reels = append(lookupTable.Reels, reels)
+	}
+
+	symbolTable := GetSymbols(guildID)
+	if symbolTable == nil {
 		return nil
+	}
+	for i, reel := range *reels {
+		for _, slot := range reel {
+			symbol, ok := symbolTable.Symbols[string(slot)]
+			if !ok {
+				slog.Error("failed to find symbol for slot in lookup table",
+					slog.String("guildID", guildID),
+					slog.String("file", configFileName),
+					slog.String("slot", string(slot)),
+				)
+				return nil
+			}
+			lookupTable.Reels[i] = append(lookupTable.Reels[i], symbol)
+		}
 	}
 
 	slog.Info("create new lookup table",

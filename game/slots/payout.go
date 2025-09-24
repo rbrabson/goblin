@@ -15,9 +15,9 @@ const (
 
 type Payout struct {
 	Win        []Slot `json:"win"`
-	OneCoin    int    `json:"1_coin"`
-	TwoCoins   int    `json:"2_coins"`
-	ThreeCoins int    `json:"3_coins"`
+	OneCoin    int    `json:"100"`
+	TwoCoins   int    `json:"200"`
+	ThreeCoins int    `json:"300"`
 }
 
 type PayoutTable struct {

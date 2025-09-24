@@ -1,149 +1,152 @@
 [
     {
         "win": [
-            "red_7",
-            "white_7",
-            "blue_7"
+            "Archer Queen",
+            "Grand Warden",
+            "Barbarian King"
         ],
-        "1_coin": 2400,
-        "2_coins": 4800,
-        "3_coins": 10000
+        "100": 240000,
+        "200": 480000,
+        "300": 1000000
     },
     {
         "win": [
-            "red_7",
-            "red_7",
-            "red_7"
+            "Archer Queen",
+            "Archer Queen",
+            "Archer Queen"
         ],
-        "1_coin": 1199,
-        "2_coins": 2400,
-        "3_coins": 5000
+        "100": 119900,
+        "200": 240000,
+        "300": 500000
     },
     {
         "win": [
-            "white_7",
-            "white_7",
-            "white_7"
+            "Grand Warden",
+            "Grand Warden",
+            "Grand Warden"
         ],
-        "1_coin": 200,
-        "2_coins": 400,
-        "3_coins": 600
+        "100": 20000,
+        "200": 40000,
+        "300": 60000
     },
     {
         "win": [
-            "blue_7",
-            "blue_7",
-            "blue_7"
+            "Barbarian King",
+            "Barbarian King",
+            "Barbarian King"
         ],
-        "1_coin": 150,
-        "2_coins": 300,
-        "3_coins": 450
+        "100": 15000,
+        "200": 30000,
+        "300": 45000
     },
     {
         "win": [
-            "seven",
-            "seven",
-            "seven"
+            "Hero",
+            "Hero",
+            "Hero"
         ],
-        "1_coin": 80,
-        "2_coins": 160,
-        "3_coins": 240
+        "100": 8000,
+        "200": 16000,
+        "300": 24000
     },
     {
         "win": [
-            "1_bar",
-            "2_bar",
-            "3_bar"
+            "Archer",
+            "Wizard",
+            "Barbarian"
         ],
-        "1_coin": 50,
-        "2_coins": 100,
-        "3_coins": 150
+        "100": 5000,
+        "200": 10000,
+        "300": 15000
     },
     {
         "win": [
-            "3_bar",
-            "3_bar",
-            "3_bar"
+            "Barbarian",
+            "Barbarian",
+            "Barbarian"
         ],
-        "1_coin": 40,
-        "2_coins": 80,
-        "3_coins": 120
+        "100": 4000,
+        "200": 8000,
+        "300": 12000
     },
     {
         "win": [
-            "2_bar",
-            "2_bar",
-            "2_bar"
+            "Wizard",
+            "Wizard",
+            "Wizard"
         ],
-        "1_coin": 25,
-        "2_coins": 50,
-        "3_coins": 75
+        "100": 2500,
+        "200": 5000,
+        "300": 7500
     },
     {
         "win": [
-            "red",
-            "white",
-            "blue"
+            "Archer Queen or Archer",
+            "Grand Warden or Wizard",
+            "Barbarian King or Barbarian"
         ],
-        "1_coin": 20,
-        "2_coins": 40,
-        "3_coins": 60
+        "100": 2000,
+        "200": 4000,
+        "300": 6000
     },
     {
         "win": [
-            "1_bar",
-            "1_bar",
-            "1_bar"
+            "Archer",
+            "Archer",
+            "Archer"
         ],
-        "1_coin": 10,
-        "2_coins": 20,
-        "3_coins": 30
+        "100": 1000,
+        "200": 2000,
+        "300": 3000
     },
     {
         "win": [
-            "bar, bar, bar"
+            "Archer or Wizard or Barbarian",
+            "Archer or Wizard or Barbarian",
+            "Archer or Wizard or Barbarian"
         ],
-        "1_coin": 5,
-        "2_coins": 10
+        "100": 500,
+        "200": 1000,
+        "300": 1500
     },
     {
         "win": [
-            "red",
-            "red",
-            "red"
+            "Archer Queen or Archer",
+            "Archer Queen or Archer",
+            "Archer Queen or Archer"
         ],
-        "1_coin": 2,
-        "2_coins": 4,
-        "3_coins": 6
+        "100": 200,
+        "200": 400,
+        "300": 600
     },
     {
         "win": [
-            "white",
-            "white",
-            "white"
+            "Grand Warden or Wizard",
+            "Grand Warden or Wizard",
+            "Grand Warden or Wizard"
         ],
-        "1_coin": 2,
-        "2_coins": 4,
-        "3_coins": 6
+        "100": 200,
+        "200": 400,
+        "300": 600
     },
     {
         "win": [
-            "blue",
-            "blue",
-            "blue"
+            "Barbarian_King or Barbarian",
+            "Barbarian_King or Barbarian",
+            "Barbarian_King or Barbarian "
         ],
-        "1_coin": 2,
-        "2_coins": 4,
-        "3_coins": 6
+        "100": 200,
+        "200": 400,
+        "300": 600
     },
     {
         "win": [
-            "blank",
-            "blank",
-            "blank"
+            "Trap",
+            "Trap",
+            "Trap"
         ],
-        "1_coin": 1,
-        "2_coins": 2,
-        "3_coins": 3
+        "100": 100,
+        "200": 200,
+        "300": 300
     }
 ]

@@ -16,13 +16,13 @@ func main() {
 	// reels := string(bytes)
 	// fmt.Println(reels)
 
-	// payoutTable := slots.GetPayoutTable("1234567890")
-	// bytes, _ := json.MarshalIndent(payoutTable.Payouts, "", "  ")
-	// paylines := string(bytes)
-	// fmt.Println(paylines)
+	payoutTable := slots.GetPayoutTable("1234567890")
+	bytes, _ := json.MarshalIndent(payoutTable.Payouts, "", "  ")
+	paylines := string(bytes)
+	fmt.Println(paylines)
 
-	symbols := slots.GetSymbols("1234567890")
-	bytes, _ := json.MarshalIndent(symbols, "", "  ")
-	symbolsStr := string(bytes)
-	fmt.Println(symbolsStr)
+	// symbols := slots.GetSymbols("1234567890")
+	// bytes, _ := json.MarshalIndent(symbols, "", "  ")
+	// symbolsStr := string(bytes)
+	// fmt.Println(symbolsStr)
 }
