@@ -11,7 +11,7 @@ import (
 
 type Symbol struct {
 	Name  string `json:"name" bson:"name"`
-	Value string `json:"value" bson:"value"`
+	Value string `json:"value,omitempty" bson:"value,omitempty"`
 	Emoji string `json:"emoji" bson:"emoji"`
 	Color string `json:"color" bson:"color"`
 }
@@ -20,7 +20,7 @@ type SymbolTable struct {
 	ID      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	GuildID string             `json:"guild_id" bson:"guild_id"`
 	Name    string             `json:"name" bson:"name"`
-	Symbols []Symbol           `json:"symbols" bson:"symbols"`
+	Symbols map[string]Symbol  `json:"symbols" bson:"symbols"`
 }
 
 func GetSymbols(guildID string) *SymbolTable {
@@ -48,24 +48,33 @@ func readSymbolsFromFile(guildID string) *SymbolTable {
 		return nil
 	}
 
-	symbols := &SymbolTable{
+	symbolTable := &SymbolTable{
 		GuildID: guildID,
 		Name:    symbolsTheme,
+		Symbols: make(map[string]Symbol),
 	}
-	err = json.Unmarshal(bytes, &symbols.Symbols)
+	symbols := &[]Symbol{}
+	err = json.Unmarshal(bytes, symbols)
 	if err != nil {
 		slog.Error("failed to unmarshal symbols",
-			slog.String("guildID", symbols.GuildID),
-			slog.String("name", symbols.Name),
+			slog.String("guildID", symbolTable.GuildID),
+			slog.String("name", symbolTable.Name),
 			slog.Any("error", err),
 		)
 		return nil
 	}
 
+	for _, symbol := range *symbols {
+		key := symbol.Value
+		symbol.Value = ""
+		symbolTable.Symbols[key] = symbol
+
+	}
+
 	slog.Info("loaded symbols",
-		slog.String("guildID", symbols.GuildID),
-		slog.String("name", symbols.Name),
+		slog.String("guildID", symbolTable.GuildID),
+		slog.String("name", symbolTable.Name),
 	)
 
-	return symbols
+	return symbolTable
 }
