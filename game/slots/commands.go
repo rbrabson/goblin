@@ -172,7 +172,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Color:       embedColor,
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "Reels",
+				Name:   "Slots",
 				Value:  spinMsg,
 				Inline: false,
 			},
