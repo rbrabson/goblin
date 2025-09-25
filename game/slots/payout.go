@@ -18,9 +18,9 @@ const (
 // Payout defines a winning combination and the payout amounts for different bets.
 type Payout struct {
 	Win    []Slot `json:"win" bson:"win"`
-	Bet100 int    `json:"bet_100" bson:"bet_100"`
-	Bet200 int    `json:"bet_200" bson:"bet_200"`
-	Bet300 int    `json:"bet_300" bson:"bet_300"`
+	Bet100 int    `json:"100" bson:"100"`
+	Bet200 int    `json:"200" bson:"200"`
+	Bet300 int    `json:"300" bson:"300"`
 }
 
 // String returns a string representation of the Payout.
@@ -143,6 +143,11 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 	}
 
 	for _, payout := range *payouts {
+		slog.Warn("loaded payout",
+			slog.String("guildID", guildID),
+			slog.Any("payout", payout),
+		)
+
 		payoutAmount := PayoutAmount{
 			Win: make([]string, 0, len(payout.Win)),
 			Bet: map[int]int{

@@ -202,11 +202,11 @@
       "result": "Apprehended"
     },
     {
-      "message": "%s left Grand Warden in air mode <:Grand_Warden:1346563596058103962>.",
+      "message": "%s left GW in air mode <:Grand_Warden:1346563596058103962>.",
       "result": "Apprehended"
     },
     {
-      "message": "%s left Grand Warden in ground mode <:Grand_Warden:1346563596058103962>.",
+      "message": "%s left GW in ground mode <:Grand_Warden:1346563596058103962>.",
       "result": "Apprehended"
     },
     {
@@ -274,7 +274,7 @@
       "result": "Apprehended"
     },
     {
-      "message": "%s used a Book of Heroes to finish the level two Barbarian King upgrade <:Book_of_Heroes:1416130423020585110>.",
+      "message": "%s used a Book of Heroes to finish the level two BK upgrade <:Book_of_Heroes:1416130423020585110>.",
       "result": "Apprehended"
     },
     {

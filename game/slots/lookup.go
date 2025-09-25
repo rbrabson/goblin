@@ -13,7 +13,7 @@ import (
 
 const (
 	LOOKUP_TABLE_NAME = "lookup"
-	NUM_SPINS         = 10
+	NUM_SPINS         = 3
 )
 
 // Slot represents a slot symbol in the lookup table.

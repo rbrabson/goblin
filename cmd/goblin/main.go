@@ -14,6 +14,7 @@ import (
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/game/heist"
 	"github.com/rbrabson/goblin/game/race"
+	"github.com/rbrabson/goblin/game/slots"
 	"github.com/rbrabson/goblin/internal/log"
 	"github.com/rbrabson/goblin/leaderboard"
 	"github.com/rbrabson/goblin/payday"
@@ -49,6 +50,7 @@ func main() {
 	race.Start()
 	role.Start()
 	shop.Start()
+	slots.Start()
 	stats.Start()
 
 	bot := discord.NewBot(BotName, Version, Revision)

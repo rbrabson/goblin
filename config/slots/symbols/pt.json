@@ -1,45 +1,38 @@
 [
     {
-        "name": "Archer Queen",
-        "emoji": "<:Archer_Queen:>",
-        "color": "red"
+        "name": "AQ",
+        "emoji": "<:Archer_Queen:1345541909698973756>"
     },
     {
-        "name": "Grand Warden",
-        "emoji": "<:Grand_Warden:>",
-        "color": "white"
+        "name": "GW",
+        "emoji": "<:Grand_Warden:1345542906252886037>"
     },
     {
-        "name": "Barbarian King",
-        "emoji": "<:Barbarian_King:>",
-        "color": "blue"
+        "name": "BK",
+        "emoji": "<:Barbarian_King:1345542026506010645>"
     },
     {
         "name": "Archer",
-        "emoji": "<:Archer:>",
-        "color": "red"
+        "emoji": "<:Archer:1345542023226327112>"
     },
     {
         "name": "Wizard",
-        "emoji": "<:Wizard:>",
-        "color": "white"
+        "emoji": "<:Wizard:1345542076137214104>"
     },
     {
         "name": "Barbarian",
-        "emoji": "<:Barbarian:>",
-        "color": "blue"
+        "emoji": "<:Barbarian:1345542028146118767>"
     },
     {
         "name": "Spell",
-        "emoji": "<:Rage_Spell:>",
-        "color": "black"
+        "emoji": "<:Rage_Spell:1420780260865085490>"
     },
     {
         "name": "Blank",
-        "emoji": "<:Blank:>"
+        "emoji": "<:Blank:1420500775632765058>"
     },
     {
         "name": "Right Arrow",
-        "emoji": "<:RightArrow:>"
+        "emoji": "<:RightArrow:1420500811464835165>"
     }
 ]

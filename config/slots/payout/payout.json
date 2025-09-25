@@ -1,9 +1,9 @@
 [
     {
         "win": [
-            "Archer Queen",
-            "Grand Warden",
-            "Barbarian King"
+            "AQ",
+            "GW",
+            "BK"
         ],
         "100": 240000,
         "200": 480000,
@@ -11,9 +11,9 @@
     },
     {
         "win": [
-            "Archer Queen",
-            "Archer Queen",
-            "Archer Queen"
+            "AQ",
+            "AQ",
+            "AQ"
         ],
         "100": 119900,
         "200": 240000,
@@ -21,9 +21,9 @@
     },
     {
         "win": [
-            "Grand Warden",
-            "Grand Warden",
-            "Grand Warden"
+            "GW",
+            "GW",
+            "GW"
         ],
         "100": 20000,
         "200": 40000,
@@ -31,9 +31,9 @@
     },
     {
         "win": [
-            "Barbarian King",
-            "Barbarian King",
-            "Barbarian King"
+            "BK",
+            "BK",
+            "BK"
         ],
         "100": 15000,
         "200": 30000,
@@ -41,9 +41,9 @@
     },
     {
         "win": [
-            "Archer Queen or Grand Warden or Barbarian King",
-            "Archer Queen or Grand Warden or Barbarian King",
-            "Archer Queen or Grand Warden or Barbarian King"
+            "AQ or GW or BK",
+            "AQ or GW or BK",
+            "AQ or GW or BK"
         ],
         "100": 8000,
         "200": 16000,
@@ -81,9 +81,9 @@
     },
     {
         "win": [
-            "Archer Queen or Archer",
-            "Grand Warden or Wizard",
-            "Barbarian King or Barbarian"
+            "AQ or Archer",
+            "GW or Wizard",
+            "BK or Barbarian"
         ],
         "100": 2000,
         "200": 4000,
@@ -111,9 +111,9 @@
     },
     {
         "win": [
-            "Archer Queen or Archer",
-            "Archer Queen or Archer",
-            "Archer Queen or Archer"
+            "AQ or Archer",
+            "AQ or Archer",
+            "AQ or Archer"
         ],
         "100": 200,
         "200": 400,
@@ -121,9 +121,9 @@
     },
     {
         "win": [
-            "Grand Warden or Wizard",
-            "Grand Warden or Wizard",
-            "Grand Warden or Wizard"
+            "GW or Wizard",
+            "GW or Wizard",
+            "GW or Wizard"
         ],
         "100": 200,
         "200": 400,
@@ -131,9 +131,9 @@
     },
     {
         "win": [
-            "Barbarian King or Barbarian",
-            "Barbarian King or Barbarian",
-            "Barbarian King or Barbarian "
+            "BK or Barbarian",
+            "BK or Barbarian",
+            "BK or Barbarian "
         ],
         "100": 200,
         "200": 400,

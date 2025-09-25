@@ -18,12 +18,12 @@ func TestPayout_String(t *testing.T) {
 		{
 			name: "basic payout",
 			payout: Payout{
-				Win:    []Slot{"Archer Queen", "Grand Warden", "Barbarian King"},
+				Win:    []Slot{"AQ", "GW", "BK"},
 				Bet100: 240000,
 				Bet200: 480000,
 				Bet300: 1000000,
 			},
-			contains: []string{"Win: [Archer Queen, Grand Warden, Barbarian King]", "Payouts: [100:", "200:", "300:"},
+			contains: []string{"Win: [AQ, GW, BK]", "Payouts: [100:", "200:", "300:"},
 		},
 		{
 			name: "empty payout",
@@ -78,14 +78,14 @@ func TestPayoutAmount_String(t *testing.T) {
 		{
 			name: "basic payout amount",
 			payoutAmount: PayoutAmount{
-				Win: []string{"Archer Queen", "Grand Warden", "Barbarian King"},
+				Win: []string{"AQ", "GW", "BK"},
 				Bet: map[int]int{
 					100: 240000,
 					200: 480000,
 					300: 1000000,
 				},
 			},
-			contains: []string{"PayoutAmount{", "Win: [", "Archer Queen", "Grand Warden", "Barbarian King", "Payouts: [", "]}"},
+			contains: []string{"PayoutAmount{", "Win: [", "AQ", "GW", "BK", "Payouts: [", "]}"},
 		},
 		{
 			name: "empty payout amount",
@@ -214,7 +214,7 @@ func TestReadPayoutTableFromFile(t *testing.T) {
 			setupFile: func() error {
 				payouts := []Payout{
 					{
-						Win:    []Slot{"Archer Queen", "Grand Warden", "Barbarian King"},
+						Win:    []Slot{"AQ", "GW", "BK"},
 						Bet100: 240000,
 						Bet200: 480000,
 						Bet300: 1000000,
@@ -483,7 +483,7 @@ func TestPayoutTable_GetPayoutAmount(t *testing.T) {
 		GuildID: "test-guild",
 		Payouts: []PayoutAmount{
 			{
-				Win: []string{"Archer Queen", "Grand Warden", "Barbarian King"},
+				Win: []string{"AQ", "GW", "BK"},
 				Bet: map[int]int{
 					100: 240000,
 					200: 480000,
@@ -519,9 +519,9 @@ func TestPayoutTable_GetPayoutAmount(t *testing.T) {
 			name: "exact match - jackpot",
 			bet:  100,
 			spin: []Symbol{
-				{Name: "Archer Queen", Emoji: "🏹"},
-				{Name: "Grand Warden", Emoji: "🛡️"},
-				{Name: "Barbarian King", Emoji: "⚔️"},
+				{Name: "AQ", Emoji: "🏹"},
+				{Name: "GW", Emoji: "🛡️"},
+				{Name: "BK", Emoji: "⚔️"},
 			},
 			expected: 240000,
 		},
@@ -559,9 +559,9 @@ func TestPayoutTable_GetPayoutAmount(t *testing.T) {
 			name: "wrong bet amount",
 			bet:  999,
 			spin: []Symbol{
-				{Name: "Archer Queen", Emoji: "🏹"},
-				{Name: "Grand Warden", Emoji: "🛡️"},
-				{Name: "Barbarian King", Emoji: "⚔️"},
+				{Name: "AQ", Emoji: "🏹"},
+				{Name: "GW", Emoji: "🛡️"},
+				{Name: "BK", Emoji: "⚔️"},
 			},
 			expected: 0,
 		},
@@ -569,8 +569,8 @@ func TestPayoutTable_GetPayoutAmount(t *testing.T) {
 			name: "mismatched spin length",
 			bet:  100,
 			spin: []Symbol{
-				{Name: "Archer Queen", Emoji: "🏹"},
-				{Name: "Grand Warden", Emoji: "🛡️"},
+				{Name: "AQ", Emoji: "🏹"},
+				{Name: "GW", Emoji: "🛡️"},
 			}, // Only 2 symbols instead of 3
 			expected: 0,
 		},
@@ -578,9 +578,9 @@ func TestPayoutTable_GetPayoutAmount(t *testing.T) {
 			name: "higher bet amount",
 			bet:  300,
 			spin: []Symbol{
-				{Name: "Archer Queen", Emoji: "🏹"},
-				{Name: "Grand Warden", Emoji: "🛡️"},
-				{Name: "Barbarian King", Emoji: "⚔️"},
+				{Name: "AQ", Emoji: "🏹"},
+				{Name: "GW", Emoji: "🛡️"},
+				{Name: "BK", Emoji: "⚔️"},
 			},
 			expected: 1000000,
 		},

@@ -18,10 +18,10 @@ func TestSymbol_String(t *testing.T) {
 		{
 			name: "basic symbol",
 			symbol: Symbol{
-				Name:  "Archer Queen",
+				Name:  "AQ",
 				Emoji: "<:Archer_Queen:1346562884720922707>",
 			},
-			expected: "Symbol{Name: Archer Queen, Emoji: <:Archer_Queen:1346562884720922707>}",
+			expected: "Symbol{Name: AQ, Emoji: <:Archer_Queen:1346562884720922707>}",
 		},
 		{
 			name: "symbol with empty fields",
@@ -183,8 +183,8 @@ func TestReadSymbolsFromFile(t *testing.T) {
 			name: "valid symbols file",
 			setupFile: func() error {
 				symbols := []Symbol{
-					{Name: "Archer Queen", Emoji: "<:Archer_Queen:1346562884720922707>"},
-					{Name: "Barbarian King", Emoji: "<:Barbarian_King:1346562986810146826>"},
+					{Name: "AQ", Emoji: "<:Archer_Queen:1346562884720922707>"},
+					{Name: "BK", Emoji: "<:Barbarian_King:1346562986810146826>"},
 				}
 				data, err := json.Marshal(symbols)
 				if err != nil {
@@ -195,7 +195,7 @@ func TestReadSymbolsFromFile(t *testing.T) {
 			guildID:      "12345",
 			expectNil:    false,
 			expectSymbol: true,
-			symbolName:   "Archer Queen",
+			symbolName:   "AQ",
 		},
 		{
 			name: "empty symbols file",

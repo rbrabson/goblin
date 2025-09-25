@@ -1,16 +1,16 @@
 [
     {
-        "name": "Archer Queen",
+        "name": "AQ",
         "emoji": "<:Archer_Queen:1346562884720922707>",
         "color": "red"
     },
     {
-        "name": "Grand Warden",
+        "name": "GW",
         "emoji": "<:Grand_Warden:1346563596058103962>",
         "color": "white"
     },
     {
-        "name": "Barbarian King",
+        "name": "BK",
         "emoji": "<:Barbarian_King:1346562986810146826>",
         "color": "blue"
     },

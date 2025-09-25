@@ -20,8 +20,8 @@ func TestSlot_String(t *testing.T) {
 		},
 		{
 			name:     "slot with spaces",
-			slot:     Slot("Archer Queen"),
-			expected: "Archer Queen",
+			slot:     Slot("AQ"),
+			expected: "AQ",
 		},
 		{
 			name:     "empty slot",
