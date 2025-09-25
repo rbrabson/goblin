@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	SYMBOLS_FILE_NAME = "symbols"
+	// SYMBOLS_FILE_NAME = "symbols"
+	SYMBOLS_FILE_NAME = "pt"
 )
 
 // Symbol represents a slot symbol with a name and an emoji.
