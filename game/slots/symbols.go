@@ -36,13 +36,13 @@ func (s *Symbol) String() string {
 type Reel []Symbol
 
 // String returns a string representation of the Reel.
-func (r *Reel) String() string {
+func (r Reel) String() string {
 	sb := strings.Builder{}
 	sb.WriteString("Symbols{")
-	for i, symbol := range *r {
+	for i, symbol := range r {
 		sb.WriteString(symbol.String())
-		if i < len(*r)-1 {
-			sb.WriteString(",")
+		if i < len(r)-1 {
+			sb.WriteString(", ")
 		}
 	}
 	sb.WriteString("}")

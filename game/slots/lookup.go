@@ -33,18 +33,33 @@ type LookupTable struct {
 
 // String returns a string representation of the LookupTable.
 func (lt *LookupTable) String() string {
-	return fmt.Sprintf("LookupTable{GuildID: %s, Reels: %v}", lt.GuildID, lt.Reels)
+	sb := strings.Builder{}
+	sb.WriteString("LookupTable{")
+	sb.WriteString("GuildID: " + lt.GuildID)
+	sb.WriteString(", Reels: [")
+	for i, reel := range lt.Reels {
+		sb.WriteString(reel.String())
+		if i < len(lt.Reels)-1 {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteString("]")
+	sb.WriteString("}")
+	return sb.String()
 }
 
 // Spins represents multiple rows of symbols displayed during a spin in the slot machine game.
 type Spins []Reel
 
 // String returns a string representation of the Spins.
-func (s *Spins) String() string {
+func (s Spins) String() string {
 	sb := strings.Builder{}
 	sb.WriteString("Spins{")
-	for i, spin := range *s {
-		sb.WriteString(fmt.Sprintf("Spin[%d]: %v", i, spin))
+	for i, spin := range s {
+		sb.WriteString(spin.String())
+		if i < len(s)-1 {
+			sb.WriteString(", ")
+		}
 	}
 	sb.WriteString("}")
 	return sb.String()
