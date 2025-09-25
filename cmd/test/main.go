@@ -20,7 +20,7 @@ func main() {
 	betAmount := 300
 	winAmount := payoutTable.GetPayoutAmount(betAmount, spin.Spins[spin.WinIndex])
 
-	p.Printf("Spin: %v\n", spin.Spins[spin.WinIndex])
+	p.Printf("Win: %v\n", spin.Spins[spin.WinIndex])
 	p.Printf("Bet: %d\n", betAmount)
 	p.Printf("Win: %d\n", winAmount)
 
