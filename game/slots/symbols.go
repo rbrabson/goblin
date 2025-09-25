@@ -68,8 +68,8 @@ func (st *SymbolTable) String() string {
 	slices.Sort(symbolNames)
 	sb.WriteString(", Symbols: [")
 	for i, name := range symbolNames {
-		symbolName := st.Symbols[name]
-		sb.WriteString(symbolName.String())
+		symbol := st.Symbols[name]
+		sb.WriteString(symbol.String())
 		if i < len(symbolNames)-1 {
 			sb.WriteString(", ")
 		}
