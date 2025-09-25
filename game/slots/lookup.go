@@ -48,8 +48,23 @@ func (lt *LookupTable) String() string {
 	return sb.String()
 }
 
+// SingleSpin represents a single row of symbols displayed during a spin in the slot machine game.
+type SingleSpin []Symbol
+
+// String returns a string representation of the SingleSpin.
+func (rs SingleSpin) String() string {
+	sb := strings.Builder{}
+	for i, symbol := range rs {
+		sb.WriteString(symbol.String())
+		if i < len(rs)-1 {
+			sb.WriteString(", ")
+		}
+	}
+	return sb.String()
+}
+
 // Spins represents multiple rows of symbols displayed during a spin in the slot machine game.
-type Spins [][]Symbol
+type Spins []SingleSpin
 
 // String returns a string representation of the Spins.
 func (s Spins) String() string {
@@ -162,7 +177,7 @@ func readLookupTableFromFile(guildID string) *LookupTable {
 // to create an animation effect. The winning index is set to the second-to-last spin.
 func (lt *LookupTable) Spin() *Spin {
 	spin := &Spin{
-		Spins: make([][]Symbol, 0, NUM_SPINS),
+		Spins: make(Spins, 0, NUM_SPINS),
 	}
 
 	currentIndices, currentSpin := lt.GetCurrentSpin()
