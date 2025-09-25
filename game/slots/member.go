@@ -1,7 +1,11 @@
 package slots
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/rbrabson/goblin/stats"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
+// Member represents a member's statistics for the slots game.
 type Member struct {
 	ID               primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	GuildID          string             `json:"guild_id" bson:"guild_id"`
@@ -14,15 +18,18 @@ type Member struct {
 	TotalWinnings    int                `json:"total_winnings" bson:"total_winnings"`
 }
 
+// GetMemberKey retrieves the member statistics for a specific guild and user.
+// If the member does not exist, a new member is created and returned.
 func GetMemberKey(guildID, userID string) *Member {
 	member := readMember(guildID, userID)
 	if member == nil {
-		member = NewMember(guildID, userID)
+		member = newMember(guildID, userID)
 	}
 	return member
 }
 
-func NewMember(guildID, userID string) *Member {
+// newMember creates a new Member instance with default values and writes it to the database.
+func newMember(guildID, userID string) *Member {
 	member := &Member{
 		ID:               primitive.NewObjectID(),
 		GuildID:          guildID,
@@ -39,6 +46,7 @@ func NewMember(guildID, userID string) *Member {
 	return member
 }
 
+// AddResults updates the member's statistics based on the results of a spin.
 func (m *Member) AddResults(spinResult *SpinResult) {
 	m.TotalBet += spinResult.Bet
 	if spinResult.Payout > 0 {
@@ -54,4 +62,7 @@ func (m *Member) AddResults(spinResult *SpinResult) {
 	}
 
 	writeMember(m)
+
+	memberIDs := []string{m.MemberID}
+	stats.UpdateGameStats(m.GuildID, "slots", memberIDs)
 }

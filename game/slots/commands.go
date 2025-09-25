@@ -54,6 +54,11 @@ var (
 					Description: "Get the pay table for the slot machine.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
+				{
+					Name:        "stats",
+					Description: "Shows a user's stats.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+				},
 			},
 		},
 	}
@@ -79,6 +84,8 @@ func slots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		playSlots(s, i)
 	case "paytable":
 		payTable(s, i)
+	case "stats":
+		showStats(s, i)
 	}
 
 }
@@ -242,4 +249,61 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
+}
+
+// showStats handles the `/slots stats` command.
+func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	guildID := i.GuildID
+	userID := i.Member.User.ID
+
+	slog.Debug("stats command",
+		slog.String("guildID", guildID),
+		slog.String("userID", userID),
+	)
+
+	member := GetMemberKey(guildID, userID)
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "Slot Machine Stats",
+		Description: p.Sprintf("Here are the stats for <@%s>:", userID),
+		Color:       0x00ff00, // Green color
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Total Wins",
+				Value:  p.Sprintf("%d", member.TotalWins),
+				Inline: true,
+			},
+			{
+				Name:   "Total Losses",
+				Value:  p.Sprintf("%d", member.TotalLosses),
+				Inline: true,
+			},
+			{
+				Name:   "Total Bet",
+				Value:  p.Sprintf("%d", member.TotalBet),
+				Inline: true,
+			},
+			{
+				Name:   "Total Winnings",
+				Value:  p.Sprintf("%d", member.TotalWinnings),
+				Inline: true,
+			},
+			{
+				Name:   "Current Win Streak",
+				Value:  p.Sprintf("%d", member.CurrentWinStreak),
+				Inline: true,
+			},
+			{
+				Name:   "Longest Win Streak",
+				Value:  p.Sprintf("%d", member.LongestWinStreak),
+				Inline: true,
+			},
+		},
+		Timestamp: time.Now().Format(time.RFC3339),
+	}
+
+	resp := disgomsg.NewResponse(disgomsg.WithEmbeds([]*discordgo.MessageEmbed{embed}))
+	resp.Send(s, i.Interaction)
 }
