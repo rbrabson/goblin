@@ -15,29 +15,90 @@ const (
 	PAYOUT_FILE_NAME = "payout"
 )
 
+// Payout defines a winning combination and the payout amounts for different bets.
 type Payout struct {
 	Win    []Slot `json:"win" bson:"win"`
-	Bet100 int    `json:"100" bson:"100"`
-	Bet200 int    `json:"200" bson:"200"`
-	Bet300 int    `json:"300" bson:"300"`
+	Bet100 int    `json:"bet_100" bson:"bet_100"`
+	Bet200 int    `json:"bet_200" bson:"bet_200"`
+	Bet300 int    `json:"bet_300" bson:"bet_300"`
 }
 
+// String returns a string representation of the Payout.
+func (p *Payout) String() string {
+	sb := strings.Builder{}
+	sb.WriteString("Payout{")
+	sb.WriteString("Win: [")
+	for i, slot := range p.Win {
+		sb.WriteString(slot.String())
+		if i < len(p.Win)-1 {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteString("]")
+	sb.WriteString(", Payouts: [")
+	sb.WriteString("100: " + string(rune(p.Bet100)))
+	sb.WriteString(", 200: " + string(rune(p.Bet200)))
+	sb.WriteString(", 300: " + string(rune(p.Bet300)))
+	sb.WriteString("]")
+	sb.WriteString("}")
+
+	return sb.String()
+}
+
+// PayoutAmount defines a winning combination and the payout amounts for different bets.
 type PayoutAmount struct {
 	Win []string    `json:"win" bson:"win"`
 	Bet map[int]int `json:"bet" bson:"bet"`
 }
 
+// String returns a string representation of the PayoutAmount.
+func (p *PayoutAmount) String() string {
+	sb := strings.Builder{}
+	sb.WriteString("PayoutAmount{")
+	sb.WriteString("Win: [")
+	for _, slot := range p.Win {
+		sb.WriteString(slot)
+	}
+	sb.WriteString("]")
+	sb.WriteString(", Payouts: [")
+	for bet, amount := range p.Bet {
+		sb.WriteString(string(rune(bet)) + ": " + string(rune(amount)) + ", ")
+	}
+	sb.WriteString("]")
+	sb.WriteString("}")
+
+	return sb.String()
+}
+
+// PayoutTable defines a table of payouts for a specific guild.
 type PayoutTable struct {
 	ID      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	GuildID string             `json:"guild_id"`
 	Payouts []PayoutAmount     `json:"payouts"`
 }
 
+// String returns a string representation of the PayoutTable.
+func (pt *PayoutTable) String() string {
+	sb := strings.Builder{}
+	sb.WriteString("PayoutTable{")
+	sb.WriteString("ID: " + pt.ID.Hex())
+	sb.WriteString(", GuildID: " + pt.GuildID)
+	sb.WriteString(", Payouts: [")
+	for _, payout := range pt.Payouts {
+		sb.WriteString(", " + payout.String())
+	}
+	sb.WriteString("]")
+	sb.WriteString("}")
+	return sb.String()
+}
+
+// GetPayoutTable retrieves the payout table for a specific guild.
 func GetPayoutTable(guildID string) *PayoutTable {
 	// TODO: try to read from the DB
 	return newPayoutTable(guildID)
 }
 
+// newPayoutTable creates a new payout table for a specific guild by reading from a file.
 func newPayoutTable(guildID string) *PayoutTable {
 	payoutTable := readPayoutTableFromFile(guildID)
 	if payoutTable == nil {
@@ -50,6 +111,7 @@ func newPayoutTable(guildID string) *PayoutTable {
 	return payoutTable
 }
 
+// readPayoutTableFromFile reads the payout table from a JSON file.
 func readPayoutTableFromFile(guildID string) *PayoutTable {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "slots", "payout", PAYOUT_FILE_NAME+".json")
@@ -102,6 +164,7 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 	return payoutTable
 }
 
+// GetPayoutAmount returns the payout amount for a given bet and spin result.
 func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 	for _, payout := range pt.Payouts {
 		if len(payout.Win) != len(spin) {

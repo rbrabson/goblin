@@ -2,11 +2,13 @@ package slots
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 )
 
 const (
@@ -14,23 +16,60 @@ const (
 	NUM_SPINS         = 10
 )
 
+// Slot represents a slot symbol in the lookup table.
 type Slot string
 
-type LookupTable struct {
-	GuildID string     `json:"guild_id"`
-	Reels   [][]Symbol `json:"reels"`
+// String returns a string representation of the Slot.
+func (s Slot) String() string {
+	return string(s)
 }
 
+// LookupTable represents the lookup table for a guild, containing the reels of slot symbols.
+// The lookup table is used to determine the outcome of spins in the slot machine game.
+type LookupTable struct {
+	GuildID string `json:"guild_id"`
+	Reels   []Reel `json:"reels"`
+}
+
+// String returns a string representation of the LookupTable.
+func (lt *LookupTable) String() string {
+	return fmt.Sprintf("LookupTable{GuildID: %s, Reels: %v}", lt.GuildID, lt.Reels)
+}
+
+// Spins represents multiple rows of symbols displayed during a spin in the slot machine game.
+type Spins []Reel
+
+// String returns a string representation of the Spins.
+func (s *Spins) String() string {
+	sb := strings.Builder{}
+	sb.WriteString("Spins{")
+	for i, spin := range *s {
+		sb.WriteString(fmt.Sprintf("Spin[%d]: %v", i, spin))
+	}
+	sb.WriteString("}")
+	return sb.String()
+}
+
+// Spin represents the result of a spin in the slot machine game, including the winning index and the symbols displayed.
+// The spin contains multiple rows of symbols, with the winning row indicated by WinIndex. THe multiple rows are used
+// to create an animation effect when displaying the spin result.
 type Spin struct {
 	WinIndex int
-	Spins    [][]Symbol
+	Spins    Spins
 }
 
+// String returns a string representation of the Spin.
+func (s *Spin) String() string {
+	return fmt.Sprintf("Spin{WinIndex: %d, Spins: %v}", s.WinIndex, s.Spins)
+}
+
+// GetLookupTable retrieves the lookup table for the specified guild.
 func GetLookupTable(guildID string) *LookupTable {
 	// TODO: try to read from the DB
 	return newLookupTable(guildID)
 }
 
+// newLookupTable creates a new lookup table for the specified guild by reading from a configuration file.
 func newLookupTable(guildID string) *LookupTable {
 	lookupTable := readLookupTableFromFile(guildID)
 	if lookupTable == nil {
@@ -63,7 +102,7 @@ func readLookupTableFromFile(guildID string) *LookupTable {
 
 	lookupTable := &LookupTable{
 		GuildID: guildID,
-		Reels:   make([][]Symbol, 0, len(*reels)),
+		Reels:   make([]Reel, 0, len(*reels)),
 	}
 	for range len(*reels) {
 		reels := make([]Symbol, 0, 64)
@@ -96,9 +135,12 @@ func readLookupTableFromFile(guildID string) *LookupTable {
 	return lookupTable
 }
 
+// Spin generates a new spin result using the lookup table.
+// It selects a random current spin, then determines the previous and next spins
+// to create an animation effect. The winning index is set to the second-to-last spin.
 func (lt *LookupTable) Spin() *Spin {
 	spin := &Spin{
-		Spins: make([][]Symbol, 0, NUM_SPINS),
+		Spins: make([]Reel, 0, NUM_SPINS),
 	}
 
 	currentIndices, currentSpin := lt.GetCurrentSpin()
@@ -118,6 +160,8 @@ func (lt *LookupTable) Spin() *Spin {
 	return spin
 }
 
+// GetCurrentSpin selects a random symbol from each reel to create the current spin.
+// It returns the indices of the selected symbols and the symbols themselves.
 func (lt *LookupTable) GetCurrentSpin() ([]int, []Symbol) {
 	currentIndices := make([]int, 0, len(lt.Reels))
 	for _, reel := range lt.Reels {
@@ -131,6 +175,9 @@ func (lt *LookupTable) GetCurrentSpin() ([]int, []Symbol) {
 	return currentIndices, currentSpin
 }
 
+// GetPreviousSpin determines the previous spin based on the current indices.
+// It returns the indices of the previous symbols and the symbols themselves.
+// The previous symbol for each reel is the first symbol that is different from the current symbol,
 func (lt *LookupTable) GetPreviousSpin(currentIndices []int) ([]int, []Symbol) {
 	previousSpin := make([]Symbol, 0, len(lt.Reels))
 	previousIndices := make([]int, 0, len(lt.Reels))
@@ -142,6 +189,8 @@ func (lt *LookupTable) GetPreviousSpin(currentIndices []int) ([]int, []Symbol) {
 	return previousIndices, previousSpin
 }
 
+// GetPreviousIndex finds the index of the previous symbol in the reel that is different from the current symbol.
+// It wraps around to the end of the reel if necessary.
 func (lt *LookupTable) GetPreviousIndex(reel []Symbol, currentIndex int) int {
 	currentSymbol := reel[currentIndex].Name
 	previousIndex := currentIndex
@@ -157,6 +206,9 @@ func (lt *LookupTable) GetPreviousIndex(reel []Symbol, currentIndex int) int {
 	return previousIndex
 }
 
+// GetNextSpin determines the next spin based on the current indices.
+// It returns the indices of the next symbols and the symbols themselves.
+// The next symbol for each reel is the first symbol that is different from the current symbol.
 func (lt *LookupTable) GetNextSpin(currentIndices []int) ([]int, []Symbol) {
 	nextSpin := make([]Symbol, 0, len(lt.Reels))
 	nextIndices := make([]int, 0, len(lt.Reels))
@@ -168,6 +220,8 @@ func (lt *LookupTable) GetNextSpin(currentIndices []int) ([]int, []Symbol) {
 	return nextIndices, nextSpin
 }
 
+// GetNextIndex finds the index of the next symbol in the reel that is different from the current symbol.
+// It wraps around to the beginning of the reel if necessary.
 func (lt *LookupTable) GetNextIndex(reel []Symbol, currentIndex int) int {
 	currentSymbol := reel[currentIndex].Name
 	nextIndex := currentIndex
