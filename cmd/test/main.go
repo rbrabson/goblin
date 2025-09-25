@@ -12,19 +12,13 @@ func main() {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	lookupTable := slots.GetLookupTable("1234567890")
-	payoutTable := slots.GetPayoutTable("1234567890")
-
-	spin := lookupTable.Spin()
-
 	betAmount := 300
-	winAmount := payoutTable.GetPayoutAmount(betAmount, spin.Spins[spin.WinIndex])
+	sm := slots.NewSlotMachine(slots.DummyGuildID)
+	spin := sm.Spin(betAmount)
 
-	p.Printf("Win: %v\n", spin.Spins[spin.WinIndex])
 	p.Printf("Bet: %d\n", betAmount)
-	p.Printf("Win: %d\n", winAmount)
-
-	for i, spin := range spin.Spins {
-		p.Printf("Spin[%d]: %v\n", i, spin)
-	}
+	p.Printf("Win: %d\n", spin.Payout)
+	p.Printf("Next: %v\n", spin.NextLine)
+	p.Printf("Payline: %v\n", spin.Payline)
+	p.Printf("Previous: %v\n", spin.PreviousLine)
 }

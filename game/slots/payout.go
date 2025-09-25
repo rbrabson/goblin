@@ -143,7 +143,7 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 	}
 
 	for _, payout := range *payouts {
-		slog.Warn("loaded payout",
+		slog.Debug("loaded payout",
 			slog.String("guildID", guildID),
 			slog.Any("payout", payout),
 		)

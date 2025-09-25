@@ -6,6 +6,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
+	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -98,67 +99,60 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.Int("bet", bet),
 	)
 
-	var resp *disgomsg.Response
-
-	lookupTable := GetLookupTable(guildID)
-	if lookupTable == nil {
-		resp = disgomsg.NewResponse(
-			disgomsg.WithContent("No slot machine configured for this server."),
+	account := bank.GetAccount(guildID, userID)
+	if err := account.Withdraw(bet); err != nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("You do not have enough balance to play."),
 		)
-		resp.SendEphemeral(s, i.Interaction)
-		return
-	}
-	payoutTable := GetPayoutTable(guildID)
-	if payoutTable == nil {
-		resp = disgomsg.NewResponse(
-			disgomsg.WithContent("No payout table configured for this server."),
-		)
-		resp.SendEphemeral(s, i.Interaction)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.Any("error", err),
+			)
+		}
 		return
 	}
 
-	symbols := GetSymbols(guildID)
-	spinResult := lookupTable.Spin()
-	spin := spinResult.Spins[spinResult.WinIndex]
-	payout := payoutTable.GetPayoutAmount(bet, spin)
+	sm := NewSlotMachine(guildID)
+	spinResult := sm.Spin(bet)
 
-	// Build spin message showing the reels
-	var spinMsg string
-	rightArrow := "▶️" // Default arrow emoji
-	blank := "⬜"       // Default blank emoji
+	member := GetMemberKey(guildID, userID)
+	member.AddResults(spinResult)
 
-	// Check if custom symbols exist
-	if _, exists := symbols.Symbols["Right Arrow"]; exists {
-		rightArrow = symbols.Symbols["Right Arrow"].Emoji
-	}
-	if _, exists := symbols.Symbols["Blank"]; exists {
-		blank = symbols.Symbols["Blank"].Emoji
+	if spinResult.Payout > 0 {
+		if err := account.Deposit(spinResult.Payout); err != nil {
+			slog.Error("error depositing winnings to account",
+				slog.String("guildID", guildID),
+				slog.String("userID", userID),
+				slog.Int("payout", spinResult.Payout),
+				slog.Any("error", err),
+			)
+		}
 	}
 
-	for idx, spin := range spinResult.Spins {
-		if idx < len(spinResult.Spins)-3 {
-			continue
-		}
-		if idx == spinResult.WinIndex {
-			spinMsg += rightArrow
-		} else {
-			spinMsg += blank
-		}
-		for _, symbol := range spin {
-			spinMsg += symbol.Emoji
-		}
-		spinMsg += "\n"
+	symbols := sm.Symbols.Symbols
+	spinMsg := symbols["Blank"].Emoji
+	for _, symbol := range spinResult.NextLine {
+		spinMsg += symbol.Emoji
 	}
+	spinMsg += "\n" + symbols["Right Arrow"].Emoji
+	for _, symbol := range spinResult.Payline {
+		spinMsg += symbol.Emoji
+	}
+	spinMsg += "\n" + symbols["Blank"].Emoji
+	for _, symbol := range spinResult.PreviousLine {
+		spinMsg += symbol.Emoji
+	}
+	spinMsg += "\n"
 
 	// Determine embed color based on win/loss
 	var embedColor int
 	var resultTitle string
 	var resultDescription string
 
-	if payout > 0 {
+	if spinResult.Payout > 0 {
 		embedColor = 0x00ff00 // Green for win
 		resultTitle = "🎉 Winner!"
-		resultDescription = p.Sprintf("You won **%d** coins!", payout)
+		resultDescription = p.Sprintf("You won **%d** coins!", spinResult.Payout)
 	} else {
 		embedColor = 0xff0000 // Red for loss
 		resultTitle = "💸 No Win"
@@ -168,7 +162,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Create the embed
 	embed := &discordgo.MessageEmbed{
 		Title:       "Slot Machine",
-		Description: p.Sprintf("<@%s> bet **%d** coins", userID, bet),
+		Description: p.Sprintf("<@%s> bet **%d** coins", userID, spinResult),
 		Color:       embedColor,
 		Fields: []*discordgo.MessageEmbedField{
 			{
@@ -185,7 +179,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
-	resp = disgomsg.NewResponse(disgomsg.WithEmbeds([]*discordgo.MessageEmbed{embed}))
+	resp := disgomsg.NewResponse(disgomsg.WithEmbeds([]*discordgo.MessageEmbed{embed}))
 	resp.Send(s, i.Interaction)
 }
 

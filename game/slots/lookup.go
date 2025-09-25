@@ -2,12 +2,10 @@ package slots
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"math/rand"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 )
 
@@ -63,43 +61,6 @@ func (rs SingleSpin) String() string {
 	}
 	sb.WriteString("}")
 	return sb.String()
-}
-
-// Spins represents multiple rows of symbols displayed during a spin in the slot machine game.
-type Spins []SingleSpin
-
-// String returns a string representation of the Spins.
-func (s Spins) String() string {
-	sb := strings.Builder{}
-	sb.WriteString("Spins{")
-	for i, spin := range s {
-		sb.WriteString("{")
-		for j, symbols := range spin {
-			sb.WriteString(symbols.String())
-			if j < len(spin)-1 {
-				sb.WriteString(", ")
-			}
-		}
-		sb.WriteString("}")
-		if i < len(s)-1 {
-			sb.WriteString(", ")
-		}
-	}
-	sb.WriteString("}")
-	return sb.String()
-}
-
-// Spin represents the result of a spin in the slot machine game, including the winning index and the symbols displayed.
-// The spin contains multiple rows of symbols, with the winning row indicated by WinIndex. THe multiple rows are used
-// to create an animation effect when displaying the spin result.
-type Spin struct {
-	WinIndex int
-	Spins    Spins
-}
-
-// String returns a string representation of the Spin.
-func (s *Spin) String() string {
-	return fmt.Sprintf("Spin{WinIndex: %d, Spins: %v}", s.WinIndex, s.Spins)
 }
 
 // GetLookupTable retrieves the lookup table for the specified guild.
@@ -177,37 +138,29 @@ func readLookupTableFromFile(guildID string) *LookupTable {
 // Spin generates a new spin result using the lookup table.
 // It selects a random current spin, then determines the previous and next spins
 // to create an animation effect. The winning index is set to the second-to-last spin.
-func (lt *LookupTable) Spin() *Spin {
-	spin := &Spin{
-		Spins: make(Spins, 0, NUM_SPINS),
-	}
-
+func (lt *LookupTable) Spin() *SpinResult {
 	currentIndices, currentSpin := lt.GetCurrentSpin()
 	_, previousSpin := lt.GetPreviousSpin(currentIndices)
-	spin.Spins = append(spin.Spins, previousSpin)
-	spin.Spins = append(spin.Spins, currentSpin)
+	_, nextSpin := lt.GetNextSpin(currentIndices)
 
-	nextIndices := currentIndices
-	var nextSpin []Symbol
-	for range NUM_SPINS - 2 {
-		nextIndices, nextSpin = lt.GetNextSpin(nextIndices)
-		spin.Spins = append(spin.Spins, nextSpin)
+	spin := &SpinResult{
+		Payline:      currentSpin,
+		PreviousLine: previousSpin,
+		NextLine:     nextSpin,
 	}
-	slices.Reverse(spin.Spins)
-	spin.WinIndex = NUM_SPINS - 2
 
 	return spin
 }
 
 // GetCurrentSpin selects a random symbol from each reel to create the current spin.
 // It returns the indices of the selected symbols and the symbols themselves.
-func (lt *LookupTable) GetCurrentSpin() ([]int, []Symbol) {
+func (lt *LookupTable) GetCurrentSpin() ([]int, SingleSpin) {
 	currentIndices := make([]int, 0, len(lt.Reels))
 	for _, reel := range lt.Reels {
 		randIndex := rand.Int31n(int32(len(reel)))
 		currentIndices = append(currentIndices, int(randIndex))
 	}
-	currentSpin := make([]Symbol, 0, len(lt.Reels))
+	currentSpin := SingleSpin{}
 	for i, reel := range lt.Reels {
 		currentSpin = append(currentSpin, reel[currentIndices[i]])
 	}
@@ -217,8 +170,8 @@ func (lt *LookupTable) GetCurrentSpin() ([]int, []Symbol) {
 // GetPreviousSpin determines the previous spin based on the current indices.
 // It returns the indices of the previous symbols and the symbols themselves.
 // The previous symbol for each reel is the first symbol that is different from the current symbol,
-func (lt *LookupTable) GetPreviousSpin(currentIndices []int) ([]int, []Symbol) {
-	previousSpin := make([]Symbol, 0, len(lt.Reels))
+func (lt *LookupTable) GetPreviousSpin(currentIndices []int) ([]int, SingleSpin) {
+	previousSpin := SingleSpin{}
 	previousIndices := make([]int, 0, len(lt.Reels))
 	for i, reel := range lt.Reels {
 		previousIndex := lt.GetPreviousIndex(reel, currentIndices[i])
@@ -248,8 +201,8 @@ func (lt *LookupTable) GetPreviousIndex(reel []Symbol, currentIndex int) int {
 // GetNextSpin determines the next spin based on the current indices.
 // It returns the indices of the next symbols and the symbols themselves.
 // The next symbol for each reel is the first symbol that is different from the current symbol.
-func (lt *LookupTable) GetNextSpin(currentIndices []int) ([]int, []Symbol) {
-	nextSpin := make([]Symbol, 0, len(lt.Reels))
+func (lt *LookupTable) GetNextSpin(currentIndices []int) ([]int, SingleSpin) {
+	nextSpin := SingleSpin{}
 	nextIndices := make([]int, 0, len(lt.Reels))
 	for i, reel := range lt.Reels {
 		nextIndex := lt.GetNextIndex(reel, currentIndices[i])
