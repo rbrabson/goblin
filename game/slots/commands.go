@@ -2,6 +2,7 @@ package slots
 
 import (
 	"log/slog"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
@@ -117,22 +118,31 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	symbols := GetSymbols(guildID)
-
 	spinResult := lookupTable.Spin()
 	spin := spinResult.Spins[spinResult.WinIndex]
 	payout := payoutTable.GetPayoutAmount(bet, spin)
 
-	betMsg := "You played the slot machine!\n"
-
+	// Build spin message showing the reels
 	var spinMsg string
+	rightArrow := "▶️" // Default arrow emoji
+	blank := "⬜"       // Default blank emoji
+
+	// Check if custom symbols exist
+	if _, exists := symbols.Symbols["Right Arrow"]; exists {
+		rightArrow = symbols.Symbols["Right Arrow"].Emoji
+	}
+	if _, exists := symbols.Symbols["Blank"]; exists {
+		blank = symbols.Symbols["Blank"].Emoji
+	}
+
 	for idx, spin := range spinResult.Spins {
 		if idx < len(spinResult.Spins)-3 {
 			continue
 		}
 		if idx == spinResult.WinIndex {
-			spinMsg += symbols.Symbols["Right Arrow"].Emoji
+			spinMsg += rightArrow
 		} else {
-			spinMsg += symbols.Symbols["Blank"].Emoji
+			spinMsg += blank
 		}
 		for _, symbol := range spin {
 			spinMsg += symbol.Emoji
@@ -140,14 +150,43 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		spinMsg += "\n"
 	}
 
-	var payoutMsg string
+	// Determine embed color based on win/loss
+	var embedColor int
+	var resultTitle string
+	var resultDescription string
+
 	if payout > 0 {
-		payoutMsg = p.Sprintf("<@%s> bet %d and won %d!", i.Member.User.ID, bet, payout)
+		embedColor = 0x00ff00 // Green for win
+		resultTitle = "🎉 Winner!"
+		resultDescription = p.Sprintf("You won **%d** coins!", payout)
 	} else {
-		payoutMsg = p.Sprintf("<@%s> lost their bet of %d.", i.Member.User.ID, bet)
+		embedColor = 0xff0000 // Red for loss
+		resultTitle = "💸 No Win"
+		resultDescription = "Better luck next time!"
 	}
 
-	disgomsg.NewResponse(disgomsg.WithContent(betMsg+spinMsg+payoutMsg)).Send(s, i.Interaction)
+	// Create the embed
+	embed := &discordgo.MessageEmbed{
+		Title:       "Slot Machine",
+		Description: p.Sprintf("<@%s> bet **%d** coins", userID, bet),
+		Color:       embedColor,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Reels",
+				Value:  spinMsg,
+				Inline: false,
+			},
+			{
+				Name:   resultTitle,
+				Value:  resultDescription,
+				Inline: false,
+			},
+		},
+		Timestamp: time.Now().Format(time.RFC3339),
+	}
+
+	resp = disgomsg.NewResponse(disgomsg.WithEmbeds([]*discordgo.MessageEmbed{embed}))
+	resp.Send(s, i.Interaction)
 }
 
 // payTable handles the `/slots paytable` command.
