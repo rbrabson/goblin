@@ -78,8 +78,9 @@ func (plugin *Plugin) GetName() string {
 func (plugin *Plugin) GetHelp() []string {
 	help := make([]string, 0, 1)
 
-	for _, command := range memberCommands {
-		commandDescription := fmt.Sprintf("- `/%s`: %s\n", command.Name, command.Description)
+	commandPrefix := memberCommands[0].Name
+	for _, command := range memberCommands[0].Options {
+		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
