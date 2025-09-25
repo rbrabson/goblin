@@ -169,11 +169,10 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Create the embed
 	embed := &discordgo.MessageEmbed{
 		Title:       "Slot Machine",
-		Description: p.Sprintf("<@%s> bet **%d** coins", userID, spinResult),
+		Description: p.Sprintf("<@%s> bet **%d** coins", userID, spinResult.Bet),
 		Color:       embedColor,
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				// Name:   "Slots",
 				Value:  spinMsg,
 				Inline: false,
 			},
