@@ -54,12 +54,14 @@ type SingleSpin []Symbol
 // String returns a string representation of the SingleSpin.
 func (rs SingleSpin) String() string {
 	sb := strings.Builder{}
+	sb.WriteString("Spin{")
 	for i, symbol := range rs {
 		sb.WriteString(symbol.String())
 		if i < len(rs)-1 {
 			sb.WriteString(", ")
 		}
 	}
+	sb.WriteString("}")
 	return sb.String()
 }
 
