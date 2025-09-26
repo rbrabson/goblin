@@ -213,10 +213,8 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 	}
 
 	// Check for two consecutive non-blank symbols (not "Spell")
-	if (spin[0].Name != "Spell" && spin[0].Name == spin[1].Name && spin[0].Name != spin[2].Name) ||
-		(spin[0].Name != "Spell" && spin[1].Name != spin[2].Name && spin[1].Name == spin[2].Name) ||
+	if (spin[0].Name != "Spell" && spin[0].Name == spin[1].Name && spin[1].Name != spin[2].Name) ||
 		(spin[0].Name != spin[1].Name && spin[1].Name != "Spell" && spin[1].Name == spin[2].Name) {
-
 		var payoutAmount PayoutAmount
 		for _, p := range pt.Payouts {
 			if len(p.Win) == 1 && p.Win[0] == TwoConsecutiveSymbols {

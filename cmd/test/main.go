@@ -103,8 +103,7 @@ func getProbabilityOfTwoConsecutiveSymbols(sm *slots.SlotMachine) *PayoutProbabi
 		for _, symbol2 := range sm.LookupTable.Reels[1] {
 			for _, symbol3 := range sm.LookupTable.Reels[2] {
 				if (symbol1.Name != "Spell" && symbol1.Name == symbol2.Name && symbol1.Name != symbol3.Name) ||
-					(symbol1.Name != "Spell" && symbol1.Name != symbol2.Name && symbol1.Name == symbol3.Name) ||
-					(symbol1.Name != symbol2.Name && symbol2.Name == symbol3.Name) {
+					(symbol1.Name != symbol2.Name && symbol2.Name != "Spell" && symbol2.Name == symbol3.Name) {
 					numMatches++
 				}
 			}
