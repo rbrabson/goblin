@@ -82,51 +82,6 @@
     },
     {
         "win": [
-            "AQ or Archer",
-            "BK or Barbarian",
-            "GW or Wizard"
-        ],
-        "bet": 1,
-        "payout": 20
-    },
-    {
-        "win": [
-            "GW or Wizard",
-            "AQ or Archer",
-            "BK or Barbarian"
-        ],
-        "bet": 1,
-        "payout": 20
-    },
-    {
-        "win": [
-            "GW or Wizard",
-            "BK or Barbarian",
-            "AQ or Archer"
-        ],
-        "bet": 1,
-        "payout": 20
-    },
-    {
-        "win": [
-            "BK or Barbarian",
-            "AQ or Archer",
-            "GW or Wizard"
-        ],
-        "bet": 1,
-        "payout": 20
-    },
-    {
-        "win": [
-            "BK or Barbarian",
-            "GW or Wizard",
-            "AQ or Archer"
-        ],
-        "bet": 1,
-        "payout": 20
-    },
-    {
-        "win": [
             "Archer",
             "Archer",
             "Archer"
@@ -136,21 +91,21 @@
     },
     {
         "win": [
-            "AQ or Archer",
-            "AQ or Archer",
-            "AQ or Archer"
-        ],
-        "bet": 1,
-        "payout": 6
-    },
-    {
-        "win": [
             "Archer or Wizard or Barbarian",
             "Archer or Wizard or Barbarian",
             "Archer or Wizard or Barbarian"
         ],
         "bet": 1,
         "payout": 5
+    },
+    {
+        "win": [
+            "AQ or Archer",
+            "AQ or Archer",
+            "AQ or Archer"
+        ],
+        "bet": 1,
+        "payout": 2
     },
     {
         "win": [
