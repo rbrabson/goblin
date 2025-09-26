@@ -127,6 +127,13 @@
     },
     {
         "win": [
+            "[any two consecutive non-Spell symbols]"
+        ],
+        "bet": 1,
+        "payout": 1.5
+    },
+    {
+        "win": [
             "Spell",
             "Spell",
             "Spell"

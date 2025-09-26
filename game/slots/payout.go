@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	PAYOUT_FILE_NAME = "payout"
+	PAYOUT_FILE_NAME      = "payout"
+	TwoConsecutiveSymbols = "[any two consecutive non-Spell symbols]"
 )
 
 // Payout defines a winning combination and the payout amounts for different bets.
@@ -170,12 +171,6 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 		payoutTable.Payouts = append(payoutTable.Payouts, payoutAmount)
 	}
 
-	payoutTable.Payouts = append(payoutTable.Payouts, PayoutAmount{
-		Win:    []string{"[any two consecutive non-Spell symbols]"},
-		Bet:    1,
-		Payout: 1.5,
-	})
-
 	slog.Debug("create new payout table",
 		slog.String("guildID", payoutTable.GuildID),
 	)
@@ -221,13 +216,23 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 	if (spin[0].Name != "Spell" && spin[0].Name == spin[1].Name && spin[0].Name != spin[2].Name) ||
 		(spin[0].Name != "Spell" && spin[1].Name != spin[2].Name && spin[1].Name == spin[2].Name) ||
 		(spin[0].Name != spin[1].Name && spin[1].Name != "Spell" && spin[1].Name == spin[2].Name) {
+
+		var payoutAmount PayoutAmount
+		for _, p := range pt.Payouts {
+			if len(p.Win) == 1 && p.Win[0] == TwoConsecutiveSymbols {
+				payoutAmount = p
+				break
+			}
+		}
+
+		payout := int(payoutAmount.Payout * float64(bet))
 		slog.Debug("found matching payout for two consecutive non-blank symbols",
 			slog.String("guildID", pt.GuildID),
 			slog.Int("bet", bet),
 			slog.Any("spin", spin),
-			slog.Int("payoutAmount", bet),
+			slog.Int("payoutAmount", payout),
 		)
-		return bet // Return the bet amount
+		return payout
 	}
 
 	return 0
