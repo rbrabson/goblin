@@ -190,7 +190,7 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 			}
 		}
 		if match {
-			slog.Error("found matching payout",
+			slog.Debug("found matching payout",
 				slog.String("guildID", pt.GuildID),
 				slog.Int("bet", bet),
 				slog.Any("win", payout.Win),

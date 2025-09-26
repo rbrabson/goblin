@@ -46,16 +46,16 @@ func (lt *LookupTable) String() string {
 	return sb.String()
 }
 
-// SingleSpin represents a single row of symbols displayed during a spin in the slot machine game.
-type SingleSpin []Symbol
+// Spin represents a single row of symbols displayed during a spin in the slot machine game.
+type Spin []Symbol
 
 // String returns a string representation of the SingleSpin.
-func (rs SingleSpin) String() string {
+func (s Spin) String() string {
 	sb := strings.Builder{}
 	sb.WriteString("Spin{")
-	for i, symbol := range rs {
+	for i, symbol := range s {
 		sb.WriteString(symbol.String())
-		if i < len(rs)-1 {
+		if i < len(s)-1 {
 			sb.WriteString(", ")
 		}
 	}
@@ -135,32 +135,15 @@ func readLookupTableFromFile(guildID string) *LookupTable {
 	return lookupTable
 }
 
-// Spin generates a new spin result using the lookup table.
-// It selects a random current spin, then determines the previous and next spins
-// to create an animation effect. The winning index is set to the second-to-last spin.
-func (lt *LookupTable) Spin() *SpinResult {
-	currentIndices, currentSpin := lt.GetCurrentSpin()
-	_, previousSpin := lt.GetPreviousSpin(currentIndices)
-	_, nextSpin := lt.GetNextSpin(currentIndices)
-
-	spin := &SpinResult{
-		Payline:      currentSpin,
-		PreviousLine: previousSpin,
-		NextLine:     nextSpin,
-	}
-
-	return spin
-}
-
-// GetCurrentSpin selects a random symbol from each reel to create the current spin.
+// GetPaylineSpin selects a random symbol from each reel to create the current spin.
 // It returns the indices of the selected symbols and the symbols themselves.
-func (lt *LookupTable) GetCurrentSpin() ([]int, SingleSpin) {
+func (lt *LookupTable) GetPaylineSpin() ([]int, Spin) {
 	currentIndices := make([]int, 0, len(lt.Reels))
 	for _, reel := range lt.Reels {
 		randIndex := rand.Int31n(int32(len(reel)))
 		currentIndices = append(currentIndices, int(randIndex))
 	}
-	currentSpin := SingleSpin{}
+	currentSpin := Spin{}
 	for i, reel := range lt.Reels {
 		currentSpin = append(currentSpin, reel[currentIndices[i]])
 	}
@@ -170,8 +153,8 @@ func (lt *LookupTable) GetCurrentSpin() ([]int, SingleSpin) {
 // GetPreviousSpin determines the previous spin based on the current indices.
 // It returns the indices of the previous symbols and the symbols themselves.
 // The previous symbol for each reel is the first symbol that is different from the current symbol,
-func (lt *LookupTable) GetPreviousSpin(currentIndices []int) ([]int, SingleSpin) {
-	previousSpin := SingleSpin{}
+func (lt *LookupTable) GetPreviousSpin(currentIndices []int) ([]int, Spin) {
+	previousSpin := Spin{}
 	previousIndices := make([]int, 0, len(lt.Reels))
 	for i, reel := range lt.Reels {
 		previousIndex := lt.GetPreviousIndex(reel, currentIndices[i])
@@ -201,11 +184,11 @@ func (lt *LookupTable) GetPreviousIndex(reel []Symbol, currentIndex int) int {
 // GetNextSpin determines the next spin based on the current indices.
 // It returns the indices of the next symbols and the symbols themselves.
 // The next symbol for each reel is the first symbol that is different from the current symbol.
-func (lt *LookupTable) GetNextSpin(currentIndices []int) ([]int, SingleSpin) {
-	nextSpin := SingleSpin{}
+func (lt *LookupTable) GetNextSpin(currentIndices []int, previousIndices []int) ([]int, Spin) {
+	nextSpin := Spin{}
 	nextIndices := make([]int, 0, len(lt.Reels))
 	for i, reel := range lt.Reels {
-		nextIndex := lt.GetNextIndex(reel, currentIndices[i])
+		nextIndex := lt.GetNextIndex(reel, currentIndices[i], previousIndices[i])
 		nextSpin = append(nextSpin, reel[nextIndex])
 		nextIndices = append(nextIndices, nextIndex)
 	}
@@ -214,15 +197,16 @@ func (lt *LookupTable) GetNextSpin(currentIndices []int) ([]int, SingleSpin) {
 
 // GetNextIndex finds the index of the next symbol in the reel that is different from the current symbol.
 // It wraps around to the beginning of the reel if necessary.
-func (lt *LookupTable) GetNextIndex(reel []Symbol, currentIndex int) int {
+func (lt *LookupTable) GetNextIndex(reel []Symbol, currentIndex int, previousIndex int) int {
 	currentSymbol := reel[currentIndex].Name
+	previousSymbol := reel[previousIndex].Name
 	nextIndex := currentIndex
 	for {
 		nextIndex++
 		if nextIndex > len(reel)-1 {
 			nextIndex = 0
 		}
-		if reel[nextIndex].Name != currentSymbol {
+		if reel[nextIndex].Name != currentSymbol && reel[nextIndex].Name != previousSymbol {
 			break
 		}
 	}

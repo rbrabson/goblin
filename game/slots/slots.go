@@ -28,9 +28,9 @@ func NewSlotMachine(guildID string) *SlotMachine {
 // The spin contains multiple rows of symbols, with the winning row indicated by Payline. THe multiple rows are used
 // to create the multiple display lines.
 type SpinResult struct {
-	NextLine     SingleSpin
-	Payline      SingleSpin
-	PreviousLine SingleSpin
+	NextLine     Spin
+	Payline      Spin
+	PreviousLine Spin
 	Bet          int
 	Payout       int
 }
@@ -43,9 +43,9 @@ func (s *SpinResult) String() string {
 // Spin simulates a spin of the slot machine with the given bet amount and returns the result of the spin,
 // including the payline, previous line, next line, bet amount, and payout amount.
 func (sm *SlotMachine) Spin(bet int) *SpinResult {
-	paylineIndices, payline := sm.LookupTable.GetCurrentSpin()
-	_, previousLine := sm.LookupTable.GetPreviousSpin(paylineIndices)
-	_, nextLine := sm.LookupTable.GetNextSpin(paylineIndices)
+	paylineIndices, payline := sm.LookupTable.GetPaylineSpin()
+	previousIndices, previousLine := sm.LookupTable.GetPreviousSpin(paylineIndices)
+	_, nextLine := sm.LookupTable.GetNextSpin(paylineIndices, previousIndices)
 	payout := sm.PayoutTable.GetPayoutAmount(bet, payline)
 
 	spinResult := &SpinResult{
