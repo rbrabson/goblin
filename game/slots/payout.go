@@ -18,9 +18,9 @@ const (
 
 // Payout defines a winning combination and the payout amounts for different bets.
 type Payout struct {
-	Win    []Slot `json:"win" bson:"win"`
-	Bet    int    `json:"bet" bson:"bet"`
-	Payout int    `json:"payout" bson:"payout"`
+	Win    []Slot  `json:"win" bson:"win"`
+	Bet    int     `json:"bet" bson:"bet"`
+	Payout float64 `json:"payout" bson:"payout"`
 }
 
 // String returns a string representation of the Payout.
@@ -37,7 +37,7 @@ func (p *Payout) String() string {
 	sb.WriteString("]")
 	sb.WriteString(", Payouts: [")
 	sb.WriteString("Bet: " + strconv.Itoa(p.Bet))
-	sb.WriteString(", Payout: " + strconv.Itoa(p.Payout))
+	sb.WriteString(", Payout: " + strconv.FormatFloat(p.Payout, 'f', -1, 64))
 	sb.WriteString("]")
 	sb.WriteString("}")
 
@@ -48,7 +48,7 @@ func (p *Payout) String() string {
 type PayoutAmount struct {
 	Win    []string `json:"win" bson:"win"`
 	Bet    int      `json:"bet" bson:"bet"`
-	Payout int      `json:"payout" bson:"payout"`
+	Payout float64  `json:"payout" bson:"payout"`
 }
 
 // String returns a string representation of the PayoutAmount.
@@ -61,7 +61,7 @@ func (p *PayoutAmount) String() string {
 	}
 	sb.WriteString("]")
 	sb.WriteString(", Bet: " + strconv.Itoa(p.Bet))
-	sb.WriteString(", Payout: " + strconv.Itoa(p.Payout))
+	sb.WriteString(", Payout: " + strconv.FormatFloat(p.Payout, 'f', -1, 64))
 	sb.WriteString("]")
 	sb.WriteString("}")
 
@@ -97,7 +97,15 @@ func GetPayoutTable(guildID string) *PayoutTable {
 		if a.Bet != b.Bet {
 			return a.Bet - b.Bet
 		}
-		return b.Payout - a.Payout
+		comparision := b.Payout - a.Payout
+		if comparision < 0 {
+			return -1
+		}
+		if comparision > 0 {
+			return 1
+		}
+		return 0
+
 	})
 	return pt
 }
@@ -165,7 +173,7 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 	payoutTable.Payouts = append(payoutTable.Payouts, PayoutAmount{
 		Win:    []string{"[any two consecutive non-Spell symbols]"},
 		Bet:    1,
-		Payout: 1,
+		Payout: 1.5,
 	})
 
 	slog.Debug("create new payout table",
@@ -202,10 +210,10 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 				slog.Any("win", payout.Win),
 				slog.Any("spin", spin),
 				slog.Int("payoutBet", payout.Bet),
-				slog.Int("payoutAmount", payout.Payout),
+				slog.Float64("payoutAmount", payout.Payout),
 			)
-			amount := payout.Payout * (bet / payout.Bet)
-			return amount
+			amount := payout.Payout * (float64(bet) / float64(payout.Bet))
+			return int(amount)
 		}
 	}
 

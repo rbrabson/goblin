@@ -2,6 +2,7 @@ package slots
 
 import (
 	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -222,7 +223,8 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				winCombination += "]"
 			}
 
-			betPayouts := p.Sprintf("Payout %d:%d\n", payout.Payout, payout.Bet)
+			payoutStr := strconv.FormatFloat(payout.Payout, 'f', -1, 64)
+			betPayouts := p.Sprintf("Payout %s:%d\n", payoutStr, payout.Bet)
 
 			field := &discordgo.MessageEmbedField{
 				Name:   winCombination,
