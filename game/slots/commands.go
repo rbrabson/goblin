@@ -301,5 +301,5 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	resp := disgomsg.NewResponse(disgomsg.WithEmbeds([]*discordgo.MessageEmbed{embed}))
-	resp.Send(s, i.Interaction)
+	resp.SendEphemeral(s, i.Interaction)
 }
