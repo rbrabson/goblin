@@ -8,17 +8,28 @@ const (
 	DummyGuildID = "000000000000000000"
 )
 
+var (
+	slotMachine *SlotMachine
+)
+
 type SlotMachine struct {
-	LookupTable *LookupTable
-	PayoutTable *PayoutTable
+	LookupTable LookupTable
+	PayoutTable PayoutTable
 	Symbols     *SymbolTable
 }
 
-func NewSlotMachine(guildID string) *SlotMachine {
+func GetSlotMachine() *SlotMachine {
+	if slotMachine == nil {
+		slotMachine = newSlotMachine()
+	}
+	return slotMachine
+}
+
+func newSlotMachine() *SlotMachine {
 	slotMachine := &SlotMachine{
-		LookupTable: GetLookupTable(guildID),
-		PayoutTable: GetPayoutTable(guildID),
-		Symbols:     GetSymbols(guildID),
+		LookupTable: GetLookupTable(),
+		PayoutTable: GetPayoutTable(),
+		Symbols:     GetSymbols(),
 	}
 
 	return slotMachine

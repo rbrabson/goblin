@@ -24,7 +24,7 @@
             "GW"
         ],
         "bet": 1,
-        "payout": 200
+        "payout": 600
     },
     {
         "win": [
@@ -33,7 +33,7 @@
             "BK"
         ],
         "bet": 1,
-        "payout": 150
+        "payout": 300
     },
     {
         "win": [
@@ -42,7 +42,7 @@
             "AQ or GW or BK"
         ],
         "bet": 1,
-        "payout": 80
+        "payout": 100
     },
     {
         "win": [
@@ -105,7 +105,7 @@
             "AQ or Archer"
         ],
         "bet": 1,
-        "payout": 2
+        "payout": 3
     },
     {
         "win": [
@@ -114,7 +114,7 @@
             "GW or Wizard"
         ],
         "bet": 1,
-        "payout": 2
+        "payout": 3
     },
     {
         "win": [
@@ -123,14 +123,14 @@
             "BK or Barbarian"
         ],
         "bet": 1,
-        "payout": 2
+        "payout": 3
     },
     {
         "win": [
             "[two consecutive non-Spell symbols]"
         ],
         "bet": 1,
-        "payout": 1.5
+        "payout": 2
     },
     {
         "win": [

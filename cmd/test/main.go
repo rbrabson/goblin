@@ -23,21 +23,21 @@ func main() {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	sm := slots.NewSlotMachine("xxxx")
+	sm := slots.GetSlotMachine()
 	payoutTable := sm.PayoutTable
 	lookupTable := sm.LookupTable
 
 	nymPossibilities := 1
-	for _, reel := range lookupTable.Reels {
+	for _, reel := range lookupTable {
 		nymPossibilities *= len(reel)
 	}
 
-	probabilities := make([]PayoutProbability, 0, len(payoutTable.Payouts))
+	probabilities := make([]PayoutProbability, 0, len(payoutTable))
 
-	for _, payout := range payoutTable.Payouts {
+	for _, payout := range payoutTable {
 		numMatches := 0
 		for i, winningSymbols := range payout.Win {
-			matchingSymbolsOnReel := getMatchingSymbols(winningSymbols, &lookupTable.Reels[i])
+			matchingSymbolsOnReel := getMatchingSymbols(winningSymbols, &lookupTable[i])
 			if numMatches == 0 {
 				numMatches = matchingSymbolsOnReel
 			} else {
@@ -91,14 +91,14 @@ func getMatchingSymbols(winningSymbols string, reel *slots.Reel) int {
 
 func getProbabilityOfTwoConsecutiveSymbols(sm *slots.SlotMachine) *PayoutProbability {
 	nymPossibilities := 1
-	for _, reel := range sm.LookupTable.Reels {
+	for _, reel := range sm.LookupTable {
 		nymPossibilities *= len(reel)
 	}
 
 	numMatches := 0
-	for _, symbol1 := range sm.LookupTable.Reels[0] {
-		for _, symbol2 := range sm.LookupTable.Reels[1] {
-			for _, symbol3 := range sm.LookupTable.Reels[2] {
+	for _, symbol1 := range sm.LookupTable[0] {
+		for _, symbol2 := range sm.LookupTable[1] {
+			for _, symbol3 := range sm.LookupTable[2] {
 				if (symbol1.Name != "Spell" && symbol1.Name == symbol2.Name && symbol1.Name != symbol3.Name) ||
 					(symbol1.Name != symbol2.Name && symbol2.Name != "Spell" && symbol2.Name == symbol3.Name) {
 					numMatches++

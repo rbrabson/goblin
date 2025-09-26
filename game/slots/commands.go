@@ -120,7 +120,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	sm := NewSlotMachine(guildID)
+	sm := GetSlotMachine()
 	spinResult := sm.Spin(bet)
 
 	member := GetMemberKey(guildID, userID)
@@ -195,7 +195,7 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	guildID := i.GuildID
-	payTable := GetPayoutTable(guildID)
+	payTable := GetPayoutTable()
 
 	slog.Debug("paytable command",
 		slog.String("guildID", guildID),
@@ -208,10 +208,10 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Title:       "Slot Machine Pay Table",
 			Description: "Here are the possible winning combinations and their payouts.",
 			Color:       0x00ff00, // Green color
-			Fields:      make([]*discordgo.MessageEmbedField, 0, len(payTable.Payouts)),
+			Fields:      make([]*discordgo.MessageEmbedField, 0, len(payTable)),
 		}
 
-		for _, payout := range payTable.Payouts {
+		for _, payout := range payTable {
 			winCombination := ""
 			if len(payout.Win) == 1 {
 				winCombination = payout.Win[0]

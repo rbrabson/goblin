@@ -8,8 +8,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -70,20 +68,14 @@ func (p *PayoutAmount) String() string {
 }
 
 // PayoutTable defines a table of payouts for a specific guild.
-type PayoutTable struct {
-	ID      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	GuildID string             `json:"guild_id"`
-	Payouts []PayoutAmount     `json:"payouts"`
-}
+type PayoutTable []PayoutAmount
 
 // String returns a string representation of the PayoutTable.
-func (pt *PayoutTable) String() string {
+func (pt PayoutTable) String() string {
 	sb := strings.Builder{}
 	sb.WriteString("PayoutTable{")
-	sb.WriteString("ID: " + pt.ID.Hex())
-	sb.WriteString(", GuildID: " + pt.GuildID)
 	sb.WriteString(", Payouts: [")
-	for _, payout := range pt.Payouts {
+	for _, payout := range pt {
 		sb.WriteString(", " + payout.String())
 	}
 	sb.WriteString("]")
@@ -92,9 +84,9 @@ func (pt *PayoutTable) String() string {
 }
 
 // GetPayoutTable retrieves the payout table for a specific guild.
-func GetPayoutTable(guildID string) *PayoutTable {
-	pt := newPayoutTable(guildID)
-	slices.SortFunc(pt.Payouts, func(a, b PayoutAmount) int {
+func GetPayoutTable() PayoutTable {
+	pt := newPayoutTable()
+	slices.SortFunc(pt, func(a, b PayoutAmount) int {
 		if a.Bet != b.Bet {
 			return a.Bet - b.Bet
 		}
@@ -112,25 +104,18 @@ func GetPayoutTable(guildID string) *PayoutTable {
 }
 
 // newPayoutTable creates a new payout table for a specific guild by reading from a file.
-func newPayoutTable(guildID string) *PayoutTable {
-	payoutTable := readPayoutTableFromFile(guildID)
-	if payoutTable == nil {
-		slog.Error("failed to create lookup table",
-			slog.String("guildID", guildID),
-		)
-		return nil
-	}
+func newPayoutTable() PayoutTable {
+	payoutTable := readPayoutTableFromFile()
 	return payoutTable
 }
 
 // readPayoutTableFromFile reads the payout table from a JSON file.
-func readPayoutTableFromFile(guildID string) *PayoutTable {
+func readPayoutTableFromFile() PayoutTable {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "slots", "payout", PAYOUT_FILE_NAME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default payout table",
-			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
@@ -141,7 +126,6 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 	err = json.Unmarshal(bytes, payouts)
 	if err != nil {
 		slog.Error("failed to unmarshal payout table",
-			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.String("data", string(bytes)),
 			slog.Any("error", err),
@@ -149,14 +133,10 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 		return nil
 	}
 
-	payoutTable := &PayoutTable{
-		GuildID: guildID,
-		Payouts: make([]PayoutAmount, 0, len(*payouts)),
-	}
+	payoutTable := make(PayoutTable, 0, len(*payouts))
 
 	for _, payout := range *payouts {
 		slog.Debug("loaded payout",
-			slog.String("guildID", guildID),
 			slog.Any("payout", payout),
 		)
 
@@ -168,22 +148,19 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 		for _, slot := range payout.Win {
 			payoutAmount.Win = append(payoutAmount.Win, string(slot))
 		}
-		payoutTable.Payouts = append(payoutTable.Payouts, payoutAmount)
+		payoutTable = append(payoutTable, payoutAmount)
 	}
 
-	slog.Debug("create new payout table",
-		slog.String("guildID", payoutTable.GuildID),
-	)
+	slog.Debug("create new payout table")
 
 	return payoutTable
 }
 
 // GetPayoutAmount returns the payout amount for a given bet and spin result.
-func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
-	for _, payout := range pt.Payouts {
+func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
+	for _, payout := range pt {
 		if len(payout.Win) != len(spin) {
 			slog.Warn("payout win length does not match spin length",
-				slog.String("guildID", pt.GuildID),
 				slog.Int("bet", bet),
 				slog.Any("win", payout.Win),
 				slog.Any("spin", spin),
@@ -200,7 +177,6 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 		}
 		if match {
 			slog.Debug("found matching payout",
-				slog.String("guildID", pt.GuildID),
 				slog.Int("bet", bet),
 				slog.Any("win", payout.Win),
 				slog.Any("spin", spin),
@@ -216,7 +192,7 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 	if (spin[0].Name != "Spell" && spin[0].Name == spin[1].Name && spin[1].Name != spin[2].Name) ||
 		(spin[0].Name != spin[1].Name && spin[1].Name != "Spell" && spin[1].Name == spin[2].Name) {
 		var payoutAmount PayoutAmount
-		for _, p := range pt.Payouts {
+		for _, p := range pt {
 			if len(p.Win) == 1 && p.Win[0] == TwoConsecutiveSymbols {
 				payoutAmount = p
 				break
@@ -225,7 +201,6 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 
 		payout := int(payoutAmount.Payout * float64(bet))
 		slog.Debug("found matching payout for two consecutive non-blank symbols",
-			slog.String("guildID", pt.GuildID),
 			slog.Int("bet", bet),
 			slog.Any("spin", spin),
 			slog.Int("payoutAmount", payout),

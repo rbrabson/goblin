@@ -22,22 +22,35 @@ func (s Slot) String() string {
 	return string(s)
 }
 
-// LookupTable represents the lookup table for a guild, containing the reels of slot symbols.
-// The lookup table is used to determine the outcome of spins in the slot machine game.
-type LookupTable struct {
-	GuildID string `json:"guild_id"`
-	Reels   []Reel `json:"reels"`
+// Reel represents a single reel of symbols in the slot machine.
+type Reel []Symbol
+
+// String returns a string representation of the Reel.
+func (r Reel) String() string {
+	sb := strings.Builder{}
+	sb.WriteString("Symbols{")
+	for i, symbol := range r {
+		sb.WriteString(symbol.String())
+		if i < len(r)-1 {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteString("}")
+	return sb.String()
 }
 
+// LookupTable represents the lookup table for a guild, containing the reels of slot symbols.
+// The lookup table is used to determine the outcome of spins in the slot machine game.
+type LookupTable []Reel
+
 // String returns a string representation of the LookupTable.
-func (lt *LookupTable) String() string {
+func (lt LookupTable) String() string {
 	sb := strings.Builder{}
 	sb.WriteString("LookupTable{")
-	sb.WriteString("GuildID: " + lt.GuildID)
 	sb.WriteString(", Reels: [")
-	for i, reel := range lt.Reels {
+	for i, reel := range lt {
 		sb.WriteString(reel.String())
-		if i < len(lt.Reels)-1 {
+		if i < len(lt)-1 {
 			sb.WriteString(", ")
 		}
 	}
@@ -64,21 +77,14 @@ func (s Spin) String() string {
 }
 
 // GetLookupTable retrieves the lookup table for the specified guild.
-func GetLookupTable(guildID string) *LookupTable {
+func GetLookupTable() LookupTable {
 	// TODO: try to read from the DB
-	return newLookupTable(guildID)
+	return newLookupTable()
 }
 
 // newLookupTable creates a new lookup table for the specified guild by reading from a configuration file.
-func newLookupTable(guildID string) *LookupTable {
-	lookupTable := readLookupTableFromFile(guildID)
-	if lookupTable == nil {
-		slog.Error("failed to create lookup table",
-			slog.String("guildID", guildID),
-		)
-		return nil
-	}
-	// TODO: write lookup table to the DB
+func newLookupTable() LookupTable {
+	lookupTable := readLookupTableFromFile()
 	return lookupTable
 }
 
@@ -86,7 +92,7 @@ func newLookupTable(guildID string) *LookupTable {
 // The file is expected to be located at DISCORD_CONFIG_DIR/slots/lookuptable/lookup.json
 // and contain an array of reels, where each reel is an object with a "Slots" field
 // that is an array of slot symbols.
-func readLookupTableFromFile(guildID string) *LookupTable {
+func readLookupTableFromFile() LookupTable {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "slots", "lookuptable", LOOKUP_TABLE_NAME+".json")
 	bytes, err := os.ReadFile(configFileName)
@@ -94,57 +100,51 @@ func readLookupTableFromFile(guildID string) *LookupTable {
 		return nil
 	}
 
-	reels := &[][]Slot{}
-	err = json.Unmarshal(bytes, reels)
+	reels := [][]Slot{}
+	err = json.Unmarshal(bytes, &reels)
 	if err != nil {
 		return nil
 	}
 
-	lookupTable := &LookupTable{
-		GuildID: guildID,
-		Reels:   make([]Reel, 0, len(*reels)),
-	}
-	for range len(*reels) {
-		reels := make([]Symbol, 0, 64)
-		lookupTable.Reels = append(lookupTable.Reels, reels)
+	lookupTable := LookupTable{}
+	for range len(reels) {
+		reel := make([]Symbol, 0, 64)
+		lookupTable = append(lookupTable, reel)
 	}
 
-	symbolTable := GetSymbols(guildID)
+	symbolTable := GetSymbols()
 	if symbolTable == nil {
 		return nil
 	}
-	for i, reel := range *reels {
+	for i, reel := range reels {
 		for _, slot := range reel {
 			symbol, ok := symbolTable.Symbols[string(slot)]
 			if !ok {
 				slog.Error("failed to find symbol for slot in lookup table",
-					slog.String("guildID", guildID),
 					slog.String("file", configFileName),
 					slog.String("slot", string(slot)),
 				)
 				return nil
 			}
-			lookupTable.Reels[i] = append(lookupTable.Reels[i], symbol)
+			lookupTable[i] = append(lookupTable[i], symbol)
 		}
 	}
 
-	slog.Debug("create new lookup table",
-		slog.String("guildID", lookupTable.GuildID),
-	)
+	slog.Debug("create new lookup table")
 
 	return lookupTable
 }
 
 // GetPaylineSpin selects a random symbol from each reel to create the current spin.
 // It returns the indices of the selected symbols and the symbols themselves.
-func (lt *LookupTable) GetPaylineSpin() ([]int, Spin) {
-	currentIndices := make([]int, 0, len(lt.Reels))
-	for _, reel := range lt.Reels {
+func (lt LookupTable) GetPaylineSpin() ([]int, Spin) {
+	currentIndices := make([]int, 0, len(lt))
+	for _, reel := range lt {
 		randIndex := rand.Int31n(int32(len(reel)))
 		currentIndices = append(currentIndices, int(randIndex))
 	}
 	currentSpin := Spin{}
-	for i, reel := range lt.Reels {
+	for i, reel := range lt {
 		currentSpin = append(currentSpin, reel[currentIndices[i]])
 	}
 	return currentIndices, currentSpin
@@ -153,10 +153,10 @@ func (lt *LookupTable) GetPaylineSpin() ([]int, Spin) {
 // GetPreviousSpin determines the previous spin based on the current indices.
 // It returns the indices of the previous symbols and the symbols themselves.
 // The previous symbol for each reel is the first symbol that is different from the current symbol,
-func (lt *LookupTable) GetPreviousSpin(currentIndices []int) ([]int, Spin) {
+func (lt LookupTable) GetPreviousSpin(currentIndices []int) ([]int, Spin) {
 	previousSpin := Spin{}
-	previousIndices := make([]int, 0, len(lt.Reels))
-	for i, reel := range lt.Reels {
+	previousIndices := make([]int, 0, len(lt))
+	for i, reel := range lt {
 		previousIndex := lt.GetPreviousIndex(reel, currentIndices[i])
 		previousSpin = append(previousSpin, reel[previousIndex])
 		previousIndices = append(previousIndices, previousIndex)
@@ -166,7 +166,7 @@ func (lt *LookupTable) GetPreviousSpin(currentIndices []int) ([]int, Spin) {
 
 // GetPreviousIndex finds the index of the previous symbol in the reel that is different from the current symbol.
 // It wraps around to the end of the reel if necessary.
-func (lt *LookupTable) GetPreviousIndex(reel []Symbol, currentIndex int) int {
+func (lt LookupTable) GetPreviousIndex(reel []Symbol, currentIndex int) int {
 	currentSymbol := reel[currentIndex].Name
 	previousIndex := currentIndex
 	for {
@@ -184,10 +184,10 @@ func (lt *LookupTable) GetPreviousIndex(reel []Symbol, currentIndex int) int {
 // GetNextSpin determines the next spin based on the current indices.
 // It returns the indices of the next symbols and the symbols themselves.
 // The next symbol for each reel is the first symbol that is different from the current symbol.
-func (lt *LookupTable) GetNextSpin(currentIndices []int, previousIndices []int) ([]int, Spin) {
+func (lt LookupTable) GetNextSpin(currentIndices []int, previousIndices []int) ([]int, Spin) {
 	nextSpin := Spin{}
-	nextIndices := make([]int, 0, len(lt.Reels))
-	for i, reel := range lt.Reels {
+	nextIndices := make([]int, 0, len(lt))
+	for i, reel := range lt {
 		nextIndex := lt.GetNextIndex(reel, currentIndices[i], previousIndices[i])
 		nextSpin = append(nextSpin, reel[nextIndex])
 		nextIndices = append(nextIndices, nextIndex)
@@ -197,7 +197,7 @@ func (lt *LookupTable) GetNextSpin(currentIndices []int, previousIndices []int) 
 
 // GetNextIndex finds the index of the next symbol in the reel that is different from the current symbol.
 // It wraps around to the beginning of the reel if necessary.
-func (lt *LookupTable) GetNextIndex(reel []Symbol, currentIndex int, previousIndex int) int {
+func (lt LookupTable) GetNextIndex(reel []Symbol, currentIndex int, previousIndex int) int {
 	currentSymbol := reel[currentIndex].Name
 	previousSymbol := reel[previousIndex].Name
 	nextIndex := currentIndex
