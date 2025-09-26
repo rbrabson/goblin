@@ -17,10 +17,13 @@ const (
 
 // Payout defines a winning combination and the payout amounts for different bets.
 type Payout struct {
-	Win    []Slot `json:"win" bson:"win"`
-	Bet100 int    `json:"100" bson:"100"`
-	Bet200 int    `json:"200" bson:"200"`
-	Bet300 int    `json:"300" bson:"300"`
+	Win          []Slot  `json:"win" bson:"win"`
+	Bet100       int     `json:"100" bson:"100"`
+	Bet200       int     `json:"200" bson:"200"`
+	Bet300       int     `json:"300" bson:"300"`
+	Combinations int     `json:"combinations" bson:"combinations"`
+	Probability  float64 `json:"probability" bson:"probability"`
+	Return       float64 `json:"return" bson:"return"`
 }
 
 // String returns a string representation of the Payout.
