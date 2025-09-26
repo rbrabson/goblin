@@ -6,8 +6,7 @@
             "BK"
         ],
         "bet": 100,
-        "payout": 240000,
-        "combinations": 1
+        "payout": 240000
     },
     {
         "win": [
@@ -16,8 +15,7 @@
             "AQ"
         ],
         "bet": 100,
-        "payout": 120000,
-        "combinations": 3
+        "payout": 120000
     },
     {
         "win": [
@@ -26,8 +24,7 @@
             "GW"
         ],
         "bet": 100,
-        "payout": 20000,
-        "combinations": 42
+        "payout": 20000
     },
     {
         "win": [
@@ -36,8 +33,7 @@
             "BK"
         ],
         "bet": 100,
-        "payout": 15000,
-        "combinations": 42
+        "payout": 15000
     },
     {
         "win": [
@@ -46,8 +42,7 @@
             "AQ or GW or BK"
         ],
         "bet": 100,
-        "payout": 8000,
-        "combinations": 1199
+        "payout": 8000
     },
     {
         "win": [
@@ -56,8 +51,7 @@
             "Barbarian"
         ],
         "bet": 100,
-        "payout": 5000,
-        "combinations": 180
+        "payout": 5000
     },
     {
         "win": [
@@ -66,8 +60,7 @@
             "Barbarian"
         ],
         "bet": 100,
-        "payout": 4000,
-        "combinations": 210
+        "payout": 4000
     },
     {
         "win": [
@@ -76,8 +69,7 @@
             "Wizard"
         ],
         "bet": 100,
-        "payout": 2500,
-        "combinations": 378
+        "payout": 2500
     },
     {
         "win": [
@@ -86,8 +78,52 @@
             "BK or Barbarian"
         ],
         "bet": 100,
-        "payout": 2000,
-        "combinations": 113
+        "payout": 2000
+    },
+    {
+        "win": [
+            "AQ or Archer",
+            "BK or Barbarian",
+            "GW or Wizard"
+        ],
+        "bet": 100,
+        "payout": 2000
+    },
+    {
+        "win": [
+            "GW or Wizard",
+            "AQ or Archer",
+            "BK or Barbarian"
+        ],
+        "bet": 100,
+        "payout": 2000
+    },
+    {
+        "win": [
+            "GW or Wizard",
+            "BK or Barbarian",
+            "AQ or Archer"
+        ],
+        "bet": 100,
+        "payout": 2000
+    },
+    {
+        "win": [
+            "BK or Barbarian",
+            "AQ or Archer",
+            "GW or Wizard"
+        ],
+        "bet": 100,
+        "payout": 2000
+    },
+    {
+        "win": [
+            "BK or Barbarian",
+            "GW or Wizard",
+            "AQ or Archer"
+        ],
+        "bet": 100,
+        "payout": 2000
     },
     {
         "win": [
@@ -96,8 +132,7 @@
             "Archer"
         ],
         "bet": 100,
-        "payout": 1000,
-        "combinations": 432
+        "payout": 1000
     },
     {
         "win": [
@@ -106,8 +141,7 @@
             "Archer or Wizard or Barbarian"
         ],
         "bet": 100,
-        "payout": 500,
-        "combinations": 7977
+        "payout": 500
     },
     {
         "win": [
@@ -116,8 +150,7 @@
             "AQ or Archer"
         ],
         "bet": 100,
-        "payout": 200,
-        "combinations": 335
+        "payout": 200
     },
     {
         "win": [
@@ -126,8 +159,7 @@
             "GW or Wizard"
         ],
         "bet": 100,
-        "payout": 200,
-        "combinations": 1036
+        "payout": 200
     },
     {
         "win": [
@@ -136,8 +168,7 @@
             "BK or Barbarian "
         ],
         "bet": 100,
-        "payout": 200,
-        "combinations": 756
+        "payout": 200
     },
     {
         "win": [
@@ -146,7 +177,6 @@
             "Spell"
         ],
         "bet": 100,
-        "payout": 100,
-        "combinations": 32768
+        "payout": 100
     }
 ]

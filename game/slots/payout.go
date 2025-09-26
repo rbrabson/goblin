@@ -18,10 +18,9 @@ const (
 
 // Payout defines a winning combination and the payout amounts for different bets.
 type Payout struct {
-	Win          []Slot `json:"win" bson:"win"`
-	Bet          int    `json:"bet" bson:"bet"`
-	Payout       int    `json:"payout" bson:"payout"`
-	Combinations int    `json:"combinations" bson:"combinations"`
+	Win    []Slot `json:"win" bson:"win"`
+	Bet    int    `json:"bet" bson:"bet"`
+	Payout int    `json:"payout" bson:"payout"`
 }
 
 // String returns a string representation of the Payout.
