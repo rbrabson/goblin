@@ -9,7 +9,6 @@ const (
 )
 
 type SlotMachine struct {
-	Reels       []Reel
 	LookupTable *LookupTable
 	PayoutTable *PayoutTable
 	Symbols     *SymbolTable
@@ -17,7 +16,6 @@ type SlotMachine struct {
 
 func NewSlotMachine(guildID string) *SlotMachine {
 	slotMachine := &SlotMachine{
-		Reels:       []Reel{},
 		LookupTable: GetLookupTable(guildID),
 		PayoutTable: GetPayoutTable(guildID),
 		Symbols:     GetSymbols(guildID),
