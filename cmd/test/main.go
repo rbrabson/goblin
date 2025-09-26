@@ -55,6 +55,9 @@ func main() {
 		})
 	}
 
+	probTwoNonBlank := getProbabilityOfTwoConsecutiveSymbols(sm)
+	probabilities = append(probabilities, *probTwoNonBlank)
+
 	totalWinProb := 0.0
 	for _, prob := range probabilities {
 		totalWinProb += prob.Probability
@@ -70,6 +73,7 @@ func main() {
 	for _, prob := range probabilities {
 		p.Printf("Spin: %v, NumMatches: %d, Probability: %.4f%%, Return: %.4f%%\n", prob.Spin, prob.NumMatches, prob.Probability, prob.Return)
 	}
+
 	p.Printf("Total Win Probability: %.2f%%\n", totalWinProb)
 	p.Printf("Total Return Percentage: %.2f%%\n", totalReturnPercentage)
 
@@ -86,6 +90,36 @@ func getMatchingSymbols(winningSymbols string, reel *slots.Reel) int {
 	}
 
 	return matchingSymbols
+}
+
+func getProbabilityOfTwoConsecutiveSymbols(sm *slots.SlotMachine) *PayoutProbability {
+	nymPossibilities := 1
+	for _, reel := range sm.LookupTable.Reels {
+		nymPossibilities *= len(reel)
+	}
+
+	numMatches := 0
+	for _, symbol1 := range sm.LookupTable.Reels[0] {
+		for _, symbol2 := range sm.LookupTable.Reels[1] {
+			for _, symbol3 := range sm.LookupTable.Reels[2] {
+				if (symbol1.Name != "Spell" && symbol1.Name == symbol2.Name && symbol1.Name != symbol3.Name) ||
+					(symbol1.Name != "Spell" && symbol1.Name != symbol2.Name && symbol1.Name == symbol3.Name) ||
+					(symbol1.Name != symbol2.Name && symbol2.Name == symbol3.Name) {
+					numMatches++
+				}
+			}
+		}
+	}
+
+	probability := (float64(numMatches) / float64((nymPossibilities))) * 100.0
+
+	return &PayoutProbability{
+		Spin:        []string{"At least two non-blank symbols"},
+		Payout:      slots.PayoutAmount{Bet: 1, Payout: 1},
+		Probability: probability,
+		NumMatches:  numMatches,
+		Return:      (float64(1) / float64(1)) * (probability / 100.0) * 100.0,
+	}
 }
 
 func printReels(reels []slots.Reel) {
