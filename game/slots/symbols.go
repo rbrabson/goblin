@@ -11,6 +11,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var (
+	symbolTable *SymbolTable
+)
+
 const (
 	SYMBOLS_FILE_NAME = "symbols"
 	// SYMBOLS_FILE_NAME = "pt"
@@ -60,19 +64,22 @@ func (st *SymbolTable) String() string {
 	return sb.String()
 }
 
-// GetSymbols retrieves the symbol table for a specific guild.
-func GetSymbols() *SymbolTable {
-	return newSymbols()
+// GetSymbolTable retrieves the symbol table for a specific guild.
+func GetSymbolTable() *SymbolTable {
+	if symbolTable == nil {
+		symbolTable = newSymbolTable()
+	}
+	return symbolTable
 }
 
 // GetSymbolNames returns a slice of symbol names in the symbol table.
-func newSymbols() *SymbolTable {
-	symbols := readSymbolsFromFile()
+func newSymbolTable() *SymbolTable {
+	symbols := readSymbolTableFromFile()
 	return symbols
 }
 
-// readSymbolsFromFile reads the symbol table from a JSON file.
-func readSymbolsFromFile() *SymbolTable {
+// readSymbolTableFromFile reads the symbol table from a JSON file.
+func readSymbolTableFromFile() *SymbolTable {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "slots", "symbols", SYMBOLS_FILE_NAME+".json")
 	bytes, err := os.ReadFile(configFileName)
