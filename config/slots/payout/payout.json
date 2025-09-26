@@ -136,21 +136,21 @@
     },
     {
         "win": [
+            "AQ or Archer",
+            "AQ or Archer",
+            "AQ or Archer"
+        ],
+        "bet": 100,
+        "payout": 600
+    },
+    {
+        "win": [
             "Archer or Wizard or Barbarian",
             "Archer or Wizard or Barbarian",
             "Archer or Wizard or Barbarian"
         ],
         "bet": 100,
         "payout": 500
-    },
-    {
-        "win": [
-            "AQ or Archer",
-            "AQ or Archer",
-            "AQ or Archer"
-        ],
-        "bet": 100,
-        "payout": 200
     },
     {
         "win": [

@@ -92,8 +92,14 @@ func (pt *PayoutTable) String() string {
 
 // GetPayoutTable retrieves the payout table for a specific guild.
 func GetPayoutTable(guildID string) *PayoutTable {
-	// TODO: try to read from the DB
-	return newPayoutTable(guildID)
+	pt := newPayoutTable(guildID)
+	slices.SortFunc(pt.Payouts, func(a, b PayoutAmount) int {
+		if a.Bet != b.Bet {
+			return a.Bet - b.Bet
+		}
+		return b.Payout - a.Payout
+	})
+	return pt
 }
 
 // newPayoutTable creates a new payout table for a specific guild by reading from a file.
@@ -105,7 +111,6 @@ func newPayoutTable(guildID string) *PayoutTable {
 		)
 		return nil
 	}
-	// TODO: write lookup table to the DB
 	return payoutTable
 }
 
