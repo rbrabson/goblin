@@ -14,6 +14,10 @@ const (
 	NUM_SPINS         = 3
 )
 
+var (
+	lookupTable LookupTable
+)
+
 // Slot represents a slot symbol in the lookup table.
 type Slot string
 
@@ -78,8 +82,10 @@ func (s Spin) String() string {
 
 // GetLookupTable retrieves the lookup table for the specified guild.
 func GetLookupTable() LookupTable {
-	// TODO: try to read from the DB
-	return newLookupTable()
+	if len(lookupTable) == 0 {
+		lookupTable = newLookupTable()
+	}
+	return lookupTable
 }
 
 // newLookupTable creates a new lookup table for the specified guild by reading from a configuration file.
@@ -112,7 +118,7 @@ func readLookupTableFromFile() LookupTable {
 		lookupTable = append(lookupTable, reel)
 	}
 
-	symbolTable := GetSymbols()
+	symbolTable := GetSymbolTable()
 	if symbolTable == nil {
 		return nil
 	}

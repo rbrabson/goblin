@@ -22,7 +22,7 @@ func newSlotMachine() *SlotMachine {
 	slotMachine := &SlotMachine{
 		LookupTable: GetLookupTable(),
 		PayoutTable: GetPayoutTable(),
-		Symbols:     GetSymbols(),
+		Symbols:     GetSymbolTable(),
 	}
 
 	return slotMachine
