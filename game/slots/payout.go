@@ -14,7 +14,7 @@ import (
 
 const (
 	PAYOUT_FILE_NAME      = "payout"
-	TwoConsecutiveSymbols = "[any two consecutive non-Spell symbols]"
+	TwoConsecutiveSymbols = "[two consecutive non-Spell symbols]"
 )
 
 // Payout defines a winning combination and the payout amounts for different bets.

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 
@@ -67,17 +66,15 @@ func main() {
 		totalReturnPercentage += prob.Return
 	}
 
-	p.Printf("Total Win Probability: %v%%\n", totalWinProb*100.0)
-
-	p.Println("Payout Probabilities:")
 	for _, prob := range probabilities {
-		p.Printf("Spin: %v, NumMatches: %d, Probability: %.4f%%, Return: %.4f%%\n", prob.Spin, prob.NumMatches, prob.Probability, prob.Return)
+		if prob.NumMatches != 0 {
+			spin := "[" + strings.Join(prob.Spin, ", ") + "]"
+			p.Printf("%s: NumMatches: %d, Probability: %.4f%%, Return: %.4f%%\n", spin, prob.NumMatches, prob.Probability, prob.Return)
+		}
 	}
 
 	p.Printf("Total Win Probability: %.2f%%\n", totalWinProb)
 	p.Printf("Total Return Percentage: %.2f%%\n", totalReturnPercentage)
-
-	// printReels(lookupTable.Reels)
 }
 
 func getMatchingSymbols(winningSymbols string, reel *slots.Reel) int {
@@ -113,21 +110,10 @@ func getProbabilityOfTwoConsecutiveSymbols(sm *slots.SlotMachine) *PayoutProbabi
 	probability := (float64(numMatches) / float64((nymPossibilities))) * 100.0
 
 	return &PayoutProbability{
-		Spin:        []string{"At least two non-blank symbols"},
+		Spin:        []string{slots.TwoConsecutiveSymbols},
 		Payout:      slots.PayoutAmount{Bet: 1, Payout: 1},
 		Probability: probability,
 		NumMatches:  numMatches,
 		Return:      (float64(1) / float64(1)) * (probability / 100.0) * 100.0,
 	}
-}
-
-func printReels(reels []slots.Reel) {
-	for i := range len(reels[0]) {
-		fmt.Printf("[%d]\t", i+1)
-		for _, reel := range reels {
-			print(reel[i].Name, "\t")
-		}
-		print("\n")
-	}
-	println()
 }
