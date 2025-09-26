@@ -101,7 +101,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	bet := int(options[0].IntValue())
 
-	slog.Debug("play command",
+	slog.Debug("`/slots play` command",
 		slog.String("guildID", guildID),
 		slog.String("userID", userID),
 		slog.Int("bet", bet),
@@ -128,7 +128,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if spinResult.Payout > 0 {
 		if err := account.Deposit(spinResult.Payout); err != nil {
-			slog.Error("error depositing winnings to account",
+			slog.Error("error depositing slots winnings to account",
 				slog.String("guildID", guildID),
 				slog.String("userID", userID),
 				slog.Int("payout", spinResult.Payout),
@@ -197,7 +197,7 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
 	payTable := GetPayoutTable()
 
-	slog.Debug("paytable command",
+	slog.Debug("`/slots paytable` command",
 		slog.String("guildID", guildID),
 		slog.Any("payTable", payTable),
 	)
@@ -256,7 +256,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
 	userID := i.Member.User.ID
 
-	slog.Debug("stats command",
+	slog.Debug("`/slots stats` command",
 		slog.String("guildID", guildID),
 		slog.String("userID", userID),
 	)
@@ -279,6 +279,11 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 			{
+				Name:   "Winning Percentage",
+				Value:  p.Sprintf("%.1f%%", (float64(member.TotalWins)/float64(member.TotalWins+member.TotalLosses))*100),
+				Inline: true,
+			},
+			{
 				Name:   "Total Bet",
 				Value:  p.Sprintf("%d", member.TotalBet),
 				Inline: true,
@@ -286,6 +291,11 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "Total Winnings",
 				Value:  p.Sprintf("%d", member.TotalWinnings),
+				Inline: true,
+			},
+			{
+				Name:   "ROI",
+				Value:  p.Sprintf("%.1f%%", (float64(member.TotalWinnings)/float64(member.TotalBet))*100),
 				Inline: true,
 			},
 			{
