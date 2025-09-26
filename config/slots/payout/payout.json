@@ -145,7 +145,7 @@
             "Spell",
             "Spell"
         ],
-        "bet:": 100,
+        "bet": 100,
         "payout": 100,
         "combinations": 32768
     }
