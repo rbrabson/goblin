@@ -8,10 +8,6 @@ const (
 	DummyGuildID = "000000000000000000"
 )
 
-var (
-	slotMachine *SlotMachine
-)
-
 type SlotMachine struct {
 	LookupTable LookupTable
 	PayoutTable PayoutTable
@@ -19,10 +15,7 @@ type SlotMachine struct {
 }
 
 func GetSlotMachine() *SlotMachine {
-	if slotMachine == nil {
-		slotMachine = newSlotMachine()
-	}
-	return slotMachine
+	return newSlotMachine()
 }
 
 func newSlotMachine() *SlotMachine {
