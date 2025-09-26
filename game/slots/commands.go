@@ -205,7 +205,7 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if payTable != nil {
 		embed := &discordgo.MessageEmbed{
 			Title:       "Slot Machine Pay Table",
-			Description: "Here are the possible winning combinations and their payouts based on your bet amount.",
+			Description: "Here are the possible winning combinations and their payouts.",
 			Color:       0x00ff00, // Green color
 			Fields:      make([]*discordgo.MessageEmbedField, 0, len(payTable.Payouts)),
 		}
