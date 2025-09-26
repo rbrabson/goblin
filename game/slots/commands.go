@@ -266,7 +266,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	embed := &discordgo.MessageEmbed{
 		Title:       "Slot Machine Stats",
 		Description: p.Sprintf("Here are the stats for <@%s>:", userID),
-		Color:       0x00ff00, // Green color
+		Color:       0x5865F2, // Blue color
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "Total Wins",
