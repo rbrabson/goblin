@@ -5,12 +5,9 @@
             "GW",
             "BK"
         ],
-        "100": 240000,
-        "200": 480000,
-        "300": 1000000,
-        "combinations": 1,
-        "probability": 0.000004,
-        "return": 0.009155
+        "bet": 100,
+        "payout": 240000,
+        "combinations": 1
     },
     {
         "win": [
@@ -18,12 +15,9 @@
             "AQ",
             "AQ"
         ],
-        "100": 120000,
-        "200": 240000,
-        "300": 500000,
-        "combinations": 3,
-        "probability": 0.000011,
-        "return": 0.013721
+        "bet": 100,
+        "payout": 120000,
+        "combinations": 3
     },
     {
         "win": [
@@ -31,12 +25,9 @@
             "GW",
             "GW"
         ],
-        "100": 20000,
-        "200": 40000,
-        "300": 60000,
-        "combinations": 42,
-        "probability": 0.000160,
-        "return": 0.032043
+        "bet": 100,
+        "payout": 20000,
+        "combinations": 42
     },
     {
         "win": [
@@ -44,12 +35,9 @@
             "BK",
             "BK"
         ],
-        "100": 15000,
-        "200": 30000,
-        "300": 45000,
-        "combinations": 42,
-        "probability": 0.000160,
-        "return": 0.024033
+        "bet": 100,
+        "payout": 15000,
+        "combinations": 42
     },
     {
         "win": [
@@ -57,12 +45,9 @@
             "AQ or GW or BK",
             "AQ or GW or BK"
         ],
-        "100": 8000,
-        "200": 16000,
-        "300": 24000,
-        "combinations": 1199,
-        "probability": 0.004574,
-        "return": 0.365906
+        "bet": 100,
+        "payout": 8000,
+        "combinations": 1199
     },
     {
         "win": [
@@ -70,12 +55,9 @@
             "Wizard",
             "Barbarian"
         ],
-        "100": 5000,
-        "200": 10000,
-        "300": 15000,
-        "combinations": 180,
-        "probability": 0.000687,
-        "return": 0.034332
+        "bet": 100,
+        "payout": 5000,
+        "combinations": 180
     },
     {
         "win": [
@@ -83,12 +65,9 @@
             "Barbarian",
             "Barbarian"
         ],
-        "100": 4000,
-        "200": 8000,
-        "300": 12000,
-        "combinations": 210,
-        "probability": 0.000801,
-        "return": 0.032043
+        "bet": 100,
+        "payout": 4000,
+        "combinations": 210
     },
     {
         "win": [
@@ -96,12 +75,9 @@
             "Wizard",
             "Wizard"
         ],
-        "100": 2500,
-        "200": 5000,
-        "300": 7500,
-        "combinations": 378,
-        "probability": 0.001442,
-        "return": 0.036049
+        "bet": 100,
+        "payout": 2500,
+        "combinations": 378
     },
     {
         "win": [
@@ -109,12 +85,9 @@
             "GW or Wizard",
             "BK or Barbarian"
         ],
-        "100": 2000,
-        "200": 4000,
-        "300": 6000,
-        "combinations": 113,
-        "probability": 0.000431,
-        "return": 0.008621
+        "bet": 100,
+        "payout": 2000,
+        "combinations": 113
     },
     {
         "win": [
@@ -122,12 +95,9 @@
             "Archer",
             "Archer"
         ],
-        "100": 1000,
-        "200": 2000,
-        "300": 3000,
-        "combinations": 432,
-        "probability": 0.001648,
-        "return": 0.016479
+        "bet": 100,
+        "payout": 1000,
+        "combinations": 432
     },
     {
         "win": [
@@ -135,12 +105,9 @@
             "Archer or Wizard or Barbarian",
             "Archer or Wizard or Barbarian"
         ],
-        "100": 500,
-        "200": 1000,
-        "300": 1500,
-        "combinations": 7977,
-        "probability": 0.030430,
-        "return": 0.152149
+        "bet": 100,
+        "payout": 500,
+        "combinations": 7977
     },
     {
         "win": [
@@ -148,12 +115,9 @@
             "AQ or Archer",
             "AQ or Archer"
         ],
-        "100": 200,
-        "200": 400,
-        "300": 600,
-        "combinations": 335,
-        "probability": 0.001278,
-        "return": 0.002556
+        "bet": 100,
+        "payout": 200,
+        "combinations": 335
     },
     {
         "win": [
@@ -161,12 +125,9 @@
             "GW or Wizard",
             "GW or Wizard"
         ],
-        "100": 200,
-        "200": 400,
-        "300": 600,
-        "combinations": 1036,
-        "probability": 0.003952,
-        "return": 0.007904
+        "bet": 100,
+        "payout": 200,
+        "combinations": 1036
     },
     {
         "win": [
@@ -174,12 +135,9 @@
             "BK or Barbarian",
             "BK or Barbarian "
         ],
-        "100": 200,
-        "200": 400,
-        "300": 600,
-        "combinations": 756,
-        "probability": 0.002884,
-        "return": 0.005768
+        "bet": 100,
+        "payout": 200,
+        "combinations": 756
     },
     {
         "win": [
@@ -187,11 +145,8 @@
             "Spell",
             "Spell"
         ],
-        "100": 100,
-        "200": 200,
-        "300": 300,
-        "combinations": 32768,
-        "probability": 0.125000,
-        "return": 0.125000
+        "bet:": 100,
+        "payout": 100,
+        "combinations": 32768
     }
 ]

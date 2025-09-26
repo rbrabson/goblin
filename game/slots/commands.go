@@ -222,10 +222,7 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				winCombination += "]"
 			}
 
-			betPayouts := ""
-			for bet, amount := range payout.Bet {
-				betPayouts += p.Sprintf("%d: %d\n", bet, amount)
-			}
+			betPayouts := p.Sprintf("Every **%d** bet wins **%d**\n", payout.Bet, payout.Payout)
 
 			field := &discordgo.MessageEmbedField{
 				Name:   winCombination,

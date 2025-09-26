@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,13 +18,10 @@ const (
 
 // Payout defines a winning combination and the payout amounts for different bets.
 type Payout struct {
-	Win          []Slot  `json:"win" bson:"win"`
-	Bet100       int     `json:"100" bson:"100"`
-	Bet200       int     `json:"200" bson:"200"`
-	Bet300       int     `json:"300" bson:"300"`
-	Combinations int     `json:"combinations" bson:"combinations"`
-	Probability  float64 `json:"probability" bson:"probability"`
-	Return       float64 `json:"return" bson:"return"`
+	Win          []Slot `json:"win" bson:"win"`
+	Bet          int    `json:"bet" bson:"bet"`
+	Payout       int    `json:"payout" bson:"payout"`
+	Combinations int    `json:"combinations" bson:"combinations"`
 }
 
 // String returns a string representation of the Payout.
@@ -39,9 +37,8 @@ func (p *Payout) String() string {
 	}
 	sb.WriteString("]")
 	sb.WriteString(", Payouts: [")
-	sb.WriteString("100: " + string(rune(p.Bet100)))
-	sb.WriteString(", 200: " + string(rune(p.Bet200)))
-	sb.WriteString(", 300: " + string(rune(p.Bet300)))
+	sb.WriteString("Bet: " + strconv.Itoa(p.Bet))
+	sb.WriteString(", Payout: " + strconv.Itoa(p.Payout))
 	sb.WriteString("]")
 	sb.WriteString("}")
 
@@ -50,8 +47,9 @@ func (p *Payout) String() string {
 
 // PayoutAmount defines a winning combination and the payout amounts for different bets.
 type PayoutAmount struct {
-	Win []string    `json:"win" bson:"win"`
-	Bet map[int]int `json:"bet" bson:"bet"`
+	Win    []string `json:"win" bson:"win"`
+	Bet    int      `json:"bet" bson:"bet"`
+	Payout int      `json:"payout" bson:"payout"`
 }
 
 // String returns a string representation of the PayoutAmount.
@@ -63,10 +61,8 @@ func (p *PayoutAmount) String() string {
 		sb.WriteString(slot)
 	}
 	sb.WriteString("]")
-	sb.WriteString(", Payouts: [")
-	for bet, amount := range p.Bet {
-		sb.WriteString(string(rune(bet)) + ": " + string(rune(amount)) + ", ")
-	}
+	sb.WriteString(", Bet: " + strconv.Itoa(p.Bet))
+	sb.WriteString(", Payout: " + strconv.Itoa(p.Payout))
 	sb.WriteString("]")
 	sb.WriteString("}")
 
@@ -152,12 +148,9 @@ func readPayoutTableFromFile(guildID string) *PayoutTable {
 		)
 
 		payoutAmount := PayoutAmount{
-			Win: make([]string, 0, len(payout.Win)),
-			Bet: map[int]int{
-				100: payout.Bet100,
-				200: payout.Bet200,
-				300: payout.Bet300,
-			},
+			Win:    make([]string, 0, len(payout.Win)),
+			Bet:    payout.Bet,
+			Payout: payout.Payout,
 		}
 		for _, slot := range payout.Win {
 			payoutAmount.Win = append(payoutAmount.Win, string(slot))
@@ -193,15 +186,15 @@ func (pt *PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 			}
 		}
 		if match {
-			amount, ok := payout.Bet[bet]
-			if !ok {
-				slog.Error("no payout for bet amount",
-					slog.String("guildID", pt.GuildID),
-					slog.Int("bet", bet),
-					slog.Any("win", spin),
-				)
-				return 0
-			}
+			slog.Error("found matching payout",
+				slog.String("guildID", pt.GuildID),
+				slog.Int("bet", bet),
+				slog.Any("win", payout.Win),
+				slog.Any("spin", spin),
+				slog.Int("payoutBet", payout.Bet),
+				slog.Int("payoutAmount", payout.Payout),
+			)
+			amount := payout.Payout * (bet / payout.Bet)
 			return amount
 		}
 	}
