@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0
+
+Add the `slots` game to the bot.
+
 ## 2.1.1
 
 Add game stats for server administrators to track game usage.

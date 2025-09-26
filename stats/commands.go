@@ -22,6 +22,7 @@ const (
 	All   = "all"
 	Heist = "heist"
 	Race  = "race"
+	Slots = "slots"
 )
 
 var (
@@ -57,6 +58,10 @@ var (
 								{
 									Name:  "Race",
 									Value: Race,
+								},
+								{
+									Name:  "Slots",
+									Value: Slots,
 								},
 							},
 						},
@@ -145,6 +150,10 @@ var (
 									Name:  "Race",
 									Value: Race,
 								},
+								{
+									Name:  "Slots",
+									Value: Slots,
+								},
 							},
 						},
 						{
@@ -217,6 +226,10 @@ var (
 									Name:  "Race",
 									Value: Race,
 								},
+								{
+									Name:  "Slots",
+									Value: Slots,
+								},
 							},
 						},
 						{
@@ -249,6 +262,10 @@ var (
 								{
 									Name:  "Race",
 									Value: Race,
+								},
+								{
+									Name:  "Slots",
+									Value: Slots,
 								},
 							},
 						},

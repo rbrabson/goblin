@@ -322,11 +322,11 @@ func getDefauiltTheme(guildID string) *Theme {
 			Result:  Apprehended,
 		},
 		{
-			Message: "%s left Grand Warden in air mode " + emoji.GrandWarden + ".",
+			Message: "%s left GW in air mode " + emoji.GrandWarden + ".",
 			Result:  Apprehended,
 		},
 		{
-			Message: "%s left Grand Warden in ground mode " + emoji.GrandWarden + ".",
+			Message: "%s left GW in ground mode " + emoji.GrandWarden + ".",
 			Result:  Apprehended,
 		},
 		{
@@ -402,7 +402,7 @@ func getDefauiltTheme(guildID string) *Theme {
 			Result:  Apprehended,
 		},
 		{
-			Message: "%s used a Book of Heroes to finish the level two Barbarian King upgrade " + emoji.BarbarianKing + ".",
+			Message: "%s used a Book of Heroes to finish the level two BK upgrade " + emoji.BarbarianKing + ".",
 			Result:  Apprehended,
 		},
 		{

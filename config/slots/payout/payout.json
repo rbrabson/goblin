@@ -1,0 +1,144 @@
+[
+    {
+        "win": [
+            "AQ",
+            "GW",
+            "BK"
+        ],
+        "bet": 1,
+        "payout": 2400
+    },
+    {
+        "win": [
+            "AQ",
+            "AQ",
+            "AQ"
+        ],
+        "bet": 1,
+        "payout": 1200
+    },
+    {
+        "win": [
+            "GW",
+            "GW",
+            "GW"
+        ],
+        "bet": 1,
+        "payout": 600
+    },
+    {
+        "win": [
+            "BK",
+            "BK",
+            "BK"
+        ],
+        "bet": 1,
+        "payout": 300
+    },
+    {
+        "win": [
+            "AQ or GW or BK",
+            "AQ or GW or BK",
+            "AQ or GW or BK"
+        ],
+        "bet": 1,
+        "payout": 100
+    },
+    {
+        "win": [
+            "Archer",
+            "Wizard",
+            "Barbarian"
+        ],
+        "bet": 1,
+        "payout": 50
+    },
+    {
+        "win": [
+            "Barbarian",
+            "Barbarian",
+            "Barbarian"
+        ],
+        "bet": 1,
+        "payout": 40
+    },
+    {
+        "win": [
+            "Wizard",
+            "Wizard",
+            "Wizard"
+        ],
+        "bet": 1,
+        "payout": 25
+    },
+    {
+        "win": [
+            "AQ or Archer",
+            "GW or Wizard",
+            "BK or Barbarian"
+        ],
+        "bet": 1,
+        "payout": 20
+    },
+    {
+        "win": [
+            "Archer",
+            "Archer",
+            "Archer"
+        ],
+        "bet": 1,
+        "payout": 10
+    },
+    {
+        "win": [
+            "Archer or Wizard or Barbarian",
+            "Archer or Wizard or Barbarian",
+            "Archer or Wizard or Barbarian"
+        ],
+        "bet": 1,
+        "payout": 5
+    },
+    {
+        "win": [
+            "AQ or Archer",
+            "AQ or Archer",
+            "AQ or Archer"
+        ],
+        "bet": 1,
+        "payout": 3
+    },
+    {
+        "win": [
+            "GW or Wizard",
+            "GW or Wizard",
+            "GW or Wizard"
+        ],
+        "bet": 1,
+        "payout": 3
+    },
+    {
+        "win": [
+            "BK or Barbarian",
+            "BK or Barbarian",
+            "BK or Barbarian"
+        ],
+        "bet": 1,
+        "payout": 3
+    },
+    {
+        "win": [
+            "[two consecutive non-Spell symbols]"
+        ],
+        "bet": 1,
+        "payout": 2
+    },
+    {
+        "win": [
+            "Spell",
+            "Spell",
+            "Spell"
+        ],
+        "bet": 1,
+        "payout": 1
+    }
+]

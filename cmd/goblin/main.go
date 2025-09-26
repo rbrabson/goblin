@@ -10,10 +10,12 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/joho/godotenv"
+	"github.com/rbrabson/goblin/account"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/game/heist"
 	"github.com/rbrabson/goblin/game/race"
+	"github.com/rbrabson/goblin/game/slots"
 	"github.com/rbrabson/goblin/internal/log"
 	"github.com/rbrabson/goblin/leaderboard"
 	"github.com/rbrabson/goblin/payday"
@@ -41,7 +43,7 @@ func main() {
 	}
 
 	// Start the plugins
-	// account.Start()
+	account.Start()
 	bank.Start()
 	heist.Start()
 	leaderboard.Start()
@@ -49,6 +51,7 @@ func main() {
 	race.Start()
 	role.Start()
 	shop.Start()
+	slots.Start()
 	stats.Start()
 
 	bot := discord.NewBot(BotName, Version, Revision)
