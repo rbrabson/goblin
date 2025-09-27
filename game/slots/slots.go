@@ -2,22 +2,26 @@ package slots
 
 import (
 	"fmt"
+	"log/slog"
 )
 
 const (
 	DummyGuildID = "000000000000000000"
 )
 
+// SlotMachine represents a slot machine with a lookup table, payout table, and symbol table.
 type SlotMachine struct {
 	LookupTable LookupTable
 	PayoutTable PayoutTable
 	Symbols     *SymbolTable
 }
 
+// GetSlotMachine returns a new instance of the SlotMachine.
 func GetSlotMachine() *SlotMachine {
 	return newSlotMachine()
 }
 
+// newSlotMachine creates a new instance of the SlotMachine with initialized lookup table, payout table, and symbol table.
 func newSlotMachine() *SlotMachine {
 	slotMachine := &SlotMachine{
 		LookupTable: GetLookupTable(),
@@ -32,16 +36,16 @@ func newSlotMachine() *SlotMachine {
 // The spin contains multiple rows of symbols, with the winning row indicated by Payline. THe multiple rows are used
 // to create the multiple display lines.
 type SpinResult struct {
-	NextLine     Spin
-	Payline      Spin
-	PreviousLine Spin
-	Bet          int
-	Payout       int
+	TopLine    Spin
+	Payline    Spin
+	BottomLine Spin
+	Bet        int
+	Payout     int
 }
 
 // String returns a string representation of the Spin.
 func (s *SpinResult) String() string {
-	return fmt.Sprintf("Spin{Payline: %v, NextLine: %v, PreviousLine: %v, Bet: %d, Payout: %d}", s.Payline, s.NextLine, s.PreviousLine, s.Bet, s.Payout)
+	return fmt.Sprintf("Spin{Payline: %v, TopLine: %v, BottomLine: %v, Bet: %d, Payout: %d}", s.Payline, s.TopLine, s.BottomLine, s.Bet, s.Payout)
 }
 
 // Spin simulates a spin of the slot machine with the given bet amount and returns the result of the spin,
@@ -53,12 +57,17 @@ func (sm *SlotMachine) Spin(bet int) *SpinResult {
 	payout := sm.PayoutTable.GetPayoutAmount(bet, payline)
 
 	spinResult := &SpinResult{
-		Payline:      payline,
-		PreviousLine: previousLine,
-		NextLine:     nextLine,
-		Bet:          bet,
-		Payout:       payout,
+		Payline:    payline,
+		BottomLine: previousLine,
+		TopLine:    nextLine,
+		Bet:        bet,
+		Payout:     payout,
 	}
+
+	slog.Debug("slot machine spin result",
+		slog.Int("bet", spinResult.Bet),
+		slog.Int("payout", spinResult.Payout),
+	)
 
 	return spinResult
 }

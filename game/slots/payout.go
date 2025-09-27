@@ -136,10 +136,6 @@ func readPayoutTableFromFile() PayoutTable {
 	payoutTable := make(PayoutTable, 0, len(*payouts))
 
 	for _, payout := range *payouts {
-		slog.Debug("loaded payout",
-			slog.Any("payout", payout),
-		)
-
 		payoutAmount := PayoutAmount{
 			Win:    make([]string, 0, len(payout.Win)),
 			Bet:    payout.Bet,
@@ -159,14 +155,6 @@ func readPayoutTableFromFile() PayoutTable {
 // GetPayoutAmount returns the payout amount for a given bet and spin result.
 func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 	for _, payout := range pt {
-		if len(payout.Win) != len(spin) {
-			slog.Warn("payout win length does not match spin length",
-				slog.Int("bet", bet),
-				slog.Any("win", payout.Win),
-				slog.Any("spin", spin),
-			)
-			continue
-		}
 		match := true
 		for i := range payout.Win {
 			winningSymbols := strings.Split(payout.Win[i], " or ")
@@ -179,9 +167,8 @@ func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 			slog.Debug("found matching payout",
 				slog.Int("bet", bet),
 				slog.Any("win", payout.Win),
-				slog.Any("spin", spin),
-				slog.Int("payoutBet", payout.Bet),
-				slog.Float64("payoutAmount", payout.Payout),
+				slog.Int("bet", payout.Bet),
+				slog.Float64("payout", payout.Payout),
 			)
 			amount := payout.Payout * (float64(bet) / float64(payout.Bet))
 			return int(amount)
@@ -202,11 +189,13 @@ func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 		payout := int(payoutAmount.Payout * float64(bet))
 		slog.Debug("found matching payout for two consecutive non-blank symbols",
 			slog.Int("bet", bet),
-			slog.Any("spin", spin),
-			slog.Int("payoutAmount", payout),
+			slog.Int("payout", payout),
 		)
 		return payout
 	}
 
+	slog.Debug("no matching payout found",
+		slog.Int("bet", bet),
+	)
 	return 0
 }

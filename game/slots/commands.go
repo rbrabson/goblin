@@ -73,6 +73,8 @@ func slots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("memberID", i.Member.User.ID),
 				slog.Any("error", err),
 			)
 		}
@@ -114,6 +116,8 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("error sending response",
+				slog.String("guildID", guildID),
+				slog.String("userID", userID),
 				slog.Any("error", err),
 			)
 		}
@@ -139,7 +143,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	symbols := sm.Symbols.Symbols
 	spinMsg := symbols["Blank"].Emoji
-	for i, symbol := range spinResult.NextLine {
+	for i, symbol := range spinResult.TopLine {
 		if i != 0 {
 			spinMsg += " | "
 		}
@@ -153,7 +157,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		spinMsg += symbol.Emoji
 	}
 	spinMsg += "\n" + symbols["Blank"].Emoji
-	for i, symbol := range spinResult.PreviousLine {
+	for i, symbol := range spinResult.BottomLine {
 		if i != 0 {
 			spinMsg += " | "
 		}
@@ -208,7 +212,7 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	slog.Debug("`/slots paytable` command",
 		slog.String("guildID", guildID),
-		slog.Any("payTable", payTable),
+		slog.String("memberID", i.Member.User.ID),
 	)
 
 	embeds := []*discordgo.MessageEmbed{}
@@ -253,6 +257,8 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 		slog.Error("error sending response",
+			slog.String("guildID", guildID),
+			slog.String("memberID", i.Member.User.ID),
 			slog.Any("error", err),
 		)
 	}
@@ -267,7 +273,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	slog.Debug("`/slots stats` command",
 		slog.String("guildID", guildID),
-		slog.String("userID", userID),
+		slog.String("memberID", userID),
 	)
 
 	member := GetMemberKey(guildID, userID)

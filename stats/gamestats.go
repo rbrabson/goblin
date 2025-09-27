@@ -56,31 +56,41 @@ func UpdateGameStats(guildID string, game string, memberIDs []string) {
 	statsLock.Lock()
 	defer statsLock.Unlock()
 
-	today := today()
+	todayTime := today()
 
 	var newUniquePlayersForGame, newUniquePlayersForAllGames int
 	for _, memberID := range memberIDs {
 		ps := getPlayerStats(guildID, memberID, game)
-		if ps.LastPlayed.Before(today) {
+		slog.Debug("retrieved player stats",
+			slog.String("guild_id", guildID),
+			slog.String("member_id", memberID),
+			slog.String("game", game),
+			slog.Time("last_played", ps.LastPlayed),
+			slog.Int("number_of_times_played", ps.NumberOfTimesPlayed),
+			slog.Time("today", todayTime),
+		)
+		// Check if this is the first time the player has played this game today
+		// and if this is the first time the player has played any game today
+		if ps.LastPlayed.Before(todayTime) {
 			newUniquePlayersForGame++
 			slog.Debug("first game played by member for today",
 				slog.String("guild_id", ps.GuildID),
 				slog.String("member_id", ps.MemberID),
 				slog.String("game", ps.Game),
-				slog.Time("day", today),
+				slog.Time("day", todayTime),
 			)
 		}
 		lastDatePlayed := getLastDatePlayed(guildID, memberID)
-		if lastDatePlayed.Before(today) {
+		if lastDatePlayed.Before(todayTime) {
 			newUniquePlayersForAllGames++
 			slog.Debug("first time playing any game by member for today",
 				slog.String("guild_id", ps.GuildID),
 				slog.String("member_id", ps.MemberID),
-				slog.Time("day", today),
+				slog.Time("day", todayTime),
 			)
 		}
 
-		ps.LastPlayed = today
+		ps.LastPlayed = todayTime
 		ps.NumberOfTimesPlayed++
 		writePlayerStats(ps)
 		slog.Debug("player stats updated",
@@ -92,7 +102,7 @@ func UpdateGameStats(guildID string, game string, memberIDs []string) {
 		)
 	}
 
-	gs := getGameStats(guildID, game, today)
+	gs := getGameStats(guildID, game, todayTime)
 	gs.UniquePlayers += newUniquePlayersForGame
 	gs.TotalPlayers += len(memberIDs)
 	gs.GamesPlayed++
@@ -109,7 +119,7 @@ func UpdateGameStats(guildID string, game string, memberIDs []string) {
 	)
 
 	// Update unique players for all games
-	gsAll := getGameStats(guildID, "all", today)
+	gsAll := getGameStats(guildID, "all", todayTime)
 	gsAll.UniquePlayers += newUniquePlayersForAllGames
 	gsAll.TotalPlayers += len(memberIDs)
 	gsAll.GamesPlayed++

@@ -142,7 +142,7 @@ func getLastDatePlayed(guildID string, memberID string) time.Time {
 	}
 
 	result := docs[0]
-	lastPlayed := getTimeFromPipeline(result["last_played"])
+	lastPlayed := getTimeFromPipeline(result["last_date_played"])
 
 	return lastPlayed
 }
