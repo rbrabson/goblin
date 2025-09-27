@@ -41,6 +41,7 @@ type SpinResult struct {
 	BottomLine Spin
 	Bet        int
 	Payout     int
+	Message    string
 }
 
 // String returns a string representation of the Spin.
@@ -54,7 +55,7 @@ func (sm *SlotMachine) Spin(bet int) *SpinResult {
 	paylineIndices, payline := sm.LookupTable.GetPaylineSpin()
 	previousIndices, previousLine := sm.LookupTable.GetPreviousSpin(paylineIndices)
 	_, nextLine := sm.LookupTable.GetNextSpin(paylineIndices, previousIndices)
-	payout := sm.PayoutTable.GetPayoutAmount(bet, payline)
+	payout, payoutmessage := sm.PayoutTable.GetPayoutAmount(bet, payline)
 
 	spinResult := &SpinResult{
 		Payline:    payline,
@@ -62,6 +63,7 @@ func (sm *SlotMachine) Spin(bet int) *SpinResult {
 		TopLine:    nextLine,
 		Bet:        bet,
 		Payout:     payout,
+		Message:    payoutmessage,
 	}
 
 	slog.Debug("slot machine spin result",

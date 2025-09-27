@@ -6,7 +6,8 @@
             "BK"
         ],
         "bet": 1,
-        "payout": 2400
+        "payout": 2400,
+        "message": "Jackpot! You hit the big one!"
     },
     {
         "win": [
@@ -15,7 +16,8 @@
             "AQ"
         ],
         "bet": 1,
-        "payout": 1200
+        "payout": 1200,
+        "message": "You hit three Acher Queenss!"
     },
     {
         "win": [
@@ -24,7 +26,8 @@
             "GW"
         ],
         "bet": 1,
-        "payout": 600
+        "payout": 600,
+        "message": "You hit three Grand Wardens!"
     },
     {
         "win": [
@@ -33,7 +36,8 @@
             "BK"
         ],
         "bet": 1,
-        "payout": 300
+        "payout": 300,
+        "message": "You hit three Barbarian Kings!"
     },
     {
         "win": [
@@ -42,7 +46,8 @@
             "AQ or GW or BK"
         ],
         "bet": 1,
-        "payout": 100
+        "payout": 100,
+        "message": "You hit three heroes!"
     },
     {
         "win": [
@@ -51,7 +56,8 @@
             "Barbarian"
         ],
         "bet": 1,
-        "payout": 50
+        "payout": 50,
+        "message": "You hit Archer, Wizard, Barbarian!"
     },
     {
         "win": [
@@ -60,7 +66,8 @@
             "Barbarian"
         ],
         "bet": 1,
-        "payout": 40
+        "payout": 40,
+        "message": "You hit three Barbarians!"
     },
     {
         "win": [
@@ -69,7 +76,8 @@
             "Wizard"
         ],
         "bet": 1,
-        "payout": 25
+        "payout": 25,
+        "message": "You hit three Wizards!"
     },
     {
         "win": [
@@ -78,7 +86,8 @@
             "BK or Barbarian"
         ],
         "bet": 1,
-        "payout": 20
+        "payout": 20,
+        "message": "You hit AQ/Archer, GW/Wizard, BK/Barbarian!"
     },
     {
         "win": [
@@ -87,7 +96,8 @@
             "Archer"
         ],
         "bet": 1,
-        "payout": 10
+        "payout": 10,
+        "message": "You hit three Archers!"
     },
     {
         "win": [
@@ -96,7 +106,8 @@
             "Archer or Wizard or Barbarian"
         ],
         "bet": 1,
-        "payout": 5
+        "payout": 5,
+        "message": "You hit three basic troops!"
     },
     {
         "win": [
@@ -105,7 +116,8 @@
             "AQ or Archer"
         ],
         "bet": 1,
-        "payout": 3
+        "payout": 3,
+        "message": "You hit three AQs or Archers!"
     },
     {
         "win": [
@@ -114,7 +126,8 @@
             "GW or Wizard"
         ],
         "bet": 1,
-        "payout": 3
+        "payout": 3,
+        "message": "You hit three GWs or Wizards!"
     },
     {
         "win": [
@@ -123,14 +136,16 @@
             "BK or Barbarian"
         ],
         "bet": 1,
-        "payout": 3
+        "payout": 3,
+        "message": "You hit three BKs or Barbarians!"
     },
     {
         "win": [
             "[two consecutive non-Spell symbols]"
         ],
         "bet": 1,
-        "payout": 2
+        "payout": 2,
+        "message": "You hit two consecutive non-Spells!"
     },
     {
         "win": [
@@ -139,6 +154,7 @@
             "Spell"
         ],
         "bet": 1,
-        "payout": 1
+        "payout": 1,
+        "message": "You hit three Spells!"
     }
 ]

@@ -17,9 +17,10 @@ const (
 
 // Payout defines a winning combination and the payout amounts for different bets.
 type Payout struct {
-	Win    []Slot  `json:"win" bson:"win"`
-	Bet    int     `json:"bet" bson:"bet"`
-	Payout float64 `json:"payout" bson:"payout"`
+	Win     []Slot  `json:"win" bson:"win"`
+	Bet     int     `json:"bet" bson:"bet"`
+	Payout  float64 `json:"payout" bson:"payout"`
+	Message string  `json:"message" bson:"message"`
 }
 
 // String returns a string representation of the Payout.
@@ -45,9 +46,10 @@ func (p *Payout) String() string {
 
 // PayoutAmount defines a winning combination and the payout amounts for different bets.
 type PayoutAmount struct {
-	Win    []string `json:"win" bson:"win"`
-	Bet    int      `json:"bet" bson:"bet"`
-	Payout float64  `json:"payout" bson:"payout"`
+	Win     []string `json:"win" bson:"win"`
+	Bet     int      `json:"bet" bson:"bet"`
+	Payout  float64  `json:"payout" bson:"payout"`
+	Message string   `json:"message" bson:"message"`
 }
 
 // String returns a string representation of the PayoutAmount.
@@ -137,9 +139,10 @@ func readPayoutTableFromFile() PayoutTable {
 
 	for _, payout := range *payouts {
 		payoutAmount := PayoutAmount{
-			Win:    make([]string, 0, len(payout.Win)),
-			Bet:    payout.Bet,
-			Payout: payout.Payout,
+			Win:     make([]string, 0, len(payout.Win)),
+			Bet:     payout.Bet,
+			Payout:  payout.Payout,
+			Message: payout.Message,
 		}
 		for _, slot := range payout.Win {
 			payoutAmount.Win = append(payoutAmount.Win, string(slot))
@@ -153,7 +156,7 @@ func readPayoutTableFromFile() PayoutTable {
 }
 
 // GetPayoutAmount returns the payout amount for a given bet and spin result.
-func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
+func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) (int, string) {
 	for _, payout := range pt {
 		match := true
 		for i := range payout.Win {
@@ -171,7 +174,7 @@ func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 				slog.Float64("payout", payout.Payout),
 			)
 			amount := payout.Payout * (float64(bet) / float64(payout.Bet))
-			return int(amount)
+			return int(amount), payout.Message
 		}
 	}
 
@@ -191,11 +194,11 @@ func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) int {
 			slog.Int("bet", bet),
 			slog.Int("payout", payout),
 		)
-		return payout
+		return payout, payoutAmount.Message
 	}
 
 	slog.Debug("no matching payout found",
 		slog.Int("bet", bet),
 	)
-	return 0
+	return 0, ""
 }

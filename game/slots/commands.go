@@ -181,7 +181,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if spinResult.Payout > 0 {
 		embedColor = 0x00ff00 // Green for win
-		resultTitle = "🎉 Winner!"
+		resultTitle = "🎉 " + spinResult.Message
 		resultDescription = p.Sprintf("You won **%d** coins!", spinResult.Payout)
 	} else {
 		embedColor = 0xff0000 // Red for loss
