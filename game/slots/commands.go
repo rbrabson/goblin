@@ -9,6 +9,7 @@ import (
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
+	"github.com/rbrabson/goblin/guild"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -59,6 +60,14 @@ var (
 					Name:        "stats",
 					Description: "Shows a user's stats.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionUser,
+							Name:        "user",
+							Description: "The member or member ID.",
+							Required:    false,
+						},
+					},
 				},
 			},
 		},
@@ -212,7 +221,6 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	slog.Debug("`/slots paytable` command",
 		slog.String("guildID", guildID),
-		slog.String("memberID", i.Member.User.ID),
 	)
 
 	embeds := []*discordgo.MessageEmbed{}
@@ -268,19 +276,40 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
+	memberID := i.Member.User.ID
+	options := i.ApplicationCommandData().Options[0].Options
+	for _, option := range options {
+		if option.Name == "user" {
+			var err error
+			member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
+			if err != nil {
+				resp := disgomsg.NewResponse(
+					disgomsg.WithContent("The user to get the account for was not found. Please try again."),
+				)
+				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+					slog.Error("error sending response",
+						slog.String("guildID", i.GuildID),
+						slog.String("error", err.Error()),
+					)
+				}
+				return
+			}
+			memberID = member.MemberID
+		}
+	}
+
 	guildID := i.GuildID
-	userID := i.Member.User.ID
 
 	slog.Debug("`/slots stats` command",
 		slog.String("guildID", guildID),
-		slog.String("memberID", userID),
+		slog.String("memberID", memberID),
 	)
 
-	member := GetMemberKey(guildID, userID)
+	member := GetMemberKey(guildID, memberID)
 
 	embed := &discordgo.MessageEmbed{
 		Title:       "Slot Machine Stats",
-		Description: p.Sprintf("Here are the stats for <@%s>:", userID),
+		Description: p.Sprintf("Here are the stats for <@%s>:", memberID),
 		Color:       0x5865F2, // Blue color
 		Fields: []*discordgo.MessageEmbedField{
 			{
