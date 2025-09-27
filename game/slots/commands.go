@@ -139,15 +139,24 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	symbols := sm.Symbols.Symbols
 	spinMsg := symbols["Blank"].Emoji
-	for _, symbol := range spinResult.NextLine {
+	for i, symbol := range spinResult.NextLine {
+		if i != 0 {
+			spinMsg += " | "
+		}
 		spinMsg += symbol.Emoji
 	}
 	spinMsg += "\n" + symbols["Right Arrow"].Emoji
-	for _, symbol := range spinResult.Payline {
+	for i, symbol := range spinResult.Payline {
+		if i != 0 {
+			spinMsg += " | "
+		}
 		spinMsg += symbol.Emoji
 	}
 	spinMsg += "\n" + symbols["Blank"].Emoji
-	for _, symbol := range spinResult.PreviousLine {
+	for i, symbol := range spinResult.PreviousLine {
+		if i != 0 {
+			spinMsg += " | "
+		}
 		spinMsg += symbol.Emoji
 	}
 	spinMsg += "\n"
