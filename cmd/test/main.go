@@ -1,13 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/game/slots"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 )
 
 type PayoutProbability struct {
@@ -20,8 +19,6 @@ type PayoutProbability struct {
 
 func main() {
 	godotenv.Load(".env")
-
-	p := message.NewPrinter(language.AmericanEnglish)
 
 	sm := slots.GetSlotMachine()
 	payoutTable := sm.PayoutTable
@@ -54,7 +51,7 @@ func main() {
 		})
 	}
 
-	probTwoNonBlank := getProbabilityOfTwoConsecutiveSymbols(sm)
+	probTwoNonBlank := getProbabilityOfTwoConsecutiveTroops(sm)
 	probabilities = append(probabilities, *probTwoNonBlank)
 
 	probAnyOrderRWB := getProabilityOfAnyOrderRedWhiteBlue(sm)
@@ -69,15 +66,15 @@ func main() {
 		totalReturnPercentage += prob.Return
 	}
 
+	fmt.Println("Spin, Matches, Probability, Return")
 	for _, prob := range probabilities {
 		if prob.NumMatches != 0 {
-			spin := "[" + strings.Join(prob.Spin, ", ") + "]"
-			p.Printf("%s: NumMatches: %d, Probability: %.4f%%, Return: %.4f%%\n", spin, prob.NumMatches, prob.Probability, prob.Return)
+			spin := "[" + strings.Join(prob.Spin, " | ") + "]"
+			fmt.Printf("%s, %d, %.4f%%, %.4f%%\n", spin, prob.NumMatches, prob.Probability, prob.Return)
 		}
 	}
 
-	p.Printf("Total Win Probability: %.2f%%\n", totalWinProb)
-	p.Printf("Total Return Percentage: %.2f%%\n", totalReturnPercentage)
+	fmt.Printf("\nWin,, %.2f%%, %.2f%%\n", totalWinProb, totalReturnPercentage)
 }
 
 func getMatchingSymbols(winningSymbols string, reel *slots.Reel) int {
@@ -92,7 +89,7 @@ func getMatchingSymbols(winningSymbols string, reel *slots.Reel) int {
 	return matchingSymbols
 }
 
-func getProbabilityOfTwoConsecutiveSymbols(sm *slots.SlotMachine) *PayoutProbability {
+func getProbabilityOfTwoConsecutiveTroops(sm *slots.SlotMachine) *PayoutProbability {
 	nymPossibilities := 1
 	for _, reel := range sm.LookupTable {
 		nymPossibilities *= len(reel)
@@ -111,9 +108,11 @@ func getProbabilityOfTwoConsecutiveSymbols(sm *slots.SlotMachine) *PayoutProbabi
 	}
 
 	var payoutAmount float64
+	var bet int
 	for _, payout := range sm.PayoutTable {
 		if strings.Contains(payout.Win[0], slots.TwoConsecutiveSymbols) {
 			payoutAmount = payout.Payout
+			bet = payout.Bet
 			break
 		}
 	}
@@ -122,10 +121,10 @@ func getProbabilityOfTwoConsecutiveSymbols(sm *slots.SlotMachine) *PayoutProbabi
 
 	return &PayoutProbability{
 		Spin:        []string{"two consecutive non-Spell symbols"},
-		Payout:      slots.PayoutAmount{Bet: 1, Payout: payoutAmount},
-		Probability: probability,
+		Payout:      slots.PayoutAmount{Bet: bet, Payout: payoutAmount},
+		Probability: probability * 100.0,
 		NumMatches:  numMatches,
-		Return:      (float64(payoutAmount) / float64(1)) * (probability) * 100.0,
+		Return:      (float64(payoutAmount) / float64(bet)) * probability * 100.0,
 	}
 }
 
@@ -177,10 +176,13 @@ func getProabilityOfAnyOrderRedWhiteBlue(sm *slots.SlotMachine) *PayoutProbabili
 			}
 		}
 	}
+
+	var bet int
 	var payoutAmount float64
 	for _, payout := range sm.PayoutTable {
 		if strings.Contains(payout.Win[0], slots.AnyOrderRWB) {
 			payoutAmount = payout.Payout
+			bet = payout.Bet
 			break
 		}
 	}
@@ -188,10 +190,10 @@ func getProabilityOfAnyOrderRedWhiteBlue(sm *slots.SlotMachine) *PayoutProbabili
 	probability := (float64(numMatches) / float64((nymPossibilities)))
 
 	return &PayoutProbability{
-		Spin:        []string{"any order AQ/Archer, GW/Wizard, BK/Barbarian"},
-		Payout:      slots.PayoutAmount{Bet: 1, Payout: payoutAmount},
-		Probability: probability,
+		Spin:        []string{"any order AQ/Archer | GW/Wizard | BK/Barbarian"},
+		Payout:      slots.PayoutAmount{Bet: bet, Payout: payoutAmount},
+		Probability: probability * 100.0,
 		NumMatches:  numMatches,
-		Return:      (float64(payoutAmount) / float64(1)) * (probability) * 100.0,
+		Return:      (float64(payoutAmount) / float64(bet)) * probability * 100.0,
 	}
 }

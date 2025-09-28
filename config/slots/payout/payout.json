@@ -46,7 +46,7 @@
             "AQ or GW or BK"
         ],
         "bet": 1,
-        "payout": 80,
+        "payout": 70,
         "message": "You hit three heroes!"
     },
     {
@@ -96,7 +96,7 @@
             "Archer or Wizard or Barbarian"
         ],
         "bet": 1,
-        "payout": 5,
+        "payout": 4,
         "message": "You hit three basic troops!"
     },
     {
