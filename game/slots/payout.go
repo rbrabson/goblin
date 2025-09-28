@@ -12,7 +12,7 @@ import (
 
 const (
 	PAYOUT_FILE_NAME      = "payout"
-	TwoConsecutiveSymbols = "[two consecutive non-Spell symbols]"
+	TwoConsecutiveSymbols = "[two consecutive troops]"
 	AnyOrderRWB           = "[any order AQ/Archer, GW/Wizard, BK/Barbarian]"
 )
 

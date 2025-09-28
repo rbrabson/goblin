@@ -139,7 +139,7 @@
     },
     {
         "win": [
-            "[two consecutive non-Spell symbols]"
+            "[two consecutive troops]"
         ],
         "bet": 1,
         "payout": 1.5,
