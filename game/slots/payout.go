@@ -12,7 +12,8 @@ import (
 
 const (
 	PAYOUT_FILE_NAME      = "payout"
-	TwoConsecutiveSymbols = "[two consecutive non-Spell symbols]"
+	TwoConsecutiveSymbols = "[two consecutive troops]"
+	AnyOrderRWB           = "[any order AQ/Archer, GW/Wizard, BK/Barbarian]"
 )
 
 // Payout defines a winning combination and the payout amounts for different bets.
@@ -191,6 +192,60 @@ func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) (int, string) {
 
 		payout := int(payoutAmount.Payout * float64(bet))
 		slog.Debug("found matching payout for two consecutive non-blank symbols",
+			slog.Int("bet", bet),
+			slog.Int("payout", payout),
+		)
+		return payout, payoutAmount.Message
+	}
+
+	// Check for any order of AQ/Archer, GW/Wizard, BK/Barbarian
+	match := false
+	switch {
+	case spin[0].Name == "Archer" || spin[0].Name == "AQ":
+		switch {
+		case spin[1].Name == "Wizard" || spin[1].Name == "GW":
+			if spin[2].Name == "Barbarian" || spin[2].Name == "BK" {
+				match = true
+			}
+		case spin[1].Name == "Barbarian" || spin[1].Name == "BK":
+			if spin[2].Name == "Wizard" || spin[2].Name == "GW" {
+				match = true
+			}
+		}
+	case spin[0].Name == "Wizard" || spin[0].Name == "GW":
+		switch {
+		case spin[1].Name == "Archer" || spin[1].Name == "AQ":
+			if spin[2].Name == "Barbarian" || spin[2].Name == "BK" {
+				match = true
+			}
+		case spin[1].Name == "Barbarian" || spin[1].Name == "BK":
+			if spin[2].Name == "Archer" || spin[2].Name == "AQ" {
+				match = true
+			}
+		}
+	case spin[0].Name == "Barbarian" || spin[0].Name == "BK":
+		switch {
+		case spin[1].Name == "Archer" || spin[1].Name == "AQ":
+			if spin[2].Name == "Wizard" || spin[2].Name == "GW" {
+				match = true
+			}
+		case spin[1].Name == "Wizard" || spin[1].Name == "GW":
+			if spin[2].Name == "Archer" || spin[2].Name == "AQ" {
+				match = true
+			}
+		}
+	}
+	if match {
+		var payoutAmount PayoutAmount
+		for _, p := range pt {
+			if len(p.Win) == 1 && p.Win[0] == AnyOrderRWB {
+				payoutAmount = p
+				break
+			}
+		}
+
+		payout := int(payoutAmount.Payout * (float64(bet) / float64(payoutAmount.Bet)))
+		slog.Debug("found matching payout for any order AQ/Archer, GW/Wizard, BK/Barbarian",
 			slog.Int("bet", bet),
 			slog.Int("payout", payout),
 		)

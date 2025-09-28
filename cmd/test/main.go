@@ -57,6 +57,9 @@ func main() {
 	probTwoNonBlank := getProbabilityOfTwoConsecutiveSymbols(sm)
 	probabilities = append(probabilities, *probTwoNonBlank)
 
+	probAnyOrderRWB := getProabilityOfAnyOrderRedWhiteBlue(sm)
+	probabilities = append(probabilities, *probAnyOrderRWB)
+
 	totalWinProb := 0.0
 	for _, prob := range probabilities {
 		totalWinProb += prob.Probability
@@ -107,13 +110,88 @@ func getProbabilityOfTwoConsecutiveSymbols(sm *slots.SlotMachine) *PayoutProbabi
 		}
 	}
 
-	probability := (float64(numMatches) / float64((nymPossibilities))) * 100.0
+	var payoutAmount float64
+	for _, payout := range sm.PayoutTable {
+		if strings.Contains(payout.Win[0], slots.TwoConsecutiveSymbols) {
+			payoutAmount = payout.Payout
+			break
+		}
+	}
+
+	probability := (float64(numMatches) / float64((nymPossibilities)))
 
 	return &PayoutProbability{
-		Spin:        []string{slots.TwoConsecutiveSymbols},
-		Payout:      slots.PayoutAmount{Bet: 1, Payout: 1},
+		Spin:        []string{"two consecutive non-Spell symbols"},
+		Payout:      slots.PayoutAmount{Bet: 1, Payout: payoutAmount},
 		Probability: probability,
 		NumMatches:  numMatches,
-		Return:      (float64(1) / float64(1)) * (probability / 100.0) * 100.0,
+		Return:      (float64(payoutAmount) / float64(1)) * (probability) * 100.0,
+	}
+}
+
+func getProabilityOfAnyOrderRedWhiteBlue(sm *slots.SlotMachine) *PayoutProbability {
+	nymPossibilities := 1
+	for _, reel := range sm.LookupTable {
+		nymPossibilities *= len(reel)
+	}
+
+	numMatches := 0
+	for _, symbol1 := range sm.LookupTable[0] {
+		for _, symbol2 := range sm.LookupTable[1] {
+			for _, symbol3 := range sm.LookupTable[2] {
+				switch {
+				case symbol1.Name == "Archer" || symbol1.Name == "AQ":
+					switch {
+					case symbol2.Name == "Wizard" || symbol2.Name == "GW":
+						if symbol3.Name == "Barbarian" || symbol3.Name == "BK" {
+							numMatches++
+						}
+					case symbol2.Name == "Barbarian" || symbol2.Name == "BK":
+						if symbol3.Name == "Wizard" || symbol3.Name == "GW" {
+							numMatches++
+						}
+					}
+				case symbol1.Name == "Wizard" || symbol1.Name == "GW":
+					switch {
+					case symbol2.Name == "Archer" || symbol2.Name == "AQ":
+						if symbol3.Name == "Barbarian" || symbol3.Name == "BK" {
+							numMatches++
+						}
+					case symbol2.Name == "Barbarian" || symbol2.Name == "BK":
+						if symbol3.Name == "Archer" || symbol3.Name == "AQ" {
+							numMatches++
+						}
+					}
+				case symbol1.Name == "Barbarian" || symbol1.Name == "BK":
+					switch {
+					case symbol2.Name == "Archer" || symbol2.Name == "AQ":
+						if symbol3.Name == "Wizard" || symbol3.Name == "GW" {
+							numMatches++
+						}
+					case symbol2.Name == "Wizard" || symbol2.Name == "GW":
+						if symbol3.Name == "Archer" || symbol3.Name == "AQ" {
+							numMatches++
+						}
+					}
+				}
+			}
+		}
+	}
+	var payoutAmount float64
+	for _, payout := range sm.PayoutTable {
+		if strings.Contains(payout.Win[0], slots.AnyOrderRWB) {
+			payoutAmount = payout.Payout
+			break
+		}
+	}
+
+	probability := (float64(numMatches) / float64((nymPossibilities)))
+
+	return &PayoutProbability{
+		Spin:        []string{"any order AQ/Archer, GW/Wizard, BK/Barbarian"},
+		Payout:      slots.PayoutAmount{Bet: 1, Payout: payoutAmount},
+		Probability: probability,
+		NumMatches:  numMatches,
+		Return:      (float64(payoutAmount) / float64(1)) * (probability) * 100.0,
 	}
 }
