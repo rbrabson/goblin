@@ -13,6 +13,7 @@ import (
 const (
 	PAYOUT_FILE_NAME      = "payout"
 	TwoConsecutiveSymbols = "[two consecutive non-Spell symbols]"
+	AnyOrderRWB           = "[any order AQ/Archer, GW/Wizard, BK/Barbarian]"
 )
 
 // Payout defines a winning combination and the payout amounts for different bets.
