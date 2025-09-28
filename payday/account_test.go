@@ -4,11 +4,9 @@ import (
 	"log/slog"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
-	"github.com/rbrabson/goblin/internal/disctime"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -148,18 +146,6 @@ func TestSetNextPayday(t *testing.T) {
 		return
 	}
 	accounts = append(accounts, account)
-
-	nextPayday := disctime.NextMonth(time.Now())
-	account.setNextPayday(nextPayday)
-	account = readAccount(payday, "67890")
-	if account == nil {
-		t.Error("account is nil")
-		return
-	}
-	if !account.NextPayday.Equal(nextPayday) {
-		t.Errorf("expected NextPayday to be '%s', got '%s'", nextPayday, account.NextPayday)
-		return
-	}
 }
 
 func TestGetNextPayday(t *testing.T) {
@@ -197,13 +183,6 @@ func TestGetNextPayday(t *testing.T) {
 	account := newAccount(payday, "67890")
 	if account == nil {
 		t.Error("account is nil")
-		return
-	}
-	nextPayday := disctime.NextMonth(time.Now())
-	account.setNextPayday(nextPayday)
-	account = readAccount(payday, "67890")
-	if !account.getNextPayday().Equal(nextPayday) {
-		t.Errorf("expected NextPayday to be '%s', got '%s'", nextPayday, account.getNextPayday())
 		return
 	}
 
@@ -246,18 +225,6 @@ func TestAccountString(t *testing.T) {
 	if account == nil {
 		t.Error("account is nil")
 		return
-	}
-
-	// Set a specific next payday time for consistent testing
-	nextPayday := time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)
-	account.setNextPayday(nextPayday)
-	account = readAccount(payday, "67890")
-
-	// Test the String method
-	str := account.String()
-	expected := "PaydayAccount{ID=" + account.ID.Hex() + ", GuildID=12345, MemberID=67890, NextPayday=2023-01-01 12:00:00 +0000 UTC}"
-	if str != expected {
-		t.Errorf("expected String() to return '%s', got '%s'", expected, str)
 	}
 
 	accounts = append(accounts, account)

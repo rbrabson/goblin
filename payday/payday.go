@@ -18,10 +18,12 @@ const (
 
 // Payday is the daily payment for members of a guild (server).
 type Payday struct {
-	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID         string             `json:"guild_id" bson:"guild_id"`
-	Amount          int                `json:"payday_amount" bson:"payday_amount"`
-	PaydayFrequency time.Duration      `json:"payday_frequency" bson:"payday_frequency"`
+	ID                primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID           string             `json:"guild_id" bson:"guild_id"`
+	Amount            int                `json:"payday_amount" bson:"payday_amount"`
+	PaydayFrequency   time.Duration      `json:"payday_frequency" bson:"payday_frequency"`
+	MaxStreak         int                `json:"max_streak" bson:"max_streak"`
+	StreakPerDayBonus float64            `json:"streak_per_day_bonus" bson:"streak_per_day_bonus"`
 }
 
 // GetPayday returns the payday information for a server, creating a new one if necessary.
