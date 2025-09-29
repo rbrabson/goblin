@@ -344,7 +344,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 			{
-				Name:   "ROI",
+				Name:   "Returns",
 				Value:  p.Sprintf("%.1f%%", (float64(member.TotalWinnings)/float64(member.TotalBet))*100),
 				Inline: true,
 			},
