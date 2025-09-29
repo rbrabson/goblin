@@ -7,10 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const (
-	cooldown = 5 * time.Second
-)
-
 // Member represents a member's statistics for the slots game.
 type Member struct {
 	ID               primitive.ObjectID `json:"id" bson:"_id,omitempty"`
@@ -66,7 +62,7 @@ func (m *Member) IsInCooldown(config *Config) bool {
 
 // GetCooldownRemaining returns the remaining cooldown time for the member.
 func (m *Member) GetCooldownRemaining(config *Config) time.Duration {
-	remaining := cooldown - time.Since(m.LastPlayed)
+	remaining := config.Cooldown - time.Since(m.LastPlayed)
 	if remaining < 0 {
 		return 0
 	}
