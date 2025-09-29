@@ -10,12 +10,13 @@ import (
 
 // Account is a user on the server that can a payday every 23 hours
 type Account struct {
-	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID       string             `json:"guild_id" bson:"guild_id"`
-	MemberID      string             `json:"member_id" bson:"member_id"`
-	NextPayday    time.Time          `json:"next_payday" bson:"next_payday"`
-	CurrentStreak int                `json:"current_streak" bson:"current_streak"`
-	MaxStreak     int                `json:"max_streak" bson:"max_streak"`
+	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID         string             `json:"guild_id" bson:"guild_id"`
+	MemberID        string             `json:"member_id" bson:"member_id"`
+	NextPayday      time.Time          `json:"next_payday" bson:"next_payday"`
+	CurrentStreak   int                `json:"current_streak" bson:"current_streak"`
+	MaxStreak       int                `json:"max_streak" bson:"max_streak"`
+	TotalAmountPaid int                `json:"total_amount_paid" bson:"total_amount_paid"`
 }
 
 // newAccount creates new payday information for a server/guild

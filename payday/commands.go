@@ -74,6 +74,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
+	paydayAccount.TotalAmountPaid += paydayAmount
 	paydayAccount.setNextPayday(payday.PaydayFrequency)
 
 	resp := disgomsg.NewResponse(
