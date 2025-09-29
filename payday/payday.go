@@ -23,7 +23,7 @@ type Payday struct {
 	Amount            int                `json:"payday_amount" bson:"payday_amount"`
 	PaydayFrequency   time.Duration      `json:"payday_frequency" bson:"payday_frequency"`
 	MaxStreak         int                `json:"max_streak" bson:"max_streak"`
-	StreakPerDayBonus float64            `json:"streak_per_day_bonus" bson:"streak_per_day_bonus"`
+	StreakPerDayBonus int                `json:"streak_per_day_bonus" bson:"streak_per_day_bonus"`
 }
 
 // GetPayday returns the payday information for a server, creating a new one if necessary.
@@ -107,6 +107,7 @@ func readPaydayFromFile(guildID string) *Payday {
 	}
 	slog.Info("create new payday config",
 		slog.String("guildID", payday.GuildID),
+		slog.Any("payday", payday),
 	)
 
 	return payday
