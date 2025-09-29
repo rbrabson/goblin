@@ -28,6 +28,7 @@ func readPayday(guildID string) *Payday {
 	}
 	slog.Debug("read payday from the database",
 		slog.String("guildID", payday.GuildID),
+		slog.Any("payday", payday),
 	)
 
 	return payday

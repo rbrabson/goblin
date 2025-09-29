@@ -1,4 +1,6 @@
 {
     "payday_amount": 5000,
-    "payday_frequency": 82800000000000
+    "payday_frequency": 82800000000000,
+    "max_streak": 7,
+    "streak_per_day_bonus": 500
 }
