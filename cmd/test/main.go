@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -66,15 +67,16 @@ func main() {
 		totalReturnPercentage += prob.Return
 	}
 
-	fmt.Println("Spin, Matches, Probability, Return")
+	fmt.Println("Spin, Matches, Payout, Probability, Return")
 	for _, prob := range probabilities {
 		if prob.NumMatches != 0 {
+			payoutStr := strconv.FormatFloat(prob.Payout.Payout, 'f', -1, 64)
 			spin := "[" + strings.Join(prob.Spin, " | ") + "]"
-			fmt.Printf("%s, %d, %.4f%%, %.4f%%\n", spin, prob.NumMatches, prob.Probability, prob.Return)
+			fmt.Printf("%s, %d, %d:%s, %.4f%%, %.4f%%\n", spin, prob.NumMatches, prob.Payout.Bet, payoutStr, prob.Probability, prob.Return)
 		}
 	}
 
-	fmt.Printf("\nWin,, %.2f%%, %.2f%%\n", totalWinProb, totalReturnPercentage)
+	fmt.Printf("\nWin,,, %.2f%%, %.2f%%\n", totalWinProb, totalReturnPercentage)
 }
 
 func getMatchingSymbols(winningSymbols string, reel *slots.Reel) int {
