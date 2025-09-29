@@ -16,6 +16,7 @@ type Account struct {
 	NextPayday      time.Time          `json:"next_payday" bson:"next_payday"`
 	CurrentStreak   int                `json:"current_streak" bson:"current_streak"`
 	MaxStreak       int                `json:"max_streak" bson:"max_streak"`
+	TotalPaydays    int                `json:"total_paydays" bson:"total_paydays"`
 	TotalAmountPaid int                `json:"total_amount_paid" bson:"total_amount_paid"`
 }
 
@@ -104,9 +105,8 @@ func (a *Account) updateStreak(minWait time.Duration) {
 	} else {
 		a.CurrentStreak++
 	}
-	if a.CurrentStreak > a.MaxStreak {
-		a.MaxStreak = a.CurrentStreak
-	}
+	a.TotalPaydays++
+	a.MaxStreak = max(a.MaxStreak, a.CurrentStreak)
 }
 
 // String returns a string representation of the Account.
