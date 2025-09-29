@@ -51,6 +51,7 @@ type PayoutAmount struct {
 	Bet     int      `json:"bet" bson:"bet"`
 	Payout  float64  `json:"payout" bson:"payout"`
 	Message string   `json:"message" bson:"message"`
+	Symbols string   `json:"-" bson:"-"`
 }
 
 // String returns a string representation of the PayoutAmount.
@@ -138,12 +139,15 @@ func readPayoutTableFromFile() PayoutTable {
 
 	payoutTable := make(PayoutTable, 0, len(*payouts))
 
+	symbolTable := GetSymbolTable()
 	for _, payout := range *payouts {
+		// Get the symbols for the payout message
 		payoutAmount := PayoutAmount{
 			Win:     make([]string, 0, len(payout.Win)),
 			Bet:     payout.Bet,
 			Payout:  payout.Payout,
 			Message: payout.Message,
+			Symbols: getPayoutSymbols(payout, symbolTable),
 		}
 		for _, slot := range payout.Win {
 			payoutAmount.Win = append(payoutAmount.Win, string(slot))
@@ -256,4 +260,51 @@ func (pt PayoutTable) GetPayoutAmount(bet int, spin []Symbol) (int, string) {
 		slog.Int("bet", bet),
 	)
 	return 0, ""
+}
+
+// getPayoutSymbols returns a string representation of the payout symbols.
+func getPayoutSymbols(payout Payout, symbolTable *SymbolTable) string {
+	payoutSlots := payout.Win
+	symbols := make([]string, 0, len(payoutSlots))
+	for _, slot := range payoutSlots {
+		winningSymbols := strings.Split(string(slot), " or ")
+		emojiSymbols := make([]string, 0, len(winningSymbols))
+		for _, name := range winningSymbols {
+			if symbol, ok := symbolTable.Symbols[name]; ok {
+				emojiSymbols = append(emojiSymbols, symbol.Emoji)
+			} else {
+				emojiSymbols = append(emojiSymbols, name)
+			}
+		}
+		if len(emojiSymbols) > 1 {
+			firstEmoji := 0
+			lastEmoji := len(emojiSymbols) - 1
+			emojiSymbols[firstEmoji] = "[" + emojiSymbols[firstEmoji]
+			emojiSymbols[lastEmoji] += "]"
+		}
+		symbols = append(symbols, strings.Join(emojiSymbols, "/"))
+	}
+
+	if len(symbols) > 1 && strings.Contains(symbols[0], "/") {
+		allSame := true
+		for _, symbol := range symbols[1:] {
+			if symbols[0] != symbol {
+				allSame = false
+				break
+			}
+		}
+		if allSame {
+			symbols = []string{"any " + symbols[0]}
+		}
+	}
+
+	if strings.Join(symbols, " | ") == AnyOrderRWB {
+		symbols = []string{"[any order " +
+			symbolTable.Symbols["Archer"].Emoji + "/" + symbolTable.Symbols["AQ"].Emoji + ", " +
+			symbolTable.Symbols["Wizard"].Emoji + "/" + symbolTable.Symbols["GW"].Emoji + ", " +
+			symbolTable.Symbols["Barbarian"].Emoji + "/" + symbolTable.Symbols["BK"].Emoji +
+			"]"}
+	}
+
+	return strings.Join(symbols, " | ")
 }

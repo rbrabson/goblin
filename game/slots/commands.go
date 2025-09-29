@@ -250,22 +250,11 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		for _, payout := range payTable {
-			winCombination := ""
-			if len(payout.Win) == 1 {
-				winCombination = payout.Win[0]
-			} else {
-				winCombination = "[" + payout.Win[0]
-				for _, win := range payout.Win[1:] {
-					winCombination += ", " + win
-				}
-				winCombination += "]"
-			}
-
 			payoutStr := strconv.FormatFloat(payout.Payout, 'f', -1, 64)
 			betPayouts := p.Sprintf("Payout %s:%d\n", payoutStr, payout.Bet)
 
 			field := &discordgo.MessageEmbedField{
-				Name:   winCombination,
+				Name:   payout.Symbols,
 				Value:  betPayouts,
 				Inline: false,
 			}
