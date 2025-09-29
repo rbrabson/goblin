@@ -369,6 +369,11 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Value:  p.Sprintf("%d", member.LongestWinStreak),
 				Inline: true,
 			},
+			{
+				Name:   "Max Win",
+				Value:  p.Sprintf("%d", member.MaxWin),
+				Inline: true,
+			},
 		},
 		Timestamp: time.Now().Format(time.RFC3339),
 	}

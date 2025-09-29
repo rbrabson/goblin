@@ -18,6 +18,7 @@ type Member struct {
 	TotalLosses      int                `json:"total_losses" bson:"total_losses"`
 	TotalBet         int                `json:"total_bet" bson:"total_bet"`
 	TotalWinnings    int                `json:"total_winnings" bson:"total_winnings"`
+	MaxWin           int                `json:"max_win" bson:"max_win"`
 	LastPlayed       time.Time          `json:"last_played" bson:"last_played"`
 }
 
@@ -76,9 +77,8 @@ func (m *Member) AddResults(spinResult *SpinResult) {
 		m.TotalWinnings += spinResult.Payout
 		m.TotalWins++
 		m.CurrentWinStreak++
-		if m.CurrentWinStreak > m.LongestWinStreak {
-			m.LongestWinStreak = m.CurrentWinStreak
-		}
+		m.LongestWinStreak = max(m.LongestWinStreak, m.CurrentWinStreak)
+		m.MaxWin = max(m.MaxWin, spinResult.Payout)
 	} else {
 		m.TotalLosses++
 		m.CurrentWinStreak = 0
