@@ -1,6 +1,7 @@
 package slots
 
 import (
+	"fmt"
 	"log/slog"
 	"strconv"
 	"time"
@@ -118,6 +119,23 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.Int("bet", bet),
 	)
 
+	config := GetConfig()
+	member := GetMember(guildID, userID)
+	if !member.IsInCooldown(config) {
+		remaining := member.GetCooldownRemaining(config)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("You are on cooldown. Please wait %d seconds before playing again.", int(remaining.Seconds())+1)),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", guildID),
+				slog.String("userID", userID),
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
+
 	account := bank.GetAccount(guildID, userID)
 	if err := account.Withdraw(bet); err != nil {
 		resp := disgomsg.NewResponse(
@@ -136,7 +154,6 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sm := GetSlotMachine()
 	spinResult := sm.Spin(bet)
 
-	member := GetMemberKey(guildID, userID)
 	member.AddResults(spinResult)
 
 	if spinResult.Payout > 0 {
@@ -305,7 +322,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("memberID", memberID),
 	)
 
-	member := GetMemberKey(guildID, memberID)
+	member := GetMember(guildID, memberID)
 
 	embed := &discordgo.MessageEmbed{
 		Title:       "Slot Machine Stats",
