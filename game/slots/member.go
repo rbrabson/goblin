@@ -1,6 +1,8 @@
 package slots
 
 import (
+	"time"
+
 	"github.com/rbrabson/goblin/stats"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -16,11 +18,13 @@ type Member struct {
 	TotalLosses      int                `json:"total_losses" bson:"total_losses"`
 	TotalBet         int                `json:"total_bet" bson:"total_bet"`
 	TotalWinnings    int                `json:"total_winnings" bson:"total_winnings"`
+	MaxWin           int                `json:"max_win" bson:"max_win"`
+	LastPlayed       time.Time          `json:"last_played" bson:"last_played"`
 }
 
-// GetMemberKey retrieves the member statistics for a specific guild and user.
+// GetMember retrieves the member statistics for a specific guild and user.
 // If the member does not exist, a new member is created and returned.
-func GetMemberKey(guildID, userID string) *Member {
+func GetMember(guildID, userID string) *Member {
 	member := readMember(guildID, userID)
 	if member == nil {
 		member = newMember(guildID, userID)
@@ -46,6 +50,26 @@ func newMember(guildID, userID string) *Member {
 	return member
 }
 
+// IsInCooldown checks if the member is in cooldown. If not, it updates the LastPlayed time and returns false.
+// If the member is in cooldown, it returns true.
+func (m *Member) IsInCooldown(config *Config) bool {
+	if time.Since(m.LastPlayed) < time.Duration(config.Cooldown) {
+		return false
+	}
+	m.LastPlayed = time.Now()
+	writeMember(m)
+	return true
+}
+
+// GetCooldownRemaining returns the remaining cooldown time for the member.
+func (m *Member) GetCooldownRemaining(config *Config) time.Duration {
+	remaining := config.Cooldown - time.Since(m.LastPlayed)
+	if remaining < 0 {
+		return 0
+	}
+	return remaining
+}
+
 // AddResults updates the member's statistics based on the results of a spin.
 func (m *Member) AddResults(spinResult *SpinResult) {
 	m.TotalBet += spinResult.Bet
@@ -53,9 +77,8 @@ func (m *Member) AddResults(spinResult *SpinResult) {
 		m.TotalWinnings += spinResult.Payout
 		m.TotalWins++
 		m.CurrentWinStreak++
-		if m.CurrentWinStreak > m.LongestWinStreak {
-			m.LongestWinStreak = m.CurrentWinStreak
-		}
+		m.LongestWinStreak = max(m.LongestWinStreak, m.CurrentWinStreak)
+		m.MaxWin = max(m.MaxWin, spinResult.Payout)
 	} else {
 		m.TotalLosses++
 		m.CurrentWinStreak = 0

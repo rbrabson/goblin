@@ -1,6 +1,7 @@
 package slots
 
 import (
+	"fmt"
 	"log/slog"
 	"strconv"
 	"time"
@@ -118,6 +119,23 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.Int("bet", bet),
 	)
 
+	config := GetConfig()
+	member := GetMember(guildID, userID)
+	if !member.IsInCooldown(config) {
+		remaining := member.GetCooldownRemaining(config)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("You are on cooldown. Please wait %d seconds before playing again.", int(remaining.Seconds())+1)),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", guildID),
+				slog.String("userID", userID),
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
+
 	account := bank.GetAccount(guildID, userID)
 	if err := account.Withdraw(bet); err != nil {
 		resp := disgomsg.NewResponse(
@@ -136,7 +154,6 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sm := GetSlotMachine()
 	spinResult := sm.Spin(bet)
 
-	member := GetMemberKey(guildID, userID)
 	member.AddResults(spinResult)
 
 	if spinResult.Payout > 0 {
@@ -233,22 +250,11 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		for _, payout := range payTable {
-			winCombination := ""
-			if len(payout.Win) == 1 {
-				winCombination = payout.Win[0]
-			} else {
-				winCombination = "[" + payout.Win[0]
-				for _, win := range payout.Win[1:] {
-					winCombination += ", " + win
-				}
-				winCombination += "]"
-			}
-
 			payoutStr := strconv.FormatFloat(payout.Payout, 'f', -1, 64)
 			betPayouts := p.Sprintf("Payout %s:%d\n", payoutStr, payout.Bet)
 
 			field := &discordgo.MessageEmbedField{
-				Name:   winCombination,
+				Name:   payout.Symbols,
 				Value:  betPayouts,
 				Inline: false,
 			}
@@ -305,7 +311,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("memberID", memberID),
 	)
 
-	member := GetMemberKey(guildID, memberID)
+	member := GetMember(guildID, memberID)
 
 	embed := &discordgo.MessageEmbed{
 		Title:       "Slot Machine Stats",
@@ -338,7 +344,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 			{
-				Name:   "ROI",
+				Name:   "Returns",
 				Value:  p.Sprintf("%.1f%%", (float64(member.TotalWinnings)/float64(member.TotalBet))*100),
 				Inline: true,
 			},
@@ -350,6 +356,11 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "Longest Win Streak",
 				Value:  p.Sprintf("%d", member.LongestWinStreak),
+				Inline: true,
+			},
+			{
+				Name:   "Max Win",
+				Value:  p.Sprintf("%d", member.MaxWin),
 				Inline: true,
 			},
 		},
