@@ -22,14 +22,14 @@ var (
 		{
 			Name:        "payday",
 			Description: "Deposits your daily check into your bank account.",
-			// Options: []*discordgo.ApplicationCommandOption{
-			// 	{
-			// 		Name:        "stats",
-			// 		Description: "View your payday statistics.",
-			// 		Type:        discordgo.ApplicationCommandOptionSubCommand,
-			// 		Required:    false,
-			// 	},
-			// },
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "stats",
+					Description: "View your payday statistics.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Required:    false,
+				},
+			},
 		},
 	}
 )
