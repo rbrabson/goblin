@@ -15,21 +15,18 @@ import (
 
 var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"payday": payday,
+		"payday":       payday,
+		"payday-stats": showStats,
 	}
 
 	memberCommands = []*discordgo.ApplicationCommand{
 		{
 			Name:        "payday",
 			Description: "Deposits your daily check into your bank account.",
-			// Options: []*discordgo.ApplicationCommandOption{
-			// 	{
-			// 		Name:        "stats",
-			// 		Description: "View your payday statistics.",
-			// 		Type:        discordgo.ApplicationCommandOptionSubCommand,
-			// 		Required:    false,
-			// 	},
-			// },
+		},
+		{
+			Name:        "payday-stats",
+			Description: "View your payday statistics.",
 		},
 	}
 )
@@ -48,23 +45,6 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	stats := false
-	options := i.ApplicationCommandData().Options
-	for _, option := range options {
-		if option.Name == "stats" {
-			stats = true
-		}
-	}
-
-	if stats {
-		showStats(s, i)
-	} else {
-		processPayday(s, i)
-	}
-}
-
-// processPayday processes the `/payday` command without the `stats` option.
-func processPayday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	payday := GetPayday(i.GuildID)
@@ -109,6 +89,18 @@ func processPayday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // showStats handles the `/payday stats` command.
 func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
+
+	if status == discord.STOPPING || status == discord.STOPPED {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
 
 	payday := GetPayday(i.GuildID)
 	paydayAccount := payday.GetAccount(i.Member.User.ID)
