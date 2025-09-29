@@ -107,7 +107,7 @@ func (a *Account) updateStreak(minWait time.Duration) {
 	}
 	a.MaxStreak = max(a.MaxStreak, a.CurrentStreak)
 	a.TotalPaydays++
-	a.TotalPaydays = max(a.TotalPaydays, a.MaxStreak)
+	a.TotalPaydays = max(a.TotalPaydays, a.MaxStreak) // To handle adding TotalPaydays to existing accounts
 }
 
 // String returns a string representation of the Account.
