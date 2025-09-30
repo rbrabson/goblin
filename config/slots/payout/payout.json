@@ -76,7 +76,7 @@
             "Wizard"
         ],
         "bet": 1,
-        "payout": 25,
+        "payout": 30,
         "message": "You hit three Wizards!"
     },
     {
@@ -86,7 +86,7 @@
             "Archer"
         ],
         "bet": 1,
-        "payout": 10,
+        "payout": 20,
         "message": "You hit three Archers!"
     },
     {
@@ -96,7 +96,7 @@
             "Archer or Wizard or Barbarian"
         ],
         "bet": 1,
-        "payout": 4,
+        "payout": 10,
         "message": "You hit three basic troops!"
     },
     {
@@ -104,7 +104,7 @@
             "[any order AQ/Archer, GW/Wizard, BK/Barbarian]"
         ],
         "bet": 1,
-        "payout": 3,
+        "payout": 5,
         "message": "You hit AQ/Archer, GW/Wizard, BK/Barbarian!"
     },
     {
