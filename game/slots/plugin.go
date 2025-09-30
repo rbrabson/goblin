@@ -50,6 +50,11 @@ func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
 }
 
+// SetDB sets the database to be used by the slots system. This is used for testing.
+func SetDB(d *mongo.MongoDB) {
+	db = d
+}
+
 // GetCommands returns the commands for the slots system
 func (plugin *Plugin) GetCommands() []*discordgo.ApplicationCommand {
 	commands := make([]*discordgo.ApplicationCommand, 0, len(memberCommands))
