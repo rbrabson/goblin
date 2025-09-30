@@ -363,6 +363,16 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Value:  p.Sprintf("%d", member.MaxWin),
 				Inline: true,
 			},
+			{
+				Name:   "Current Loss Streak",
+				Value:  p.Sprintf("%d", member.CurrentLosingStreak),
+				Inline: true,
+			},
+			{
+				Name:   "Longest Loss Streak",
+				Value:  p.Sprintf("%d", member.LongestLosingStreak),
+				Inline: true,
+			},
 		},
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
