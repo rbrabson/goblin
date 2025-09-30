@@ -200,6 +200,7 @@ func GetPayoutAverages(guildID string) (*PayoutAverages, error) {
 		AverageMaxWinningStreak: getFloatFromResult(result, "average_max_winning_streak"),
 		AverageMaxLosingStreak:  getFloatFromResult(result, "average_max_losing_streak"),
 	}
+	averages.AverageReturns = float64(averages.TotalWon) / float64(averages.TotalBet) * 100.0
 
 	slog.Debug("retrieved payout averages",
 		slog.String("guildID", guildID),
