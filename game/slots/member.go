@@ -9,19 +9,19 @@ import (
 
 // Member represents a member's statistics for the slots game.
 type Member struct {
-	ID                primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	GuildID           string             `json:"guild_id" bson:"guild_id"`
-	MemberID          string             `json:"member_id" bson:"member_id"`
-	CurrentWinStreak  int                `json:"current_win_streak" bson:"current_win_streak"`
-	LongestWinStreak  int                `json:"longest_win_streak" bson:"longest_win_streak"`
-	CurrentLoseStreak int                `json:"current_lose_streak" bson:"current_lose_streak"`
-	LongestLoseStreak int                `json:"longest_lose_streak" bson:"longest_lose_streak"`
-	TotalWins         int                `json:"total_wins" bson:"total_wins"`
-	TotalLosses       int                `json:"total_losses" bson:"total_losses"`
-	TotalBet          int                `json:"total_bet" bson:"total_bet"`
-	TotalWinnings     int                `json:"total_winnings" bson:"total_winnings"`
-	MaxWin            int                `json:"max_win" bson:"max_win"`
-	LastPlayed        time.Time          `json:"last_played" bson:"last_played"`
+	ID                  primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	GuildID             string             `json:"guild_id" bson:"guild_id"`
+	MemberID            string             `json:"member_id" bson:"member_id"`
+	CurrentWinStreak    int                `json:"current_win_streak" bson:"current_win_streak"`
+	LongestWinStreak    int                `json:"longest_win_streak" bson:"longest_win_streak"`
+	CurrentLosingStreak int                `json:"current_losing_streak" bson:"current_losing_streak"`
+	LongestLosingStreak int                `json:"longest_losing_streak" bson:"longest_losing_streak"`
+	TotalWins           int                `json:"total_wins" bson:"total_wins"`
+	TotalLosses         int                `json:"total_losses" bson:"total_losses"`
+	TotalBet            int                `json:"total_bet" bson:"total_bet"`
+	TotalWinnings       int                `json:"total_winnings" bson:"total_winnings"`
+	MaxWin              int                `json:"max_win" bson:"max_win"`
+	LastPlayed          time.Time          `json:"last_played" bson:"last_played"`
 }
 
 // GetMember retrieves the member statistics for a specific guild and user.
@@ -74,12 +74,12 @@ func (m *Member) AddResults(spinResult *SpinResult) {
 		m.TotalWins++
 		m.CurrentWinStreak++
 		m.LongestWinStreak = max(m.LongestWinStreak, m.CurrentWinStreak)
-		m.CurrentLoseStreak = 0
+		m.CurrentLosingStreak = 0
 		m.MaxWin = max(m.MaxWin, spinResult.Payout)
 	} else {
 		m.TotalLosses++
-		m.CurrentLoseStreak++
-		m.LongestLoseStreak = max(m.LongestLoseStreak, m.CurrentLoseStreak)
+		m.CurrentLosingStreak++
+		m.LongestLosingStreak = max(m.LongestLosingStreak, m.CurrentLosingStreak)
 		m.CurrentWinStreak = 0
 	}
 
