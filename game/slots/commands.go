@@ -349,12 +349,12 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 			{
-				Name:   "Current Win Streak",
+				Name:   "Current Winning Streak",
 				Value:  p.Sprintf("%d", member.CurrentWinStreak),
 				Inline: true,
 			},
 			{
-				Name:   "Longest Win Streak",
+				Name:   "Longest Winning Streak",
 				Value:  p.Sprintf("%d", member.LongestWinStreak),
 				Inline: true,
 			},
@@ -364,12 +364,12 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 			{
-				Name:   "Current Loss Streak",
+				Name:   "Current Losing Streak",
 				Value:  p.Sprintf("%d", member.CurrentLosingStreak),
 				Inline: true,
 			},
 			{
-				Name:   "Longest Loss Streak",
+				Name:   "Longest Losing Streak",
 				Value:  p.Sprintf("%d", member.LongestLosingStreak),
 				Inline: true,
 			},
