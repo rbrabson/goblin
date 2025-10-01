@@ -40,10 +40,6 @@ func main() {
 	for _, prob := range probabilities {
 		totalWinProb += prob.Probability
 	}
-	totalReturnPercentage := 0.0
-	for _, prob := range probabilities {
-		totalReturnPercentage += prob.Return
-	}
 
 	fmt.Println("Spin, Matches, Payout, Probability, Return")
 	for _, prob := range probabilities {
@@ -54,6 +50,20 @@ func main() {
 		}
 	}
 
+	var totalBets, totalWins, totalReturn int
+	for _, symbol1 := range sm.LookupTable[0] {
+		for _, symbol2 := range sm.LookupTable[1] {
+			for _, symbol3 := range sm.LookupTable[2] {
+				totalBets += 1
+				payout, _ := sm.PayoutTable.GetPayoutAmount(1, []slots.Symbol{symbol1, symbol2, symbol3})
+				totalReturn += payout
+				if payout > 0 {
+					totalWins += 1
+				}
+			}
+		}
+	}
+	totalReturnPercentage := (float64(totalReturn) / float64(totalBets)) * 100.0
 	fmt.Printf("\nWin,,, %.2f%%, %.2f%%\n", totalWinProb, totalReturnPercentage)
 }
 
