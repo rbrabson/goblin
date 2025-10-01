@@ -40,15 +40,9 @@ func TestGetPayoutAverages(t *testing.T) {
 func TestPayoutAveragesStruct(t *testing.T) {
 	// Test that the PayoutAverages struct can be created and fields are accessible
 	averages := &PayoutAverages{
-		AverageTotalWins:        10.5,
-		AverageTotalLosses:      8.3,
-		AverageWinPercentage:    55.8,
-		AverageLossPercentage:   44.2,
-		TotalBet:                1000,
-		TotalWon:                1200,
-		AverageReturns:          120.0,
-		AverageMaxWinningStreak: 5.2,
-		AverageMaxLosingStreak:  3.1,
+		AverageTotalWins: 10.5,
+		TotalBet:         1000,
+		AverageReturns:   120.0,
 	}
 
 	if averages.AverageTotalWins != 10.5 {
@@ -68,10 +62,7 @@ func TestHelperFunctions(t *testing.T) {
 	// Test getFloatFromResult helper function
 	testData := map[string]interface{}{
 		"float64_val": float64(123.45),
-		"float32_val": float32(67.89),
 		"int64_val":   int64(100),
-		"int32_val":   int32(50),
-		"int_val":     int(25),
 		"nil_val":     nil,
 	}
 
