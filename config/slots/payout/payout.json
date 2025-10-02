@@ -104,7 +104,7 @@
             "[any order AQ/Archer, GW/Wizard, BK/Barbarian]"
         ],
         "bet": 1,
-        "payout": 5,
+        "payout": 7.5,
         "message": "You hit AQ/Archer, GW/Wizard, BK/Barbarian!"
     },
     {
@@ -114,7 +114,7 @@
             "AQ or Archer"
         ],
         "bet": 1,
-        "payout": 3,
+        "payout": 4,
         "message": "You hit three AQs or Archers!"
     },
     {
@@ -124,7 +124,7 @@
             "GW or Wizard"
         ],
         "bet": 1,
-        "payout": 3,
+        "payout": 4,
         "message": "You hit three GWs or Wizards!"
     },
     {
@@ -134,7 +134,7 @@
             "BK or Barbarian"
         ],
         "bet": 1,
-        "payout": 3,
+        "payout": 4,
         "message": "You hit three BKs or Barbarians!"
     },
     {
@@ -142,7 +142,7 @@
             "[two consecutive troops]"
         ],
         "bet": 1,
-        "payout": 1.5,
+        "payout": 2,
         "message": "You hit two consecutive troops!"
     },
     {
