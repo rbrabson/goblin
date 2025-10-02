@@ -114,7 +114,7 @@
             "AQ or Archer"
         ],
         "bet": 1,
-        "payout": 2,
+        "payout": 3,
         "message": "You hit three AQs or Archers!"
     },
     {
@@ -124,7 +124,7 @@
             "GW or Wizard"
         ],
         "bet": 1,
-        "payout": 2,
+        "payout": 3,
         "message": "You hit three GWs or Wizards!"
     },
     {
@@ -134,7 +134,7 @@
             "BK or Barbarian"
         ],
         "bet": 1,
-        "payout": 2,
+        "payout": 3,
         "message": "You hit three BKs or Barbarians!"
     },
     {
