@@ -61,6 +61,8 @@ type PayoutAverages struct {
 	AverageTotalLosses      float64 `bson:"average_total_losses"`
 	AverageWinPercentage    float64 `bson:"average_win_percentage"`
 	AverageLossPercentage   float64 `bson:"average_loss_percentage"`
+	TotalWins               int64   `bson:"total_wins"`
+	TotalLosses             int64   `bson:"total_losses"`
 	TotalBet                int64   `bson:"total_bet"`
 	TotalWon                int64   `bson:"total_won"`
 	AverageReturns          float64 `bson:"average_returns"`
@@ -150,6 +152,12 @@ func GetPayoutAverages(guildID string) (*PayoutAverages, error) {
 				{Key: "average_loss_percentage", Value: bson.D{
 					{Key: "$avg", Value: "$loss_percentage"},
 				}},
+				{Key: "total_wins", Value: bson.D{
+					{Key: "$sum", Value: "$total_wins"},
+				}},
+				{Key: "total_losses", Value: bson.D{
+					{Key: "$sum", Value: "$total_losses"},
+				}},
 				{Key: "total_bet", Value: bson.D{
 					{Key: "$sum", Value: "$total_bet"},
 				}},
@@ -194,6 +202,8 @@ func GetPayoutAverages(guildID string) (*PayoutAverages, error) {
 		AverageTotalLosses:      getFloatFromResult(result, "average_total_losses"),
 		AverageWinPercentage:    getFloatFromResult(result, "average_win_percentage"),
 		AverageLossPercentage:   getFloatFromResult(result, "average_loss_percentage"),
+		TotalWins:               getInt64FromResult(result, "total_wins"),
+		TotalLosses:             getInt64FromResult(result, "total_losses"),
 		TotalBet:                getInt64FromResult(result, "total_bet"),
 		TotalWon:                getInt64FromResult(result, "total_won"),
 		AverageReturns:          getFloatFromResult(result, "average_returns"),

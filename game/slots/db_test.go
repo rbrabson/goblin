@@ -28,6 +28,14 @@ func TestGetPayoutAverages(t *testing.T) {
 		t.Errorf("GetPayoutAverages().AverageTotalLosses = %v, want 0", averages.AverageTotalLosses)
 	}
 
+	if averages.TotalWins != 0 {
+		t.Errorf("GetPayoutAverages().TotalWins = %v, want 0", averages.TotalWins)
+	}
+
+	if averages.TotalLosses != 0 {
+		t.Errorf("GetPayoutAverages().TotalLosses = %v, want 0", averages.TotalLosses)
+	}
+
 	if averages.TotalBet != 0 {
 		t.Errorf("GetPayoutAverages().TotalBet = %v, want 0", averages.TotalBet)
 	}
@@ -41,12 +49,22 @@ func TestPayoutAveragesStruct(t *testing.T) {
 	// Test that the PayoutAverages struct can be created and fields are accessible
 	averages := &PayoutAverages{
 		AverageTotalWins: 10.5,
+		TotalWins:        150,
+		TotalLosses:      75,
 		TotalBet:         1000,
 		AverageReturns:   120.0,
 	}
 
 	if averages.AverageTotalWins != 10.5 {
 		t.Errorf("PayoutAverages.AverageTotalWins = %v, want 10.5", averages.AverageTotalWins)
+	}
+
+	if averages.TotalWins != 150 {
+		t.Errorf("PayoutAverages.TotalWins = %v, want 150", averages.TotalWins)
+	}
+
+	if averages.TotalLosses != 75 {
+		t.Errorf("PayoutAverages.TotalLosses = %v, want 75", averages.TotalLosses)
 	}
 
 	if averages.TotalBet != 1000 {
