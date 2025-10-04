@@ -204,6 +204,23 @@ func (bot *Bot) LoadCommands(commands []*discordgo.ApplicationCommand) {
 
 	}
 	slog.Info("new bot commands loaded")
+	for _, command := range commands {
+		slog.Info("loaded command",
+			slog.String("name", command.Name),
+			slog.String("description", command.Description),
+			slog.Int("num_options", len(command.Options)),
+		)
+		if command.Name == "shop-admin" {
+			for _, option := range command.Options {
+				slog.Info("shop-admin subcommand",
+					slog.String("name", option.Name),
+					slog.String("description", option.Description),
+					slog.Int("num_options", len(option.Options)),
+				)
+			}
+		}
+	}
+
 }
 
 // AddComponentHandler adds a component handler for the bot. This is used to handle

@@ -332,3 +332,24 @@ func deleteMember(member *Member) error {
 
 	return nil
 }
+
+// listMembers lists all the members in the given guild.
+func listMembers(guildID string) ([]*Member, error) {
+	filter := bson.D{{Key: "guild_id", Value: guildID}}
+	var members []*Member
+	err := db.FindMany(MemberCollection, filter, &members, bson.D{}, 0)
+	if err != nil {
+		slog.Error("unable to read shop members from the database",
+			slog.String("guildID", guildID),
+			slog.Any("filter", filter),
+			slog.Any("error", err),
+		)
+		return nil, err
+	}
+	slog.Debug("read shop members from the database",
+		slog.String("guildID", guildID),
+		slog.Int("count", len(members)),
+	)
+
+	return members, nil
+}

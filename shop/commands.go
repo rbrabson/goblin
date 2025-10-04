@@ -151,7 +151,7 @@ var (
 						{
 							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
-							Description: "The user to ban from the shop.",
+							Description: "The user to ban.",
 							Required:    true,
 						},
 					},
@@ -164,10 +164,15 @@ var (
 						{
 							Type:        discordgo.ApplicationCommandOptionUser,
 							Name:        "user",
-							Description: "The user to have the ban from the shop removed.",
+							Description: "The user to have the ban removed.",
 							Required:    true,
 						},
 					},
+				},
+				{
+					Name:        "list-bans",
+					Description: "Lists the users banned from the shop.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
 				{
 					Name:        "channel",
@@ -177,14 +182,14 @@ var (
 						{
 							Type:        discordgo.ApplicationCommandOptionChannel,
 							Name:        "id",
-							Description: "The ID of the channel to which to publish the shop items.",
+							Description: "The ID of the channel.",
 							Required:    true,
 						},
 					},
 				},
 				{
 					Name:        "mod-channel",
-					Description: "Sets the channel to which to publish notices when an item is purchased or the purchase removed.",
+					Description: "Sets the channel to which to publish notices.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
@@ -197,13 +202,13 @@ var (
 				},
 				{
 					Name:        "notification-id",
-					Description: "Sets the member to which to notify when a purchase requires additional action.",
+					Description: "Sets the member to which to notify.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
 							Type:        discordgo.ApplicationCommandOptionChannel,
 							Name:        "user",
-							Description: "The user to notify when a purchase requires additional action.",
+							Description: "The user to notify.",
 							Required:    true,
 						},
 					},
@@ -268,6 +273,8 @@ func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		banMember(s, i)
 	case "unban":
 		unbanMember(s, i)
+	case "list-bans":
+		listMemberBans(s, i)
 	case "channel":
 		setShopChannel(s, i)
 	case "mod-channel":
@@ -739,6 +746,53 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(p.Sprintf("The ban from the shop for member <@%s> has been removed.", memberID)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
+	}
+}
+
+// listMemberBans lists the members banned from the shop.
+func listMemberBans(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	bannedMembers, err := GetRestrictedMembers(i.GuildID, ShopBan)
+	if err != nil {
+		slog.Error("failed to get banned members from shop",
+			slog.String("guildID", i.GuildID),
+			slog.Any("error", err),
+		)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Failed to get banned members from shop: %s", err)),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
+		}
+		return
+	}
+
+	if len(bannedMembers) == 0 {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("No members are banned from the shop."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
+		}
+		return
+	}
+
+	var b strings.Builder
+	if len(bannedMembers) == 1 {
+		b.WriteString("The following member is banned from the shop:\n")
+	} else {
+		b.WriteString("The following members are banned from the shop:\n")
+	}
+	for _, m := range bannedMembers {
+		b.WriteString(fmt.Sprintf("- <@%s>\n", m.MemberID))
+	}
+
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf(b.String())),
+	)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }

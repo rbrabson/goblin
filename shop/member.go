@@ -71,3 +71,29 @@ func (m *Member) RemoveRestriction(restriction string) error {
 func (m *Member) HasRestriction(restriction string) bool {
 	return slices.Contains(m.Restrictions, restriction)
 }
+
+// GetRestrictedMembers retrieves all members with a specific restriction in a guild.
+func GetRestrictedMembers(guildID, restriction string) ([]*Member, error) {
+	allMembers, err := listMembers(guildID)
+	if err != nil {
+		return nil, err
+	}
+
+	restrictedMembers := make([]*Member, 0, len(allMembers))
+	for _, member := range allMembers {
+		if member.HasRestriction(restriction) {
+			restrictedMembers = append(restrictedMembers, member)
+		}
+	}
+
+	slices.SortFunc(restrictedMembers, func(a, b *Member) int {
+		if a.MemberID < b.MemberID {
+			return -1
+		} else if a.MemberID > b.MemberID {
+			return 1
+		}
+		return 0
+	})
+
+	return restrictedMembers, nil
+}
