@@ -629,22 +629,6 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	memberID := member.MemberID
 
-	slog.Error("error getting guild member",
-		slog.String("guildID", i.GuildID),
-		slog.String("memberID", memberID),
-		slog.Any("error", err),
-	)
-	resp := disgomsg.NewResponse(
-		disgomsg.WithContent("An account with that ID does not exist."),
-	)
-	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("error sending response",
-			slog.String("guildID", i.GuildID),
-			slog.String("error", err.Error()),
-		)
-		return
-	}
-
 	m := GetMember(i.GuildID, memberID)
 	err = m.AddRestriction(ShopBan)
 	if err != nil {
@@ -659,18 +643,19 @@ func banMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
-	} else {
-		slog.Info("member banned from shop",
-			slog.String("guildID", i.GuildID),
-			slog.String("memberID", memberID),
-		)
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(p.Sprintf("Member <@%s> has been banned from the shop.", memberID)),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", slog.Any("error", err))
-		}
 	}
+
+	slog.Info("member banned from shop",
+		slog.String("guildID", i.GuildID),
+		slog.String("memberID", memberID),
+	)
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(p.Sprintf("Member <@%s> has been banned from the shop.", memberID)),
+	)
+	if err := resp.Send(s, i.Interaction); err != nil {
+		slog.Error("unable to send ephemeral response", slog.Any("error", err))
+	}
+
 }
 
 // unbanMember unbans a member from the shop.
@@ -746,14 +731,14 @@ func unbanMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	slog.Info("member banned from shop",
+	slog.Info("member unbanned from shop",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", memberID),
 	)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(p.Sprintf("The ban from the shop for member <@%s> has been removed.", memberID)),
 	)
-	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("unable to send ephemeral response", slog.Any("error", err))
 	}
 }

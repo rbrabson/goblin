@@ -1,6 +1,7 @@
 package shop
 
 import (
+	"fmt"
 	"slices"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -43,6 +44,9 @@ func newMember(guildID, memberID string) *Member {
 
 // AddRestriction adds a restriction to the member.
 func (m *Member) AddRestriction(restriction string) error {
+	if m.HasRestriction(restriction) {
+		return fmt.Errorf("the user already has the `%s` restriction", restriction)
+	}
 	m.Restrictions = append(m.Restrictions, restriction)
 	return writeMember(m)
 }
