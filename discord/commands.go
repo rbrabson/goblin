@@ -8,8 +8,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/rbrabson/disgomsg"
+	page "github.com/rbrabson/disgopage"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/unicode"
+)
+
+const (
+	HelpMessagesPerPage  = 5
+	HelpPaginatorTimeout = 2 * 60 // 2 minutes
 )
 
 var (
@@ -135,14 +141,7 @@ var (
 
 // help sends a help message for plugin commands.
 func help(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(getHelp()),
-	)
-	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("failed to send help response",
-			slog.Any("error", err),
-		)
-	}
+	sendHelpMessages(s, i, "Help Messages", getHelp())
 }
 
 // adminHelp sends a help message for administrative commands.
@@ -159,13 +158,52 @@ func adminHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(getAdminHelp()),
+	sendHelpMessages(s, i, "Admin Help Messages", getAdminHelp())
+}
+
+// sendHelpMessages sends help messages in a paginated format.
+func sendHelpMessages(s *discordgo.Session, i *discordgo.InteractionCreate, title string, helpMessages [][]string) {
+	embedFields := make([]*discordgo.MessageEmbedField, 0, len(helpMessages))
+
+	for _, msg := range helpMessages {
+		if len(msg) == 0 {
+			continue
+		}
+		slog.Error("******",
+			slog.Any("msg", msg),
+		)
+		name := msg[0]
+		var value string
+		if len(msg) > 1 {
+			value = strings.Join(msg[1:], "\n")
+			value = strings.ReplaceAll(value, "\n\n", "\n")
+		}
+		embedFields = append(embedFields, &discordgo.MessageEmbedField{
+			Name:   name,
+			Value:  value,
+			Inline: false,
+		})
+	}
+
+	paginator := page.NewPaginator(
+		page.WithDiscordConfig(
+			page.DiscordConfig{
+				Session:                bot.Session,
+				AddComponentHandler:    bot.AddComponentHandler,
+				RemoveComponentHandler: bot.RemoveComponentHandler,
+			},
+		),
+		page.WithItemsPerPage(HelpMessagesPerPage),
+		page.WithIdleWait(HelpPaginatorTimeout),
 	)
-	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("failed to send help response",
+	err := paginator.CreateInteractionResponse(s, i, title, embedFields, true)
+	if err != nil {
+		slog.Error("unable to send admin help commands",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
 			slog.Any("error", err),
 		)
+		return
 	}
 }
 
@@ -205,33 +243,37 @@ func version(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 // getHelp gets help about commands from all plugins.
-func getHelp() string {
-	var sb strings.Builder
-	slog.Debug("plugins",
-		slog.Any("plugins", ListPlugin()),
-	)
+func getHelp() [][]string {
+	helpMessages := make([][]string, 0, 10)
 	for _, plugin := range ListPlugin() {
-		slog.Debug("plugin",
-			slog.String("plugin", plugin.GetName()),
-		)
+		pluginMessages := make([]string, 0, 10)
 		for _, str := range plugin.GetHelp() {
-			sb.WriteString(str)
+			str := strings.ReplaceAll(str, "#", "")
+			str = strings.TrimSpace(str)
+			strs := strings.Split(str, "\n")
+			pluginMessages = append(pluginMessages, strs...)
 		}
+		helpMessages = append(helpMessages, pluginMessages)
 	}
 
-	return sb.String()
+	return helpMessages
 }
 
 // getAdminHelp returns help about administrative commands for all bots.
-func getAdminHelp() string {
-	var sb strings.Builder
+func getAdminHelp() [][]string {
+	helpMessages := make([][]string, 0, 10)
 	for _, plugin := range ListPlugin() {
+		pluginMessages := make([]string, 0, 10)
 		for _, str := range plugin.GetAdminHelp() {
-			sb.WriteString(str)
+			str := strings.ReplaceAll(str, "#", "")
+			str = strings.TrimSpace(str)
+			strs := strings.Split(str, "\n")
+			pluginMessages = append(pluginMessages, strs...)
 		}
+		helpMessages = append(helpMessages, pluginMessages)
 	}
 
-	return sb.String()
+	return helpMessages
 }
 
 // serverAdmin handles server admin commands.

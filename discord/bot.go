@@ -22,6 +22,7 @@ var (
 	Revision string
 	BotName  = "Goblin"
 	db       *mongo.MongoDB
+	bot      *Bot
 )
 
 var (
@@ -61,7 +62,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 		os.Exit(1)
 	}
 
-	bot := &Bot{
+	bot = &Bot{
 		Session: s,
 		timer:   make(chan int),
 		appID:   appID,
