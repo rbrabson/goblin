@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -15,7 +16,7 @@ import (
 
 const (
 	HelpMessagesPerPage  = 5
-	HelpPaginatorTimeout = 2 * 60 // 2 minutes
+	HelpPaginatorTimeout = time.Minute * 2
 )
 
 var (
