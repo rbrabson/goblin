@@ -4,10 +4,6 @@ import (
 	rslots "github.com/rbrabson/slots"
 )
 
-const (
-	DummyGuildID = "000000000000000000"
-)
-
 // SlotMachine represents a slot machine with a lookup table, payout table, and symbol table.
 type SlotMachine struct {
 	slotMachine rslots.SlotMachine
