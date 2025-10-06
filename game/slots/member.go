@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/rbrabson/goblin/stats"
+	rslots "github.com/rbrabson/slots"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -67,7 +68,7 @@ func (m *Member) GetCooldownRemaining(config *Config) time.Duration {
 }
 
 // AddResults updates the member's statistics based on the results of a spin.
-func (m *Member) AddResults(spinResult *SpinResult) {
+func (m *Member) AddResults(spinResult *rslots.SpinResult) {
 	m.TotalBet += spinResult.Bet
 	if spinResult.Payout > 0 {
 		m.TotalWinnings += spinResult.Payout

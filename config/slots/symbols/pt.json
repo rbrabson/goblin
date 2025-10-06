@@ -1,30 +1,30 @@
 [
     {
-        "name": "AQ",
+        "name": "red 7",
         "emoji": "<:Archer_Queen:1345541909698973756>"
     },
     {
-        "name": "GW",
+        "name": "white 7",
         "emoji": "<:Grand_Warden:1345542906252886037>"
     },
     {
-        "name": "BK",
-        "emoji": "<:Barbarian_King:1345542026506010645>"
+        "name": "blue 7",
+        "emoji": "<:Barbarian_King: 1345542026506010645>"
     },
     {
-        "name": "Archer",
+        "name": "1 bar",
         "emoji": "<:Archer:1345542023226327112>"
     },
     {
-        "name": "Wizard",
+        "name": "2 bar",
         "emoji": "<:Wizard:1345542076137214104>"
     },
     {
-        "name": "Barbarian",
+        "name": "3 bar",
         "emoji": "<:Barbarian:1345542028146118767>"
     },
     {
-        "name": "Spell",
+        "name": "blank",
         "emoji": "<:Rage_Spell:1420780260865085490>"
     },
     {

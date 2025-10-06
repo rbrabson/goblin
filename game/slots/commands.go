@@ -167,27 +167,27 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	symbols := sm.Symbols.Symbols
+	symbols := sm.symbols
 	spinMsg := symbols["Blank"].Emoji
 	for i, symbol := range spinResult.TopLine {
 		if i != 0 {
 			spinMsg += " | "
 		}
-		spinMsg += symbol.Emoji
+		spinMsg += sm.symbols[symbol].Emoji
 	}
 	spinMsg += "\n" + symbols["Right Arrow"].Emoji
 	for i, symbol := range spinResult.Payline {
 		if i != 0 {
 			spinMsg += " | "
 		}
-		spinMsg += symbol.Emoji
+		spinMsg += sm.symbols[symbol].Emoji
 	}
 	spinMsg += "\n" + symbols["Blank"].Emoji
 	for i, symbol := range spinResult.BottomLine {
 		if i != 0 {
 			spinMsg += " | "
 		}
-		spinMsg += symbol.Emoji
+		spinMsg += symbols[symbol].Emoji
 	}
 	spinMsg += "\n"
 
@@ -254,7 +254,7 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			betPayouts := p.Sprintf("Payout %s:%d\n", payoutStr, payout.Bet)
 
 			field := &discordgo.MessageEmbedField{
-				Name:   payout.Symbols,
+				Name:   payout.Message,
 				Value:  betPayouts,
 				Inline: false,
 			}

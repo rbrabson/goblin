@@ -8,6 +8,7 @@ require (
 	github.com/olekukonko/tablewriter v1.1.0
 	github.com/rbrabson/disgomsg v0.12.1
 	github.com/rbrabson/disgopage v0.3.0
+	github.com/rbrabson/slots v1.0.1
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/text v0.29.0
 )
