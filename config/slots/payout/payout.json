@@ -96,7 +96,7 @@
             "any blue"
         ],
         "bet": 1,
-        "payout": 10,
+        "payout": 15,
         "message": "You hit AQ/Archer | GW/Wizard | BK/Barbarian!"
     },
     {
@@ -106,7 +106,7 @@
             "any white"
         ],
         "bet": 1,
-        "payout": 10,
+        "payout": 15,
         "message": "You hit AQ/Archer | BK/Barbarian | GW/Wizard!"
     },
     {
@@ -116,7 +116,7 @@
             "any blue"
         ],
         "bet": 1,
-        "payout": 10,
+        "payout": 15,
         "message": "You hit GW/Wizard | AQ/Archer | BK/Barbarian!"
     },
     {
@@ -126,7 +126,7 @@
             "any red"
         ],
         "bet": 1,
-        "payout": 10,
+        "payout": 15,
         "message": "You hit GW/Wizard | BK/Barbarian | AQ/Archer!"
     },
     {
@@ -136,7 +136,7 @@
             "any white"
         ],
         "bet": 1,
-        "payout": 10,
+        "payout": 15,
         "message": "You hit BK/Barbarian | AQ/Archer | GW/Wizard!"
     },
     {
@@ -146,7 +146,7 @@
             "any red"
         ],
         "bet": 1,
-        "payout": 10,
+        "payout": 15,
         "message": "You hit BK/Barbarian | GW/Wizard | AQ/Archer!"
     },
     {
@@ -156,7 +156,7 @@
             "any bar"
         ],
         "bet": 1,
-        "payout": 8,
+        "payout": 10,
         "message": "You hit three basic troops!"
     },
     {
@@ -166,7 +166,7 @@
             "any red"
         ],
         "bet": 1,
-        "payout": 6,
+        "payout": 5,
         "message": "You hit three AQs or Archers!"
     },
     {
@@ -176,7 +176,7 @@
             "any white"
         ],
         "bet": 1,
-        "payout": 6,
+        "payout": 5,
         "message": "You hit three GWs or Wizards!"
     },
     {
@@ -186,7 +186,7 @@
             "any blue"
         ],
         "bet": 1,
-        "payout": 6,
+        "payout": 5,
         "message": "You hit three BKs or Barbarians!"
     },
     {
