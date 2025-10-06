@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -11,6 +12,7 @@ import (
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
+	rslots "github.com/rbrabson/slots"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -229,55 +231,6 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp.Send(s, i.Interaction)
 }
 
-// payTable handles the `/slots paytable` command.
-func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	p := message.NewPrinter(language.AmericanEnglish)
-
-	guildID := i.GuildID
-	payTable := GetPayoutTable()
-
-	slog.Debug("`/slots paytable` command",
-		slog.String("guildID", guildID),
-	)
-
-	embeds := []*discordgo.MessageEmbed{}
-	if payTable != nil {
-		embed := &discordgo.MessageEmbed{
-			Title:       "Slot Machine Pay Table",
-			Description: "Here are the possible winning combinations and their payouts.",
-			Color:       0x00ff00, // Green color
-			Fields:      make([]*discordgo.MessageEmbedField, 0, len(payTable)),
-		}
-
-		for _, payout := range payTable {
-			payoutStr := strconv.FormatFloat(payout.Payout, 'f', -1, 64)
-			betPayouts := p.Sprintf("Payout %s:%d\n", payoutStr, payout.Bet)
-
-			field := &discordgo.MessageEmbedField{
-				Name:   payout.Message,
-				Value:  betPayouts,
-				Inline: false,
-			}
-			embed.Fields = append(embed.Fields, field)
-		}
-
-		embeds = append(embeds, embed)
-	}
-
-	resp := disgomsg.NewResponse(
-		disgomsg.WithContent("Pay table:"),
-		disgomsg.WithEmbeds(embeds),
-	)
-
-	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("error sending response",
-			slog.String("guildID", guildID),
-			slog.String("memberID", i.Member.User.ID),
-			slog.Any("error", err),
-		)
-	}
-}
-
 // showStats handles the `/slots stats` command.
 func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
@@ -379,4 +332,111 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	resp := disgomsg.NewResponse(disgomsg.WithEmbeds([]*discordgo.MessageEmbed{embed}))
 	resp.SendEphemeral(s, i.Interaction)
+}
+
+// payTable handles the `/slots paytable` command.
+func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	guildID := i.GuildID
+	payTable := GetPayoutTable()
+
+	slog.Debug("`/slots paytable` command",
+		slog.String("guildID", guildID),
+	)
+
+	embeds := []*discordgo.MessageEmbed{}
+	if payTable != nil {
+		embed := &discordgo.MessageEmbed{
+			Title:       "Slot Machine Pay Table",
+			Description: "Here are the possible winning combinations and their payouts.",
+			Color:       0x00ff00, // Green color
+			Fields:      make([]*discordgo.MessageEmbedField, 0, len(payTable)),
+		}
+
+		twoConsecTroops := false
+		for _, payout := range payTable {
+			payoutStr := strconv.FormatFloat(payout.Payout, 'f', -1, 64)
+			betPayouts := p.Sprintf("Payout %s:%d\n", payoutStr, payout.Bet)
+
+			name := getPayoutDisplayMessage(payout.Win, GetSlotMachine().symbols)
+			if name == "two consecutive troops" {
+				if twoConsecTroops {
+					continue
+				}
+				twoConsecTroops = true
+			}
+
+			field := &discordgo.MessageEmbedField{
+				Name:   getPayoutDisplayMessage(payout.Win, GetSlotMachine().symbols),
+				Value:  betPayouts,
+				Inline: false,
+			}
+			embed.Fields = append(embed.Fields, field)
+		}
+
+		embeds = append(embeds, embed)
+	}
+
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent("Pay table:"),
+		disgomsg.WithEmbeds(embeds),
+	)
+
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", guildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
+	}
+}
+
+// getPayoutDisplayMessage returns a user-friendly message for the payout symbols.
+func getPayoutDisplayMessage(spin []string, symbolTable SymbolTable) string {
+	if len(spin) == 1 {
+		return spin[0]
+	}
+
+	symbols := make([]string, 0, len(spin))
+	for _, symbol := range spin {
+		if lookup, ok := symbolTable[symbol]; ok {
+			symbols = append(symbols, lookup.Emoji)
+			continue
+		}
+
+		switch symbol {
+		case rslots.Any:
+			symbols = append(symbols, "any symbol")
+		case rslots.AnySeven:
+			aq := symbolTable["red 7"]
+			gw := symbolTable["blue 7"]
+			bk := symbolTable["white 7"]
+			symbols = append(symbols, fmt.Sprintf("%s/%s/%s", aq.Emoji, gw.Emoji, bk.Emoji))
+		case rslots.AnyBar:
+			symbols = append(symbols, "basic troop")
+		case rslots.AnyRed:
+			aq := symbolTable["red 7"]
+			archer := symbolTable["1 bar"]
+			symbols = append(symbols, fmt.Sprintf("%s/%s", aq.Emoji, archer.Emoji))
+		case rslots.AnyWhite:
+			gw := symbolTable["white 7"]
+			wizard := symbolTable["2 bar"]
+			symbols = append(symbols, fmt.Sprintf("%s/%s", gw.Emoji, wizard.Emoji))
+		case rslots.AnyBlue:
+			bk := symbolTable["blue 7"]
+			barbarian := symbolTable["3 bar"]
+			symbols = append(symbols, fmt.Sprintf("%s/%s", bk.Emoji, barbarian.Emoji))
+		case rslots.MatchingNonBlank:
+			symbols = append(symbols, "any troop")
+		default:
+			spell := symbolTable["blank"]
+			symbols = append(symbols, spell.Emoji)
+		}
+	}
+	display := strings.Join(symbols, " | ")
+	if display == "any troop | any troop | any symbol" || display == "any symbol | any troop | any troop" {
+		display = "two consecutive troops"
+	}
+	return display
 }
