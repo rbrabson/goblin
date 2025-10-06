@@ -156,7 +156,7 @@
             "any bar"
         ],
         "bet": 1,
-        "payout": 5,
+        "payout": 8,
         "message": "You hit three basic troops!"
     },
     {
@@ -166,7 +166,7 @@
             "any red"
         ],
         "bet": 1,
-        "payout": 4,
+        "payout": 6,
         "message": "You hit three AQs or Archers!"
     },
     {
@@ -176,7 +176,7 @@
             "any white"
         ],
         "bet": 1,
-        "payout": 4,
+        "payout": 6,
         "message": "You hit three GWs or Wizards!"
     },
     {
@@ -186,7 +186,7 @@
             "any blue"
         ],
         "bet": 1,
-        "payout": 4,
+        "payout": 6,
         "message": "You hit three BKs or Barbarians!"
     },
     {
