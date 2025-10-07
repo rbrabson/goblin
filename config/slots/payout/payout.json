@@ -41,12 +41,12 @@
     },
     {
         "win": [
-            "AQ or GW or BK",
-            "AQ or GW or BK",
-            "AQ or GW or BK"
+            "any 7",
+            "any 7",
+            "any 7"
         ],
         "bet": 1,
-        "payout": 70,
+        "payout": 80,
         "message": "You hit three heroes!"
     },
     {
@@ -76,18 +76,8 @@
             "2 bar"
         ],
         "bet": 1,
-        "payout": 30,
+        "payout": 25,
         "message": "You hit three Wizards!"
-    },
-    {
-        "win": [
-            "1 bar",
-            "1 bar",
-            "1 bar"
-        ],
-        "bet": 1,
-        "payout": 20,
-        "message": "You hit three Archers!"
     },
     {
         "win": [
@@ -151,12 +141,22 @@
     },
     {
         "win": [
+            "1 bar",
+            "1 bar",
+            "1 bar"
+        ],
+        "bet": 1,
+        "payout": 10,
+        "message": "You hit three Archers!"
+    },
+    {
+        "win": [
             "any bar",
             "any bar",
             "any bar"
         ],
         "bet": 1,
-        "payout": 10,
+        "payout": 5,
         "message": "You hit three basic troops!"
     },
     {
@@ -166,7 +166,7 @@
             "any red"
         ],
         "bet": 1,
-        "payout": 5,
+        "payout": 2,
         "message": "You hit three AQs or Archers!"
     },
     {
@@ -176,7 +176,7 @@
             "any white"
         ],
         "bet": 1,
-        "payout": 5,
+        "payout": 2,
         "message": "You hit three GWs or Wizards!"
     },
     {
@@ -186,7 +186,7 @@
             "any blue"
         ],
         "bet": 1,
-        "payout": 5,
+        "payout": 2,
         "message": "You hit three BKs or Barbarians!"
     },
     {
@@ -196,7 +196,7 @@
             "any"
         ],
         "bet": 1,
-        "payout": 2,
+        "payout": 1.5,
         "message": "You hit two consecutive troops!"
     },
     {
@@ -206,7 +206,7 @@
             "matching non-blank"
         ],
         "bet": 1,
-        "payout": 2,
+        "payout": 1.5,
         "message": "You hit two consecutive troops!"
     },
     {
