@@ -82,16 +82,16 @@ func getProbabilityOfWin(payout *rslots.PayoutAmount, sm *rslots.SlotMachine) *P
 		}
 	}
 
-	bet := payout.Bet
-	payoutAmount := payout.Payout
+	bet := float64(payout.Bet)
+	payoutAmount := float64(payout.Payout)
 	probability := (float64(numMatches) / float64((nymPossibilities)))
 
 	return &PayoutProbability{
 		Spin:        payout.Win,
-		Payout:      rslots.PayoutAmount{Bet: bet, Payout: payoutAmount},
+		Payout:      rslots.PayoutAmount{Bet: payout.Bet, Payout: payout.Payout},
 		Probability: probability * 100.0,
 		NumMatches:  numMatches,
 		Message:     payout.Message,
-		Return:      (float64(payoutAmount) / float64(bet)) * probability * 100.0,
+		Return:      (payoutAmount - bet) / bet * probability * 100.0,
 	}
 }
