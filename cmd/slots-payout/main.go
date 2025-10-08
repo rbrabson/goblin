@@ -10,8 +10,8 @@ import (
 )
 
 type PayoutProbability struct {
-	Spin        []string
-	Payout      rslots.PayoutAmount
+	Bet         int
+	Payout      float64
 	Probability float64
 	NumMatches  int
 	Return      float64
@@ -31,10 +31,10 @@ func main() {
 		nymPossibilities *= len(reel)
 	}
 
-	probabilities := make([]PayoutProbability, 0, len(sm.PayoutTable))
+	probabilities := make([]*PayoutProbability, 0, len(sm.PayoutTable))
 	for _, payout := range sm.PayoutTable {
 		payoutProbability := getProbabilityOfWin(&payout, sm)
-		probabilities = append(probabilities, *payoutProbability)
+		probabilities = append(probabilities, payoutProbability)
 	}
 
 	totalWinProb := 0.0
@@ -47,8 +47,8 @@ func main() {
 	fmt.Println("Spin, Matches, Payout, Probability, Return")
 	for _, prob := range probabilities {
 		if prob.NumMatches != 0 {
-			payoutStr := strconv.FormatFloat(prob.Payout.Payout, 'f', -1, 64)
-			fmt.Printf("%s, %d, %d:%s, %.4f%%, %.4f%%\n", prob.Message, prob.NumMatches, prob.Payout.Bet, payoutStr, prob.Probability, prob.Return)
+			payoutStr := strconv.FormatFloat(prob.Payout, 'f', -1, 64)
+			fmt.Printf("%s, %d, %d:%s, %.4f%%, %.4f%%\n", prob.Message, prob.NumMatches, prob.Bet, payoutStr, prob.Probability, prob.Return)
 		}
 	}
 
@@ -75,15 +75,15 @@ func getProbabilityOfWin(payout *rslots.PayoutAmount, sm *rslots.SlotMachine) *P
 	}
 
 	bet := float64(payout.Bet)
-	payoutAmount := float64(payout.Payout)
-	probability := (float64(numMatches) / float64((nymPossibilities)))
+	winnings := float64(payout.Payout) - bet
+	probability := (float64(numMatches) / float64((nymPossibilities))) * 100
 
 	return &PayoutProbability{
-		Spin:        payout.Win,
-		Payout:      rslots.PayoutAmount{Bet: payout.Bet, Payout: payout.Payout},
-		Probability: probability * 100.0,
+		Bet:         payout.Bet,
+		Payout:      payout.Payout,
+		Probability: probability,
 		NumMatches:  numMatches,
 		Message:     payout.Message,
-		Return:      (payoutAmount - bet) / bet * probability * 100.0,
+		Return:      (winnings / bet) * probability,
 	}
 }
