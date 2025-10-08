@@ -409,10 +409,7 @@ func getPayoutDisplayMessage(spin []string, symbolTable SymbolTable) string {
 		case rslots.Any:
 			symbols = append(symbols, "any symbol")
 		case rslots.AnySeven:
-			aq := symbolTable["red 7"]
-			gw := symbolTable["blue 7"]
-			bk := symbolTable["white 7"]
-			symbols = append(symbols, fmt.Sprintf("%s/%s/%s", aq.Emoji, gw.Emoji, bk.Emoji))
+			symbols = append(symbols, "hero")
 		case rslots.AnyBar:
 			symbols = append(symbols, "basic troop")
 		case rslots.AnyRed:
@@ -435,7 +432,8 @@ func getPayoutDisplayMessage(spin []string, symbolTable SymbolTable) string {
 		}
 	}
 	display := strings.Join(symbols, " | ")
-	if display == "any troop | any troop | any symbol" || display == "any symbol | any troop | any troop" {
+	switch display {
+	case "any troop | any troop | any symbol", "any symbol | any troop | any troop":
 		display = "two consecutive troops"
 	}
 	return display
