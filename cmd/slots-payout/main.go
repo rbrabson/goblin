@@ -61,21 +61,13 @@ func getProbabilityOfWin(payout *rslots.PayoutAmount, sm *rslots.SlotMachine) *P
 		nymPossibilities *= len(reel)
 	}
 
-	// TODO: Need to handle case where a previous entry in the paytable matches the same combination
-
 	numMatches := 0
 
 	for _, symbol1 := range sm.LookupTable[0] {
 		for _, symbol2 := range sm.LookupTable[1] {
 			for _, symbol3 := range sm.LookupTable[2] {
-				for _, p := range sm.PayoutTable {
-					payoutAmount := p.GetPayoutAmount(1, []string{symbol1, symbol2, symbol3})
-					if payoutAmount > 0 && !(p.Win[0] == payout.Win[0] && p.Win[1] == payout.Win[1] && p.Win[2] == payout.Win[2]) {
-						continue
-					}
-				}
-				payout := payout.GetPayoutAmount(1, []string{symbol1, symbol2, symbol3})
-				if payout > 0 {
+				payoutAmount := payout.GetPayoutAmount(1, []string{symbol1, symbol2, symbol3})
+				if payoutAmount > 0 {
 					numMatches++
 				}
 			}
