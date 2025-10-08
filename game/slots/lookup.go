@@ -14,15 +14,9 @@ const (
 	NUM_SPINS         = 3
 )
 
-var (
-	lookupTable rslots.LookupTable
-)
-
 // GetLookupTable retrieves the lookup table for the specified guild.
 func GetLookupTable() rslots.LookupTable {
-	if len(lookupTable) == 0 {
-		lookupTable = newLookupTable()
-	}
+	lookupTable := newLookupTable()
 	return lookupTable
 }
 
