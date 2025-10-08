@@ -8,14 +8,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
 	"github.com/rbrabson/goblin/game/slots"
-	"github.com/rbrabson/goblin/internal/log"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
 func main() {
-	log.Initialize()
-
 	err := godotenv.Load(".env")
 	if err != nil {
 		slog.LogAttrs(context.Background(), slog.LevelError,
