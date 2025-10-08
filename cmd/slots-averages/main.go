@@ -45,8 +45,6 @@ func main() {
 	totalGames := averages.TotalWins + averages.TotalLosses
 	p.Printf("Total wins %d (%.2f%%)\n", averages.TotalWins, float64(averages.TotalWins)/float64(totalGames)*100)
 	p.Printf("Total losses %d (%.2f%%)\n", averages.TotalLosses, float64(averages.TotalLosses)/float64(totalGames)*100)
-	p.Printf("Total bet: %d\n", averages.TotalBet)
-	p.Printf("Total won: %d\n", averages.TotalWon)
 	p.Printf("Average wins: %.0f (%.2f%%)\n", averages.AverageTotalWins, averages.AverageWinPercentage)
 	p.Printf("Average losses: %.0f (%.2f%%)\n", averages.AverageTotalLosses, averages.AverageLossPercentage)
 	p.Printf("Average return: %.2f%% (%d won from %d bet)\n", averages.AverageReturns, averages.TotalWon, averages.TotalBet)
