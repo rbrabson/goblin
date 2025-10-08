@@ -31,6 +31,26 @@ func main() {
 		nymPossibilities *= len(reel)
 	}
 
+	// numWins := 0
+	// bets := 0
+	// payouts := 0
+	// for _, symbol1 := range sm.LookupTable[0] {
+	// 	for _, symbol2 := range sm.LookupTable[1] {
+	// 		for _, symbol3 := range sm.LookupTable[2] {
+	// 			bets++
+	// 			payline := []string{symbol1, symbol2, symbol3}
+	// 			payoutAmount, _ := sm.PayoutTable.GetPayoutAmount(1, payline)
+	// 			if payoutAmount > 0 {
+	// 				numWins++
+	// 				payouts += payoutAmount
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// p := message.NewPrinter(language.AmericanEnglish)
+	// p.Printf("Total possibilities: %d, Total wins: %d, Win probability: %.2f%%\n", nymPossibilities, numWins, (float64(numWins)/float64(nymPossibilities))*100)
+	// p.Printf("Total bets: %d, Total payouts: %d, Return to player: %.2f%%, ROI: %.2f%%\n", bets, payouts, (float64(payouts)/float64(bets))*100, (float64(payouts)-float64(bets))/float64(bets)*100)
+
 	probabilities := make([]*PayoutProbability, 0, len(sm.PayoutTable))
 	for _, payout := range sm.PayoutTable {
 		payoutProbability := getProbabilityOfWin(&payout, sm)
