@@ -352,7 +352,7 @@ func (avatar *Avatar) calculateMovement(currentTurn int) int {
 		case 2:
 			return 7 * 3
 		default:
-			return r.IntN(3) * 3
+			return (r.IntN(3) * 3) + 1
 		}
 	}
 }
