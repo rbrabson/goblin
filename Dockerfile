@@ -33,15 +33,18 @@ LABEL org.label-schema.vendor="rbrabson" \
 RUN mkdir -p /licenses
 ADD LICENSE /licenses
 
+RUN mkdir -p /config
+ADD config /config/
+
 WORKDIR /
 
 COPY --from=builder /workspace/goblin /
 
 RUN apk add iputils \
-    bash \
-    openssh \
-    which \
-    vim
+  bash \
+  openssh \
+  which \
+  vim
 
 USER 65532:65532
 
