@@ -39,11 +39,11 @@ var (
 							Required:    true,
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
 								{
-									Name:  "300",
+									Name:  "500",
 									Value: 300,
 								},
 								{
-									Name:  "200",
+									Name:  "300",
 									Value: 200,
 								},
 								{
