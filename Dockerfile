@@ -1,4 +1,4 @@
-FROM golang as builder
+FROM golang AS builder
 
 # Set destination for COPY
 WORKDIR /workspace
@@ -22,7 +22,7 @@ LABEL org.label-schema.vendor="rbrabson" \
   org.label-schema.name="goblin bot" \
   org.label-schema.description="Deploy the goblin bot" \
   org.label-schema.vcs-ref=$VCS_REF \
-  org.label-schema.vcs-url=$VCS_URL \
+  org.label-schema.vcs-url=https://github.com/rbrabson/goblin.git \
   org.label-schema.license="BSD-3-Clause license" \
   org.label-schema.schema-version="1.0" \
   name="goblin-bot" \
