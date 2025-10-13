@@ -357,8 +357,8 @@ func TestGetAccounts(t *testing.T) {
 	// Verify accounts are sorted by balance in descending order
 	for i := 0; i < len(retrievedAccounts)-1; i++ {
 		if retrievedAccounts[i].CurrentBalance < retrievedAccounts[i+1].CurrentBalance {
-			t.Errorf("Accounts not sorted correctly: %d should be >= %d", 
-				retrievedAccounts[i].CurrentBalance, 
+			t.Errorf("Accounts not sorted correctly: %d should be >= %d",
+				retrievedAccounts[i].CurrentBalance,
 				retrievedAccounts[i+1].CurrentBalance)
 		}
 	}

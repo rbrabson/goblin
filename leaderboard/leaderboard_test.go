@@ -636,14 +636,14 @@ func TestPlugin(t *testing.T) {
 	// Test GetCommands
 	commands := testPlugin.GetCommands()
 	if len(commands) != len(adminCommands)+len(memberCommands) {
-		t.Errorf("GetCommands() returned incorrect number of commands: got %d, want %d", 
+		t.Errorf("GetCommands() returned incorrect number of commands: got %d, want %d",
 			len(commands), len(adminCommands)+len(memberCommands))
 	}
 
 	// Test GetCommandHandlers
 	handlers := testPlugin.GetCommandHandlers()
 	if len(handlers) != len(commandHandlers) {
-		t.Errorf("GetCommandHandlers() returned incorrect number of handlers: got %d, want %d", 
+		t.Errorf("GetCommandHandlers() returned incorrect number of handlers: got %d, want %d",
 			len(handlers), len(commandHandlers))
 	}
 

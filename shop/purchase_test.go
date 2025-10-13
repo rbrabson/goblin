@@ -216,7 +216,7 @@ func TestReturnPurchase(t *testing.T) {
 
 	// Verify the balance was reduced by the item price
 	account = bank.GetAccount(GuildId, MemberId)
-	if account.CurrentBalance != initialBalance - item.Price {
+	if account.CurrentBalance != initialBalance-item.Price {
 		t.Errorf("Expected balance to be reduced by %d, got %d", item.Price, account.CurrentBalance)
 		return
 	}

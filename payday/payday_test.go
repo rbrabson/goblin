@@ -149,7 +149,7 @@ func TestPaydayString(t *testing.T) {
 
 	// Test the String method
 	str := payday.String()
-	expected := "Payday{ID=" + payday.ID.Hex() + ", GuildID=12345, Amount=" + 
+	expected := "Payday{ID=" + payday.ID.Hex() + ", GuildID=12345, Amount=" +
 		"5000, PaydayFrequency=23h0m0s}"
 	if str != expected {
 		t.Errorf("expected String() to return '%s', got '%s'", expected, str)

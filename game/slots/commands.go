@@ -40,11 +40,11 @@ var (
 							Choices: []*discordgo.ApplicationCommandOptionChoice{
 								{
 									Name:  "500",
-									Value: 300,
+									Value: 500,
 								},
 								{
 									Name:  "300",
-									Value: 200,
+									Value: 300,
 								},
 								{
 									Name:  "100",
