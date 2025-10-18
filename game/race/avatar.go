@@ -320,6 +320,7 @@ func getDefaultRaceAvatars(guildID string) []*Avatar {
 
 // calculateMovement calculates the distance a racer moves on a given turn
 func (avatar *Avatar) calculateMovement(currentTurn int) int {
+	config := GetConfig(avatar.GuildID)
 	source := rand.NewPCG(rand.Uint64(), rand.Uint64())
 	r := rand.New(source)
 	switch avatar.MovementSpeed {
@@ -352,7 +353,7 @@ func (avatar *Avatar) calculateMovement(currentTurn int) int {
 		case 2:
 			return 7 * 3
 		default:
-			return (r.IntN(3) * 3) + 1
+			return (r.IntN(3) * 3) + int(float64(config.BabyDragonBuffPercent)/100.0)
 		}
 	}
 }
