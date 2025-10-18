@@ -161,7 +161,7 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // startRace starts a race that other members may join.
 func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceLock.Lock()
-	err := raceStartChecks(i.GuildID, i.Member.User.ID)
+	err := raceStartChecks(i.GuildID)
 	if err != nil {
 		raceLock.Unlock()
 		resp := disgomsg.NewResponse(

@@ -322,7 +322,7 @@ func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantP
 }
 
 // raceStartChecks checks to see if a race can be started.
-func raceStartChecks(guildID string, memberID string) error {
+func raceStartChecks(guildID string) error {
 	config := GetConfig(guildID)
 
 	race := currentRaces[guildID]

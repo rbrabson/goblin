@@ -157,7 +157,7 @@ func TestCalculateWinnings(t *testing.T) {
 
 func TestRaceChecks(t *testing.T) {
 	// Test raceStartChecks
-	err := raceStartChecks("123", "456")
+	err := raceStartChecks("123")
 	if err != nil {
 		t.Error("expected no error from raceStartChecks for new race, got:", err)
 	}

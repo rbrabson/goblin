@@ -353,7 +353,11 @@ func (avatar *Avatar) calculateMovement(currentTurn int) int {
 		case 2:
 			return 7 * 3
 		default:
-			return (r.IntN(3) * 3) + int(float64(config.BabyDragonBuffPercent)/100.0)
+			movement := (r.IntN(3) * 3)
+			if rand.IntN(100) < config.BabyDragonBuffPercent {
+				movement += 1
+			}
+			return movement
 		}
 	}
 }
