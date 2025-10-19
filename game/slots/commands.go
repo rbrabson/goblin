@@ -141,7 +141,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	account := bank.GetAccount(guildID, userID)
 	if err := account.Withdraw(bet); err != nil {
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("You do not have enough balance to play, Error: %s", err.Error())),
+			disgomsg.WithContent(fmt.Sprintf("Unable to play slots, Error: %s", err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("error sending response",
