@@ -420,6 +420,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				slog.Any("error", err),
 			)
 		}
+		heist.Cancel()
 		return
 	}
 
@@ -746,7 +747,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	if err := heistMessage(s, heist); err != nil {
-		slog.Error("failed to heist message",
+		slog.Error("failed to send heist message",
 			slog.Any("error", err),
 		)
 	}

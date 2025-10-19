@@ -300,6 +300,13 @@ func (h *Heist) End() {
 	stats.UpdateGameStats(h.GuildID, "heist", memberIDs)
 }
 
+// Cancel cancels the current heist, removing it from the current heists.
+func (h *Heist) Cancel() {
+	heistLock.Lock()
+	delete(currentHeists, h.GuildID)
+	heistLock.Unlock()
+}
+
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.
 func heistChecks(h *Heist, member *HeistMember) error {
 	if h.State != Planning {
