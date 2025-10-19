@@ -413,7 +413,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 		msg := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("Unable to start the hest. Error: %s", err.Error())),
+			disgomsg.WithContent(fmt.Sprintf("Unable to start the heist. Error: %s", err.Error())),
 		)
 		if err := msg.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -761,7 +761,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 		msg := disgomsg.NewResponse(
-			disgomsg.WithContent(fmt.Sprintf("Unable to join the hest. Error: %s", err.Error())),
+			disgomsg.WithContent(fmt.Sprintf("Unable to join the heist. Error: %s", err.Error())),
 		)
 		if err := msg.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
