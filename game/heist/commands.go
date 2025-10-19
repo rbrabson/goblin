@@ -406,6 +406,23 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	// The organizer has to pay a fee to plan the heist.
+	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
+	if err := account.Withdraw(heist.config.HeistCost); err != nil {
+		slog.Error("failed to withdraw heist cost",
+			slog.Any("error", err),
+		)
+		msg := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Unable to start the hest. Error: %s", err.Error())),
+		)
+		if err := msg.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send response",
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
+
 	theme := GetTheme(i.GuildID)
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent("Planning a " + theme.Heist + " heist..."),
@@ -417,14 +434,6 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	heist.Organizer.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	heist.interaction = i
-
-	// The organizer has to pay a fee to plan the heist.
-	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
-	if err := account.Withdraw(heist.config.HeistCost); err != nil {
-		slog.Error("failed to withdraw heist cost",
-			slog.Any("error", err),
-		)
-	}
 
 	if err := heistMessage(s, heist); err != nil {
 		slog.Error("failed to send heist message",
@@ -750,6 +759,15 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.String("guildID", i.GuildID),
 			slog.Any("error", err),
 		)
+		msg := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Unable to join the hest. Error: %s", err.Error())),
+		)
+		if err := msg.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send response",
+				slog.Any("error", err),
+			)
+		}
+		return
 	}
 
 	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)

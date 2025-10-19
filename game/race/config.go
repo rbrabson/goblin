@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	defaultBabyDragonBuffPercent = 85
+	defaultBabyDragonBuffPercent = 50
 )
 
 var (
