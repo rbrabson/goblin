@@ -489,7 +489,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.String("memberID", i.Member.User.ID),
 			slog.Any("error", err))
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Insufficiient funds in your bank account to place a bet"),
+			disgomsg.WithContent(fmt.Sprintf("Unable to place a bet, Error: %s", err.Error())),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send the response",
