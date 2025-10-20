@@ -1,6 +1,12 @@
 package blackjack
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"log/slog"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
+	"github.com/rbrabson/goblin/discord"
+)
 
 var (
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -35,7 +41,22 @@ var (
 	}
 )
 
+// blackjack handles the /blackjack command and its subcommands.
 func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if status == discord.STOPPING || status == discord.STOPPED {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("memberID", i.Member.User.ID),
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
+
 	subCommand := i.ApplicationCommandData().Options[0].Name
 
 	switch subCommand {
@@ -48,10 +69,30 @@ func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+// playBlackjack handles the /blackjack/play command.
 func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	// Implementation of playing blackjack goes here
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent("Not Implemented Yet."),
+	)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
+	}
 }
 
+// showStats handles the /blackjack/stats command.
 func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	// Implementation of showing stats goes here
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent("Not Implemented Yet."),
+	)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("error sending response",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
+	}
 }
