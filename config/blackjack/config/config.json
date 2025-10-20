@@ -1,0 +1,8 @@
+{
+    "max_players": 5,
+    "decks": 6,
+    "bet_amount": 50,
+    "blackjack_pay": 1.5,
+    "delay_between_games": 10,
+    "wait_for_players": 30
+}
