@@ -6,7 +6,7 @@ require (
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/joho/godotenv v1.5.1
 	github.com/olekukonko/tablewriter v1.1.0
-	github.com/rbrabson/blackjack v1.0.0
+	github.com/rbrabson/blackjack v1.1.1
 	github.com/rbrabson/disgomsg v0.12.1
 	github.com/rbrabson/disgopage v0.3.0
 	github.com/rbrabson/slots v1.0.3
