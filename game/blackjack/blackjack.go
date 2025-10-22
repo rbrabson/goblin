@@ -68,7 +68,7 @@ func (g *Game) AddPlayer(memberID string) error {
 	if g.GetPlayer(memberID) != nil {
 		return ErrPlayerAlreadyInGame
 	}
-	if g.state == NotStarted {
+	if g.NotStarted() {
 		g.state = WaitingForPlayers
 	}
 

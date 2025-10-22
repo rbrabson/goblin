@@ -2,17 +2,11 @@ package blackjack
 
 import (
 	"log/slog"
-	"sync"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
-)
-
-var (
-	waitLock sync.Mutex
-	waiting  = make(map[string]*Game)
 )
 
 var (
@@ -117,6 +111,32 @@ func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // playBlackjack handles the /blackjack/play command.
 func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	game := GetGame(i.GuildID)
+
+	if !startChecks(s, i) {
+		game.Unlock()
+		return
+	}
+	if err := game.AddPlayer(i.Member.User.ID); err != nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("Error starting the game: " + err.Error()),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("memberID", i.Member.User.ID),
+				slog.Any("error", err),
+			)
+		}
+		game.Unlock()
+		return
+	}
+
+	game.Unlock()
+	waitForRoundToStart(s, i)
+
+	// TODO: run the game
+
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent("Not Implemented Yet."),
 	)
@@ -127,35 +147,28 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
-
-	// Add player to the game (handle errors appropriately)
-
-	waitForRoundToStart(s, i)
 }
 
 // waitForRoundToStart waits for the round to start for the blackjack game.
 func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	waitLock.Lock()
+	game := GetGame(i.GuildID)
 
-	game, exists := waiting[i.GuildID]
-	if exists {
-		waitLock.Unlock()
-		slog.Info("game already waiting",
-			slog.String("guildID", i.GuildID),
-		)
-		return
-	}
-	waitLock.Unlock()
-
-	// Wait until either the time expires or the max number of players joins the game
+	// Wait until the game starts or a timeout occurs.
+	timeout := time.After(game.config.WaitForPlayers)
+	tick := time.Tick(1 * time.Second)
 	for {
-		if game.IsActive() {
-			break
+		select {
+		case <-timeout:
+			// TODO: send message saying the game has started
+			return
+		case <-tick:
+			if game.IsActive() {
+				// TODO: send message saying the game has started
+				return
+			}
+			// TODO: send message saying waiting for players, and the time remaining
 		}
-		time.Sleep(1 * time.Second)
 	}
-
-	// TODO: Notify players that the round is starting
 }
 
 // blackjackJoinGame handles the /blackjack/join command.
@@ -364,6 +377,28 @@ func blackjackSurrender(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
+}
+
+// startChecks performs checks to see if a game can be started.
+func startChecks(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
+	game := GetGame(i.GuildID)
+
+	if !game.NotStarted() {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("An active blackjack game already exists."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("failed to send the response",
+				slog.Any("error", err),
+			)
+		}
+		slog.Error("blackjack game has not started",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+		)
+		return false
+	}
+	return true
 }
 
 // joinChecks performs checks to see if a player can join the game.
