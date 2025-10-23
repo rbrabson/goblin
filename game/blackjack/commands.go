@@ -316,20 +316,18 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // dealerTurn handles the dealer's turn in blackjack.
 func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	game := GetGame(i.GuildID)
+
 	// Dealer turn (if any players are still in)
 	if hasActiveNonBustedPlayers(game) {
 		fmt.Println("\n🎯 Dealer's turn:")
 		fmt.Println("Revealing hole card...")
 		fmt.Println(game.Dealer().RevealHoleCard())
 
-		err := game.DealerPlay()
-		if err != nil {
-			fmt.Printf("Error during dealer play: %v\n", err)
-			return
-		}
+		game.DealerPlay()
+	}
 
-		fmt.Println("\nDealer finished:")
-		fmt.Println(game.Dealer().String())
+	for _, action := range game.Dealer().Hand().Actions() {
+		fmt.Println(action)
 	}
 }
 
