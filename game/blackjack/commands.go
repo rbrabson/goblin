@@ -175,50 +175,9 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	game := GetGame(i.GuildID)
 	defer game.EndRound()
 
-	game.Lock()
-	showCurrentTurn(s, i, game)
-	game.Unlock()
-
-	// TODO: can't just send a response here; need to update the existing message
-	//       We'll need to save that in the Game struct.
-	if err := game.StartNewRound(); err != nil {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Error starting new round: " + err.Error()),
-		)
-		if err := resp.Send(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.String("guildID", i.GuildID),
-				slog.String("memberID", i.Member.User.ID),
-				slog.Any("error", err),
-			)
-		}
-		slog.Error("error starting new round",
-			slog.String("guildID", i.GuildID),
-			slog.String("memberID", i.Member.User.ID),
-			slog.Any("error", err),
-		)
-		return
-	}
-	if err := game.DealInitialCards(); err != nil {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Error dealing initial cards: " + err.Error()),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.String("guildID", i.GuildID),
-				slog.String("memberID", i.Member.User.ID),
-				slog.Any("error", err),
-			)
-		}
-		slog.Error("error dealing initial cards",
-			slog.String("guildID", i.GuildID),
-			slog.String("memberID", i.Member.User.ID),
-			slog.Any("error", err),
-		)
-		return
-	}
-
-	// Show initial cards
+	game.StartNewRound()
+	game.DealInitialCards()
+	showDeal(s, i, game)
 
 	// Check for dealer blackjack, and only proceed to player turns if dealer doesn't have blackjack
 	if !game.Dealer().HasBlackjack() {
@@ -226,7 +185,7 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		dealerTurn(s, i)
 	}
 
-	showRoundResults(game)
+	showResults(game)
 	game.PayoutResults()
 }
 
@@ -251,132 +210,104 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				continue
 			}
 
-			// Show current hand status
-			if len(player.Hands()) > 1 {
-				fmt.Printf("\n%s - Hand %d of %d: %s\n",
-					player.Name(),
-					player.GetCurrentHandIndex()+1,
-					len(player.Hands()),
-					currentHand.String())
-			} else {
-				fmt.Printf("\n%s: %s\n", player.Name(), currentHand.String())
+			showCurrentTurn(s, i, game)
+
+			// TODO: use a Select with a timeout here; if time out, then select "Stand" for the player action
+			action := <-game.turnChan
+
+			switch action {
+			case Hit:
+				err := game.PlayerHit(player.Name())
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
+
+				fmt.Printf("Drew: %s\n", currentHand.String())
+
+				if currentHand.IsBusted() {
+					fmt.Printf("💥 Hand busted!\n")
+					currentHand.SetActive(false)
+				}
+
+			case Stand:
+				fmt.Printf("Standing on hand.\n")
+				err := game.PlayerStand(player.Name())
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
+
+			case DoubleDown:
+				if !player.CanDoubleDown() {
+					fmt.Println("Cannot double down.")
+					continue
+				}
+
+				err := player.DoubleDown()
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
+
+				err = game.PlayerDoubleDownHit(player.Name())
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
+
+				fmt.Printf("Doubled down! Drew: %s\n", currentHand.String())
+
+				if currentHand.IsBusted() {
+					fmt.Printf("💥 Hand busted!\n")
+				}
+
+				// Double down ends the hand
+				err = game.PlayerStand(player.Name())
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+				}
+
+			case Split:
+				if !player.CanSplit() {
+					fmt.Println("Cannot split.")
+					continue
+				}
+
+				err := game.PlayerSplit(player.Name())
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
+
+				fmt.Printf("Hand split! You now have %d hands.\n", len(player.Hands()))
+				// Show current hand after split
+				fmt.Printf("Current hand: %s\n", currentHand.String())
+
+			case Surrender:
+				if !player.CanSurrender() {
+					fmt.Println("Cannot surrender.")
+					continue
+				}
+
+				err := game.PlayerSurrender(player.Name())
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
+
+				fmt.Printf("Surrendered! Half bet returned.\n")
+
+			default:
+				fmt.Println("Invalid action. Please choose (h)it, (s)tand, (d)ouble down, s(p)lit, or s(u)rrender if available.")
 			}
+		}
 
-			// Player actions for current hand
-			for currentHand.IsActive() && !currentHand.IsBusted() && !currentHand.IsBlackjack() {
-				fmt.Print("Choose action: (h)it, (s)tand")
-
-				if player.CanDoubleDown() {
-					fmt.Print(", (d)ouble down")
-				}
-
-				if player.CanSplit() {
-					fmt.Print(", s(p)lit")
-				}
-
-				if player.CanSurrender() {
-					fmt.Print(", s(u)rrender")
-				}
-
-				fmt.Print(": ")
-
-				// TODO: use a Select with a timeout here; if time out, then select "Stand" for the player action
-				action := <-game.turnChan
-
-				switch action {
-				case Hit:
-					err := game.PlayerHit(player.Name())
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-
-					fmt.Printf("Drew: %s\n", currentHand.String())
-
-					if currentHand.IsBusted() {
-						fmt.Printf("💥 Hand busted!\n")
-						currentHand.SetActive(false)
-					}
-
-				case Stand:
-					fmt.Printf("Standing on hand.\n")
-					err := game.PlayerStand(player.Name())
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-
-				case DoubleDown:
-					if !player.CanDoubleDown() {
-						fmt.Println("Cannot double down.")
-						continue
-					}
-
-					err := player.DoubleDown()
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-
-					err = game.PlayerDoubleDownHit(player.Name())
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-
-					fmt.Printf("Doubled down! Drew: %s\n", currentHand.String())
-
-					if currentHand.IsBusted() {
-						fmt.Printf("💥 Hand busted!\n")
-					}
-
-					// Double down ends the hand
-					err = game.PlayerStand(player.Name())
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-					}
-
-				case Split:
-					if !player.CanSplit() {
-						fmt.Println("Cannot split.")
-						continue
-					}
-
-					err := game.PlayerSplit(player.Name())
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-
-					fmt.Printf("Hand split! You now have %d hands.\n", len(player.Hands()))
-					// Show current hand after split
-					fmt.Printf("Current hand: %s\n", currentHand.String())
-
-				case Surrender:
-					if !player.CanSurrender() {
-						fmt.Println("Cannot surrender.")
-						continue
-					}
-
-					err := game.PlayerSurrender(player.Name())
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-
-					fmt.Printf("Surrendered! Half bet returned.\n")
-
-				default:
-					fmt.Println("Invalid action. Please choose (h)it, (s)tand, (d)ouble down, s(p)lit, or s(u)rrender if available.")
-				}
-			}
-
-			// Move to next hand if current hand is done
-			if !currentHand.IsActive() {
-				if !player.MoveToNextActiveHand() {
-					player.SetActive(false)
-					break
-				}
+		// Move to next hand if current hand is done
+		if !player.CurrentHand().IsActive() {
+			if !player.MoveToNextActiveHand() {
+				player.SetActive(false)
+				break
 			}
 		}
 	}
@@ -515,13 +446,67 @@ func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game
 	}
 }
 
-// showCurrentTurn displays the current turn information for the active player.
-func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	// TODO: implement
+// showDeal displays the deal information for the blackjack game.
+func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	var status strings.Builder
+
+	// Show the dealer's hand (with one card hidden)
+	status.WriteString(fmt.Sprintf("%s\n", game.Dealer().StringHidden()))
+
+	// Show players
+	for _, player := range game.Players() {
+		status.WriteString(fmt.Sprintf("%s\n", player.String()))
+	}
+
+	fmt.Println(status.String())
 }
 
-// showRoundResults displays the results of the blackjack round for each player.
-func showRoundResults(game *Game) {
+// showCurrentTurn displays the current turn information for the active player.
+func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	for _, player := range game.Players() {
+		if player != game.GetActivePlayer() {
+			currentHand := player.CurrentHand()
+			for _, hand := range player.Hands() {
+				if len(player.Hands()) > 1 {
+					fmt.Printf("\n%s - Hand %d of %d: %s",
+						player.Name(),
+						player.GetCurrentHandIndex()+1,
+						len(player.Hands()),
+						hand.String())
+				} else {
+					fmt.Printf("\n%s: %s", player.Name(), hand.String())
+				}
+				if &hand == currentHand {
+					fmt.Print("  <-- Current Hand\n")
+				} else {
+					fmt.Print("\n")
+				}
+			}
+		}
+	}
+
+	// Player actions for current hand. These should be adding buttons to the message.
+	player := game.GetActivePlayer()
+	currentHand := player.CurrentHand()
+	if currentHand.IsActive() && !currentHand.IsBusted() && !currentHand.IsBlackjack() {
+		fmt.Printf("\n%s's turn - Current hand: %s\n", player.Name(), currentHand.String())
+		fmt.Print("Choose action: ")
+		fmt.Print("(h)it")
+		fmt.Print(", (s)tand")
+		if player.CanDoubleDown() {
+			fmt.Print(", (d)ouble down")
+		}
+		if player.CanSplit() {
+			fmt.Print(", s(p)lit")
+		}
+		if player.CanSurrender() {
+			fmt.Print(", s(u)rrender")
+		}
+	}
+}
+
+// showResults displays the results of the blackjack round for each player.
+func showResults(game *Game) {
 	fmt.Println("\n💰 Round Results:")
 	fmt.Println("================")
 

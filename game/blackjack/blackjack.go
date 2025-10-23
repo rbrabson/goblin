@@ -223,6 +223,11 @@ func (g *Game) EvaluateHand(player *bj.Player) bj.GameResult {
 	return g.game.EvaluateHand(player)
 }
 
+// Round returns the current round number of the blackjack game.
+func (g *Game) Round() int {
+	return g.game.Round()
+}
+
 // Lock locks the game's mutex.
 func (g *Game) Lock() {
 	g.lock.Lock()
