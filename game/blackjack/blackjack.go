@@ -21,6 +21,17 @@ const (
 	InProgress
 )
 
+type Action int
+
+const (
+	_ Action = iota
+	Hit
+	Stand
+	DoubleDown
+	Split
+	Surrender
+)
+
 // Game represents a blackjack game for a specific guild.
 type Game struct {
 	guildID       string
@@ -28,6 +39,7 @@ type Game struct {
 	config        *Config
 	state         GameState
 	gameStartTime time.Time
+	turnChan      chan Action
 	lock          sync.Mutex
 }
 
@@ -49,11 +61,12 @@ func GetGame(guildID string) *Game {
 func newGame(guildID string) *Game {
 	config := GetConfig()
 	game := &Game{
-		guildID: guildID,
-		game:    bj.New(config.Decks),
-		config:  config,
-		state:   NotStarted,
-		lock:    sync.Mutex{},
+		guildID:  guildID,
+		game:     bj.New(config.Decks),
+		config:   config,
+		state:    NotStarted,
+		turnChan: make(chan Action),
+		lock:     sync.Mutex{},
 	}
 
 	return game
@@ -106,8 +119,6 @@ func (g *Game) StartNewRound() {
 	}
 
 	g.state = InProgress
-	g.game.StartNewRound()
-	g.game.DealInitialCards()
 }
 
 // EndRound ends the current round of blackjack for the guild, removing all players from the game.
