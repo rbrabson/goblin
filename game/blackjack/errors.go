@@ -3,6 +3,7 @@ package blackjack
 import "errors"
 
 var (
-	ErrGameActive          = errors.New("you cannot join an active game")
+	ErrGameActive          = errors.New("the game has already started")
 	ErrPlayerAlreadyInGame = errors.New("you already joined the game")
+	ErrGameFull            = errors.New("the game is already full")
 )

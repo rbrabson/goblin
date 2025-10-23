@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	bj "github.com/rbrabson/blackjack"
 )
 
@@ -40,6 +41,7 @@ type Game struct {
 	state         GameState
 	gameStartTime time.Time
 	turnChan      chan Action
+	interaction   *discordgo.InteractionCreate
 	lock          sync.Mutex
 }
 
@@ -81,8 +83,8 @@ func (g *Game) AddPlayer(memberID string) error {
 	if g.GetPlayer(memberID) != nil {
 		return ErrPlayerAlreadyInGame
 	}
-	if g.NotStarted() {
-		g.state = WaitingForPlayers
+	if len(g.game.Players()) >= g.config.MaxPlayers {
+		return ErrGameFull
 	}
 
 	cm := NewChipManager(g.guildID, memberID)
@@ -93,16 +95,15 @@ func (g *Game) AddPlayer(memberID string) error {
 		return err
 	}
 
+	if g.NotStarted() {
+		g.state = WaitingForPlayers
+	}
+
 	// If this is the first player, set the game start time to wait for additional players.
 	if len(g.game.Players()) == 1 {
 		g.gameStartTime = time.Now().Add(g.config.WaitForPlayers)
 	}
 
-	// If the maximum number of players has been reached, start a new round
-	// without waiting for additional players.
-	if len(g.game.Players()) == g.config.MaxPlayers {
-		g.StartNewRound()
-	}
 	return nil
 }
 
@@ -111,14 +112,29 @@ func (g *Game) GetPlayer(memberID string) *bj.Player {
 	return g.game.GetPlayer(memberID)
 }
 
+// GetACtivePlayer retrieves the currently active player in the blackjack game.
+func (g *Game) GetActivePlayer() *bj.Player {
+	return g.game.GetActivePlayer()
+}
+
+// Players returns a slice of all players in the blackjack game.
+func (g *Game) Players() []*bj.Player {
+	return g.game.Players()
+}
+
 // StartNewRound starts a new round of blackjack in the game.
-func (g *Game) StartNewRound() {
+func (g *Game) StartNewRound() error {
 	// If the game is already active, do nothing.
 	if g.IsActive() {
-		return
+		return nil
 	}
 
+	err := g.game.StartNewRound()
+	if err != nil {
+		return err
+	}
 	g.state = InProgress
+	return nil
 }
 
 // EndRound ends the current round of blackjack for the guild, removing all players from the game.
@@ -151,8 +167,57 @@ func (g *Game) WaitForPlayers() int {
 	if waitTime > 0 {
 		return int(waitTime.Seconds())
 	}
-	g.StartNewRound()
 	return 0
+}
+
+// DealInitialCards deals the initial cards to all players and the dealer.
+func (g *Game) DealInitialCards() error {
+	return g.game.DealInitialCards()
+}
+
+// Dealer returns the dealer of the blackjack game.
+func (g *Game) Dealer() *bj.Dealer {
+	return g.game.Dealer()
+}
+
+// PlayerHit processes a hit action for the specified player.
+func (g *Game) PlayerHit(playerName string) error {
+	return g.game.PlayerHit(playerName)
+}
+
+// PlayerStand processes a stand action for the specified player.
+func (g *Game) PlayerStand(playerName string) error {
+	return g.game.PlayerStand(playerName)
+}
+
+// PlayerDoubleDownHit processes a double down hit action for the specified player.
+func (g *Game) PlayerDoubleDownHit(playerName string) error {
+	return g.game.PlayerDoubleDownHit(playerName)
+}
+
+// PlayerSplit processes a split action for the specified player.
+func (g *Game) PlayerSplit(playerName string) error {
+	return g.game.PlayerSplit(playerName)
+}
+
+// PlayerSurrender processes a surrender action for the specified player.
+func (g *Game) PlayerSurrender(playerName string) error {
+	return g.game.PlayerSurrender(playerName)
+}
+
+// DealerPlay processes the dealer's play according to blackjack rules.
+func (g *Game) DealerPlay() error {
+	return g.game.DealerPlay()
+}
+
+// PayoutResults pays out the results of the blackjack game.
+func (g *Game) PayoutResults() {
+	g.game.PayoutResults()
+}
+
+// EvaluateHand evaluates the result of a specific hand for a player.
+func (g *Game) EvaluateHand(player *bj.Player) bj.GameResult {
+	return g.game.EvaluateHand(player)
 }
 
 // Lock locks the game's mutex.

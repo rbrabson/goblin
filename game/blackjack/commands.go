@@ -3,12 +3,14 @@ package blackjack
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	bj "github.com/rbrabson/blackjack"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 var (
@@ -115,6 +117,7 @@ func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	game := GetGame(i.GuildID)
 
+	game.Lock()
 	if !startChecks(s, i) {
 		game.Unlock()
 		return
@@ -133,9 +136,11 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		game.Unlock()
 		return
 	}
+	showJoinGame(s, i, game)
 	game.Unlock()
 
 	waitForRoundToStart(s, i)
+	showStartingGame(s, i, game)
 	playRound(s, i)
 }
 
@@ -149,26 +154,28 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for {
 		select {
 		case <-timeout:
-			// TODO: send message saying the game has started
 			return
 		case <-tick:
 			if game.IsActive() {
-				// TODO: send message saying the game has started
 				return
 			}
-			// TODO: send message saying waiting for players, and the time remaining
+			showJoinGame(s, i, game)
 		}
 	}
 }
 
 // playRound handles playing a round of blackjack.
 func playRound(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	g := GetGame(i.GuildID)
-	defer g.EndRound()
+	game := GetGame(i.GuildID)
+	defer game.EndRound()
+
+	game.Lock()
+	showCurrentTurn(s, i, game)
+	game.Unlock()
 
 	// TODO: can't just send a response here; need to update the existing message
 	//       We'll need to save that in the Game struct.
-	if err := g.game.StartNewRound(); err != nil {
+	if err := game.StartNewRound(); err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Error starting new round: " + err.Error()),
 		)
@@ -186,7 +193,7 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 		return
 	}
-	if err := g.game.DealInitialCards(); err != nil {
+	if err := game.DealInitialCards(); err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("Error dealing initial cards: " + err.Error()),
 		)
@@ -208,19 +215,19 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Show initial cards
 
 	// Check for dealer blackjack, and only proceed to player turns if dealer doesn't have blackjack
-	if !g.game.Dealer().HasBlackjack() {
+	if !game.Dealer().HasBlackjack() {
 		playerTurns(s, i)
 		dealerTurn(s, i)
 	}
 
-	showRoundResults(g.game)
-	g.game.PayoutResults()
+	showRoundResults(game)
+	game.PayoutResults()
 }
 
 // playerTurns handles the turns for each player in blackjack, until all players have stood or busted.
 func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	g := GetGame(i.GuildID)
-	for _, player := range g.game.Players() {
+	game := GetGame(i.GuildID)
+	for _, player := range game.Players() {
 		if !player.IsActive() {
 			continue
 		}
@@ -267,11 +274,12 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 				fmt.Print(": ")
 
-				action := <-g.turnChan
+				// TODO: use a Select with a timeout here; if time out, then select "Stand" for the player action
+				action := <-game.turnChan
 
 				switch action {
 				case Hit:
-					err := g.game.PlayerHit(player.Name())
+					err := game.PlayerHit(player.Name())
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 						continue
@@ -286,7 +294,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 				case Stand:
 					fmt.Printf("Standing on hand.\n")
-					err := g.game.PlayerStand(player.Name())
+					err := game.PlayerStand(player.Name())
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 						continue
@@ -304,7 +312,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						continue
 					}
 
-					err = g.game.PlayerDoubleDownHit(player.Name())
+					err = game.PlayerDoubleDownHit(player.Name())
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 						continue
@@ -317,7 +325,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					}
 
 					// Double down ends the hand
-					err = g.game.PlayerStand(player.Name())
+					err = game.PlayerStand(player.Name())
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 					}
@@ -328,7 +336,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						continue
 					}
 
-					err := g.game.PlayerSplit(player.Name())
+					err := game.PlayerSplit(player.Name())
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 						continue
@@ -344,7 +352,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						continue
 					}
 
-					err := g.game.PlayerSurrender(player.Name())
+					err := game.PlayerSurrender(player.Name())
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 						continue
@@ -370,26 +378,26 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // dealerTurn handles the dealer's turn in blackjack.
 func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	g := GetGame(i.GuildID)
+	game := GetGame(i.GuildID)
 	// Dealer turn (if any players are still in)
-	if hasActiveNonBustedPlayers(g.game) {
+	if hasActiveNonBustedPlayers(game) {
 		fmt.Println("\n🎯 Dealer's turn:")
 		fmt.Println("Revealing hole card...")
-		fmt.Println(g.game.Dealer().RevealHoleCard())
+		fmt.Println(game.Dealer().RevealHoleCard())
 
-		err := g.game.DealerPlay()
+		err := game.DealerPlay()
 		if err != nil {
 			fmt.Printf("Error during dealer play: %v\n", err)
 			return
 		}
 
 		fmt.Println("\nDealer finished:")
-		fmt.Println(g.game.Dealer().String())
+		fmt.Println(game.Dealer().String())
 	}
 }
 
 // hasActiveNonBustedPlayers checks if there are any active non-busted players in the game.
-func hasActiveNonBustedPlayers(game *bj.Game) bool {
+func hasActiveNonBustedPlayers(game *Game) bool {
 	for _, player := range game.Players() {
 		if player.Bet() > 0 && !player.CurrentHand().IsBusted() {
 			return true
@@ -398,8 +406,116 @@ func hasActiveNonBustedPlayers(game *bj.Game) bool {
 	return false
 }
 
+// showJoinGame displays the join game message with a button to join.
+func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	msg := "A new game of blackjack has started! Click the button below to join the game."
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	playerNames := make([]string, 0, len(game.Players()))
+	for _, player := range game.Players() {
+		playerNames = append(playerNames, "<@"+player.Name()+">")
+	}
+
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Type:  discordgo.EmbedTypeRich,
+			Title: "Blackjack",
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:   msg,
+					Inline: false,
+				},
+				{
+					Name:   p.Sprintf("Players (%d)", len(game.Players())),
+					Value:  strings.Join(playerNames, ", "),
+					Inline: false,
+				},
+			},
+		},
+	}
+
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				joinButton,
+			},
+		},
+	}
+	if game.interaction == nil {
+		if err := s.InteractionRespond(game.interaction.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds:     embeds,
+				Components: components,
+			},
+		}); err != nil {
+			slog.Error("error sending blackjack interaction response",
+				slog.String("guildID", game.guildID),
+				slog.String("memberID", game.interaction.Member.User.ID),
+				slog.Any("error", err),
+			)
+		}
+		game.interaction = i
+	} else {
+		if _, err := s.InteractionResponseEdit(game.interaction.Interaction, &discordgo.WebhookEdit{
+			Embeds:     &embeds,
+			Components: &components,
+		}); err != nil {
+			slog.Error("error editing blackjack interaction response",
+				slog.String("guildID", game.guildID),
+				slog.String("memberID", game.interaction.Member.User.ID),
+				slog.Any("error", err),
+			)
+		}
+	}
+}
+
+// showStartingGame displays the starting game message when the round begins.
+func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	msg := "A new game of blackjack is starting! The dealer is dealing the hands!"
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	playerNames := make([]string, 0, len(game.Players()))
+	for _, player := range game.Players() {
+		playerNames = append(playerNames, "<@"+player.Name()+">")
+	}
+
+	embeds := []*discordgo.MessageEmbed{
+		{
+			Type:  discordgo.EmbedTypeRich,
+			Title: "Blackjack",
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:   msg,
+					Inline: false,
+				},
+				{
+					Name:   p.Sprintf("Players (%d)", len(game.Players())),
+					Value:  strings.Join(playerNames, ", "),
+					Inline: false,
+				},
+			},
+		},
+	}
+
+	if _, err := s.InteractionResponseEdit(game.interaction.Interaction, &discordgo.WebhookEdit{
+		Embeds: &embeds,
+	}); err != nil {
+		slog.Error("error editing blackjack interaction response",
+			slog.String("guildID", game.guildID),
+			slog.String("memberID", game.interaction.Member.User.ID),
+			slog.Any("error", err),
+		)
+	}
+}
+
+// showCurrentTurn displays the current turn information for the active player.
+func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	// TODO: implement
+}
+
 // showRoundResults displays the results of the blackjack round for each player.
-func showRoundResults(game *bj.Game) {
+func showRoundResults(game *Game) {
 	fmt.Println("\n💰 Round Results:")
 	fmt.Println("================")
 
@@ -440,8 +556,27 @@ func blackjackJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	if err := game.AddPlayer(i.Member.User.ID); err != nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("Error joining the game: " + err.Error()),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("memberID", i.Member.User.ID),
+				slog.Any("error", err),
+			)
+		}
+		slog.Error("error adding player to blackjack game",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.Any("error", err),
+		)
+		return
+	}
+
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent("Join Not Implemented Yet."),
+		disgomsg.WithContent("You have joined the game."),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 		slog.Error("error sending response",
@@ -450,6 +585,7 @@ func blackjackJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
+	// TODO: update the game message to show the new player has joined
 }
 
 // blackjackHit handles a player hitting in blackjack.
@@ -611,8 +747,8 @@ func playHandChecks(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
 	}
 
 	player := game.GetPlayer(i.Member.User.ID)
-	activePlayer := game.game.GetActivePlayer()
-	if player == nil || game.game.GetActivePlayer() != player {
+	activePlayer := game.GetActivePlayer()
+	if player == nil || player != activePlayer {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You are not the active player."),
 		)
