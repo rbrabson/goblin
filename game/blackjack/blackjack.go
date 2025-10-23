@@ -142,6 +142,9 @@ func (g *Game) EndRound() {
 	for _, player := range g.game.Players() {
 		g.game.RemovePlayer(player.Name())
 	}
+	for len(g.turnChan) > 0 {
+		<-g.turnChan
+	}
 	g.state = WaitingForPlayers
 }
 
