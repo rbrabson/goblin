@@ -140,7 +140,12 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	game.Unlock()
 
 	waitForRoundToStart(s, i)
+
+	game.Lock()
+	game.StartNewRound()
 	showStartingGame(s, i, game)
+	game.Unlock()
+
 	playRound(s, i)
 }
 
@@ -156,7 +161,8 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case <-timeout:
 			return
 		case <-tick:
-			if game.IsActive() {
+			secondsBeforeStart := game.SecondsBeforeStart()
+			if game.IsActive() || secondsBeforeStart == 0 {
 				return
 			}
 			showJoinGame(s, i, game)
@@ -585,7 +591,8 @@ func blackjackJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
-	// TODO: update the game message to show the new player has joined
+
+	showJoinGame(s, i, game)
 }
 
 // blackjackHit handles a player hitting in blackjack.

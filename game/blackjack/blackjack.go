@@ -160,9 +160,9 @@ func (g *Game) IsWaitingForPlayers() bool {
 	return g.state == WaitingForPlayers
 }
 
-// WaitForPlayers returns the number of seconds remaining to wait for players
+// SecondsBeforeStart returns the number of seconds remaining to wait for players
 // before starting the game. If the wait time has elapsed, it returns 0.
-func (g *Game) WaitForPlayers() int {
+func (g *Game) SecondsBeforeStart() int {
 	waitTime := time.Until(g.gameStartTime)
 	if waitTime > 0 {
 		return int(waitTime.Seconds())
