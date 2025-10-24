@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
+	"github.com/rbrabson/goblin/internal/format"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -55,7 +56,7 @@ var (
 var (
 	joinButton = discordgo.Button{
 		Label:    "Join",
-		Style:    discordgo.PrimaryButton,
+		Style:    discordgo.SuccessButton,
 		CustomID: "join",
 	}
 	hitButton = discordgo.Button{
@@ -163,6 +164,7 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case <-tick:
 			secondsBeforeStart := game.SecondsBeforeStart()
 			if game.IsActive() || secondsBeforeStart == 0 {
+				showJoinGame(s, i, game)
 				return
 			}
 			showJoinGame(s, i, game)
@@ -343,8 +345,10 @@ func hasActiveNonBustedPlayers(game *Game) bool {
 
 // showJoinGame displays the join game message with a button to join.
 func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	msg := "A new game of blackjack has started! Click the button below to join the game."
 	p := message.NewPrinter(language.AmericanEnglish)
+
+	until := time.Until(game.gameStartTime)
+	msg := fmt.Sprintf("A new game of blackjack has started! Click the button below to join the game!\n\t\t\t\t\t<The race will begin in %s>", format.Duration(until))
 
 	playerNames := make([]string, 0, len(game.Players()))
 	for _, player := range game.Players() {
@@ -407,7 +411,7 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 
 // showStartingGame displays the starting game message when the round begins.
 func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	msg := "A new game of blackjack is starting! The dealer is dealing the hands!"
+	msg := "The dealer is dealing the hands!"
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	playerNames := make([]string, 0, len(game.Players()))
