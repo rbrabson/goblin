@@ -372,8 +372,10 @@ func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game
 // hasActiveNonBustedPlayers checks if there are any active non-busted players in the game.
 func hasActiveNonBustedPlayers(game *Game) bool {
 	for _, player := range game.Players() {
-		if player.Bet() > 0 && !player.CurrentHand().IsBusted() {
-			return true
+		for _, hand := range player.Hands() {
+			if hand.IsActive() && !hand.IsBusted() {
+				return true
+			}
 		}
 	}
 	return false
@@ -492,7 +494,7 @@ func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game
 
 // showDeal displays the deal information for the blackjack game.
 func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+2)
+	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
 	var title string
 	if game.message == nil {
@@ -503,20 +505,9 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 
 	dealerHand := game.Dealer().Hand()
 	embeds = append(embeds, &discordgo.MessageEmbed{
-		Type:  discordgo.EmbedTypeRich,
-		Title: title,
-	})
-
-	embeds = append(embeds, &discordgo.MessageEmbed{
-		Type:  discordgo.EmbedTypeRich,
-		Title: "Dealer",
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "Hand",
-				Value:  game.symbols.GetHand(dealerHand, hasActiveNonBustedPlayers(game)),
-				Inline: false,
-			},
-		},
+		Type:        discordgo.EmbedTypeRich,
+		Title:       title,
+		Description: "**Dealer Hand**: " + game.symbols.GetHand(dealerHand, !hasActiveNonBustedPlayers(game)),
 	})
 
 	for _, player := range game.Players() {
@@ -571,24 +562,12 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 
 // showCurrentTurn displays the current turn information for the active player.
 func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+2)
-
-	dealerHand := game.Dealer().Hand()
-	embeds = append(embeds, &discordgo.MessageEmbed{
-		Type:  discordgo.EmbedTypeRich,
-		Title: "Blackjack - Player Turn",
-	})
+	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
 	embeds = append(embeds, &discordgo.MessageEmbed{
-		Type:  discordgo.EmbedTypeRich,
-		Title: "Dealer",
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "Hand",
-				Value:  game.symbols.GetHand(dealerHand, true),
-				Inline: false,
-			},
-		},
+		Type:        discordgo.EmbedTypeRich,
+		Title:       "Blackjack - Player Turn",
+		Description: "**Dealer Hand**: " + game.symbols.GetHand(game.Dealer().Hand(), false),
 	})
 
 	for _, player := range game.Players() {
@@ -608,6 +587,22 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 		}
 		embeds = append(embeds, playerEmbed)
 	}
+	embeds = append(embeds, &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: "Current Turn",
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Player",
+				Value:  guild.GetMember(game.guildID, game.GetActivePlayer().Name()).Name,
+				Inline: true,
+			},
+			{
+				Name:   "Hand",
+				Value:  fmt.Sprintf("%v", game.symbols.GetHand(game.GetActivePlayer().CurrentHand(), false)),
+				Inline: true,
+			},
+		},
+	})
 
 	buttons := make([]discordgo.MessageComponent, 0, 5)
 
@@ -652,8 +647,9 @@ func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 	embeds = append(embeds, &discordgo.MessageEmbed{
-		Type:  discordgo.EmbedTypeRich,
-		Title: "Blackjack - Results",
+		Type:        discordgo.EmbedTypeRich,
+		Title:       "Blackjack - Results",
+		Description: "**Dealer Hand**: " + game.symbols.GetHand(game.Dealer().Hand(), false),
 	})
 	for _, player := range game.Players() {
 		embed := &discordgo.MessageEmbed{
@@ -669,22 +665,22 @@ func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 			case hand.Winnings() < 0:
 				result = p.Sprintf("Lost %d credits", -hand.Winnings())
 			default:
-				result = p.Sprintf("Push, bet %d credits, winnings %d credits", hand.Bet(), hand.Winnings())
-				// result = "Push"
+				result = "Push"
 			}
-			field := &discordgo.MessageEmbedField{
+			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   p.Sprintf("Hand %d", idx+1),
-				Value:  result,
+				Value:  p.Sprintf("%s\n**Result**: %s", game.symbols.GetHand(hand, false), result),
 				Inline: false,
-			}
-			embed.Fields = append(embed.Fields, field)
+			})
 		}
 
 		embeds = append(embeds, embed)
 	}
 
-	_, err := s.ChannelMessageSendComplex(i.ChannelID, &discordgo.MessageSend{
-		Embeds: embeds,
+	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		Channel: game.message.ChannelID,
+		ID:      game.message.ID,
+		Embeds:  &embeds,
 	})
 	if err != nil {
 		slog.Error("error sending blackjack result message",
