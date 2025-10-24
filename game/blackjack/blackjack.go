@@ -145,6 +145,7 @@ func (g *Game) EndRound() {
 	for len(g.turnChan) > 0 {
 		<-g.turnChan
 	}
+	g.interaction = nil
 	g.state = WaitingForPlayers
 }
 
