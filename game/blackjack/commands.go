@@ -634,13 +634,8 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 		Color: 0x00ff00, // Green
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "Hand",
+				Name:   fmt.Sprintf("Hand (time remaining: %s)", format.Duration(waitTime)),
 				Value:  game.symbols.GetHand(game.GetActivePlayer().CurrentHand(), false),
-				Inline: false,
-			},
-			{
-				Name:   "Time Remaining",
-				Value:  format.Duration(waitTime),
 				Inline: false,
 			},
 		},
@@ -703,9 +698,18 @@ func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 			var result string
 			switch {
 			case hand.Winnings() > 0:
-				result = p.Sprintf("Won %d credits", hand.Winnings())
+				if hand.Winnings() == 1 {
+					result = "Won 1 credit"
+				} else {
+					result = p.Sprintf("Won %d credits", hand.Winnings())
+				}
 			case hand.Winnings() < 0:
-				result = p.Sprintf("Lost %d credits", -hand.Winnings())
+				if hand.Winnings() == -1 {
+					result = "Lost 1 credit"
+				} else {
+					result = p.Sprintf("Lost %d credits", -hand.Winnings())
+
+				}
 			default:
 				result = "Push"
 			}
@@ -720,9 +724,10 @@ func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 	}
 
 	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-		Channel: game.message.ChannelID,
-		ID:      game.message.ID,
-		Embeds:  &embeds,
+		Channel:    game.message.ChannelID,
+		ID:         game.message.ID,
+		Embeds:     &embeds,
+		Components: &[]discordgo.MessageComponent{},
 	})
 	if err != nil {
 		slog.Error("error sending blackjack result message",
