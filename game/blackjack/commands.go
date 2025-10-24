@@ -507,7 +507,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
 		Title:       title,
-		Description: "**Dealer Hand**: " + game.symbols.GetHand(dealerHand, !hasActiveNonBustedPlayers(game)),
+		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(dealerHand, !hasActiveNonBustedPlayers(game)),
 	})
 
 	for _, player := range game.Players() {
@@ -567,7 +567,7 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
 		Title:       "Blackjack - Player Turn",
-		Description: "**Dealer Hand**: " + game.symbols.GetHand(game.Dealer().Hand(), false),
+		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), false),
 	})
 
 	for _, player := range game.Players() {
