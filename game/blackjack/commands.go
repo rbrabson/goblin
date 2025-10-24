@@ -10,6 +10,7 @@ import (
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
+	"github.com/rbrabson/goblin/internal/format"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -233,20 +234,29 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				continue
 			}
 
-			showCurrentTurn(s, i, game)
+			// Wait for the player action or timeout
+			waitUntil := time.Now().Add(game.config.PlayerTimeout)
+			showCurrentTurn(s, i, game, time.Until(waitUntil))
 
-			// TODO: use a Select with a timeout here; if time out, then select "Stand" for the player action
 			var action Action
 			timeout := time.After(game.config.PlayerTimeout)
-			select {
-			case pa := <-game.turnChan:
-				action = pa
-			case <-timeout:
-				slog.Debug("player turn timed out, defaulting to Stand",
-					slog.String("guildID", game.guildID),
-					slog.String("playerName", playerName),
-				)
-				action = Stand
+			tick := time.Tick(1 * time.Second)
+		GetAction:
+			for {
+				select {
+				case pa := <-game.turnChan:
+					action = pa
+					break GetAction
+				case <-timeout:
+					slog.Debug("player turn timed out, defaulting to Stand",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", playerName),
+					)
+					action = Stand
+					break GetAction
+				case <-tick:
+					showCurrentTurn(s, i, game, time.Until(waitUntil))
+				}
 			}
 
 			switch action {
@@ -592,7 +602,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 }
 
 // showCurrentTurn displays the current turn information for the active player.
-func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, waitTime time.Duration) {
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
 	embeds = append(embeds, &discordgo.MessageEmbed{
@@ -620,17 +630,18 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 	}
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:  discordgo.EmbedTypeRich,
-		Title: "Current Turn",
+		Title: guild.GetMember(game.guildID, game.GetActivePlayer().Name()).Name + "'s Turn",
+		Color: 0x00ff00, // Green
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "Player",
-				Value:  guild.GetMember(game.guildID, game.GetActivePlayer().Name()).Name,
-				Inline: true,
+				Name:   "Hand",
+				Value:  game.symbols.GetHand(game.GetActivePlayer().CurrentHand(), false),
+				Inline: false,
 			},
 			{
-				Name:   "Hand",
-				Value:  fmt.Sprintf("%v", game.symbols.GetHand(game.GetActivePlayer().CurrentHand(), false)),
-				Inline: true,
+				Name:   "Time Remaining",
+				Value:  format.Duration(waitTime),
+				Inline: false,
 			},
 		},
 	})
