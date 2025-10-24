@@ -377,7 +377,7 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 		},
 	}
 	if game.interaction == nil {
-		if err := s.InteractionRespond(game.interaction.Interaction, &discordgo.InteractionResponse{
+		if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Embeds:     embeds,
