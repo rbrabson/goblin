@@ -158,6 +158,8 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	showStartingGame(s, i, game)
 	game.Unlock()
 
+	// wait for 3 seconds before playing the round
+	time.Sleep(3 * time.Second)
 	playRound(s, i)
 }
 
@@ -429,27 +431,24 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 
 // showStartingGame displays the starting game message when the round begins.
 func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	msg := "The dealer is dealing the hands!"
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	playerNames := make([]string, 0, len(game.Players()))
 	for _, player := range game.Players() {
-		playerNames = append(playerNames, "<@"+player.Name()+">")
+		member := guild.GetMember(game.guildID, player.Name())
+		playerNames = append(playerNames, member.Name)
 	}
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Type:  discordgo.EmbedTypeRich,
-			Title: "Blackjack - Deal",
+			Type:        discordgo.EmbedTypeRich,
+			Title:       "Blackjack",
+			Description: "The round is starting! The dealer is dealing the hands to the players.",
 			Fields: []*discordgo.MessageEmbedField{
-				{
-					Name:   msg,
-					Inline: false,
-				},
 				{
 					Name:   p.Sprintf("Players (%d)", len(game.Players())),
 					Value:  strings.Join(playerNames, ", "),
-					Inline: false,
+					Inline: true,
 				},
 			},
 		},

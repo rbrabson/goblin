@@ -12,10 +12,10 @@ type Symbols map[string]map[string]string
 func GetSymbols() *Symbols {
 	return &Symbols{
 		"Suits": {
-			"Diamonds": "♦",
-			"Hearts":   "♥",
-			"Clubs":    "♣",
-			"Spades":   "♠",
+			"Diamonds": ":diamonds:",
+			"Hearts":   ":hearts:",
+			"Clubs":    ":clubs:",
+			"Spades":   ":spades:",
 		},
 		"HiddenCard": {
 			"Card": "🂠",
