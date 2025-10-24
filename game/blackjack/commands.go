@@ -9,7 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
-	"github.com/rbrabson/goblin/internal/format"
+	"github.com/rbrabson/goblin/guild"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -137,6 +137,9 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		game.Unlock()
 		return
 	}
+
+	guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+
 	showJoinGame(s, i, game)
 	game.Unlock()
 
@@ -164,7 +167,6 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case <-tick:
 			secondsBeforeStart := game.SecondsBeforeStart()
 			if game.IsActive() || secondsBeforeStart == 0 {
-				showJoinGame(s, i, game)
 				return
 			}
 			showJoinGame(s, i, game)
@@ -347,12 +349,19 @@ func hasActiveNonBustedPlayers(game *Game) bool {
 func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	until := time.Until(game.gameStartTime)
-	msg := fmt.Sprintf("A new game of blackjack has started! Click the button below to join the game!\n\t\t\t\t\t<The race will begin in %s>", format.Duration(until))
+	seconds := game.SecondsBeforeStart()
+	var until string
+	if seconds == 1 {
+		until = "1 second"
+	} else {
+		until = p.Sprintf("%d seconds", seconds)
+	}
+	msg := fmt.Sprintf("A new game is starting! Click the button below to join the game!\n\t\t\t\t\tThe game will begin in %s", until)
 
 	playerNames := make([]string, 0, len(game.Players()))
 	for _, player := range game.Players() {
-		playerNames = append(playerNames, "<@"+player.Name()+">")
+		member := guild.GetMember(game.guildID, player.Name())
+		playerNames = append(playerNames, member.Name)
 	}
 
 	embeds := []*discordgo.MessageEmbed{
@@ -422,7 +431,7 @@ func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Type:  discordgo.EmbedTypeRich,
-			Title: "Blackjack",
+			Title: "Blackjack - Deal",
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   msg,
@@ -438,7 +447,8 @@ func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game
 	}
 
 	if _, err := s.InteractionResponseEdit(game.interaction.Interaction, &discordgo.WebhookEdit{
-		Embeds: &embeds,
+		Embeds:     &embeds,
+		Components: &[]discordgo.MessageComponent{},
 	}); err != nil {
 		slog.Error("error editing blackjack interaction response",
 			slog.String("guildID", game.guildID),
@@ -450,17 +460,54 @@ func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game
 
 // showDeal displays the deal information for the blackjack game.
 func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	var status strings.Builder
+	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
-	// Show the dealer's hand (with one card hidden)
-	status.WriteString(fmt.Sprintf("%s\n", game.Dealer().StringHidden()))
+	dealerHand := game.Dealer().Hand()
+	embeds = append(embeds, &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: "Blackjack - Deal",
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Dealer",
+				Inline: false,
+			},
+			{
+				Name:   "Hand",
+				Value:  game.symbols.GetHand(dealerHand, true),
+				Inline: false,
+			},
+		},
+	})
 
-	// Show players
 	for _, player := range game.Players() {
-		status.WriteString(fmt.Sprintf("%s\n", player.String()))
+		member := guild.GetMember(game.guildID, player.Name())
+		playerEmbed := &discordgo.MessageEmbed{
+			Type:   discordgo.EmbedTypeRich,
+			Title:  member.Name,
+			Fields: make([]*discordgo.MessageEmbedField, 0, len(player.Hands())),
+		}
+		for idx, hand := range player.Hands() {
+			handField := &discordgo.MessageEmbedField{
+				Name:   fmt.Sprintf("Hand %d", idx+1),
+				Value:  game.symbols.GetHand(&hand, false),
+				Inline: false,
+			}
+			playerEmbed.Fields = append(playerEmbed.Fields, handField)
+		}
+		embeds = append(embeds, playerEmbed)
 	}
 
-	fmt.Println(status.String())
+	if _, err := s.InteractionResponseEdit(game.interaction.Interaction, &discordgo.WebhookEdit{
+		Embeds:     &embeds,
+		Components: &[]discordgo.MessageComponent{},
+	}); err != nil {
+		slog.Error("error editing blackjack interaction response",
+			slog.String("guildID", game.guildID),
+			slog.String("memberID", game.interaction.Member.User.ID),
+			slog.Any("error", err),
+		)
+	}
+
 }
 
 // showCurrentTurn displays the current turn information for the active player.
@@ -548,6 +595,8 @@ func blackjackJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if !joinChecks(s, i) {
 		return
 	}
+
+	guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 
 	if err := game.AddPlayer(i.Member.User.ID); err != nil {
 		resp := disgomsg.NewResponse(

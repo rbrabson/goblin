@@ -42,6 +42,7 @@ type Game struct {
 	gameStartTime time.Time
 	turnChan      chan Action
 	interaction   *discordgo.InteractionCreate
+	symbols       *Symbols
 	lock          sync.Mutex
 }
 
@@ -68,6 +69,7 @@ func newGame(guildID string) *Game {
 		config:   config,
 		state:    NotStarted,
 		turnChan: make(chan Action),
+		symbols:  GetSymbols(),
 		lock:     sync.Mutex{},
 	}
 
