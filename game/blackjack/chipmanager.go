@@ -34,6 +34,12 @@ func (c *ChipManager) SetChips(amount int) {
 
 // AddChips adds the specified amount of chips to the player's account.
 func (c *ChipManager) AddChips(amount int) {
+	if amount == 0 {
+		slog.Warn("attempted to add zero blackjack chips to account",
+			slog.String("guildID", c.guildID),
+			slog.String("memberID", c.memberID))
+		return
+	}
 	account := bank.GetAccount(c.guildID, c.memberID)
 	if err := account.Deposit(amount); err != nil {
 		slog.Error("failed to add chips to account",
@@ -41,13 +47,30 @@ func (c *ChipManager) AddChips(amount int) {
 			slog.String("memberID", c.memberID),
 			slog.Int("amount", amount),
 			slog.Any("error", err))
+		return
 	}
+	slog.Debug("added blackjack chips to account",
+		slog.String("guildID", c.guildID),
+		slog.String("memberID", c.memberID),
+		slog.Int("amount", amount))
 }
 
 // DeductChips deducts the specified amount of chips from the player's account.
 func (c *ChipManager) DeductChips(amount int) error {
 	account := bank.GetAccount(c.guildID, c.memberID)
-	return account.Withdraw(amount)
+	if err := account.Withdraw(amount); err != nil {
+		slog.Error("failed to deduct chips from account",
+			slog.String("guildID", c.guildID),
+			slog.String("memberID", c.memberID),
+			slog.Int("amount", amount),
+			slog.Any("error", err))
+		return err
+	}
+	slog.Debug("deducted blackjack chips from account",
+		slog.String("guildID", c.guildID),
+		slog.String("memberID", c.memberID),
+		slog.Int("amount", amount))
+	return nil
 }
 
 // HasEnoughChips checks if the player has enough chips for the specified amount.

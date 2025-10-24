@@ -151,20 +151,20 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	showJoinGame(s, i, game)
 	game.Unlock()
 
-	waitForRoundToStart(s, i)
+	waitForRoundToStart(s, i, game)
 
 	game.Lock()
 	game.StartNewRound()
 	showStartingGame(s, i, game)
 	game.Unlock()
 
-	playRound(s, i)
+	playRound(s, i, game)
+
+	game.EndRound()
 }
 
 // waitForRoundToStart waits for the round to start for the blackjack game.
-func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
-
+func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	// Wait until the game starts or a timeout occurs.
 	timeout := time.After(game.config.WaitForPlayers)
 	tick := time.Tick(1 * time.Second)
@@ -183,11 +183,7 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 // playRound handles playing a round of blackjack.
-func playRound(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
-	defer game.EndRound()
-
-	game.StartNewRound()
+func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	game.DealInitialCards()
 	showDeal(s, i, game)
 
@@ -197,9 +193,17 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		dealerTurn(s, i, game)
 	}
 
-	showResults(s, i, game)
+	for _, player := range game.Players() {
+		result := game.EvaluateHand(player)
+		slog.Info("player result",
+			slog.String("guildID", game.guildID),
+			slog.String("playerName", player.Name()),
+			slog.Any("result", result),
+		)
+	}
+
 	game.PayoutResults()
-	game.EndRound()
+	showResults(s, i, game)
 }
 
 // playerTurns handles the turns for each player in blackjack, until all players have stood or busted.
@@ -525,7 +529,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 		for idx, hand := range player.Hands() {
 			handField := &discordgo.MessageEmbedField{
 				Name:   fmt.Sprintf("Hand %d", idx+1),
-				Value:  game.symbols.GetHand(&hand, false),
+				Value:  game.symbols.GetHand(hand, false),
 				Inline: false,
 			}
 			playerEmbed.Fields = append(playerEmbed.Fields, handField)
@@ -597,7 +601,7 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 		for idx, hand := range player.Hands() {
 			handField := &discordgo.MessageEmbedField{
 				Name:   fmt.Sprintf("Hand %d", idx+1),
-				Value:  game.symbols.GetHand(&hand, false),
+				Value:  game.symbols.GetHand(hand, false),
 				Inline: false,
 			}
 			playerEmbed.Fields = append(playerEmbed.Fields, handField)
@@ -649,7 +653,7 @@ func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:  discordgo.EmbedTypeRich,
-		Title: "Blackjack - Round Results",
+		Title: "Blackjack - Results",
 	})
 	for _, player := range game.Players() {
 		embed := &discordgo.MessageEmbed{
@@ -665,7 +669,8 @@ func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 			case hand.Winnings() < 0:
 				result = p.Sprintf("Lost %d credits", -hand.Winnings())
 			default:
-				result = "Push"
+				result = p.Sprintf("Push, bet %d credits, winnings %d credits", hand.Bet(), hand.Winnings())
+				// result = "Push"
 			}
 			field := &discordgo.MessageEmbedField{
 				Name:   p.Sprintf("Hand %d", idx+1),

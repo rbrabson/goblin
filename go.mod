@@ -6,7 +6,8 @@ require (
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/joho/godotenv v1.5.1
 	github.com/olekukonko/tablewriter v1.1.0
-	github.com/rbrabson/blackjack v1.1.1
+	github.com/rbrabson/blackjack v1.2.1
+	github.com/rbrabson/cards v0.0.0-20250930172612-22ab548ff9f8
 	github.com/rbrabson/disgomsg v0.12.1
 	github.com/rbrabson/disgopage v0.3.0
 	github.com/rbrabson/slots v1.0.3
@@ -27,7 +28,6 @@ require (
 	github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 // indirect
 	github.com/olekukonko/errors v1.1.0 // indirect
 	github.com/olekukonko/ll v0.1.2 // indirect
-	github.com/rbrabson/cards v0.0.0-20250930172612-22ab548ff9f8 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect

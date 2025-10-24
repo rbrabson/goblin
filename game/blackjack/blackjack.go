@@ -137,6 +137,7 @@ func (g *Game) StartNewRound() error {
 	if err != nil {
 		return err
 	}
+
 	g.state = InProgress
 	return nil
 }
@@ -151,7 +152,7 @@ func (g *Game) EndRound() {
 	}
 	g.interaction = nil
 	g.message = nil
-	g.state = WaitingForPlayers
+	g.state = NotStarted
 }
 
 // NotStarted returns whether the blackjack game has not yet started.
@@ -181,7 +182,15 @@ func (g *Game) SecondsBeforeStart() int {
 
 // DealInitialCards deals the initial cards to all players and the dealer.
 func (g *Game) DealInitialCards() error {
-	return g.game.DealInitialCards()
+	if err := g.game.DealInitialCards(); err != nil {
+		return err
+	}
+	for _, player := range g.game.Players() {
+		for _, hand := range player.Hands() {
+			hand.SetBet(g.config.BetAmount)
+		}
+	}
+	return nil
 }
 
 // Dealer returns the dealer of the blackjack game.
