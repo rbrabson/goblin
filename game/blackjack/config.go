@@ -21,6 +21,7 @@ type Config struct {
 	BlackjackPay      float64       `json:"blackjack_pay"`
 	DelayBetweenGames time.Duration `json:"delay_between_games"`
 	WaitForPlayers    time.Duration `json:"wait_for_players"`
+	PlayerTimeout     time.Duration `json:"player_timeout"`
 }
 
 // String returns a string representation of the Config struct.
@@ -55,6 +56,7 @@ func defaultConfig() *Config {
 		BlackjackPay:      1.5,
 		DelayBetweenGames: 10 * time.Second,
 		WaitForPlayers:    30 * time.Second,
+		PlayerTimeout:     15 * time.Second,
 	}
 }
 
@@ -68,6 +70,7 @@ func readConfigFromFile() *Config {
 	_ = json.Unmarshal(bytes, &config)
 	config.DelayBetweenGames *= time.Second
 	config.WaitForPlayers *= time.Second
+	config.PlayerTimeout *= time.Second
 
 	return &config
 }

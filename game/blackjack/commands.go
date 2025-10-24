@@ -209,12 +209,20 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game)
 // playerTurns handles the turns for each player in blackjack, until all players have stood or busted.
 func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	for _, player := range game.Players() {
+		playerName := guild.GetMember(game.guildID, player.Name()).Name
+		slog.Debug("starting turn for player",
+			slog.String("playerName", playerName),
+		)
 		if !player.IsActive() {
 			continue
 		}
 
 		for player.HasActiveHands() {
 			currentHand := player.CurrentHand()
+			slog.Debug("processing player hand",
+				slog.String("playerName", playerName),
+				slog.Any("hand", currentHand),
+			)
 
 			// Check for player blackjack
 			if currentHand.IsBlackjack() {
@@ -228,14 +236,25 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 			showCurrentTurn(s, i, game)
 
 			// TODO: use a Select with a timeout here; if time out, then select "Stand" for the player action
-			action := <-game.turnChan
+			var action Action
+			timeout := time.After(game.config.PlayerTimeout)
+			select {
+			case pa := <-game.turnChan:
+				action = pa
+			case <-timeout:
+				slog.Debug("player turn timed out, defaulting to Stand",
+					slog.String("guildID", game.guildID),
+					slog.String("playerName", playerName),
+				)
+				action = Stand
+			}
 
 			switch action {
 			case Hit:
 				if err := game.PlayerHit(player.Name()); err != nil {
 					slog.Error("error processing player hit",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 						slog.Any("error", err),
 					)
 					continue
@@ -253,7 +272,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if err := game.PlayerStand(player.Name()); err != nil {
 					slog.Error("error processing player stand",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 						slog.Any("error", err),
 					)
 					continue
@@ -263,7 +282,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if !player.CanDoubleDown() {
 					slog.Error("cannot double down",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 					)
 					continue
 				}
@@ -271,7 +290,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if err := player.DoubleDown(); err != nil {
 					slog.Error("error processing player double down",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 						slog.Any("error", err),
 					)
 					continue
@@ -280,7 +299,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if err := game.PlayerDoubleDownHit(player.Name()); err != nil {
 					slog.Error("error processing player double down hit",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 						slog.Any("error", err),
 					)
 					continue
@@ -289,7 +308,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if currentHand.IsBusted() {
 					slog.Debug("player hand busted after double down",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 					)
 					currentHand.SetActive(false)
 				}
@@ -298,7 +317,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if err := game.PlayerStand(player.Name()); err != nil {
 					slog.Error("error processing player stand after double down",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 						slog.Any("error", err),
 					)
 					continue
@@ -308,7 +327,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if !player.CanSplit() {
 					slog.Error("cannot split",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 					)
 					continue
 				}
@@ -316,7 +335,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if err := game.PlayerSplit(player.Name()); err != nil {
 					slog.Error("error processing player split",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 						slog.Any("error", err),
 					)
 					continue
@@ -325,7 +344,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if !player.CanSurrender() {
 					slog.Error("cannot surrender",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 					)
 					continue
 				}
@@ -333,7 +352,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				if err := game.PlayerSurrender(player.Name()); err != nil {
 					slog.Error("error processing player surrender",
 						slog.String("guildID", game.guildID),
-						slog.String("playerName", player.Name()),
+						slog.String("playerName", playerName),
 						slog.Any("error", err),
 					)
 					continue
@@ -342,7 +361,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 			default:
 				slog.Error("invalid player action",
 					slog.String("guildID", game.guildID),
-					slog.String("playerName", player.Name()),
+					slog.String("playerName", playerName),
 					slog.Any("action", action),
 				)
 			}
@@ -352,20 +371,21 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 		if !player.CurrentHand().IsActive() {
 			if !player.MoveToNextActiveHand() {
 				player.SetActive(false)
-				break
+				continue
 			}
 		}
 	}
-
-	showDeal(s, i, game)
 }
 
 // dealerTurn handles the dealer's turn in blackjack.
 func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	// Dealer turn (if any players are still in)
-	if hasActiveNonBustedPlayers(game) {
+	if hasNonBustedPlayers(game) {
+		showDeal(s, i, game)
+		time.Sleep(1 * time.Second)
 		game.DealerPlay()
 		showDeal(s, i, game)
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -374,6 +394,17 @@ func hasActiveNonBustedPlayers(game *Game) bool {
 	for _, player := range game.Players() {
 		for _, hand := range player.Hands() {
 			if hand.IsActive() && !hand.IsBusted() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func hasNonBustedPlayers(game *Game) bool {
+	for _, player := range game.Players() {
+		for _, hand := range player.Hands() {
+			if !hand.IsBusted() {
 				return true
 			}
 		}
@@ -500,7 +531,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 	if game.message == nil {
 		title = "Blackjack - Deal"
 	} else {
-		title = "Blackjack - Round Over"
+		title = "Blackjack - Dealer's Turn"
 	}
 
 	dealerHand := game.Dealer().Hand()
@@ -567,7 +598,7 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
 		Title:       "Blackjack - Player Turn",
-		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), false),
+		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), true),
 	})
 
 	for _, player := range game.Players() {
@@ -649,7 +680,7 @@ func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
 		Title:       "Blackjack - Results",
-		Description: "**Dealer Hand**: " + game.symbols.GetHand(game.Dealer().Hand(), false),
+		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), false),
 	})
 	for _, player := range game.Players() {
 		embed := &discordgo.MessageEmbed{
