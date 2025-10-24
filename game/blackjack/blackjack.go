@@ -43,6 +43,7 @@ type Game struct {
 	gameStartTime time.Time
 	turnChan      chan Action
 	interaction   *discordgo.InteractionCreate
+	message       *discordgo.Message
 	symbols       *Symbols
 	lock          sync.Mutex
 }
@@ -149,6 +150,7 @@ func (g *Game) EndRound() {
 		<-g.turnChan
 	}
 	g.interaction = nil
+	g.message = nil
 	g.state = WaitingForPlayers
 }
 
@@ -242,6 +244,7 @@ func (g *Game) Unlock() {
 	g.lock.Unlock()
 }
 
+// handValue calculates the value of a blackjack hand.
 func handValue(hand *bj.Hand, hidden bool) int {
 	visibleValue := 0
 	aces := 0

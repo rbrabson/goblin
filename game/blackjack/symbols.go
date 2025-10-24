@@ -85,7 +85,6 @@ func GetSymbols() *Symbols {
 
 // GetHand returns a string representation of the hand using the provided symbols.
 func (s Symbols) GetHand(hand *bj.Hand, hidden bool) string {
-
 	cards := make([]string, 0, len(hand.Cards()))
 	var sb strings.Builder
 	for idx, card := range hand.Cards() {
@@ -98,9 +97,16 @@ func (s Symbols) GetHand(hand *bj.Hand, hidden bool) string {
 		}
 	}
 	sb.WriteString(strings.Join(cards, " "))
-	sb.WriteString(" (value: ")
-	sb.WriteString(fmt.Sprintf("%d", handValue(hand, hidden)))
-	sb.WriteString(")")
+	switch {
+	case hand.IsBlackjack():
+		sb.WriteString(" (blackjack)")
+	case hand.IsBusted():
+		sb.WriteString(" (busted)")
+	default:
+		sb.WriteString(" (value: ")
+		sb.WriteString(fmt.Sprintf("%d", handValue(hand, hidden)))
+		sb.WriteString(")")
+	}
 
 	return sb.String()
 }

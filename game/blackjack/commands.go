@@ -158,8 +158,6 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	showStartingGame(s, i, game)
 	game.Unlock()
 
-	// wait for 3 seconds before playing the round
-	time.Sleep(3 * time.Second)
 	playRound(s, i)
 }
 
@@ -176,7 +174,7 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		case <-tick:
 			secondsBeforeStart := game.SecondsBeforeStart()
-			if game.IsActive() || secondsBeforeStart == 0 {
+			if game.IsActive() || len(game.Players()) == game.config.MaxPlayers || secondsBeforeStart == 0 {
 				return
 			}
 			showJoinGame(s, i, game)
@@ -195,17 +193,17 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Check for dealer blackjack, and only proceed to player turns if dealer doesn't have blackjack
 	if !game.Dealer().HasBlackjack() {
-		playerTurns(s, i)
-		dealerTurn(s, i)
+		playerTurns(s, i, game)
+		dealerTurn(s, i, game)
 	}
 
-	showResults(game)
+	showResults(s, i, game)
 	game.PayoutResults()
+	game.EndRound()
 }
 
 // playerTurns handles the turns for each player in blackjack, until all players have stood or busted.
-func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
+func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	for _, player := range game.Players() {
 		if !player.IsActive() {
 			continue
@@ -216,7 +214,6 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 			// Check for player blackjack
 			if currentHand.IsBlackjack() {
-				fmt.Printf("🎯 %s has blackjack on hand %d!\n", player.Name(), player.GetCurrentHandIndex()+1)
 				if !player.MoveToNextActiveHand() {
 					player.SetActive(false)
 					break
@@ -231,89 +228,119 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 			switch action {
 			case Hit:
-				err := game.PlayerHit(player.Name())
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if err := game.PlayerHit(player.Name()); err != nil {
+					slog.Error("error processing player hit",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+						slog.Any("error", err),
+					)
 					continue
 				}
 
-				fmt.Printf("Drew: %s\n", currentHand.String())
-
 				if currentHand.IsBusted() {
-					fmt.Printf("💥 Hand busted!\n")
+					slog.Debug("player hand busted",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+					)
 					currentHand.SetActive(false)
 				}
 
 			case Stand:
-				fmt.Printf("Standing on hand.\n")
-				err := game.PlayerStand(player.Name())
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if err := game.PlayerStand(player.Name()); err != nil {
+					slog.Error("error processing player stand",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+						slog.Any("error", err),
+					)
 					continue
 				}
 
 			case DoubleDown:
 				if !player.CanDoubleDown() {
-					fmt.Println("Cannot double down.")
+					slog.Error("cannot double down",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+					)
 					continue
 				}
 
-				err := player.DoubleDown()
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if err := player.DoubleDown(); err != nil {
+					slog.Error("error processing player double down",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+						slog.Any("error", err),
+					)
 					continue
 				}
 
-				err = game.PlayerDoubleDownHit(player.Name())
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if err := game.PlayerDoubleDownHit(player.Name()); err != nil {
+					slog.Error("error processing player double down hit",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+						slog.Any("error", err),
+					)
 					continue
 				}
-
-				fmt.Printf("Doubled down! Drew: %s\n", currentHand.String())
 
 				if currentHand.IsBusted() {
-					fmt.Printf("💥 Hand busted!\n")
+					slog.Debug("player hand busted after double down",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+					)
+					currentHand.SetActive(false)
 				}
 
 				// Double down ends the hand
-				err = game.PlayerStand(player.Name())
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if err := game.PlayerStand(player.Name()); err != nil {
+					slog.Error("error processing player stand after double down",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+						slog.Any("error", err),
+					)
+					continue
 				}
 
 			case Split:
 				if !player.CanSplit() {
-					fmt.Println("Cannot split.")
+					slog.Error("cannot split",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+					)
 					continue
 				}
 
-				err := game.PlayerSplit(player.Name())
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if err := game.PlayerSplit(player.Name()); err != nil {
+					slog.Error("error processing player split",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+						slog.Any("error", err),
+					)
 					continue
 				}
-
-				fmt.Printf("Hand split! You now have %d hands.\n", len(player.Hands()))
-				// Show current hand after split
-				fmt.Printf("Current hand: %s\n", currentHand.String())
-
 			case Surrender:
 				if !player.CanSurrender() {
-					fmt.Println("Cannot surrender.")
+					slog.Error("cannot surrender",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+					)
 					continue
 				}
 
-				err := game.PlayerSurrender(player.Name())
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
+				if err := game.PlayerSurrender(player.Name()); err != nil {
+					slog.Error("error processing player surrender",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", player.Name()),
+						slog.Any("error", err),
+					)
 					continue
 				}
-
-				fmt.Printf("Surrendered! Half bet returned.\n")
 
 			default:
-				fmt.Println("Invalid action. Please choose (h)it, (s)tand, (d)ouble down, s(p)lit, or s(u)rrender if available.")
+				slog.Error("invalid player action",
+					slog.String("guildID", game.guildID),
+					slog.String("playerName", player.Name()),
+					slog.Any("action", action),
+				)
 			}
 		}
 
@@ -325,23 +352,16 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 		}
 	}
+
+	showDeal(s, i, game)
 }
 
 // dealerTurn handles the dealer's turn in blackjack.
-func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
-
+func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	// Dealer turn (if any players are still in)
 	if hasActiveNonBustedPlayers(game) {
-		fmt.Println("\n🎯 Dealer's turn:")
-		fmt.Println("Revealing hole card...")
-		fmt.Println(game.Dealer().RevealHoleCard())
-
 		game.DealerPlay()
-	}
-
-	for _, action := range game.Dealer().Hand().Actions() {
-		fmt.Println(action)
+		showDeal(s, i, game)
 	}
 }
 
@@ -470,10 +490,89 @@ func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game
 func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+2)
 
+	var title string
+	if game.message == nil {
+		title = "Blackjack - Deal"
+	} else {
+		title = "Blackjack - Round Over"
+	}
+
 	dealerHand := game.Dealer().Hand()
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:  discordgo.EmbedTypeRich,
-		Title: "Blackjack - Deal",
+		Title: title,
+	})
+
+	embeds = append(embeds, &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: "Dealer",
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Hand",
+				Value:  game.symbols.GetHand(dealerHand, hasActiveNonBustedPlayers(game)),
+				Inline: false,
+			},
+		},
+	})
+
+	for _, player := range game.Players() {
+		member := guild.GetMember(game.guildID, player.Name())
+		playerEmbed := &discordgo.MessageEmbed{
+			Type:   discordgo.EmbedTypeRich,
+			Title:  member.Name,
+			Fields: make([]*discordgo.MessageEmbedField, 0, len(player.Hands())),
+		}
+		for idx, hand := range player.Hands() {
+			handField := &discordgo.MessageEmbedField{
+				Name:   fmt.Sprintf("Hand %d", idx+1),
+				Value:  game.symbols.GetHand(&hand, false),
+				Inline: false,
+			}
+			playerEmbed.Fields = append(playerEmbed.Fields, handField)
+		}
+		embeds = append(embeds, playerEmbed)
+	}
+
+	if game.message != nil {
+		m, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Channel:    game.message.ChannelID,
+			ID:         game.message.ID,
+			Embeds:     &embeds,
+			Components: &[]discordgo.MessageComponent{},
+		})
+		if err != nil {
+			slog.Error("error editing blackjack deal message",
+				slog.String("guildID", game.guildID),
+				slog.String("memberID", game.interaction.Member.User.ID),
+				slog.Any("error", err),
+			)
+			return
+		}
+		game.message = m
+	} else {
+		m, err := s.ChannelMessageSendComplex(i.ChannelID, &discordgo.MessageSend{
+			Embeds: embeds,
+		})
+		if err != nil {
+			slog.Error("error sending blackjack deal message",
+				slog.String("guildID", game.guildID),
+				slog.String("memberID", game.interaction.Member.User.ID),
+				slog.Any("error", err),
+			)
+			return
+		}
+		game.message = m
+	}
+}
+
+// showCurrentTurn displays the current turn information for the active player.
+func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+2)
+
+	dealerHand := game.Dealer().Hand()
+	embeds = append(embeds, &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: "Blackjack - Player Turn",
 	})
 
 	embeds = append(embeds, &discordgo.MessageEmbed{
@@ -506,91 +605,89 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 		embeds = append(embeds, playerEmbed)
 	}
 
-	if _, err := s.InteractionResponseEdit(game.interaction.Interaction, &discordgo.WebhookEdit{
-		Embeds:     &embeds,
-		Components: &[]discordgo.MessageComponent{},
-	}); err != nil {
-		slog.Error("error editing blackjack interaction response",
-			slog.String("guildID", game.guildID),
-			slog.String("memberID", game.interaction.Member.User.ID),
-			slog.Any("error", err),
-		)
-	}
-
-}
-
-// showCurrentTurn displays the current turn information for the active player.
-func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	for _, player := range game.Players() {
-		if player != game.GetActivePlayer() {
-			currentHand := player.CurrentHand()
-			for _, hand := range player.Hands() {
-				if len(player.Hands()) > 1 {
-					fmt.Printf("\n%s - Hand %d of %d: %s",
-						player.Name(),
-						player.GetCurrentHandIndex()+1,
-						len(player.Hands()),
-						hand.String())
-				} else {
-					fmt.Printf("\n%s: %s", player.Name(), hand.String())
-				}
-				if &hand == currentHand {
-					fmt.Print("  <-- Current Hand\n")
-				} else {
-					fmt.Print("\n")
-				}
-			}
-		}
-	}
+	buttons := make([]discordgo.MessageComponent, 0, 5)
 
 	// Player actions for current hand. These should be adding buttons to the message.
 	player := game.GetActivePlayer()
 	currentHand := player.CurrentHand()
 	if currentHand.IsActive() && !currentHand.IsBusted() && !currentHand.IsBlackjack() {
-		fmt.Printf("\n%s's turn - Current hand: %s\n", player.Name(), currentHand.String())
-		fmt.Print("Choose action: ")
-		fmt.Print("(h)it")
-		fmt.Print(", (s)tand")
+		buttons = append(buttons, hitButton, standButton)
 		if player.CanDoubleDown() {
-			fmt.Print(", (d)ouble down")
+			buttons = append(buttons, doubleDownButton)
 		}
 		if player.CanSplit() {
-			fmt.Print(", s(p)lit")
+			buttons = append(buttons, splitButton)
 		}
 		if player.CanSurrender() {
-			fmt.Print(", s(u)rrender")
+			buttons = append(buttons, surrenderButton)
 		}
 	}
+
+	m, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		Channel: game.message.ChannelID,
+		ID:      game.message.ID,
+		Embeds:  &embeds,
+		Components: &[]discordgo.MessageComponent{
+			discordgo.ActionsRow{Components: buttons},
+		},
+	})
+	if err != nil {
+		slog.Error("error editing blackjack deal message",
+			slog.String("guildID", game.guildID),
+			slog.String("memberID", game.interaction.Member.User.ID),
+			slog.Any("error", err),
+		)
+		return
+	}
+	game.message = m
 }
 
 // showResults displays the results of the blackjack round for each player.
-func showResults(game *Game) {
-	fmt.Println("\n💰 Round Results:")
-	fmt.Println("================")
+func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	p := message.NewPrinter(language.AmericanEnglish)
 
+	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
+	embeds = append(embeds, &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: "Blackjack - Round Results",
+	})
 	for _, player := range game.Players() {
-		if player.Bet() == 0 {
-			continue
+		embed := &discordgo.MessageEmbed{
+			Title:  guild.GetMember(game.guildID, player.Name()).Name,
+			Fields: make([]*discordgo.MessageEmbedField, 0, len(player.Hands())),
 		}
 
-		hands := player.Hands()
-		if len(hands) == 1 {
-			// Single hand
-			result := game.EvaluateHand(player)
-			fmt.Printf("%s: %s\n", player.Name(), result.String())
-		} else {
-			// Multiple hands (splits)
-			fmt.Printf("%s:\n", player.Name())
-			for i := 0; i < len(hands); i++ {
-				// Temporarily set current hand for evaluation
-				originalHandIdx := player.GetCurrentHandIndex()
-				player.SetCurrentHandIndex(i)
-				result := game.EvaluateHand(player)
-				fmt.Printf("  Hand %d: %s\n", i+1, result.String())
-				player.SetCurrentHandIndex(originalHandIdx)
+		for idx, hand := range player.Hands() {
+			var result string
+			switch {
+			case hand.Winnings() > 0:
+				result = p.Sprintf("Won %d credits", hand.Winnings())
+			case hand.Winnings() < 0:
+				result = p.Sprintf("Lost %d credits", -hand.Winnings())
+			default:
+				result = "Push"
 			}
+			field := &discordgo.MessageEmbedField{
+				Name:   p.Sprintf("Hand %d", idx+1),
+				Value:  result,
+				Inline: false,
+			}
+			embed.Fields = append(embed.Fields, field)
 		}
-		fmt.Printf("  Final Chips: %d\n", player.Chips())
+
+		embeds = append(embeds, embed)
+	}
+
+	_, err := s.ChannelMessageSendComplex(i.ChannelID, &discordgo.MessageSend{
+		Embeds: embeds,
+	})
+	if err != nil {
+		slog.Error("error sending blackjack result message",
+			slog.String("guildID", game.guildID),
+			slog.String("memberID", game.interaction.Member.User.ID),
+			slog.Any("error", err),
+		)
+		return
 	}
 }
 
@@ -652,6 +749,10 @@ func blackjackHit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	game.turnChan <- Hit
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
 }
 
 // blackjackStand handles a player standing in blackjack.
@@ -666,6 +767,10 @@ func blackjackStand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	game.turnChan <- Stand
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
 }
 
 // blackjackDoubleDown handles a player doubling down in blackjack.
@@ -680,6 +785,10 @@ func blackjackDoubleDown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	game.turnChan <- DoubleDown
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
 }
 
 // blackjackSplit handles a player splitting their hand in blackjack.
@@ -694,6 +803,10 @@ func blackjackSplit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	game.turnChan <- Split
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
 }
 
 // blackjackSurrender handles a player surrendering in blackjack.
@@ -708,6 +821,10 @@ func blackjackSurrender(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	game.turnChan <- Surrender
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
 }
 
 // startChecks performs checks to see if a game can be started.
