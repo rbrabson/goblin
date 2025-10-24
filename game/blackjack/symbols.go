@@ -25,7 +25,7 @@ func GetSymbols() *Symbols {
 			"Two":   "2",
 			"Three": "3",
 			"Four":  "4",
-			"FFive": "5",
+			"Five":  "5",
 			"Six":   "6",
 			"Seven": "7",
 			"Eight": "8",
@@ -40,7 +40,7 @@ func GetSymbols() *Symbols {
 			"Two":   "2",
 			"Three": "3",
 			"Four":  "4",
-			"FFive": "5",
+			"Five":  "5",
 			"Six":   "6",
 			"Seven": "7",
 			"Eight": "8",
@@ -55,7 +55,7 @@ func GetSymbols() *Symbols {
 			"Two":   "2",
 			"Three": "3",
 			"Four":  "4",
-			"FFive": "5",
+			"Five":  "5",
 			"Six":   "6",
 			"Seven": "7",
 			"Eight": "8",
@@ -70,7 +70,7 @@ func GetSymbols() *Symbols {
 			"Two":   "2",
 			"Three": "3",
 			"Four":  "4",
-			"FFive": "5",
+			"Five":  "5",
 			"Six":   "6",
 			"Seven": "7",
 			"Eight": "8",
@@ -79,13 +79,6 @@ func GetSymbols() *Symbols {
 			"Jack":  "J",
 			"Queen": "Q",
 			"King":  "K",
-		},
-		"actions": {
-			"hit":        "🃏",
-			"stand":      "✋",
-			"doubleDown": "💰",
-			"split":      "🔀",
-			"surrender":  "🏳️",
 		},
 	}
 }
@@ -105,16 +98,9 @@ func (s Symbols) GetHand(hand *bj.Hand, hidden bool) string {
 		}
 	}
 	sb.WriteString(strings.Join(cards, " "))
+	sb.WriteString(" (value: ")
+	sb.WriteString(fmt.Sprintf("%d", handValue(hand, hidden)))
+	sb.WriteString(")")
 
-	if hidden {
-		handValue(hand, true)
-		sb.WriteString(" (visible value: ")
-		sb.WriteString(fmt.Sprintf("%d", handValue(hand, true)))
-		sb.WriteString(")")
-	} else {
-		sb.WriteString(" (value: ")
-		sb.WriteString(fmt.Sprintf("%d", handValue(hand, false)))
-		sb.WriteString(")")
-	}
 	return sb.String()
 }

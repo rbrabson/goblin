@@ -15,14 +15,16 @@ import (
 )
 
 var (
+	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"join_blackjack":       blackjackJoinGame,
+		"hit_blackjack":        blackjackHit,
+		"stand_blackjack":      blackjackStand,
+		"doubledown_blackjack": blackjackDoubleDown,
+		"split_blackjack":      blackjackSplit,
+		"surrender_blackjack":  blackjackSurrender,
+	}
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"blackjack":   blackjack,
-		"join":        blackjackJoinGame,
-		"hit":         blackjackHit,
-		"stand":       blackjackStand,
-		"double_down": blackjackDoubleDown,
-		"split":       blackjackSplit,
-		"surrender":   blackjackSurrender,
+		"blackjack": blackjack,
 	}
 
 	memberCommands = []*discordgo.ApplicationCommand{
@@ -57,32 +59,38 @@ var (
 	joinButton = discordgo.Button{
 		Label:    "Join",
 		Style:    discordgo.SuccessButton,
-		CustomID: "join",
+		CustomID: "join_blackjack",
+		Emoji:    nil,
 	}
 	hitButton = discordgo.Button{
 		Label:    "Hit",
 		Style:    discordgo.PrimaryButton,
-		CustomID: "hit",
+		CustomID: "hit_blackjack",
+		Emoji:    nil,
 	}
 	standButton = discordgo.Button{
 		Label:    "Stand",
 		Style:    discordgo.PrimaryButton,
-		CustomID: "staad",
+		CustomID: "stand_blackjack",
+		Emoji:    nil,
 	}
 	doubleDownButton = discordgo.Button{
 		Label:    "Double Down",
 		Style:    discordgo.PrimaryButton,
-		CustomID: "doubleDown",
+		CustomID: "doubledown_blackjack",
+		Emoji:    nil,
 	}
 	splitButton = discordgo.Button{
 		Label:    "Split",
 		Style:    discordgo.PrimaryButton,
-		CustomID: "split",
+		CustomID: "split_blackjack",
+		Emoji:    nil,
 	}
 	surrenderButton = discordgo.Button{
 		Label:    "Surrender",
 		Style:    discordgo.DangerButton,
-		CustomID: "surrender",
+		CustomID: "surrender_blackjack",
+		Emoji:    nil,
 	}
 )
 
@@ -356,7 +364,6 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 	} else {
 		until = p.Sprintf("%d seconds", seconds)
 	}
-	msg := fmt.Sprintf("A new game is starting! Click the button below to join the game!\n\t\t\t\t\tThe game will begin in %s", until)
 
 	playerNames := make([]string, 0, len(game.Players()))
 	for _, player := range game.Players() {
@@ -366,17 +373,19 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 
 	embeds := []*discordgo.MessageEmbed{
 		{
-			Type:  discordgo.EmbedTypeRich,
-			Title: "Blackjack",
+			Type:        discordgo.EmbedTypeRich,
+			Title:       "Blackjack",
+			Description: p.Sprintf("A new blackjack game is starting. You can join the game for a cost of %d credits at any time prior to the game starting.", game.config.BetAmount),
 			Fields: []*discordgo.MessageEmbedField{
 				{
-					Name:   msg,
-					Inline: false,
+					Name:   "Status",
+					Value:  p.Sprintf("Starts in %s", until),
+					Inline: true,
 				},
 				{
 					Name:   p.Sprintf("Players (%d)", len(game.Players())),
 					Value:  strings.Join(playerNames, ", "),
-					Inline: false,
+					Inline: true,
 				},
 			},
 		},
@@ -460,17 +469,18 @@ func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game
 
 // showDeal displays the deal information for the blackjack game.
 func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
+	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+2)
 
 	dealerHand := game.Dealer().Hand()
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:  discordgo.EmbedTypeRich,
 		Title: "Blackjack - Deal",
+	})
+
+	embeds = append(embeds, &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: "Dealer",
 		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "Dealer",
-				Inline: false,
-			},
 			{
 				Name:   "Hand",
 				Value:  game.symbols.GetHand(dealerHand, true),
