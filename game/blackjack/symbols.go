@@ -1,6 +1,9 @@
 package blackjack
 
 import (
+	"fmt"
+	"strings"
+
 	bj "github.com/rbrabson/blackjack"
 )
 
@@ -8,29 +11,110 @@ type Symbols map[string]map[string]string
 
 func GetSymbols() *Symbols {
 	return &Symbols{
-		"cards": {
-			"S": "♠",
-			"H": "♥",
-			"D": "♦",
-			"C": "♣",
+		"Suits": {
+			"Diamonds": "♦",
+			"Hearts":   "♥",
+			"Clubs":    "♣",
+			"Spades":   "♠",
+		},
+		"HiddenCard": {
+			"Card": "🂠",
+		},
+		"Diamonds": {
+			"Ace":   "A",
+			"Two":   "2",
+			"Three": "3",
+			"Four":  "4",
+			"FFive": "5",
+			"Six":   "6",
+			"Seven": "7",
+			"Eight": "8",
+			"Nine":  "9",
+			"Ten":   "10",
+			"Jack":  "J",
+			"Queen": "Q",
+			"King":  "K",
+		},
+		"Clubs": {
+			"Ace":   "A",
+			"Two":   "2",
+			"Three": "3",
+			"Four":  "4",
+			"FFive": "5",
+			"Six":   "6",
+			"Seven": "7",
+			"Eight": "8",
+			"Nine":  "9",
+			"Ten":   "10",
+			"Jack":  "J",
+			"Queen": "Q",
+			"King":  "K",
+		},
+		"Hearts": {
+			"Ace":   "A",
+			"Two":   "2",
+			"Three": "3",
+			"Four":  "4",
+			"FFive": "5",
+			"Six":   "6",
+			"Seven": "7",
+			"Eight": "8",
+			"Nine":  "9",
+			"Ten":   "10",
+			"Jack":  "J",
+			"Queen": "Q",
+			"King":  "K",
+		},
+		"Spades": {
+			"Ace":   "A",
+			"Two":   "2",
+			"Three": "3",
+			"Four":  "4",
+			"FFive": "5",
+			"Six":   "6",
+			"Seven": "7",
+			"Eight": "8",
+			"Nine":  "9",
+			"Ten":   "10",
+			"Jack":  "J",
+			"Queen": "Q",
+			"King":  "K",
 		},
 		"actions": {
 			"hit":        "🃏",
 			"stand":      "✋",
 			"doubleDown": "💰",
 			"split":      "🔀",
-		},
-		"hand": {
-			"hidden":    "🂠",
-			"busted":    "💥",
-			"blackjack": "🃏",
+			"surrender":  "🏳️",
 		},
 	}
 }
 
+// GetHand returns a string representation of the hand using the provided symbols.
 func (s Symbols) GetHand(hand *bj.Hand, hidden bool) string {
-	if hidden {
-		return hand.StringHidden()
+
+	cards := make([]string, 0, len(hand.Cards()))
+	var sb strings.Builder
+	for idx, card := range hand.Cards() {
+		if hidden && idx == 0 {
+			cards = append(cards, s["HiddenCard"]["Card"])
+		} else {
+			suit := s["Suits"][card.Suit.String()]
+			rank := s[card.Suit.String()][card.Rank.String()]
+			cards = append(cards, rank+suit)
+		}
 	}
-	return hand.String()
+	sb.WriteString(strings.Join(cards, " "))
+
+	if hidden {
+		handValue(hand, true)
+		sb.WriteString(" (visible value: ")
+		sb.WriteString(fmt.Sprintf("%d", handValue(hand, true)))
+		sb.WriteString(")")
+	} else {
+		sb.WriteString(" (value: ")
+		sb.WriteString(fmt.Sprintf("%d", handValue(hand, false)))
+		sb.WriteString(")")
+	}
+	return sb.String()
 }

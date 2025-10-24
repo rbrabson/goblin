@@ -6,6 +6,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	bj "github.com/rbrabson/blackjack"
+	"github.com/rbrabson/cards"
 )
 
 var (
@@ -239,4 +240,33 @@ func (g *Game) Lock() {
 // Unlock unlocks the game's mutex.
 func (g *Game) Unlock() {
 	g.lock.Unlock()
+}
+
+func handValue(hand *bj.Hand, hidden bool) int {
+	visibleValue := 0
+	aces := 0
+	for idx, card := range hand.Cards() {
+		if hidden && idx == 0 {
+			continue
+		}
+
+		rank := card.Rank
+		switch rank {
+		case cards.Jack, cards.Queen, cards.King:
+			visibleValue += 10
+		case cards.Ace:
+			aces++
+			visibleValue += 11
+		default:
+			visibleValue += int(rank)
+		}
+	}
+
+	// Adjust for aces
+	for aces > 0 && visibleValue > 21 {
+		visibleValue -= 10
+		aces--
+	}
+
+	return visibleValue
 }
