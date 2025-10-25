@@ -1,0 +1,72 @@
+{
+    "Suits": {
+        "Clubs": ":clubs:",
+        "Diamonds": ":diamonds:",
+        "Hearts": ":hearts:",
+        "Spades": ":spades:"
+    },
+    "Cards": {
+        "Back": "<:backside_of_card:1431696868949360751>",
+        "Multiple": "<:multiple_cards:1431696869970723840>"
+    },
+    "Clubs": {
+        "Ace": "<:ace_of_clubs:1431696862737596418>",
+        "Eight": "<:eight_of_clubs:1431696872992407702>",
+        "Five": "<:five_of_clubs:1431696878696923319>",
+        "Four": "<:four_of_clubs:1431696882832380065>",
+        "Jack": "<:jack_of_clubs:1431696888402415928>",
+        "King": "<:king_of_clubs:1431696892982464582>",
+        "Nine": "<:nine_of_clubs:1431696898007371796>",
+        "Queen": "<:queen_of_clubs:1431696902176637088>",
+        "Seven": "<:seven_of_clubs:1431696906437918851>",
+        "Six": "<:six_of_clubs:1431696911920009276>",
+        "Ten": "<:ten_of_clubs:1431696916802174996>",
+        "Three": "<:three_of_clubs:1431696922976063619>",
+        "Two": "<:two_of_clubs:1431696927472357446>"
+    },
+    "Diamonds": {
+        "Ace": "<:ace_of_diamonds:1431696865648316427>",
+        "Eight": "<:eight_of_diamonds:1431696874087252130>",
+        "Five": "<:five_of_diamonds:1431696879569211402>",
+        "Four": "<:four_of_diamonds:1431696883402670154>",
+        "Jack": "<:jack_of_diamonds:1431696889484541982>",
+        "King": "<:king_of_diamonds:1431696894517842052>",
+        "Nine": "<:nine_of_diamonds:1431696898883981453>",
+        "Queen": "<:queen_of_diamonds:1431696903036207305>",
+        "Seven": "<:seven_of_diamonds:1431696908392468530>",
+        "Six": "<:six_of_diamonds:1431696912842490018>",
+        "Ten": "<:ten_of_diamonds:1431696918534295572>",
+        "Three": "<:three_of_diamonds:1431696924603318544>",
+        "Two": "<:two_of_diamonds:1431696928386715689>"
+    },
+    "Hearts": {
+        "Ace": "<:ace_of_hearts:1431696866625458267>",
+        "Eight": "<:eight_of_hearts:1431696875408461915>",
+        "Five": "<:five_of_hearts:1431696880319860746>",
+        "Four": "<:four_of_hearts:1431696884791115849>",
+        "Jack": "<:jack_of_hearts:1431696890864599271>",
+        "King": "<:king_of_hearts:1431696895906021529>",
+        "Nine": "<:nine_of_hearts:1431696899500544002>",
+        "Queen": "<:queen_of_hearts:1431696904206422046>",
+        "Seven": "<:seven_of_hearts:1431696909877383369>",
+        "Six": "<:six_of_hearts:1431696914394382446>",
+        "Ten": "<:ten_of_hearts:1431696920429985842>",
+        "Three": "<:three_of_hearts:1431696925496967329>",
+        "Two": "<:two_of_hearts:1431696929288355960>"
+    },
+    "Spades": {
+        "Ace": "<:ace_of_spades:1431696867661713418>",
+        "Eight": "<:eight_of_spades:1431696876603703529>",
+        "Five": "<:five_of_spades:1431696881653776595>",
+        "Four": "<:four_of_spades:1431696886460452916>",
+        "Jack": "<:jack_of_spades:1431696892135473292>",
+        "King": "<:king_of_spades:1431696896770052188>",
+        "Nine": "<:nine_of_spades:1431696901320867982>",
+        "Queen": "<:queen_of_spades:1431696905334947892>",
+        "Seven": "<:seven_of_spades:1431696910934081567>",
+        "Six": "<:six_of_spades:1431696915682168882>",
+        "Ten": "<:ten_of_spades:1431696921923289178>",
+        "Three": "<:three_of_spades:1431696926704926840>",
+        "Two": "<:two_of_spades:1431696930114633879>"
+    }
+}
