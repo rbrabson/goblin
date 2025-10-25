@@ -441,7 +441,7 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Type:        discordgo.EmbedTypeRich,
-			Title:       "Blackjack",
+			Title:       game.symbols["Cards"]["Multiple"] + "Blackjack" + game.symbols["Cards"]["Multiple"],
 			Description: p.Sprintf("A new blackjack game is starting. You can join the game for a cost of %d credits at any time prior to the game starting.", game.config.BetAmount),
 			Fields: []*discordgo.MessageEmbedField{
 				{
@@ -507,7 +507,7 @@ func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Type:        discordgo.EmbedTypeRich,
-			Title:       "Blackjack",
+			Title:       game.symbols["Cards"]["Multiple"] + "Blackjack" + game.symbols["Cards"]["Multiple"],
 			Description: "The round is starting! The dealer is dealing the hands to the players.",
 			Fields: []*discordgo.MessageEmbedField{
 				{
@@ -537,9 +537,9 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 
 	var title string
 	if game.message == nil {
-		title = "Blackjack - Deal"
+		title = game.symbols["Cards"]["Multiple"] + "Blackjack - Deal" + game.symbols["Cards"]["Multiple"]
 	} else {
-		title = "Blackjack - Dealer's Turn"
+		title = game.symbols["Cards"]["Multiple"] + "Blackjack - Dealer's Turn" + game.symbols["Cards"]["Multiple"]
 	}
 
 	dealerHand := game.Dealer().Hand()
@@ -605,7 +605,7 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
-		Title:       "Blackjack - Player Turn",
+		Title:       game.symbols["Cards"]["Multiple"] + "Blackjack - Player Turn" + game.symbols["Cards"]["Multiple"],
 		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), true),
 	})
 
@@ -683,7 +683,7 @@ func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
-		Title:       "Blackjack - Results",
+		Title:       game.symbols["Cards"]["Multiple"] + "Blackjack - Results" + game.symbols["Cards"]["Multiple"],
 		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), false),
 	})
 	for _, player := range game.Players() {

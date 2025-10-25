@@ -44,7 +44,7 @@ type Game struct {
 	turnChan      chan Action
 	interaction   *discordgo.InteractionCreate
 	message       *discordgo.Message
-	symbols       *Symbols
+	symbols       Symbols
 	lock          sync.Mutex
 }
 

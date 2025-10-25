@@ -18,7 +18,7 @@ const (
 
 type Symbols map[string]map[string]string
 
-func GetSymbols() *Symbols {
+func GetSymbols() Symbols {
 	symbols := readSymbolsFromFile()
 	if symbols == nil {
 		symbols = getDefaultSymbols()
@@ -27,7 +27,7 @@ func GetSymbols() *Symbols {
 }
 
 // readSymbolsFromFile reads the symbols from the configuration file. If the file cannot be read or unmarshaled, nil is returned.
-func readSymbolsFromFile() *Symbols {
+func readSymbolsFromFile() Symbols {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	configFileName := filepath.Join(configDir, "blackjack", "symbols", symbolsFile+".json")
 	bytes, err := os.ReadFile(configFileName)
@@ -53,12 +53,12 @@ func readSymbolsFromFile() *Symbols {
 		slog.String("symbolsFile", symbolsFile),
 	)
 
-	return &symbols
+	return symbols
 }
 
 // getDefaultSymbols returns the default symbols for the game.
-func getDefaultSymbols() *Symbols {
-	return &Symbols{
+func getDefaultSymbols() Symbols {
+	return Symbols{
 		"Suits": {
 			"Diamonds": ":diamonds:",
 			"Hearts":   ":hearts:",
@@ -66,7 +66,7 @@ func getDefaultSymbols() *Symbols {
 			"Spades":   ":spades:",
 		},
 		"Cards": {
-			"Multiple": "<:multiple_cards:1431696869970723840>",
+			"Multiple": "<:deck_of_cards:1431696871713411082>",
 			"Back":     "<:backside_of_card:1431696868949360751>",
 		},
 		"Diamonds": {
@@ -144,7 +144,7 @@ func (s Symbols) GetHand(hand *bj.Hand, hidden bool) string {
 			cards = append(cards, card)
 		}
 	}
-	sb.WriteString(strings.Join(cards, " "))
+	sb.WriteString(strings.Join(cards, ""))
 	switch {
 	case hand.IsBlackjack():
 		sb.WriteString(" (blackjack)")
