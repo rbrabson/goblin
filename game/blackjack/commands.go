@@ -289,7 +289,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				}
 
 			case DoubleDown:
-				if !player.CanDoubleDown() {
+				if !player.CurrentHand().CanDoubleDown() {
 					slog.Error("cannot double down",
 						slog.String("guildID", game.guildID),
 						slog.String("playerName", playerName),
@@ -297,7 +297,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 					continue
 				}
 
-				if err := player.DoubleDown(); err != nil {
+				if err := player.CurrentHand().DoubleDown(); err != nil {
 					slog.Error("error processing player double down",
 						slog.String("guildID", game.guildID),
 						slog.String("playerName", playerName),
@@ -334,7 +334,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 				}
 
 			case Split:
-				if !player.CanSplit() {
+				if !player.CurrentHand().CanSplit() {
 					slog.Error("cannot split",
 						slog.String("guildID", game.guildID),
 						slog.String("playerName", playerName),
@@ -351,7 +351,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 					continue
 				}
 			case Surrender:
-				if !player.CanSurrender() {
+				if !player.CurrentHand().CanSurrender() {
 					slog.Error("cannot surrender",
 						slog.String("guildID", game.guildID),
 						slog.String("playerName", playerName),
@@ -411,10 +411,18 @@ func hasActiveNonBustedPlayers(game *Game) bool {
 	return false
 }
 
+// hasNonBustedPlayers checks if there are any non-busted players in the game.
 func hasNonBustedPlayers(game *Game) bool {
 	for _, player := range game.Players() {
 		for _, hand := range player.Hands() {
-			if !hand.IsBusted() {
+			if !(hand.IsBusted() || hand.IsSurrendered() || hand.IsBlackjack()) {
+				slog.Error("******** found non-busted player ********",
+					slog.Any("playerName", player),
+					slog.Any("hand", hand),
+					slog.Bool("isBusted", hand.IsBusted()),
+					slog.Bool("isSurrendered", hand.IsSurrendered()),
+					slog.Bool("isBlackjack", hand.IsBlackjack()),
+				)
 				return true
 			}
 		}
@@ -648,13 +656,13 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 	currentHand := player.CurrentHand()
 	if currentHand.IsActive() && !currentHand.IsBusted() && !currentHand.IsBlackjack() {
 		buttons = append(buttons, hitButton, standButton)
-		if player.CanDoubleDown() {
+		if currentHand.CanDoubleDown() {
 			buttons = append(buttons, doubleDownButton)
 		}
-		if player.CanSplit() {
+		if currentHand.CanSplit() {
 			buttons = append(buttons, splitButton)
 		}
-		if player.CanSurrender() {
+		if currentHand.CanSurrender() {
 			buttons = append(buttons, surrenderButton)
 		}
 	}

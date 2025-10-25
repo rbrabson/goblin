@@ -92,9 +92,9 @@ func (g *Game) AddPlayer(memberID string) error {
 	}
 
 	cm := NewChipManager(g.guildID, memberID)
-	g.game.AddPlayer(memberID, 0, bj.WithChipManager(cm))
+	g.game.AddPlayer(memberID, bj.WithChipManager(cm))
 	player := g.GetPlayer(memberID)
-	if err := player.PlaceBet(g.config.BetAmount); err != nil {
+	if err := player.CurrentHand().PlaceBet(g.config.BetAmount); err != nil {
 		g.game.RemovePlayer(memberID)
 		return err
 	}
@@ -215,7 +215,11 @@ func (g *Game) PlayerDoubleDownHit(playerName string) error {
 
 // PlayerSplit processes a split action for the specified player.
 func (g *Game) PlayerSplit(playerName string) error {
-	return g.game.PlayerSplit(playerName)
+	player := g.GetPlayer(playerName)
+	if player == nil {
+		return ErrPlayerNotFound
+	}
+	return player.CurrentHand().Split()
 }
 
 // PlayerSurrender processes a surrender action for the specified player.
@@ -235,7 +239,7 @@ func (g *Game) PayoutResults() {
 
 // EvaluateHand evaluates the result of a specific hand for a player.
 func (g *Game) EvaluateHand(player *bj.Player) bj.GameResult {
-	return g.game.EvaluateHand(player)
+	return g.game.EvaluateHand(player.CurrentHand())
 }
 
 // Round returns the current round number of the blackjack game.
