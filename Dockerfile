@@ -34,11 +34,11 @@ ADD LICENSE /licenses
 RUN mkdir -p /config
 ADD config /config/
 
-COPY .env .env
-
 WORKDIR /
 
 COPY --from=builder /workspace/bin/linux/amd64/goblin /
+
+ADD .env .
 
 RUN apk add iputils \
   bash \

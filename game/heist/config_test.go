@@ -14,7 +14,7 @@ import (
 func init() {
 	err := godotenv.Load("../../.env_test")
 	if err != nil {
-		slog.Error("Error loading .env file")
+		slog.Error("Error loading .env_test file")
 		os.Exit(1)
 	}
 	db = mongo.NewDatabase()

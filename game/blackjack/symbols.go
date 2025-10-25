@@ -142,13 +142,11 @@ func (s Symbols) GetHand(hand *bj.Hand, hidden bool) string {
 	case hand.IsBlackjack():
 		sb.WriteString(" (blackjack)")
 	case hand.IsBusted():
-		sb.WriteString(" (busted)")
+		sb.WriteString(fmt.Sprintf(" (value: %d, busted)", handValue(hand, hidden)))
 	case hand.IsSurrendered():
-		sb.WriteString(" (surrendered)")
+		sb.WriteString(fmt.Sprintf(" (value: %d, surrendered)", handValue(hand, hidden)))
 	default:
-		sb.WriteString(" (value: ")
-		sb.WriteString(fmt.Sprintf("%d", handValue(hand, hidden)))
-		sb.WriteString(")")
+		sb.WriteString(fmt.Sprintf(" (value: %d)", handValue(hand, hidden)))
 	}
 
 	return sb.String()
