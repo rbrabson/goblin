@@ -186,7 +186,7 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate, g
 // playRound handles playing a round of blackjack.
 func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	game.DealInitialCards()
-	showDeal(s, i, game)
+	showDeal(s, i, game, false)
 
 	// Check for dealer blackjack, and only proceed to player turns if dealer doesn't have blackjack
 	if !game.Dealer().HasBlackjack() {
@@ -379,12 +379,16 @@ func playerTurns(s *discordgo.Session, game *Game) {
 
 // dealerTurn handles the dealer's turn in blackjack.
 func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	slog.Debug("starting dealer turn",
+		slog.String("guildID", game.guildID),
+	)
+
 	// Dealer turn (if any players are still in)
 	if hasNonBustedPlayers(game) {
-		showDeal(s, i, game)
+		showDeal(s, i, game, true)
 		time.Sleep(1 * time.Second)
 		game.DealerPlay()
-		showDeal(s, i, game)
+		showDeal(s, i, game, true)
 		time.Sleep(1 * time.Second)
 	}
 }
@@ -393,11 +397,20 @@ func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game
 func hasActiveNonBustedPlayers(game *Game) bool {
 	for _, player := range game.Players() {
 		for _, hand := range player.Hands() {
-			if hand.IsActive() && !hand.IsBusted() {
+			if hand.IsActive() && !(hand.IsBusted() || hand.IsSurrendered() || hand.IsBlackjack()) {
+				slog.Warn("******** found active non-busted player ********",
+					slog.Any("playerName:", player),
+					slog.Any("hand:", hand),
+					slog.Bool("isActive:", hand.IsActive()),
+					slog.Bool("isBusted:", hand.IsBusted()),
+					slog.Bool("isSurrendered:", hand.IsSurrendered()),
+					slog.Bool("isBlackjack:", hand.IsBlackjack()),
+				)
 				return true
 			}
 		}
 	}
+	slog.Warn("******** no active non-busted players found ********")
 	return false
 }
 
@@ -532,7 +545,7 @@ func showStartingGame(s *discordgo.Session, game *Game) {
 }
 
 // showDeal displays the deal information for the blackjack game.
-func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, isDealerTurn bool) {
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
 	var title string
@@ -546,7 +559,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
 		Title:       title,
-		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(dealerHand, !hasActiveNonBustedPlayers(game)),
+		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(dealerHand, !isDealerTurn),
 	})
 
 	for _, player := range game.Players() {

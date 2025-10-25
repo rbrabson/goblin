@@ -1,0 +1,6 @@
+services:
+  goblin_bot:
+    container_name: goblin-bot
+    image: <image>_name>
+    entrypoint: /goblin
+    restart: unless-stopped
