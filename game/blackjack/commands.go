@@ -393,27 +393,6 @@ func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game
 	}
 }
 
-// hasActiveNonBustedPlayers checks if there are any active non-busted players in the game.
-func hasActiveNonBustedPlayers(game *Game) bool {
-	for _, player := range game.Players() {
-		for _, hand := range player.Hands() {
-			if hand.IsActive() && !(hand.IsBusted() || hand.IsSurrendered() || hand.IsBlackjack()) {
-				slog.Warn("******** found active non-busted player ********",
-					slog.Any("playerName:", player),
-					slog.Any("hand:", hand),
-					slog.Bool("isActive:", hand.IsActive()),
-					slog.Bool("isBusted:", hand.IsBusted()),
-					slog.Bool("isSurrendered:", hand.IsSurrendered()),
-					slog.Bool("isBlackjack:", hand.IsBlackjack()),
-				)
-				return true
-			}
-		}
-	}
-	slog.Warn("******** no active non-busted players found ********")
-	return false
-}
-
 // hasNonBustedPlayers checks if there are any non-busted players in the game.
 func hasNonBustedPlayers(game *Game) bool {
 	for _, player := range game.Players() {
