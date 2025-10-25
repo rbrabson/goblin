@@ -1,10 +1,4 @@
 {
-    "Suits": {
-        "Clubs": ":clubs:",
-        "Diamonds": ":diamonds:",
-        "Hearts": ":hearts:",
-        "Spades": ":spades:"
-    },
     "Cards": {
         "Back": "<:backside_of_card:1431696868949360751>",
         "Multiple": "<:deck_of_cards:1431696871713411082>"
