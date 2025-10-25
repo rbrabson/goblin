@@ -30,7 +30,7 @@ go.work
 .env_mongo
 .env_prod
 .env_dev
-.env_docker
+.env docker
 
 # vscode
 .vscode
