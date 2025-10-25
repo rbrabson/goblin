@@ -323,16 +323,6 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 					currentHand.SetActive(false)
 				}
 
-				// Double down ends the hand
-				if err := game.PlayerStand(player.Name()); err != nil {
-					slog.Error("error processing player stand after double down",
-						slog.String("guildID", game.guildID),
-						slog.String("playerName", playerName),
-						slog.Any("error", err),
-					)
-					continue
-				}
-
 			case Split:
 				if !player.CurrentHand().CanSplit() {
 					slog.Error("cannot split",
