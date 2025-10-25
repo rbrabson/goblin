@@ -36,7 +36,7 @@ ADD LICENSE /licenses
 RUN mkdir -p /config
 ADD config /config/
 
-ADD .env .
+ADD .env_docker .env
 
 WORKDIR /
 
