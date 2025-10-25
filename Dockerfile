@@ -1,4 +1,4 @@
-FROM alpine AS builder
+FROM alpine:latest AS builder
 
 # Install make and go
 RUN apk add make go
@@ -14,8 +14,6 @@ RUN go mod download
 
 # Build the goblin binary
 RUN make build-linux
-
-RUN env
 
 # Create a new image for the application code to run in
 FROM alpine
@@ -36,7 +34,7 @@ ADD LICENSE /licenses
 RUN mkdir -p /config
 ADD config /config/
 
-ADD .env_docker .env
+COPY .env .env
 
 WORKDIR /
 
