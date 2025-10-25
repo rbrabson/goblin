@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	bj "github.com/rbrabson/blackjack"
 	"github.com/rbrabson/cards"
+	"github.com/rbrabson/goblin/stats"
 )
 
 var (
@@ -144,6 +145,20 @@ func (g *Game) StartNewRound() error {
 
 // EndRound ends the current round of blackjack for the guild, removing all players from the game.
 func (g *Game) EndRound() {
+	// Update the member stats
+	for _, player := range g.Players() {
+		member := GetMember(g.guildID, player.Name())
+		member.RoundPlayed(g, player)
+	}
+
+	memberIDs := make([]string, 0, len(g.Players()))
+	for _, player := range g.Players() {
+		memberIDs = append(memberIDs, player.Name())
+	}
+	stats.UpdateGameStats(g.guildID, "blackjack", memberIDs)
+
+	// TODO: update global stats
+
 	for _, player := range g.game.Players() {
 		g.game.RemovePlayer(player.Name())
 	}
@@ -238,8 +253,8 @@ func (g *Game) PayoutResults() {
 }
 
 // EvaluateHand evaluates the result of a specific hand for a player.
-func (g *Game) EvaluateHand(player *bj.Player) bj.GameResult {
-	return g.game.EvaluateHand(player.CurrentHand())
+func (g *Game) EvaluateHand(hand *bj.Hand) bj.GameResult {
+	return g.game.EvaluateHand(hand)
 }
 
 // Round returns the current round number of the blackjack game.

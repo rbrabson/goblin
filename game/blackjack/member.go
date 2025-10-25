@@ -1,42 +1,49 @@
 package blackjack
 
 import (
+	"strconv"
 	"time"
 
+	bj "github.com/rbrabson/blackjack"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Member represents a member's statistics for the blackjack game.
 type Member struct {
-	ID                  primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	GuildID             string             `json:"guild_id" bson:"guild_id"`
-	MemberID            string             `json:"member_id" bson:"member_id"`
-	CurrentWinStreak    int                `json:"current_win_streak" bson:"current_win_streak"`
-	LongestWinStreak    int                `json:"longest_win_streak" bson:"longest_win_streak"`
-	CurrentLosingStreak int                `json:"current_losing_streak" bson:"current_losing_streak"`
-	LongestLosingStreak int                `json:"longest_losing_streak" bson:"longest_losing_streak"`
-	TotalWins           int                `json:"total_wins" bson:"total_wins"`
-	TotalLosses         int                `json:"total_losses" bson:"total_losses"`
-	TotalBet            int                `json:"total_bet" bson:"total_bet"`
-	TotalWinnings       int                `json:"total_winnings" bson:"total_winnings"`
-	MaxWin              int                `json:"max_win" bson:"max_win"`
-	LastPlayed          time.Time          `json:"last_played" bson:"last_played"`
+	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	GuildID      string             `json:"guild_id" bson:"guild_id"`
+	MemberID     string             `json:"member_id" bson:"member_id"`
+	RoundsPlayed int                `json:"rounds_played" bson:"rounds_played"`
+	HandsPlayed  int                `json:"hands_played" bson:"hands_played"`
+	Wins         int                `json:"wins" bson:"wins"`
+	Losses       int                `json:"losses" bson:"losses"`
+	Pushes       int                `json:"pushes" bson:"pushes"`
+	Blackjacks   int                `json:"blackjacks" bson:"blackjacks"`
+	Splits       int                `json:"splits" bson:"splits"`
+	Surrenders   int                `json:"surrenders" bson:"surrenders"`
+	CreditsBet   int                `json:"credits_bet" bson:"credits_bet"`
+	CreditsWon   int                `json:"credits_won" bson:"credits_won"`
+	CreditsLost  int                `json:"credits_lost" bson:"credits_lost"`
+	LastPlayed   time.Time          `json:"last_played" bson:"last_played"`
 }
 
+// String returns a string representation of the Member struct.
 func (m *Member) String() string {
 	return "Member{" +
 		"ID: " + m.ID.Hex() +
 		", GuildID: " + m.GuildID +
 		", MemberID: " + m.MemberID +
-		", CurrentWinStreak: " + string(rune(m.CurrentWinStreak)) +
-		", LongestWinStreak: " + string(rune(m.LongestWinStreak)) +
-		", CurrentLosingStreak: " + string(rune(m.CurrentLosingStreak)) +
-		", LongestLosingStreak: " + string(rune(m.LongestLosingStreak)) +
-		", TotalWins: " + string(rune(m.TotalWins)) +
-		", TotalLosses: " + string(rune(m.TotalLosses)) +
-		", TotalBet: " + string(rune(m.TotalBet)) +
-		", TotalWinnings: " + string(rune(m.TotalWinnings)) +
-		", MaxWin: " + string(rune(m.MaxWin)) +
+		", RoundsPlayed: " + strconv.Itoa(m.RoundsPlayed) +
+		", HandsPlayed: " + strconv.Itoa(m.HandsPlayed) +
+		", Wins: " + strconv.Itoa(m.Wins) +
+		", Losses: " + strconv.Itoa(m.Losses) +
+		", Pushes: " + strconv.Itoa(m.Pushes) +
+		", Blackjacks: " + strconv.Itoa(m.Blackjacks) +
+		", Splits: " + strconv.Itoa(m.Splits) +
+		", Surrenders: " + strconv.Itoa(m.Surrenders) +
+		", CreditsBet: " + strconv.Itoa(m.CreditsBet) +
+		", CreditsWon: " + strconv.Itoa(m.CreditsWon) +
+		", CreditsLost: " + strconv.Itoa(m.CreditsLost) +
 		", LastPlayed: " + m.LastPlayed.String() +
 		"}"
 }
@@ -61,4 +68,35 @@ func newMember(guildID, userID string) *Member {
 	writeMember(member)
 
 	return member
+}
+
+// RoundPlayed updates the member statistics based on the results of a played round.
+func (m *Member) RoundPlayed(game *Game, player *bj.Player) {
+	m.RoundsPlayed++
+	m.HandsPlayed += len(player.Hands())
+	for _, hand := range player.Hands() {
+		switch game.EvaluateHand(hand) {
+		case bj.PlayerWin:
+			m.Wins++
+			m.CreditsWon += hand.Winnings()
+		case bj.DealerWin:
+			m.Losses++
+			m.CreditsLost += -hand.Winnings()
+		case bj.Push:
+			m.Pushes++
+		}
+		if hand.IsBlackjack() {
+			m.Blackjacks++
+		}
+		if hand.IsSplit() {
+			m.Splits++
+		}
+		if hand.IsSurrendered() {
+			m.Surrenders++
+		}
+		m.CreditsBet += hand.Bet()
+	}
+	m.LastPlayed = time.Now()
+
+	writeMember(m)
 }

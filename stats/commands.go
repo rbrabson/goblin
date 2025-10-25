@@ -19,10 +19,11 @@ import (
 )
 
 const (
-	All   = "all"
-	Heist = "heist"
-	Race  = "race"
-	Slots = "slots"
+	All       = "all"
+	Blackjack = "blackjack"
+	Heist     = "heist"
+	Race      = "race"
+	Slots     = "slots"
 )
 
 var (
@@ -50,6 +51,10 @@ var (
 								{
 									Name:  "All",
 									Value: All,
+								},
+								{
+									Name:  "Blackjack",
+									Value: Blackjack,
 								},
 								{
 									Name:  "Heist",
@@ -143,6 +148,10 @@ var (
 									Value: All,
 								},
 								{
+									Name:  "Blackjack",
+									Value: Blackjack,
+								},
+								{
 									Name:  "Heist",
 									Value: Heist,
 								},
@@ -219,6 +228,10 @@ var (
 									Value: All,
 								},
 								{
+									Name:  "Blackjack",
+									Value: Blackjack,
+								},
+								{
 									Name:  "Heist",
 									Value: Heist,
 								},
@@ -254,6 +267,10 @@ var (
 								{
 									Name:  "All",
 									Value: All,
+								},
+								{
+									Name:  "Blackjack",
+									Value: Blackjack,
 								},
 								{
 									Name:  "Heist",

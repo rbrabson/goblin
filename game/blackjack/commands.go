@@ -156,7 +156,7 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	game.Lock()
 	game.StartNewRound()
-	showStartingGame(s, i, game)
+	showStartingGame(s, game)
 	game.Unlock()
 
 	playRound(s, i, game)
@@ -190,12 +190,12 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game)
 
 	// Check for dealer blackjack, and only proceed to player turns if dealer doesn't have blackjack
 	if !game.Dealer().HasBlackjack() {
-		playerTurns(s, i, game)
+		playerTurns(s, game)
 		dealerTurn(s, i, game)
 	}
 
 	for _, player := range game.Players() {
-		result := game.EvaluateHand(player)
+		result := game.EvaluateHand(player.CurrentHand())
 		slog.Info("player result",
 			slog.String("guildID", game.guildID),
 			slog.String("playerName", player.Name()),
@@ -204,11 +204,11 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game)
 	}
 
 	game.PayoutResults()
-	showResults(s, i, game)
+	showResults(s, game)
 }
 
 // playerTurns handles the turns for each player in blackjack, until all players have stood or busted.
-func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+func playerTurns(s *discordgo.Session, game *Game) {
 	for _, player := range game.Players() {
 		playerName := guild.GetMember(game.guildID, player.Name()).Name
 		slog.Debug("starting turn for player",
@@ -236,7 +236,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 
 			// Wait for the player action or timeout
 			waitUntil := time.Now().Add(game.config.PlayerTimeout)
-			showCurrentTurn(s, i, game, time.Until(waitUntil))
+			showCurrentTurn(s, game, time.Until(waitUntil))
 
 			var action Action
 			timeout := time.After(game.config.PlayerTimeout)
@@ -255,7 +255,7 @@ func playerTurns(s *discordgo.Session, i *discordgo.InteractionCreate, game *Gam
 					action = Stand
 					break GetAction
 				case <-tick:
-					showCurrentTurn(s, i, game, time.Until(waitUntil))
+					showCurrentTurn(s, game, time.Until(waitUntil))
 				}
 			}
 
@@ -495,7 +495,7 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 }
 
 // showStartingGame displays the starting game message when the round begins.
-func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+func showStartingGame(s *discordgo.Session, game *Game) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	playerNames := make([]string, 0, len(game.Players()))
@@ -600,7 +600,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) 
 }
 
 // showCurrentTurn displays the current turn information for the active player.
-func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, waitTime time.Duration) {
+func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
 	embeds = append(embeds, &discordgo.MessageEmbed{
@@ -677,7 +677,7 @@ func showCurrentTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game 
 }
 
 // showResults displays the results of the blackjack round for each player.
-func showResults(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+func showResults(s *discordgo.Session, game *Game) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
