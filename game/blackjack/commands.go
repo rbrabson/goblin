@@ -579,7 +579,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, 
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
 		Title:       title,
-		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(dealerHand, !isDealerTurn),
+		Description: fmt.Sprintf("**Dealer Hand**:\n%s\nValue: %s", game.symbols.GetHandWithoutValue(dealerHand, !isDealerTurn), GetHandValue(dealerHand, !isDealerTurn)),
 	})
 
 	for _, player := range game.Players() {
@@ -592,7 +592,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, 
 		for idx, hand := range player.Hands() {
 			handField := &discordgo.MessageEmbedField{
 				Name:   fmt.Sprintf("Hand %d", idx+1),
-				Value:  game.symbols.GetHand(hand, false),
+				Value:  fmt.Sprintf("%s\nValue: %s", game.symbols.GetHandWithoutValue(hand, false), GetHandValue(hand, false)),
 				Inline: false,
 			}
 			playerEmbed.Fields = append(playerEmbed.Fields, handField)
@@ -636,10 +636,11 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, 
 func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player, currentHand *bj.Hand, currentHandIndex int, waitTime time.Duration) {
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
+	dealerHand := game.Dealer().Hand()
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
 		Title:       game.symbols["Cards"]["Multiple"] + "Blackjack - Player Turn" + game.symbols["Cards"]["Multiple"],
-		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), true),
+		Description: fmt.Sprintf("**Dealer Hand**:\n%s\nValue: %s", game.symbols.GetHandWithoutValue(dealerHand, true), GetHandValue(dealerHand, true)),
 	})
 
 	for _, player := range game.Players() {
@@ -659,7 +660,7 @@ func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player,
 			}
 			handField := &discordgo.MessageEmbedField{
 				Name:   fmt.Sprintf("Hand %d", idx+1),
-				Value:  game.symbols.GetHand(hand, false),
+				Value:  fmt.Sprintf("%s\nValue: %s", game.symbols.GetHandWithoutValue(hand, false), GetHandValue(hand, false)),
 				Inline: false,
 			}
 			playerEmbed.Fields = append(playerEmbed.Fields, handField)
@@ -750,10 +751,11 @@ func showResults(s *discordgo.Session, game *Game) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
+	dealerHand := game.Dealer().Hand()
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:        discordgo.EmbedTypeRich,
 		Title:       game.symbols["Cards"]["Multiple"] + "Blackjack - Results" + game.symbols["Cards"]["Multiple"],
-		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), false),
+		Description: fmt.Sprintf("**Dealer Hand**:\n%s\nValue: %s", game.symbols.GetHandWithoutValue(dealerHand, false), GetHandValue(dealerHand, false)),
 	})
 	for _, player := range game.Players() {
 		embed := &discordgo.MessageEmbed{
@@ -781,8 +783,9 @@ func showResults(s *discordgo.Session, game *Game) {
 				result = "Push"
 			}
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-				Name:   p.Sprintf("Hand %d", idx+1),
-				Value:  p.Sprintf("%s\n**Result**: %s", game.symbols.GetHand(hand, false), result),
+				Name:  p.Sprintf("Hand %d", idx+1),
+				Value: fmt.Sprintf("%s\nValue: %s\n%s", game.symbols.GetHandWithoutValue(hand, false), GetHandValue(hand, false), result),
+
 				Inline: false,
 			})
 		}

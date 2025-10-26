@@ -68,7 +68,7 @@ func defaultConfig() *Config {
 		WaitForPlayers:    30 * time.Second,
 		PlayerTimeout:     30 * time.Second,
 		ShowPlayerTurn:    2 * time.Second,
-		ShowDealerTurn:    1 * time.Second,
+		ShowDealerTurn:    0 * time.Second,
 	}
 }
 

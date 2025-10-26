@@ -6,5 +6,5 @@
     "wait_for_players": 30,
     "player_timeout": 30,
     "show_player_turn": 2,
-    "show_dealer_turn": 1
+    "show_dealer_turn": 0
 }
