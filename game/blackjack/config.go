@@ -25,6 +25,8 @@ type Config struct {
 	DelayBetweenGames time.Duration      `json:"delay_between_games" bson:"delay_between_games"`
 	WaitForPlayers    time.Duration      `json:"wait_for_players" bson:"wait_for_players"`
 	PlayerTimeout     time.Duration      `json:"player_timeout" bson:"player_timeout"`
+	ShowPlayerTurn    time.Duration      `json:"show_player_turn" bson:"show_player_turn"`
+	ShowDealerTurn    time.Duration      `json:"show_dealer_turn" bson:"show_dealer_turn"`
 }
 
 // String returns a string representation of the Config struct.
@@ -65,6 +67,8 @@ func defaultConfig() *Config {
 		DelayBetweenGames: 10 * time.Second,
 		WaitForPlayers:    30 * time.Second,
 		PlayerTimeout:     30 * time.Second,
+		ShowPlayerTurn:    2 * time.Second,
+		ShowDealerTurn:    1 * time.Second,
 	}
 }
 
@@ -79,6 +83,8 @@ func readConfigFromFile() *Config {
 	config.DelayBetweenGames *= time.Second
 	config.WaitForPlayers *= time.Second
 	config.PlayerTimeout *= time.Second
+	config.ShowPlayerTurn *= time.Second
+	config.ShowDealerTurn *= time.Second
 
 	return &config
 }

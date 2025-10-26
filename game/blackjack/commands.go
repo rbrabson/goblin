@@ -414,7 +414,7 @@ func playerTurns(s *discordgo.Session, game *Game) {
 			}
 
 			showCurrentTurn(s, game, player, currentHand, currentHandIndex, time.Until(waitUntil))
-			time.Sleep(2 * time.Second)
+			time.Sleep(game.config.ShowPlayerTurn)
 		}
 
 		// Move to next hand if current hand is done
@@ -437,7 +437,7 @@ func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game
 	if hasNonBustedPlayers(game) {
 		game.DealerPlay()
 		showDeal(s, i, game, true)
-		time.Sleep(1 * time.Second)
+		time.Sleep(game.config.ShowDealerTurn)
 	}
 }
 
