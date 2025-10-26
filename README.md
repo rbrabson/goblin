@@ -2,6 +2,28 @@
 
 A Discord bot built with Go that integrates with MongoDB, providing various game and utility features for Discord servers.
 
+## 🐳 Quick Start with Docker
+
+The easiest way to run Goblin is using Docker:
+
+```bash
+# Quick setup
+./setup.sh
+
+# Edit your configuration
+nano .env
+
+# Start the bot
+docker-compose up -d
+```
+
+📖 **See [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) for complete Docker setup instructions**, including:
+
+- Building, tagging, and pushing Docker images
+- Multiple deployment options (pre-built image, local build, with/without .env)
+- Production deployment best practices
+- Troubleshooting guide
+
 ## Changelog
 
 See the [changelog](CHANGELOG.md) for details.
