@@ -64,7 +64,7 @@ func defaultConfig() *Config {
 		BetAmount:         50,
 		DelayBetweenGames: 10 * time.Second,
 		WaitForPlayers:    30 * time.Second,
-		PlayerTimeout:     15 * time.Second,
+		PlayerTimeout:     30 * time.Second,
 	}
 }
 

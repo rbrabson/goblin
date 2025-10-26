@@ -4,5 +4,5 @@
     "bet_amount": 1000,
     "delay_between_games": 10,
     "wait_for_players": 30,
-    "player_timeout": 15
+    "player_timeout": 30
 }
