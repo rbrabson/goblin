@@ -76,6 +76,7 @@ func getDefaultSymbols() Symbols {
 			"Ten":   "10:diamonds:",
 			"Jack":  "J:diamonds:",
 			"Queen": "Q:diamonds:",
+			"King":  "K:diamonds:",
 		},
 		"Clubs": {
 			"Ace":   "A:clubs:",
