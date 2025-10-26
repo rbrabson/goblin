@@ -11,6 +11,7 @@ import (
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
+	"github.com/rbrabson/goblin/internal/format"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -707,17 +708,17 @@ func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player,
 				Value:  actions,
 				Inline: false,
 			},
-			{
-				Name:   "Value",
-				Value:  caser.String(GetHandValue(currentHand, false)),
-				Inline: false,
-			},
+		},
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: caser.String(GetHandValue(currentHand, false)),
 		},
 	}
 	if len(buttons) > 0 {
-		embed.Footer = &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("You have %d seconds to act.", int(waitTime.Seconds())),
-		}
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   "Time Remaining",
+			Value:  format.Duration(waitTime),
+			Inline: false,
+		})
 	}
 	embeds = append(embeds, embed)
 
