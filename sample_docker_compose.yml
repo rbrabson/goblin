@@ -2,14 +2,12 @@ services:
   goblin_bot:
     container_name: goblin-bot
     image: <image_name>
+    # You can use the environment here, or a .env file (remember to uncommnent out the COPY `.env . line` in the Dockerfile)
     environment:
       DISCORD_BOT_TOKEN: <bot_token>
       DISCORD_APP_ID: <app_id>
       DISCORD_CONFIG_DIR: /config
       DISCORD_DEFAULT_THEME: clash
-      MONGODB_USERID: <username>
-      MONGODB_PASSWORD: <password>
-      MONGODB_SERVER: <mogodb_url>
       MONGODB_DATABASE: <database_name>
       MONGODB_URI: mongodb+srv://<username>:<password>@<mogodb_url>/<database_name>?retryWrites=true&w=majority
       LOG_LEVEL: info

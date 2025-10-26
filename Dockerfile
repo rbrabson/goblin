@@ -38,6 +38,7 @@ WORKDIR /
 
 COPY --from=builder /workspace/bin/linux/amd64/goblin /
 
+# Uncomment this out if you are using a .env file for configuration instead of environment variables in the docker compose file
 # ADD .env .
 
 RUN apk add iputils \
