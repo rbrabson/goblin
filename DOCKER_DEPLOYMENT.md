@@ -139,63 +139,63 @@ volumes:
 
 1. **Create a `.env` file:**
 
-```bash
-cp sample.env .env
-```
+    ```bash
+    cp sample.env .env
+    ```
 
-1. **Edit `.env` with your values:**
+2. **Edit `.env` with your values:**
 
-```env
-# Discord Bot Configuration
-DISCORD_BOT_TOKEN=your_bot_token_here
-DISCORD_APP_ID=your_app_id_here
-DISCORD_CONFIG_DIR=/config
-DISCORD_DEFAULT_THEME=clash
-LOG_LEVEL=info
-# DISCORD_GUILD_ID=your_dev_server_id
+    ```env
+    # Discord Bot Configuration
+    DISCORD_BOT_TOKEN=your_bot_token_here
+    DISCORD_APP_ID=your_app_id_here
+    DISCORD_CONFIG_DIR=/config
+    DISCORD_DEFAULT_THEME=clash
+    LOG_LEVEL=info
+    # DISCORD_GUILD_ID=your_dev_server_id
 
-# MongoDB Configuration
-MONGODB_URI=mongodb+srv://user:password@server/database?retryWrites=true&w=majority
+    # MongoDB Configuration
+    MONGODB_URI=mongodb+srv://user:password@server/database?retryWrites=true&w=majority
 
-# Local MongoDB Container Settings
-MONGODB_ROOT_USER=admin
-MONGODB_ROOT_PASSWORD=your_mongo_password
-MONGODB_DATABASE=goblin
-```
+    # Local MongoDB Container Settings
+    MONGODB_ROOT_USER=admin
+    MONGODB_ROOT_PASSWORD=your_mongo_password
+    MONGODB_DATABASE=goblin
+    ```
 
 3. **Update Docker Compose to use .env:**
 
-```yaml
-services:
-  goblin_bot:
-    container_name: goblin
-    image: username/goblin:latest  # Replace with your image
-    env_file:
-      - .env
-    entrypoint: /goblin
-    restart: unless-stopped
-    volumes:
-      - ./config:/config:ro  # Mount config directory (optional)
+    ```yaml
+    services:
+      goblin_bot:
+        container_name: goblin
+        image: username/goblin:latest  # Replace with your image
+        env_file:
+          - .env
+        entrypoint: /goblin
+        restart: unless-stopped
+        volumes:
+          - ./config:/config:ro  # Mount config directory (optional)
 
-  mongodb:
-    container_name: goblin-mongo
-    image: mongo:latest
-    env_file:
-      - .env
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_ROOT_USER}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD}
-      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE}
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    restart: unless-stopped
+      mongodb:
+        container_name: goblin-mongo
+        image: mongo:latest
+        env_file:
+          - .env
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=${MONGODB_ROOT_USER}
+          - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD}
+          - MONGO_INITDB_DATABASE=${MONGODB_DATABASE}
+        ports:
+          - "27017:27017"
+        volumes:
+          - mongodb_data:/data/db
+        restart: unless-stopped
 
-volumes:
-  mongodb_data:
-    driver: local
-```
+    volumes:
+      mongodb_data:
+        driver: local
+    ```
 
 ### Option 3: Building Image with Docker Compose
 
