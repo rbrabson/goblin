@@ -9,7 +9,47 @@ import (
 
 const (
 	blackjackMemberCollection = "blackjack_members"
+	blackjackConfigCollection = "blackjack_configs"
 )
+
+// readConfig loads the blackjack configuration from the database. If it does not exist then
+// a `nil` value is returned.
+func readConfig(guildID string) *Config {
+	var config Config
+	filter := bson.M{"guild_id": guildID}
+	err := db.FindOne(blackjackConfigCollection, filter, &config)
+	if err != nil {
+		slog.Debug("blackjack config not found in the database, using default",
+			slog.String("guildID", guildID),
+			slog.Any("error", err),
+		)
+		return nil
+	}
+	slog.Debug("read blackjack config from the database",
+		slog.String("guildID", guildID),
+	)
+
+	return &config
+}
+
+// writeConfig creates or updates the blackjack configuration in the database
+func writeConfig(config *Config) {
+	var filter bson.M
+	if config.ID != primitive.NilObjectID {
+		filter = bson.M{"_id": config.ID}
+	} else {
+		filter = bson.M{"guild_id": config.GuildID}
+	}
+	if err := db.UpdateOrInsert(blackjackConfigCollection, filter, config); err != nil {
+		slog.Error("error writing blackjack config to the database",
+			slog.String("guildID", config.GuildID),
+			slog.Any("error", err),
+		)
+	}
+	slog.Debug("write blackjack config to the database",
+		slog.String("guildID", config.GuildID),
+	)
+}
 
 // readMember loads the blackjack member from the database. If it does not exist then
 // a `nil` value is returned.

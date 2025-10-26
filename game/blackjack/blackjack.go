@@ -65,7 +65,7 @@ func GetGame(guildID string) *Game {
 
 // newGame creates a new blackjack game for the specified guild.
 func newGame(guildID string) *Game {
-	config := GetConfig()
+	config := GetConfig(guildID)
 	game := &Game{
 		guildID:  guildID,
 		game:     bj.New(config.Decks),
