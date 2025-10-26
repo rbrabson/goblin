@@ -38,7 +38,7 @@ WORKDIR /
 
 COPY --from=builder /workspace/bin/linux/amd64/goblin /
 
-ADD .env .
+# ADD .env .
 
 RUN apk add iputils \
   bash \
