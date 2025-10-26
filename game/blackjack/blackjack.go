@@ -230,11 +230,7 @@ func (g *Game) PlayerDoubleDownHit(playerName string) error {
 
 // PlayerSplit processes a split action for the specified player.
 func (g *Game) PlayerSplit(playerName string) error {
-	player := g.GetPlayer(playerName)
-	if player == nil {
-		return ErrPlayerNotFound
-	}
-	return player.CurrentHand().Split()
+	return g.game.PlayerSplit(playerName)
 }
 
 // PlayerSurrender processes a surrender action for the specified player.

@@ -601,14 +601,25 @@ func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), true),
 	})
 
+	activePlayer := game.GetActivePlayer()
+	activeHand := activePlayer.CurrentHand()
+	currentHandIndex := activePlayer.GetCurrentHandNumber()
+
 	for _, player := range game.Players() {
-		member := guild.GetMember(game.guildID, player.Name())
+		// If the active player only has a single hand, it will be shown in the active player's turn embed.
+		if player == activePlayer && len(player.Hands()) == 1 {
+			continue
+		}
 		playerEmbed := &discordgo.MessageEmbed{
 			Type:   discordgo.EmbedTypeRich,
-			Title:  member.Name,
+			Title:  guild.GetMember(game.guildID, player.Name()).Name,
 			Fields: make([]*discordgo.MessageEmbedField, 0, len(player.Hands())),
 		}
 		for idx, hand := range player.Hands() {
+			// The active player's current hand is shown in the active player's turn embed.
+			if player == activePlayer && idx == currentHandIndex {
+				continue
+			}
 			handField := &discordgo.MessageEmbedField{
 				Name:   fmt.Sprintf("Hand %d", idx+1),
 				Value:  game.symbols.GetHand(hand, false),
@@ -620,12 +631,12 @@ func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 	}
 	embeds = append(embeds, &discordgo.MessageEmbed{
 		Type:  discordgo.EmbedTypeRich,
-		Title: guild.GetMember(game.guildID, game.GetActivePlayer().Name()).Name + "'s Turn",
+		Title: guild.GetMember(game.guildID, activePlayer.Name()).Name + "'s Turn",
 		Color: 0x00ff00, // Green
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   fmt.Sprintf("Hand (time remaining: %s)", format.Duration(waitTime)),
-				Value:  game.symbols.GetHand(game.GetActivePlayer().CurrentHand(), false),
+				Name:   fmt.Sprintf("Hand %d (time remaining: %s)", currentHandIndex+1, format.Duration(waitTime)),
+				Value:  game.symbols.GetHand(activeHand, false),
 				Inline: false,
 			},
 		},
@@ -633,9 +644,8 @@ func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 
 	buttons := make([]discordgo.MessageComponent, 0, 5)
 
-	// Player actions for current hand. These should be adding buttons to the message.
-	player := game.GetActivePlayer()
-	currentHand := player.CurrentHand()
+	// Player actions for current hand.
+	currentHand := activePlayer.CurrentHand()
 	if currentHand.IsActive() && !currentHand.IsBusted() && !currentHand.IsBlackjack() {
 		buttons = append(buttons, hitButton, standButton)
 		if currentHand.CanDoubleDown() {
