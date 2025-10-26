@@ -246,6 +246,11 @@ func playerTurns(s *discordgo.Session, game *Game) {
 				select {
 				case pa := <-game.turnChan:
 					action = pa
+					slog.Debug("received player action",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", playerName),
+						slog.Any("action", action),
+					)
 					break GetAction
 				case <-timeout:
 					slog.Debug("player turn timed out, defaulting to Stand",
@@ -278,6 +283,20 @@ func playerTurns(s *discordgo.Session, game *Game) {
 					currentHand.SetActive(false)
 				}
 
+				if currentHand.Value() == 21 {
+					slog.Debug("player hand reached 21",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", playerName),
+						slog.Any("hand", currentHand),
+					)
+				} else {
+					slog.Debug("hit",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", playerName),
+						slog.Any("hand", currentHand),
+					)
+				}
+
 			case Stand:
 				if err := game.PlayerStand(player.Name()); err != nil {
 					slog.Error("error processing player stand",
@@ -287,6 +306,12 @@ func playerTurns(s *discordgo.Session, game *Game) {
 					)
 					continue
 				}
+
+				slog.Debug("standing",
+					slog.String("guildID", game.guildID),
+					slog.String("playerName", playerName),
+					slog.Any("hand", currentHand),
+				)
 
 			case DoubleDown:
 				if !player.CurrentHand().CanDoubleDown() {
@@ -320,7 +345,12 @@ func playerTurns(s *discordgo.Session, game *Game) {
 						slog.String("guildID", game.guildID),
 						slog.String("playerName", playerName),
 					)
-					currentHand.SetActive(false)
+				} else {
+					slog.Debug("double down",
+						slog.String("guildID", game.guildID),
+						slog.String("playerName", playerName),
+						slog.Any("hand", currentHand),
+					)
 				}
 
 			case Split:
@@ -340,6 +370,13 @@ func playerTurns(s *discordgo.Session, game *Game) {
 					)
 					continue
 				}
+
+				slog.Debug("split",
+					slog.String("guildID", game.guildID),
+					slog.String("playerName", playerName),
+					slog.Any("hand", currentHand),
+				)
+
 			case Surrender:
 				if !player.CurrentHand().CanSurrender() {
 					slog.Error("cannot surrender",
@@ -357,6 +394,12 @@ func playerTurns(s *discordgo.Session, game *Game) {
 					)
 					continue
 				}
+
+				slog.Debug("surrender",
+					slog.String("guildID", game.guildID),
+					slog.String("playerName", playerName),
+					slog.Any("hand", currentHand),
+				)
 
 			default:
 				slog.Error("invalid player action",
@@ -398,13 +441,6 @@ func hasNonBustedPlayers(game *Game) bool {
 	for _, player := range game.Players() {
 		for _, hand := range player.Hands() {
 			if !(hand.IsBusted() || hand.IsSurrendered() || hand.IsBlackjack()) {
-				slog.Error("******** found non-busted player ********",
-					slog.Any("playerName", player),
-					slog.Any("hand", hand),
-					slog.Bool("isBusted", hand.IsBusted()),
-					slog.Bool("isSurrendered", hand.IsSurrendered()),
-					slog.Bool("isBlackjack", hand.IsBlackjack()),
-				)
 				return true
 			}
 		}
@@ -668,7 +704,7 @@ func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 		},
 	})
 	if err != nil {
-		slog.Error("error editing blackjack deal message",
+		slog.Error("error editing blackjack turn message",
 			slog.String("guildID", game.guildID),
 			slog.String("memberID", game.interaction.Member.User.ID),
 			slog.Any("error", err),
