@@ -242,11 +242,6 @@ func playerTurns(s *discordgo.Session, game *Game) {
 			waitUntil := time.Now().Add(game.config.PlayerTimeout)
 			showCurrentTurn(s, game, player, currentHand, currentHandIndex, time.Until(waitUntil))
 
-			// clear turnChan before waiting for action
-			for len(game.turnChan) > 0 {
-				<-game.turnChan
-			}
-
 			var action Action
 			timeout := time.After(game.config.PlayerTimeout)
 			tick := time.Tick(1 * time.Second)
@@ -440,8 +435,6 @@ func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game
 
 	// Dealer turn (if any players are still in)
 	if hasNonBustedPlayers(game) {
-		showDeal(s, i, game, true)
-		time.Sleep(1 * time.Second)
 		game.DealerPlay()
 		showDeal(s, i, game, true)
 		time.Sleep(1 * time.Second)
@@ -716,7 +709,7 @@ func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player,
 	}
 	if len(buttons) > 0 {
 		embed.Footer = &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("Time remaining: %s", format.Duration(waitTime)),
+			Text: fmt.Sprintf("%s remaining to take an action", format.Duration(waitTime)),
 		}
 	}
 	embeds = append(embeds, embed)
