@@ -71,7 +71,7 @@ func newGame(guildID string) *Game {
 		game:     bj.New(config.Decks),
 		config:   config,
 		state:    NotStarted,
-		turnChan: make(chan Action),
+		turnChan: make(chan Action, 5),
 		symbols:  GetSymbols(),
 		lock:     sync.Mutex{},
 	}
@@ -156,8 +156,6 @@ func (g *Game) EndRound() {
 		memberIDs = append(memberIDs, player.Name())
 	}
 	stats.UpdateGameStats(g.guildID, "blackjack", memberIDs)
-
-	// TODO: update global stats
 
 	for _, player := range g.game.Players() {
 		g.game.RemovePlayer(player.Name())

@@ -139,16 +139,38 @@ func (s Symbols) GetHand(hand *bj.Hand, hidden bool) string {
 		}
 	}
 	sb.WriteString(strings.Join(cards, ""))
-	switch {
-	case hand.IsBlackjack():
-		sb.WriteString(" (blackjack)")
-	case hand.IsBusted():
-		sb.WriteString(fmt.Sprintf(" (value: %d, busted)", handValue(hand, hidden)))
-	case hand.IsSurrendered():
-		sb.WriteString(fmt.Sprintf(" (value: %d, surrendered)", handValue(hand, hidden)))
-	default:
-		sb.WriteString(fmt.Sprintf(" (value: %d)", handValue(hand, hidden)))
-	}
+	sb.WriteString(fmt.Sprintf(" (%s)", GetHandValue(hand, hidden)))
 
 	return sb.String()
+}
+
+// GetHandWithoutValue returns a string representation of the hand using the provided symbols.
+func (s Symbols) GetHandWithoutValue(hand *bj.Hand, hidden bool) string {
+	cards := make([]string, 0, len(hand.Cards()))
+	var sb strings.Builder
+	for idx, card := range hand.Cards() {
+		if hidden && idx == 0 {
+			cards = append(cards, s["Cards"]["Back"])
+		} else {
+			card := s[card.Suit.String()][card.Rank.String()]
+			cards = append(cards, card)
+		}
+	}
+	sb.WriteString(strings.Join(cards, ""))
+
+	return sb.String()
+}
+
+// GetHandValue returns a string representation of the hand value using the provided symbols.
+func GetHandValue(hand *bj.Hand, hidden bool) string {
+	switch {
+	case hand.IsBlackjack():
+		return (" (blackjack)")
+	case hand.IsBusted():
+		return fmt.Sprintf("value: %d, busted", handValue(hand, hidden))
+	case hand.IsSurrendered():
+		return fmt.Sprintf("value: %d, surrendered", handValue(hand, hidden))
+	default:
+		return fmt.Sprintf("value: %d", handValue(hand, hidden))
+	}
 }

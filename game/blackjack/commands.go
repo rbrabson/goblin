@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	bj "github.com/rbrabson/blackjack"
 	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
-	"github.com/rbrabson/goblin/internal/format"
+	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -220,6 +221,8 @@ func playerTurns(s *discordgo.Session, game *Game) {
 
 		for player.HasActiveHands() {
 			currentHand := player.CurrentHand()
+			currentHandIndex := player.GetCurrentHandNumber()
+
 			slog.Debug("processing player hand",
 				slog.String("playerName", playerName),
 				slog.Any("hand", currentHand),
@@ -236,7 +239,12 @@ func playerTurns(s *discordgo.Session, game *Game) {
 
 			// Wait for the player action or timeout
 			waitUntil := time.Now().Add(game.config.PlayerTimeout)
-			showCurrentTurn(s, game, time.Until(waitUntil))
+			showCurrentTurn(s, game, player, currentHand, currentHandIndex, time.Until(waitUntil))
+
+			// clear turnChan before waiting for action
+			for len(game.turnChan) > 0 {
+				<-game.turnChan
+			}
 
 			var action Action
 			timeout := time.After(game.config.PlayerTimeout)
@@ -260,7 +268,7 @@ func playerTurns(s *discordgo.Session, game *Game) {
 					action = Stand
 					break GetAction
 				case <-tick:
-					showCurrentTurn(s, game, time.Until(waitUntil))
+					showCurrentTurn(s, game, player, currentHand, currentHandIndex, time.Until(waitUntil))
 				}
 			}
 
@@ -408,6 +416,9 @@ func playerTurns(s *discordgo.Session, game *Game) {
 					slog.Any("action", action),
 				)
 			}
+
+			showCurrentTurn(s, game, player, currentHand, currentHandIndex, time.Until(waitUntil))
+			time.Sleep(2 * time.Second)
 		}
 
 		// Move to next hand if current hand is done
@@ -628,7 +639,7 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, 
 }
 
 // showCurrentTurn displays the current turn information for the active player.
-func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
+func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player, currentHand *bj.Hand, currentHandIndex int, waitTime time.Duration) {
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
 	embeds = append(embeds, &discordgo.MessageEmbed{
@@ -637,13 +648,9 @@ func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 		Description: "**Dealer Hand**:\n" + game.symbols.GetHand(game.Dealer().Hand(), true),
 	})
 
-	activePlayer := game.GetActivePlayer()
-	activeHand := activePlayer.CurrentHand()
-	currentHandIndex := activePlayer.GetCurrentHandNumber()
-
 	for _, player := range game.Players() {
 		// If the active player only has a single hand, it will be shown in the active player's turn embed.
-		if player == activePlayer && len(player.Hands()) == 1 {
+		if player == currentPlayer && len(player.Hands()) == 1 {
 			continue
 		}
 		playerEmbed := &discordgo.MessageEmbed{
@@ -653,7 +660,7 @@ func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 		}
 		for idx, hand := range player.Hands() {
 			// The active player's current hand is shown in the active player's turn embed.
-			if player == activePlayer && idx == currentHandIndex {
+			if player == currentPlayer && idx == currentHandIndex {
 				continue
 			}
 			handField := &discordgo.MessageEmbedField{
@@ -665,23 +672,10 @@ func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 		}
 		embeds = append(embeds, playerEmbed)
 	}
-	embeds = append(embeds, &discordgo.MessageEmbed{
-		Type:  discordgo.EmbedTypeRich,
-		Title: guild.GetMember(game.guildID, activePlayer.Name()).Name + "'s Turn",
-		Color: 0x00ff00, // Green
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   fmt.Sprintf("Hand %d (time remaining: %s)", currentHandIndex+1, format.Duration(waitTime)),
-				Value:  game.symbols.GetHand(activeHand, false),
-				Inline: false,
-			},
-		},
-	})
 
+	// Buttons for the current player's actions
 	buttons := make([]discordgo.MessageComponent, 0, 5)
-
 	// Player actions for current hand.
-	currentHand := activePlayer.CurrentHand()
 	if currentHand.IsActive() && !currentHand.IsBusted() && !currentHand.IsBlackjack() {
 		buttons = append(buttons, hitButton, standButton)
 		if currentHand.CanDoubleDown() {
@@ -695,14 +689,58 @@ func showCurrentTurn(s *discordgo.Session, game *Game, waitTime time.Duration) {
 		}
 	}
 
-	m, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-		Channel: game.message.ChannelID,
-		ID:      game.message.ID,
-		Embeds:  &embeds,
-		Components: &[]discordgo.MessageComponent{
-			discordgo.ActionsRow{Components: buttons},
+	// Active player's turn embed
+	caser := cases.Title(language.AmericanEnglish)
+	actions := strings.ReplaceAll(currentHand.ActionSummary(), ",", "\n")
+	embed := &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: guild.GetMember(game.guildID, currentPlayer.Name()).Name + "'s Turn",
+		Color: 0x00ff00, // Green
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   fmt.Sprintf("Hand %d", currentHandIndex+1),
+				Value:  game.symbols.GetHandWithoutValue(currentHand, false),
+				Inline: false,
+			},
+			{
+				Name:   "Actions",
+				Value:  actions,
+				Inline: false,
+			},
+			{
+				Name:   "Value",
+				Value:  caser.String(GetHandValue(currentHand, false)),
+				Inline: false,
+			},
 		},
-	})
+	}
+	if len(buttons) > 0 {
+		embed.Footer = &discordgo.MessageEmbedFooter{
+			Text: fmt.Sprintf("You have %d seconds to act.", int(waitTime.Seconds())),
+		}
+	}
+	embeds = append(embeds, embed)
+
+	var m *discordgo.Message
+	var err error
+
+	if len((buttons)) == 0 {
+		m, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Channel:    game.message.ChannelID,
+			ID:         game.message.ID,
+			Embeds:     &embeds,
+			Components: &[]discordgo.MessageComponent{},
+		})
+	} else {
+		m, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Channel: game.message.ChannelID,
+			ID:      game.message.ID,
+			Embeds:  &embeds,
+			Components: &[]discordgo.MessageComponent{
+				discordgo.ActionsRow{Components: buttons},
+			},
+		})
+	}
 	if err != nil {
 		slog.Error("error editing blackjack turn message",
 			slog.String("guildID", game.guildID),
