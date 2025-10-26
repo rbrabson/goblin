@@ -1,4 +1,4 @@
-FROM alpine:latest AS builder
+FROM alpine AS builder
 
 # Install make and go
 RUN apk add make go
