@@ -22,7 +22,6 @@ type Config struct {
 	MaxPlayers        int                `json:"max_players" bson:"max_players"`
 	Decks             int                `json:"decks" bson:"decks"`
 	BetAmount         int                `json:"bet_amount" bson:"bet_amount"`
-	BlackjackPay      float64            `json:"blackjack_pay" bson:"blackjack_pay"`
 	DelayBetweenGames time.Duration      `json:"delay_between_games" bson:"delay_between_games"`
 	WaitForPlayers    time.Duration      `json:"wait_for_players" bson:"wait_for_players"`
 	PlayerTimeout     time.Duration      `json:"player_timeout" bson:"player_timeout"`
@@ -37,7 +36,6 @@ func (c *Config) String() string {
 	sb.WriteString(fmt.Sprintf("MaxPlayers: %d, ", c.MaxPlayers))
 	sb.WriteString(fmt.Sprintf("Decks: %d, ", c.Decks))
 	sb.WriteString(fmt.Sprintf("BetAmount: %d, ", c.BetAmount))
-	sb.WriteString(fmt.Sprintf("BlackjackPay: %.2f%%", c.BlackjackPay))
 	sb.WriteString(fmt.Sprintf("DelayBetweenGames: %v, ", c.DelayBetweenGames))
 	sb.WriteString(fmt.Sprintf("WaitForPlayers: %v", c.WaitForPlayers))
 	sb.WriteString("}")
@@ -64,7 +62,6 @@ func defaultConfig() *Config {
 		MaxPlayers:        5,
 		Decks:             6,
 		BetAmount:         50,
-		BlackjackPay:      1.5,
 		DelayBetweenGames: 10 * time.Second,
 		WaitForPlayers:    30 * time.Second,
 		PlayerTimeout:     15 * time.Second,
