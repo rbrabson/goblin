@@ -692,7 +692,7 @@ func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player,
 
 	// Active player's turn embed
 	caser := cases.Title(language.AmericanEnglish)
-	actions := strings.ReplaceAll(currentHand.ActionSummary(), ",", "\n")
+	actions := strings.ReplaceAll(currentHand.ActionSummary(), ", ", "\n")
 	embed := &discordgo.MessageEmbed{
 		Type:  discordgo.EmbedTypeRich,
 		Title: guild.GetMember(game.guildID, currentPlayer.Name()).Name + "'s Turn",
@@ -708,17 +708,16 @@ func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player,
 				Value:  actions,
 				Inline: false,
 			},
-		},
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: caser.String(GetHandValue(currentHand, false)),
+			{
+				Name:  "Value",
+				Value: caser.String(GetHandValue(currentHand, false)),
+			},
 		},
 	}
 	if len(buttons) > 0 {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:   "Time Remaining",
-			Value:  format.Duration(waitTime),
-			Inline: false,
-		})
+		embed.Footer = &discordgo.MessageEmbedFooter{
+			Text: fmt.Sprintf("Time remaining: %s", format.Duration(waitTime)),
+		}
 	}
 	embeds = append(embeds, embed)
 
