@@ -1057,14 +1057,138 @@ func playHandChecks(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
 
 // showStats handles the /blackjack/stats command.
 func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	p := message.NewPrinter(language.AmericanEnglish)
+
+	// Determine which user's stats to show
+	var targetUserID string
+	var targetUser *discordgo.User
+
+	options := i.ApplicationCommandData().Options[0].Options
+	if len(options) > 0 && options[0].Name == "user" {
+		// User specified in command
+		targetUser = options[0].UserValue(s)
+		targetUserID = targetUser.ID
+	} else {
+		// Default to command user
+		targetUserID = i.Member.User.ID
+	}
+
+	// Get member statistics
+	member := GetMember(i.GuildID, targetUserID)
+
+	// Calculate derived statistics
+	totalGames := member.Wins + member.Losses + member.Pushes
+	winRate := 0.0
+	netCredits := member.CreditsWon - member.CreditsLost
+
+	if totalGames > 0 {
+		winRate = (float64(member.Wins) / float64(totalGames)) * 100
+	}
+
+	// Determine user display name
+	var displayName string
+	if i.Member.User.ID == targetUserID {
+		displayName = "Your"
+	} else {
+		// Try to get the member from the guild to get their display name
+		guildMember, err := s.GuildMember(i.GuildID, targetUserID)
+		if err == nil {
+			switch {
+			case guildMember.Nick != "":
+				displayName = guildMember.Nick + "'s"
+			case guildMember.User.GlobalName != "":
+				displayName = guildMember.User.GlobalName + "'s"
+			default:
+				displayName = targetUser.Username + "'s"
+			}
+		} else {
+			displayName = targetUser.Username
+		}
+	}
+
+	// Create the stats embed
+	embed := &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: fmt.Sprintf("🃏 %s Blackjack Statistics", displayName),
+		Color: 0x2f3136, // Dark gray color
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name: "📊 Game Summary",
+				Value: fmt.Sprintf("**Rounds Played:** %s\n**Hands Played:** %s\n**Win Rate:** %.1f%%",
+					p.Sprintf("%d", member.RoundsPlayed),
+					p.Sprintf("%d", member.HandsPlayed),
+					winRate),
+				Inline: false,
+			},
+			{
+				Name: "🎯 Hand Results",
+				Value: fmt.Sprintf("**Wins:** %s\n**Losses:** %s\n**Pushes:** %s",
+					p.Sprintf("%d", member.Wins),
+					p.Sprintf("%d", member.Losses),
+					p.Sprintf("%d", member.Pushes)),
+				Inline: true,
+			},
+			{
+				Name: "🎴 Special Hands",
+				Value: fmt.Sprintf("**Blackjacks:** %s\n**Splits:** %s\n**Surrenders:** %s",
+					p.Sprintf("%d", member.Blackjacks),
+					p.Sprintf("%d", member.Splits),
+					p.Sprintf("%d", member.Surrenders)),
+				Inline: true,
+			},
+			{
+				Name: "💰 Credits",
+				Value: fmt.Sprintf("**Total Bet:** %s\n**Credits Won:** %s\n**Credits Lost:** %s\n**Net:** %s",
+					p.Sprintf("%d", member.CreditsBet),
+					p.Sprintf("%d", member.CreditsWon),
+					p.Sprintf("%d", member.CreditsLost),
+					formatNetCredits(netCredits, p)),
+				Inline: false,
+			},
+		},
+	}
+
+	// Add last played field if the member has played before
+	if !member.LastPlayed.IsZero() {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   "🕒 Last Played",
+			Value:  fmt.Sprintf("<t:%d:R>", member.LastPlayed.Unix()),
+			Inline: false,
+		})
+	}
+
+	// Add footer with additional info
+	if member.RoundsPlayed == 0 {
+		embed.Description = "*No blackjack games played yet. Join a game to start tracking statistics!*"
+	} else {
+		avgHandsPerRound := float64(member.HandsPlayed) / float64(member.RoundsPlayed)
+		embed.Footer = &discordgo.MessageEmbedFooter{
+			Text: fmt.Sprintf("Average %.1f hands per round", avgHandsPerRound),
+		}
+	}
+
+	// Send ephemeral response
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent("Not Implemented Yet."),
+		disgomsg.WithEmbeds([]*discordgo.MessageEmbed{embed}),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("error sending response",
+		slog.Error("error sending stats response",
 			slog.String("guildID", i.GuildID),
 			slog.String("memberID", i.Member.User.ID),
+			slog.String("targetUserID", targetUserID),
 			slog.Any("error", err),
 		)
+	}
+}
+
+// formatNetCredits formats the net credits with appropriate color coding
+func formatNetCredits(netCredits int, p *message.Printer) string {
+	switch {
+	case netCredits > 0:
+		return fmt.Sprintf("**+%s** 📈", p.Sprintf("%d", netCredits))
+	case netCredits < 0:
+		return fmt.Sprintf("**%s** 📉", p.Sprintf("%d", netCredits))
+	default:
+		return "**0** ➖"
 	}
 }
