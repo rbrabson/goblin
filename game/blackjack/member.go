@@ -76,10 +76,10 @@ func (m *Member) RoundPlayed(game *Game, player *bj.Player) {
 	m.HandsPlayed += len(player.Hands())
 	for _, hand := range player.Hands() {
 		switch game.EvaluateHand(hand) {
-		case bj.PlayerWin:
+		case bj.PlayerWin, bj.PlayerBlackjack:
 			m.Wins++
 			m.CreditsWon += hand.Winnings()
-		case bj.DealerWin:
+		case bj.DealerWin, bj.DealerBlackjack:
 			m.Losses++
 			m.CreditsLost += -hand.Winnings()
 		case bj.Push:
