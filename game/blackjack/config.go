@@ -60,6 +60,8 @@ func GetConfig(guildID string) *Config {
 	if config.SinglePlayerMode {
 		config.MaxPlayers = 1
 		config.WaitForPlayers = 0
+		config.ShowPlayerTurn = 0
+		config.ShowDealerTurn = 0
 	}
 	return config
 }
