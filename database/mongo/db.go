@@ -42,6 +42,8 @@ func NewDatabase() *MongoDB {
 	m.Client, err = mongo.Connect(ctx, m.clientOpts)
 	if err != nil {
 		slog.Error("unable to connect to the MongoDB database",
+			slog.String("uri", m.uri),
+			slog.String("database", m.dbname),
 			slog.Any("error", err),
 		)
 		return nil

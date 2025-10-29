@@ -16,7 +16,7 @@ func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		slog.LogAttrs(context.Background(), slog.LevelError,
-			"unable to load .env_test file",
+			"unable to load .env file",
 			slog.Any("error", err),
 		)
 	}

@@ -1,0 +1,54 @@
+# Production Docker Compose for Goblin Discord Bot
+# This is a production-ready configuration using .env file
+services:
+  goblin_bot:
+    container_name: goblin-bot
+    image: rbrabson/goblin-bot:latest # Replace with your image
+    env_file:
+      - .env
+    entrypoint: /goblin
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    volumes:
+      - ./config:/config:ro
+    networks:
+      - goblin_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mongodb:
+    container_name: goblin-mongo
+    image: mongo:7-jammy
+    env_file:
+      - .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE}
+    ports:
+      - "127.0.0.1:27017:27017" # Bind to localhost only for security
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    restart: unless-stopped
+    networks:
+      - goblin_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+
+networks:
+  goblin_network:
+    driver: bridge
