@@ -13,7 +13,7 @@ import (
 
 const (
 	// symbolsFile = "symbols"
-	symbolsFile = "symbols"
+	symbolsFile = "cards"
 )
 
 type Symbols map[string]map[string]string
