@@ -19,7 +19,7 @@ import (
 
 var (
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"join_blackjack":       blackjackJoinGame,
+		"join_blackjack":       blackjackJoin,
 		"hit_blackjack":        blackjackHit,
 		"stand_blackjack":      blackjackStand,
 		"doubledown_blackjack": blackjackDoubleDown,
@@ -58,45 +58,6 @@ var (
 	}
 )
 
-var (
-	joinButton = discordgo.Button{
-		Label:    "Join",
-		Style:    discordgo.SuccessButton,
-		CustomID: "join_blackjack",
-		Emoji:    nil,
-	}
-	hitButton = discordgo.Button{
-		Label:    "Hit",
-		Style:    discordgo.PrimaryButton,
-		CustomID: "hit_blackjack",
-		Emoji:    nil,
-	}
-	standButton = discordgo.Button{
-		Label:    "Stand",
-		Style:    discordgo.PrimaryButton,
-		CustomID: "stand_blackjack",
-		Emoji:    nil,
-	}
-	doubleDownButton = discordgo.Button{
-		Label:    "Double Down",
-		Style:    discordgo.PrimaryButton,
-		CustomID: "doubledown_blackjack",
-		Emoji:    nil,
-	}
-	splitButton = discordgo.Button{
-		Label:    "Split",
-		Style:    discordgo.PrimaryButton,
-		CustomID: "split_blackjack",
-		Emoji:    nil,
-	}
-	surrenderButton = discordgo.Button{
-		Label:    "Surrender",
-		Style:    discordgo.DangerButton,
-		CustomID: "surrender_blackjack",
-		Emoji:    nil,
-	}
-)
-
 // blackjack handles the /blackjack command and its subcommands.
 func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
@@ -127,7 +88,8 @@ func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // playBlackjack handles the /blackjack/play command.
 func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
+	uid := getUID(i.GuildID, i.Member.User.ID)
+	game := GetGame(i.GuildID, uid)
 
 	game.Lock()
 	if !startChecks(s, i) {
@@ -156,9 +118,12 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	waitForRoundToStart(s, i, game)
 
+	game.state = InProgress
+	guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+
 	game.Lock()
 	game.StartNewRound()
-	showStartingGame(s, game)
+	showStartingGame(s, i, game)
 	game.Unlock()
 
 	playRound(s, i, game)
@@ -168,6 +133,10 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // waitForRoundToStart waits for the round to start for the blackjack game.
 func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	if game.config.SinglePlayerMode {
+		return
+	}
+
 	// Wait until the game starts or a timeout occurs.
 	timeout := time.After(game.config.WaitForPlayers)
 	tick := time.Tick(1 * time.Second)
@@ -455,6 +424,23 @@ func hasNonBustedPlayers(game *Game) bool {
 
 // showJoinGame displays the join game message with a button to join.
 func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	if game.config.SinglePlayerMode {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Starting single-player blackjack game...",
+			},
+		})
+		if err != nil {
+			slog.Error("error sending blackjack interaction response",
+				slog.String("guildID", game.guildID),
+				slog.String("memberID", i.Interaction.Member.User.ID),
+				slog.Any("error", err),
+			)
+		}
+		return
+	}
+
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	seconds := game.SecondsBeforeStart()
@@ -494,7 +480,7 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 	components := []discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
-				joinButton,
+				game.joinButton,
 			},
 		},
 	}
@@ -528,7 +514,11 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 }
 
 // showStartingGame displays the starting game message when the round begins.
-func showStartingGame(s *discordgo.Session, game *Game) {
+func showStartingGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	if game.config.SinglePlayerMode {
+		return
+	}
+
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	playerNames := make([]string, 0, len(game.Players()))
@@ -552,15 +542,31 @@ func showStartingGame(s *discordgo.Session, game *Game) {
 		},
 	}
 
-	if _, err := s.InteractionResponseEdit(game.interaction.Interaction, &discordgo.WebhookEdit{
-		Embeds:     &embeds,
-		Components: &[]discordgo.MessageComponent{},
-	}); err != nil {
-		slog.Error("error editing blackjack interaction response",
-			slog.String("guildID", game.guildID),
-			slog.String("memberID", game.interaction.Member.User.ID),
-			slog.Any("error", err),
-		)
+	if game.interaction == nil {
+		if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: embeds,
+			},
+		}); err != nil {
+			slog.Error("error sending blackjack interaction response",
+				slog.String("guildID", game.guildID),
+				slog.String("memberID", game.interaction.Member.User.ID),
+				slog.Any("error", err),
+			)
+		}
+		game.interaction = i
+	} else {
+		if _, err := s.InteractionResponseEdit(game.interaction.Interaction, &discordgo.WebhookEdit{
+			Embeds:     &embeds,
+			Components: &[]discordgo.MessageComponent{},
+		}); err != nil {
+			slog.Error("error editing blackjack interaction response",
+				slog.String("guildID", game.guildID),
+				slog.String("memberID", game.interaction.Member.User.ID),
+				slog.Any("error", err),
+			)
+		}
 	}
 }
 
@@ -672,15 +678,15 @@ func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player,
 	buttons := make([]discordgo.MessageComponent, 0, 5)
 	// Player actions for current hand.
 	if currentHand.IsActive() && !currentHand.IsBusted() && !currentHand.IsBlackjack() {
-		buttons = append(buttons, hitButton, standButton)
+		buttons = append(buttons, game.hitButton, game.standButton)
 		if currentHand.CanDoubleDown() {
-			buttons = append(buttons, doubleDownButton)
+			buttons = append(buttons, game.doubleDownButton)
 		}
 		if currentHand.CanSplit() {
-			buttons = append(buttons, splitButton)
+			buttons = append(buttons, game.splitButton)
 		}
 		if currentHand.CanSurrender() {
-			buttons = append(buttons, surrenderButton)
+			buttons = append(buttons, game.surrenderButton)
 		}
 	}
 
@@ -811,9 +817,10 @@ func showResults(s *discordgo.Session, game *Game) {
 	}
 }
 
-// blackjackJoinGame handles the /blackjack/join command.
-func blackjackJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
+// blackjackJoin handles the /blackjack/join command.
+func blackjackJoin(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	uid := getUIDFromInteraction(i)
+	game := GetGame(i.GuildID, uid)
 
 	game.Lock()
 	defer game.Unlock()
@@ -859,7 +866,8 @@ func blackjackJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // blackjackHit handles a player hitting in blackjack.
 func blackjackHit(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
+	uid := getUIDFromInteraction(i)
+	game := GetGame(i.GuildID, uid)
 
 	game.Lock()
 	defer game.Unlock()
@@ -877,7 +885,8 @@ func blackjackHit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // blackjackStand handles a player standing in blackjack.
 func blackjackStand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
+	uid := getUIDFromInteraction(i)
+	game := GetGame(i.GuildID, uid)
 
 	game.Lock()
 	defer game.Unlock()
@@ -895,7 +904,8 @@ func blackjackStand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // blackjackDoubleDown handles a player doubling down in blackjack.
 func blackjackDoubleDown(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
+	uid := getUIDFromInteraction(i)
+	game := GetGame(i.GuildID, uid)
 
 	game.Lock()
 	defer game.Unlock()
@@ -913,7 +923,8 @@ func blackjackDoubleDown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // blackjackSplit handles a player splitting their hand in blackjack.
 func blackjackSplit(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
+	uid := getUIDFromInteraction(i)
+	game := GetGame(i.GuildID, uid)
 
 	game.Lock()
 	defer game.Unlock()
@@ -931,7 +942,8 @@ func blackjackSplit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // blackjackSurrender handles a player surrendering in blackjack.
 func blackjackSurrender(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	game := GetGame(i.GuildID)
+	uid := getUIDFromInteraction(i)
+	game := GetGame(i.GuildID, uid)
 
 	game.Lock()
 	defer game.Unlock()
@@ -949,7 +961,8 @@ func blackjackSurrender(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // startChecks performs checks to see if a game can be started.
 func startChecks(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
-	game := GetGame(i.GuildID)
+	uid := getUID(i.GuildID, i.Member.User.ID)
+	game := GetGame(i.GuildID, uid)
 
 	if !game.NotStarted() {
 		resp := disgomsg.NewResponse(
@@ -971,7 +984,8 @@ func startChecks(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
 
 // joinChecks performs checks to see if a player can join the game.
 func joinChecks(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
-	game := GetGame(i.GuildID)
+	uid := getUIDFromInteraction(i)
+	game := GetGame(i.GuildID, uid)
 	if game.NotStarted() {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The blackjack game has not started yet. Please wait for the game to start before joining."),
@@ -1019,7 +1033,8 @@ func joinChecks(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
 
 // playHandChecks performs checks to see if a player can play their hand.
 func playHandChecks(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
-	game := GetGame(i.GuildID)
+	uid := getUIDFromInteraction(i)
+	game := GetGame(i.GuildID, uid)
 	if !game.IsActive() {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("There is no active blackjack game. Join the game to start a new round."),

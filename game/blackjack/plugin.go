@@ -19,6 +19,7 @@ const (
 var (
 	plugin *Plugin
 	db     *mongo.MongoDB
+	bot    *discord.Bot
 	status = discord.RUNNING
 )
 
@@ -47,6 +48,7 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 
 // Initialize saves the Discord bot to be used by the slots system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
+	bot = b
 	db = d
 }
 

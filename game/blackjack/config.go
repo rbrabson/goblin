@@ -28,6 +28,7 @@ type Config struct {
 	ShowPlayerTurn    time.Duration      `json:"show_player_turn" bson:"show_player_turn"`
 	ShowDealerTurn    time.Duration      `json:"show_dealer_turn" bson:"show_dealer_turn"`
 	PayoutPercent     int                `json:"payout_percent" bson:"payout_percent"`
+	SinglePlayerMode  bool               `json:"single_player_mode" bson:"single_player_mode"`
 }
 
 // String returns a string representation of the Config struct.
@@ -56,6 +57,10 @@ func GetConfig(guildID string) *Config {
 		config.GuildID = guildID
 		writeConfig(config)
 	}
+	if config.SinglePlayerMode {
+		config.MaxPlayers = 1
+		config.WaitForPlayers = 0
+	}
 	return config
 }
 
@@ -71,6 +76,7 @@ func defaultConfig() *Config {
 		ShowPlayerTurn:    2 * time.Second,
 		ShowDealerTurn:    0 * time.Second,
 		PayoutPercent:     200,
+		SinglePlayerMode:  false,
 	}
 }
 
