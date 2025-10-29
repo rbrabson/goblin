@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	// symbolsFile = "symbols"
+	// symbolsFile = "pt"
 	symbolsFile = "cards"
 )
 

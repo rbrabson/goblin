@@ -78,7 +78,7 @@ func (m *Member) RoundPlayed(game *Game, player *bj.Player) {
 		switch game.EvaluateHand(hand) {
 		case bj.PlayerWin, bj.PlayerBlackjack:
 			m.Wins++
-			m.CreditsWon += hand.Winnings()
+			m.CreditsWon += hand.Winnings() * game.config.PayoutPercent / 100
 		case bj.DealerWin, bj.DealerBlackjack:
 			m.Losses++
 			m.CreditsLost += -hand.Winnings()

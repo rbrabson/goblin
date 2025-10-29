@@ -27,6 +27,7 @@ type Config struct {
 	PlayerTimeout     time.Duration      `json:"player_timeout" bson:"player_timeout"`
 	ShowPlayerTurn    time.Duration      `json:"show_player_turn" bson:"show_player_turn"`
 	ShowDealerTurn    time.Duration      `json:"show_dealer_turn" bson:"show_dealer_turn"`
+	PayoutPercent     int                `json:"payout_percent" bson:"payout_percent"`
 }
 
 // String returns a string representation of the Config struct.
@@ -65,10 +66,11 @@ func defaultConfig() *Config {
 		Decks:             6,
 		BetAmount:         50,
 		DelayBetweenGames: 10 * time.Second,
-		WaitForPlayers:    30 * time.Second,
+		WaitForPlayers:    15 * time.Second,
 		PlayerTimeout:     30 * time.Second,
 		ShowPlayerTurn:    2 * time.Second,
 		ShowDealerTurn:    0 * time.Second,
+		PayoutPercent:     200,
 	}
 }
 

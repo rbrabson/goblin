@@ -765,18 +765,20 @@ func showResults(s *discordgo.Session, game *Game) {
 
 		for idx, hand := range player.Hands() {
 			var result string
+			winnings := hand.Winnings()
 			switch {
-			case hand.Winnings() > 0:
-				if hand.Winnings() == 1 {
+			case winnings > 0:
+				winnings = winnings * game.config.PayoutPercent / 100
+				if winnings == 1 {
 					result = "Won 1 credit"
 				} else {
-					result = p.Sprintf("Won %d credits", hand.Winnings())
+					result = p.Sprintf("Won %d credits", winnings)
 				}
-			case hand.Winnings() < 0:
-				if hand.Winnings() == -1 {
+			case winnings < 0:
+				if winnings == -1 {
 					result = "Lost 1 credit"
 				} else {
-					result = p.Sprintf("Lost %d credits", -hand.Winnings())
+					result = p.Sprintf("Lost %d credits", -winnings)
 
 				}
 			default:

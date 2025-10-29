@@ -56,6 +56,7 @@ func GetGame(guildID string) *Game {
 	defer gamesLock.Unlock()
 
 	if game, exists := games[guildID]; exists {
+		game.config = GetConfig(guildID)
 		return game
 	}
 	game := newGame(guildID)
