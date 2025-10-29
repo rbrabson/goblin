@@ -225,11 +225,11 @@ var (
 	memberCommands = []*discordgo.ApplicationCommand{
 		{
 			Name:        "shop",
-			Description: "Commands used by a member to purchase items in the shop.",
+			Description: "Commands used by a member to interact with their purchases from the shop.",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Name:        "purchases",
-					Description: "Lists the items in the shop that may be purchased.",
+					Description: "Lists the items you have purchased.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 				},
 			},
