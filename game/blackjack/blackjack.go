@@ -181,6 +181,7 @@ func (g *Game) EndRound() {
 		delete(games, g.uid)
 		gamesLock.Unlock()
 	} else {
+		g.Dealer().ClearHand()
 		g.interaction = nil
 		g.message = nil
 		g.state = NotStarted
