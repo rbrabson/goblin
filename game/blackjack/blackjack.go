@@ -1,6 +1,7 @@
 package blackjack
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -37,38 +38,46 @@ const (
 
 // Game represents a blackjack game for a specific guild.
 type Game struct {
-	guildID       string
-	game          *bj.Game
-	config        *Config
-	state         GameState
-	gameStartTime time.Time
-	turnChan      chan Action
-	interaction   *discordgo.InteractionCreate
-	message       *discordgo.Message
-	symbols       Symbols
-	lock          sync.Mutex
+	guildID          string
+	game             *bj.Game
+	config           *Config
+	state            GameState
+	gameStartTime    time.Time
+	turnChan         chan Action
+	interaction      *discordgo.InteractionCreate
+	message          *discordgo.Message
+	symbols          Symbols
+	joinButton       discordgo.Button
+	hitButton        discordgo.Button
+	standButton      discordgo.Button
+	doubleDownButton discordgo.Button
+	splitButton      discordgo.Button
+	surrenderButton  discordgo.Button
+	uid              string
+	lock             sync.Mutex
 }
 
 // GetGame retrieves the blackjack game for the specified guild.
 // If no game exists, a new one is created.
-func GetGame(guildID string) *Game {
+func GetGame(guildID string, uid string) *Game {
 	gamesLock.Lock()
 	defer gamesLock.Unlock()
 
-	if game, exists := games[guildID]; exists {
-		game.config = GetConfig(guildID)
-		return game
+	config := GetConfig(guildID)
+	game := games[uid]
+	if game == nil {
+		game = newGame(guildID, uid, config)
+		games[uid] = game
 	}
-	game := newGame(guildID)
-	games[guildID] = game
+	game.config = config
 	return game
 }
 
 // newGame creates a new blackjack game for the specified guild.
-func newGame(guildID string) *Game {
-	config := GetConfig(guildID)
+func newGame(guildID string, uid string, config *Config) *Game {
 	game := &Game{
 		guildID:  guildID,
+		uid:      uid,
 		game:     bj.New(config.Decks),
 		config:   config,
 		state:    NotStarted,
@@ -76,6 +85,7 @@ func newGame(guildID string) *Game {
 		symbols:  GetSymbols(),
 		lock:     sync.Mutex{},
 	}
+	createButtons(game)
 
 	return game
 }
@@ -93,7 +103,7 @@ func (g *Game) AddPlayer(memberID string) error {
 		return ErrGameFull
 	}
 
-	cm := NewChipManager(g.guildID, memberID)
+	cm := NewChipManager(g, memberID)
 	g.game.AddPlayer(memberID, bj.WithChipManager(cm))
 	player := g.GetPlayer(memberID)
 	if err := player.CurrentHand().PlaceBet(g.config.BetAmount); err != nil {
@@ -161,12 +171,21 @@ func (g *Game) EndRound() {
 	for _, player := range g.game.Players() {
 		g.game.RemovePlayer(player.Name())
 	}
+
 	for len(g.turnChan) > 0 {
 		<-g.turnChan
 	}
-	g.interaction = nil
-	g.message = nil
-	g.state = NotStarted
+	if g.config.SinglePlayerMode {
+		destroyButtons(g)
+		gamesLock.Lock()
+		delete(games, g.uid)
+		gamesLock.Unlock()
+	} else {
+		g.Dealer().ClearHand()
+		g.interaction = nil
+		g.message = nil
+		g.state = NotStarted
+	}
 }
 
 // NotStarted returns whether the blackjack game has not yet started.
@@ -295,4 +314,81 @@ func handValue(hand *bj.Hand, hidden bool) int {
 	}
 
 	return visibleValue
+}
+
+// createButtons creates and registers the action buttons for the blackjack game.
+func createButtons(game *Game) {
+	game.joinButton = discordgo.Button{
+		Label:    "Join Game",
+		Style:    discordgo.SuccessButton,
+		CustomID: "blackjack_join" + ":" + game.uid,
+	}
+	bot.AddComponentHandler(game.joinButton.CustomID, blackjackJoin)
+
+	game.hitButton = discordgo.Button{
+		Label:    "Hit",
+		Style:    discordgo.PrimaryButton,
+		CustomID: "blackjack_hit" + ":" + game.uid,
+	}
+	bot.AddComponentHandler(game.hitButton.CustomID, blackjackHit)
+
+	game.standButton = discordgo.Button{
+		Label:    "Stand",
+		Style:    discordgo.PrimaryButton,
+		CustomID: "blackjack_stand" + ":" + game.uid,
+	}
+	bot.AddComponentHandler(game.standButton.CustomID, blackjackStand)
+
+	game.doubleDownButton = discordgo.Button{
+		Label:    "Double Down",
+		Style:    discordgo.PrimaryButton,
+		CustomID: "blackjack_double_down" + ":" + game.uid,
+	}
+	bot.AddComponentHandler(game.doubleDownButton.CustomID, blackjackDoubleDown)
+
+	game.splitButton = discordgo.Button{
+		Label:    "Split",
+		Style:    discordgo.PrimaryButton,
+		CustomID: "blackjack_split" + ":" + game.uid,
+	}
+	bot.AddComponentHandler(game.splitButton.CustomID, blackjackSplit)
+
+	game.surrenderButton = discordgo.Button{
+		Label:    "Surrender",
+		Style:    discordgo.DangerButton,
+		CustomID: "blackjack_surrender" + ":" + game.uid,
+	}
+	bot.AddComponentHandler(game.surrenderButton.CustomID, blackjackSurrender)
+}
+
+// destroyButtons deregisters the action buttons for the blackjack game.
+func destroyButtons(game *Game) {
+	bot.RemoveComponentHandler(game.joinButton.CustomID)
+	bot.RemoveComponentHandler(game.hitButton.CustomID)
+	bot.RemoveComponentHandler(game.standButton.CustomID)
+	bot.RemoveComponentHandler(game.doubleDownButton.CustomID)
+	bot.RemoveComponentHandler(game.splitButton.CustomID)
+	bot.RemoveComponentHandler(game.surrenderButton.CustomID)
+}
+
+// getUID generates the unique identifier for the blackjack game based on the guild and member IDs.
+func getUID(guildID string, memberID string) string {
+	config := GetConfig(guildID)
+	if config.SinglePlayerMode {
+		return guildID + "-" + memberID
+	}
+	return guildID
+}
+
+// getUIDFromInteraction extracts the unique identifier from a Discord interaction.
+func getUIDFromInteraction(i *discordgo.InteractionCreate) string {
+	customID := i.Interaction.MessageComponentData().CustomID
+	vars := strings.Split(customID, ":")
+	var uid string
+	if len(vars) == 1 {
+		uid = vars[0]
+	} else {
+		uid = vars[1]
+	}
+	return uid
 }

@@ -7,5 +7,6 @@
     "player_timeout": 30,
     "show_player_turn": 2,
     "show_dealer_turn": 0,
-    "payout_percent": 200
+    "payout_percent": 200,
+    "single_player_mode": false
 }
