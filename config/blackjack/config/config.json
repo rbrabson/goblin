@@ -1,7 +1,7 @@
 {
     "max_players": 5,
     "decks": 6,
-    "bet_amount": 1000,
+    "bet_amount": 500,
     "delay_between_games": 10,
     "wait_for_players": 30,
     "player_timeout": 30,
