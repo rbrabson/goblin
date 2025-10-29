@@ -13,6 +13,7 @@ import (
 	"github.com/rbrabson/goblin/account"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/discord"
+	"github.com/rbrabson/goblin/game/blackjack"
 	"github.com/rbrabson/goblin/game/heist"
 	"github.com/rbrabson/goblin/game/race"
 	"github.com/rbrabson/goblin/game/slots"
@@ -45,6 +46,7 @@ func main() {
 	// Start the plugins
 	account.Start()
 	bank.Start()
+	blackjack.Start()
 	heist.Start()
 	leaderboard.Start()
 	payday.Start()

@@ -1,20 +1,19 @@
-FROM golang AS builder
+FROM alpine AS builder
+
+# Install make and go
+RUN apk add make go
 
 # Set destination for COPY
 WORKDIR /workspace
 
-# Download Go modules
-COPY go.mod go.sum ./
-RUN go mod download
-
 # Copy the source code
 COPY ./ ./
-# COPY cmd/ cmd/
-# COPY internal/ internal/
-# COPY pkg/ pkg/
 
-# Build
-RUN CGO_ENABLED=0 GO111MODULE=on GOOS=linux OARCH=amd64 go build -o goblin cmd/goblin/main.go
+# Download Go modules
+RUN go mod download
+
+# Build the goblin binary
+RUN make build-linux
 
 # Create a new image for the application code to run in
 FROM alpine
@@ -35,11 +34,12 @@ ADD LICENSE /licenses
 RUN mkdir -p /config
 ADD config /config/
 
-ADD .env .
-
 WORKDIR /
 
-COPY --from=builder /workspace/goblin /
+COPY --from=builder /workspace/bin/linux/amd64/goblin /
+
+# Uncomment this out if you are using a .env file for configuration instead of environment variables in the docker compose file
+# ADD .env .
 
 RUN apk add iputils \
   bash \

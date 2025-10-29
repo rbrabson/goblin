@@ -137,6 +137,11 @@ func (account *Account) SetBalance(balance int) error {
 	return err
 }
 
+// GetBalance returns the current balance of the account.
+func (account *Account) GetBalance() int {
+	return account.CurrentBalance
+}
+
 // newAccount creates a new bank account for a member in the guild (server).
 func newAccount(guildID string, memberID string) *Account {
 	bank := GetBank(guildID)
