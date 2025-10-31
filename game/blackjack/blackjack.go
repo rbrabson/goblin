@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	bj "github.com/rbrabson/blackjack"
 	"github.com/rbrabson/cards"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/stats"
 )
 
@@ -185,6 +186,10 @@ func (g *Game) EndRound() {
 		g.interaction = nil
 		g.message = nil
 		g.state = NotStarted
+	}
+
+	if status == discord.STOPPING && len(games) == 0 {
+		status = discord.STOPPED
 	}
 }
 
