@@ -10,13 +10,13 @@ Build the image locally for testing:
 
 ```bash
 # Build with default tag
-docker build -t goblin .
+docker build -platform=linux/amd64 -t goblin .
 
 # Build with specific tag
-docker build -t goblin:v1.0.0 .
+docker build -platform=linux/amd64 -t goblin:v1.0.0 .
 
 # Build with multiple tags
-docker build -t goblin:latest -t goblin:v1.0.0 .
+docker build -platform=linux/amd64 -t goblin:latest -t goblin:v1.0.0 .
 ```
 
 ### Build Arguments (if needed)
@@ -104,26 +104,28 @@ services:
     container_name: goblin
     image: username/goblin:latest  # Replace with your image
     environment:
-      - DISCORD_BOT_TOKEN=your_bot_token_here
-      - DISCORD_APP_ID=your_app_id_here
-      - DISCORD_CONFIG_DIR=/config
-      - DISCORD_DEFAULT_THEME=clash
-      - MONGODB_DATABASE=your_database_name_here
-      - MONGODB_URI=mongodb+srv://user:password@server/database?retryWrites=true&w=majority
-      - LOG_LEVEL=info
-      # - DISCORD_GUILD_ID=your_dev_server_id  # Uncomment for dev server only
+services:
+  goblin:
+    container_name: goblin-bot
+    image: rbrabson/private:goblin
+    environment:
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      DISCORD_APP_ID: ${DISCORD_APP_ID}
+      DISCORD_CONFIG_DIR: ${DISCORD_CONFIG_DIR}
+      DISCORD_DEFAULT_THEME: ${DISCORD_DEFAULT_THEME}
+      MONGODB_DATABASE: ${MONGODB_DATABASE}
+      MONGODB_URI: ${MONGODB_URI}
+      LOG_LEVEL: ${LOG_LEVEL}
     entrypoint: /goblin
     restart: unless-stopped
-    volumes:
-      - ./config:/config:ro  # Mount config directory (optional)
 
   mongodb:
     container_name: goblin-mongo
     image: mongo:latest
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=your_mongo_password
-      - MONGO_INITDB_DATABASE=goblin
+      - MONGO_INITDB_ROOT_USERNAME=${ROOT_USERNAME}$
+      - MONGO_INITDB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${DATABASE_NAME}
     ports:
       - "27017:27017"
     volumes:
@@ -133,6 +135,25 @@ services:
 volumes:
   mongodb_data:
     driver: local
+```
+
+Environment variables used by the deployment include:
+
+```env
+# Discord Bot Configuration
+DISCORD_BOT_TOKEN=your_bot_token_here
+DISCORD_APP_ID=your_app_id_here
+DISCORD_CONFIG_DIR=/config
+DISCORD_DEFAULT_THEME=clash
+LOG_LEVEL=info
+
+# MongoDB Configuration for the Discord bot
+MONGODB_URI=mongodb+srv://user:password@server/database?retryWrites=true&w=majority
+
+# Local MongoDB Container Settings
+MONGODB_ROOT_USER=admin
+MONGODB_ROOT_PASSWORD=your_mongo_password
+MONGODB_DATABASE=goblin
 ```
 
 ### Option 2: Using .env File (Recommended)
@@ -152,9 +173,8 @@ volumes:
     DISCORD_CONFIG_DIR=/config
     DISCORD_DEFAULT_THEME=clash
     LOG_LEVEL=info
-    # DISCORD_GUILD_ID=your_dev_server_id
 
-    # MongoDB Configuration
+    # MongoDB Configuration for the Discord bot
     MONGODB_URI=mongodb+srv://user:password@server/database?retryWrites=true&w=majority
 
     # Local MongoDB Container Settings
