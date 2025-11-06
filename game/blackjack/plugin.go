@@ -37,7 +37,18 @@ func Start() {
 
 // Stop stops the heist game. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
-	status = discord.STOPPING
+	gamesLock.Lock()
+	defer gamesLock.Unlock()
+
+	newState := discord.STOPPED
+	for _, game := range games {
+		if game.IsActive() || game.IsWaitingForPlayers() {
+			newState = discord.STOPPING
+			break
+		}
+	}
+	status = newState
+
 }
 
 // Status returns the status of the heist game.	This is used to determine

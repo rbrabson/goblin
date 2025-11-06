@@ -190,12 +190,14 @@ func (g *Game) EndRound() {
 
 	gamesLock.Lock()
 	if status == discord.STOPPING {
+		newstatus := discord.STOPPED
 		for _, game := range games {
 			if game.IsActive() || game.IsWaitingForPlayers() {
+				newstatus = discord.STOPPING
 				break
 			}
-			status = discord.STOPPED
 		}
+		status = newstatus
 	}
 	gamesLock.Unlock()
 }
