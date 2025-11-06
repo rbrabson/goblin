@@ -3,6 +3,7 @@ package stats
 import (
 	"log/slog"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 
@@ -799,6 +800,9 @@ func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.Me
 
 // getGuildID returns the guild ID from the interaction.
 func getGuildID(i *discordgo.InteractionCreate) string {
-	return i.GuildID
-	// return "236523452230533121"
+	guildID := os.Getenv("DISCORD_STATS_GUILDID")
+	if guildID == "" {
+		guildID = i.GuildID
+	}
+	return guildID
 }
