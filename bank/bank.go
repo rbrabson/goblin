@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/rbrabson/goblin/discord"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -38,9 +39,8 @@ func GetBank(guildID string) *Bank {
 
 // readBankFromFile creates a new bank for the given guild.
 func readBankFromFile(guildID string) *Bank {
-	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "bank", "config", configTheme+".json")
+	configTheme := os.Getenv("DISCORD_BANK_FILE")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "bank", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default bank config",

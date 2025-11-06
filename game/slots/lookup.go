@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/rbrabson/goblin/discord"
 	rslots "github.com/rbrabson/slots"
 )
 
@@ -31,8 +32,7 @@ func newLookupTable() rslots.LookupTable {
 // and contain an array of reels, where each reel is an object with a "Slots" field
 // that is an array of slot symbols.
 func readLookupTableFromFile() rslots.LookupTable {
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "slots", "lookuptable", LOOKUP_TABLE_NAME+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "slots", "lookuptable", LOOKUP_TABLE_NAME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		return nil

@@ -111,8 +111,14 @@ services:
     environment:
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
       DISCORD_APP_ID: ${DISCORD_APP_ID}
+      DISCORD_BANK_FILE: ${DISCORD_BANK_FILE:-"clash"}
+      DISCORD_BLACKJACK_THEME: ${DISCORD_BLACKJACK_THEME:-"clash"}
       DISCORD_CONFIG_DIR: ${DISCORD_CONFIG_DIR}
-      DISCORD_DEFAULT_THEME: ${DISCORD_DEFAULT_THEME}
+      DISCORD_GUILD_FILE: ${DISCORD_GUILD_FILE:-"clash"}
+      DISCORD_HEIST_FILE: ${DISCORD_HEIST_FILE:-"clash"}
+      DISCORD_PAYDAY_FILE: ${DISCORD_PAYDAY_FILE:-"clash"}
+      DISCORD_RACE_FILE: ${DISCORD_RACE_FILE:-"clash"}
+      DISCORD_SLOTS_THEME: ${DISCORD_SLOTS_THEME:-"clash"}
       MONGODB_DATABASE: ${MONGODB_DATABASE}
       MONGODB_URI: ${MONGODB_URI}
       LOG_LEVEL: ${LOG_LEVEL}
@@ -144,7 +150,14 @@ Environment variables used by the deployment include:
 DISCORD_BOT_TOKEN=your_bot_token_here
 DISCORD_APP_ID=your_app_id_here
 DISCORD_CONFIG_DIR=/config
-DISCORD_DEFAULT_THEME=clash
+DISCORD_BANK_FILE=clash
+DISCORD_BLACKJACK_THEME=clash
+DISCORD_CONFIG_DIR=clash
+DISCORD_GUILD_FILE=clash
+DISCORD_HEIST_FILE=$clash
+DISCORD_PAYDAY_FILE=clash
+DISCORD_RACE_FILE=clash
+DISCORD_SLOTS_THEME=clash
 LOG_LEVEL=info
 
 # MongoDB Configuration for the Discord bot
@@ -171,7 +184,13 @@ MONGODB_DATABASE=goblin
     DISCORD_BOT_TOKEN=your_bot_token_here
     DISCORD_APP_ID=your_app_id_here
     DISCORD_CONFIG_DIR=/config
-    DISCORD_DEFAULT_THEME=clash
+    DISCORD_BANK_FILE="clash"
+    DISCORD_BLACKJACK_THEME="clash"
+    DISCORD_GUILD_FILE="clash"
+    DISCORD_HEIST_FILE="clash"
+    DISCORD_PAYDAY_FILE="clash"
+    DISCORD_RACE_FILE="clash"
+    DISCORD_SLOTS_THEME="clash"
     LOG_LEVEL=info
 
     # MongoDB Configuration for the Discord bot
@@ -372,7 +391,13 @@ LOG_LEVEL=debug docker-compose up
 | `DISCORD_BOT_TOKEN` | Discord bot token | Yes | - |
 | `DISCORD_APP_ID` | Discord application ID | Yes | - |
 | `DISCORD_CONFIG_DIR` | Configuration directory path | No | `/config` |
-| `DISCORD_DEFAULT_THEME` | Default theme name | No | `clash` |
+| `DISCORD_BANK_FILE` | Default bank theme | No | `clash` |
+| `DISCORD_BLACKJACK_THEME`  | Default blackjack theme | No | `clash` |
+| `DISCORD_GUILD_FILE`  | Default guild theme | No | `clash` |
+| `DISCORD_HEIST_FILE`  | Default heist theme | No | `clash` |
+| `DISCORD_PAYDAY_FILE`  | Default payday theme | No | `clash` |
+| `DISCORD_RACE_FILE`  | Default race theme | No | `clash` |
+| `DISCORD_SLOTS_THEME`  | Default slots theme | No | `clash` |
 | `MONGODB_DATABASE` | Name of the MogoDB database | Yes | - |
 | `MONGODB_URI` | MongoDB connection string | Yes | - |
 | `LOG_LEVEL` | Logging level (debug, info, warn, error) | No | `info` |

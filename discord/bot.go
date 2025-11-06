@@ -18,11 +18,12 @@ const (
 )
 
 var (
-	Version  string
-	Revision string
-	BotName  = "Goblin"
-	db       *mongo.MongoDB
-	bot      *Bot
+	Version            string
+	Revision           string
+	BotName            = "Goblin"
+	db                 *mongo.MongoDB
+	bot                *Bot
+	DISCORD_CONFIG_DIR string
 )
 
 var (
@@ -53,6 +54,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 	appID := os.Getenv("DISCORD_APP_ID")
 	token := os.Getenv("DISCORD_BOT_TOKEN")
 	guildID := os.Getenv("DISCORD_GUILD_ID")
+	DISCORD_CONFIG_DIR = os.Getenv("DISCORD_CONFIG_DIR")
 
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {

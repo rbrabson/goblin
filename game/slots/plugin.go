@@ -2,6 +2,7 @@ package slots
 
 import (
 	"fmt"
+	"os"
 	"slices"
 
 	"golang.org/x/text/cases"
@@ -13,13 +14,15 @@ import (
 )
 
 const (
-	PluginName = "slots"
+	PluginName        = "slots"
+	defaultSlotsTheme = "clash"
 )
 
 var (
-	plugin *Plugin
-	db     *mongo.MongoDB
-	status = discord.RUNNING
+	plugin     *Plugin
+	db         *mongo.MongoDB
+	status     = discord.RUNNING
+	slotsTheme string
 )
 
 // Plugin is the plugin for the slots system used by the bot
@@ -48,6 +51,10 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 // Initialize saves the Discord bot to be used by the slots system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
+	slotsTheme = os.Getenv("DISCORD_SLOTS_THEME")
+	if slotsTheme == "" {
+		slotsTheme = defaultSlotsTheme
+	}
 }
 
 // SetDB sets the database to be used by the slots system. This is used for testing.

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rbrabson/goblin/discord"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -84,8 +85,7 @@ func defaultConfig() *Config {
 
 // readConfigFromFile reads the configuration from a JSON file and returns a Config instance.
 func readConfigFromFile() *Config {
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "blackjack", "config", CONFIG_FILE_NAME+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "blackjack", "config", CONFIG_FILE_NAME+".json")
 	bytes, _ := os.ReadFile(configFileName)
 
 	var config Config

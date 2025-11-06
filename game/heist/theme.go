@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/internal/emoji"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -88,9 +89,7 @@ func GetTheme(guildID string) *Theme {
 // readThemeFromFile returns the default theme for a guild. If the theme can't be read
 // from the configuration file or can't be decoded, then a default theme is returned
 func readThemeFromFile(guildID string) *Theme {
-	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "heist", "themes", configTheme+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "themes", heistTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default theme",
@@ -113,7 +112,7 @@ func readThemeFromFile(guildID string) *Theme {
 		return getDefauiltTheme(guildID)
 	}
 	theme.GuildID = guildID
-	theme.Name = configTheme
+	theme.Name = heistTheme
 
 	slog.Info("create new theme",
 		slog.String("guildID", theme.GuildID),

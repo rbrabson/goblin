@@ -75,9 +75,8 @@ func (payday *Payday) SetPaydayFrequency(frequency time.Duration) {
 // If the default payday configuration file cannot be read or dedcoded, then a
 // default payday configuration is created.
 func readPaydayFromFile(guildID string) *Payday {
-	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "payday", "config", configTheme+".json")
+	configFileName := filepath.Join(configDir, "payday", "config", paydayTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default payday config",

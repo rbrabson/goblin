@@ -2,6 +2,7 @@ package race
 
 import (
 	"fmt"
+	"os"
 	"slices"
 
 	"github.com/bwmarrin/discordgo"
@@ -12,14 +13,16 @@ import (
 )
 
 const (
-	PluginName = "race"
+	PluginName       = "race"
+	defaultRaceTheme = "clash"
 )
 
 var (
-	plugin *Plugin
-	bot    *discord.Bot
-	db     *mongo.MongoDB
-	status = discord.RUNNING
+	plugin    *Plugin
+	bot       *discord.Bot
+	db        *mongo.MongoDB
+	status    = discord.RUNNING
+	raceTheme string
 )
 
 // Plugin is the plugin for the heist game
@@ -57,6 +60,10 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	bot = b
 	db = d
+	raceTheme = os.Getenv("DISCORD_RACE_FILE")
+	if raceTheme == "" {
+		raceTheme = defaultRaceTheme
+	}
 }
 
 // GetCommands returns the commands for the banking system

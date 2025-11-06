@@ -11,6 +11,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/log"
 	"github.com/rbrabson/goblin/stats"
@@ -61,6 +62,8 @@ func main() {
 	db = mongo.NewDatabase()
 	defer db.Close()
 	guild.SetDB(db)
+
+	discord.DISCORD_CONFIG_DIR = os.Getenv("DISCORD_CONFIG_DIR")
 
 	// Get all players who have
 

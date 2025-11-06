@@ -2,6 +2,7 @@ package heist
 
 import (
 	"fmt"
+	"os"
 	"slices"
 
 	"github.com/bwmarrin/discordgo"
@@ -12,13 +13,15 @@ import (
 )
 
 const (
-	PluginName = "heist"
+	PluginName        = "heist"
+	defaultHeistTheme = "clash"
 )
 
 var (
-	plugin *Plugin
-	db     *mongo.MongoDB
-	status = discord.RUNNING
+	plugin     *Plugin
+	db         *mongo.MongoDB
+	status     = discord.RUNNING
+	heistTheme string
 )
 
 // Plugin is the plugin for the heist game
@@ -56,6 +59,10 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
 	go vaultUpdater()
+	heistTheme := os.Getenv("DISCORD_HEIST_FILE")
+	if heistTheme == "" {
+		heistTheme = defaultTheme
+	}
 }
 
 // GetCommands returns the commands for the banking system

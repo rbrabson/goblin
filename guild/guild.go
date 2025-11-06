@@ -12,6 +12,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const (
+	defaultGuildTheme = "clash"
+)
+
 var (
 	DefaultAdminRoles = []string{"Admin", "Admins", "Administrator", "Mod", "Mods", "Moderator"}
 )
@@ -50,10 +54,12 @@ func GetGuild(guildID string) *Guild {
 
 // readGuildFromFile creates a new guild configuration for a given guild (guild).
 func readGuildFromFile(guildID string) *Guild {
-
-	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "guild", "config", configTheme+".json")
+	guildTheme := os.Getenv("DISCORD_GUILD_FILE")
+	if guildTheme == "" {
+		guildTheme = defaultGuildTheme
+	}
+	configFileName := filepath.Join(configDir, "guild", "config", guildTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default guild config",
