@@ -9,11 +9,7 @@ import (
 	"strings"
 
 	bj "github.com/rbrabson/blackjack"
-)
-
-const (
-	// symbolsFile = "pt"
-	symbolsFile = "cards"
+	"github.com/rbrabson/goblin/discord"
 )
 
 type Symbols map[string]map[string]string
@@ -28,12 +24,11 @@ func GetSymbols() Symbols {
 
 // readSymbolsFromFile reads the symbols from the configuration file. If the file cannot be read or unmarshaled, nil is returned.
 func readSymbolsFromFile() Symbols {
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "blackjack", "symbols", symbolsFile+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "blackjack", "symbols", blackjackTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read the symbols file",
-			slog.String("file", symbolsFile),
+			slog.String("file", blackjackTheme),
 			slog.Any("error", err),
 		)
 		return nil
@@ -50,7 +45,7 @@ func readSymbolsFromFile() Symbols {
 	}
 
 	slog.Info("loaded symbols from file",
-		slog.String("symbolsFile", symbolsFile),
+		slog.String("symbolsFile", blackjackTheme),
 	)
 
 	return symbols
