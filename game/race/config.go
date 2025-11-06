@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rbrabson/goblin/discord"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -61,14 +62,12 @@ func GetConfig(guildID string) *Config {
 // read from the configuration file or decdoded, then a default configuration is
 // returned.
 func readConfigFromFile(guildID string) *Config {
-	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "race", "config", configTheme+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "race", "config", raceTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default race config",
 			slog.String("guildID", guildID),
-			slog.String("theme", configTheme),
+			slog.String("theme", raceTheme),
 			slog.Any("error", err),
 		)
 		// If the configuration file does not exist, then create a new configuration.
@@ -80,7 +79,7 @@ func readConfigFromFile(guildID string) *Config {
 	if err != nil {
 		slog.Error("failed to unmarshal default race config",
 			slog.String("guildID", guildID),
-			slog.String("theme", configTheme),
+			slog.String("theme", raceTheme),
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
@@ -91,7 +90,7 @@ func readConfigFromFile(guildID string) *Config {
 	writeConfig(config)
 	slog.Info("create new race config",
 		slog.String("guildID", guildID),
-		slog.String("theme", configTheme),
+		slog.String("theme", raceTheme),
 	)
 
 	return config

@@ -7,6 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/game/slots"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -30,6 +31,8 @@ func main() {
 	db := mongo.NewDatabase()
 	defer db.Close()
 	slots.SetDB(db)
+
+	discord.DISCORD_CONFIG_DIR = os.Getenv("DISCORD_CONFIG_DIR")
 
 	averages, err := slots.GetPayoutAverages(guildID)
 	if err != nil {

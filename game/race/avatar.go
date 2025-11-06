@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/internal/emoji"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -50,8 +51,7 @@ func GetRaceAvatars(guildID string, themeName string) []*Avatar {
 // readRaceAvatarsFromFile reads the list of characters for the theme and guild from the database. If the list
 // does not exist, then an error is returned.
 func readRaceAvatarsFromFile(guildID string, themeName string) []*Avatar {
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "race", "avatars", themeName+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "race", "avatars", themeName+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default race avatars",

@@ -2,6 +2,7 @@ package payday
 
 import (
 	"fmt"
+	"os"
 	"slices"
 
 	"golang.org/x/text/cases"
@@ -13,13 +14,15 @@ import (
 )
 
 const (
-	PluginName = "payday"
+	PluginName         = "payday"
+	defaultPaydayTheme = "clash"
 )
 
 var (
-	plugin *Plugin
-	db     *mongo.MongoDB
-	status = discord.RUNNING
+	plugin      *Plugin
+	db          *mongo.MongoDB
+	status      = discord.RUNNING
+	paydayTheme string
 )
 
 // Plugin is the plugin for the payday system used by the bot
@@ -48,6 +51,10 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 // Initialize saves the Discord bot to be used by the banking system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
+	paydayTheme := os.Getenv("DISCORD_PAYDAY_THEME")
+	if paydayTheme == "" {
+		paydayTheme = defaultPaydayTheme
+	}
 }
 
 // GetCommands returns the commands for the banking system

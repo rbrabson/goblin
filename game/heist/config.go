@@ -7,7 +7,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/rbrabson/goblin/discord"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+const (
+	defaultTheme = "clash"
 )
 
 const (
@@ -52,9 +57,7 @@ func GetConfig(guildID string) *Config {
 // If the default configuration file cannot be read or decoded, then a default
 // configuration is created.
 func readConfigFromFile(guildID string) *Config {
-	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "heist", "config", configTheme+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "config", heistTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default heist config",

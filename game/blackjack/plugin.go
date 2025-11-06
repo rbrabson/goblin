@@ -2,6 +2,7 @@ package blackjack
 
 import (
 	"fmt"
+	"os"
 	"slices"
 
 	"golang.org/x/text/cases"
@@ -13,14 +14,16 @@ import (
 )
 
 const (
-	PluginName = "blackjack"
+	PluginName            = "blackjack"
+	defaultBlackjackTheme = "clash"
 )
 
 var (
-	plugin *Plugin
-	db     *mongo.MongoDB
-	bot    *discord.Bot
-	status = discord.RUNNING
+	plugin         *Plugin
+	db             *mongo.MongoDB
+	bot            *discord.Bot
+	status         = discord.RUNNING
+	blackjackTheme string
 )
 
 // Plugin is the plugin for the slots system used by the bot
@@ -61,6 +64,10 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	bot = b
 	db = d
+	blackjackTheme = os.Getenv("DISCORD_BLACKJACK_THEME")
+	if blackjackTheme == "" {
+		blackjackTheme = defaultBlackjackTheme
+	}
 }
 
 // SetDB sets the database to be used by the slots system. This is used for testing.

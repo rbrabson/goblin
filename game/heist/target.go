@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/rbrabson/goblin/discord"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -105,9 +106,7 @@ func getTarget(targets []*Target, crewSize int) *Target {
 // readTargetsFromFIle returns the default targets for a server.
 // If the file is not found or cannot be decoded, the default targets are used.
 func readTargetsFromFIle(guildID string) []*Target {
-	configTheme := os.Getenv("DISCORD_DEFAULT_THEME")
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "heist", "targets", configTheme+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "targets", heistTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default targets",
@@ -131,7 +130,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 	}
 	for _, target := range targets {
 		target.GuildID = guildID
-		target.Theme = configTheme
+		target.Theme = heistTheme
 		target.Vault = target.VaultMax
 		target.IsAtMax = true
 	}

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/rbrabson/goblin/discord"
 )
 
 const (
@@ -28,8 +30,7 @@ func newConfig() *Config {
 
 // readConfigFromFile reads the configuration from a JSON file and returns a Config instance.
 func readConfigFromFile() *Config {
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "slots", "config", CONFIG_TABLE_NAME+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "slots", "config", CONFIG_TABLE_NAME+".json")
 	bytes, _ := os.ReadFile(configFileName)
 
 	var config Config

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"slices"
 
+	"github.com/rbrabson/goblin/discord"
 	rslots "github.com/rbrabson/slots"
 )
 
@@ -42,8 +43,7 @@ func newPayoutTable() rslots.PayoutTable {
 
 // readPayoutTableFromFile reads the payout table from a JSON file.
 func readPayoutTableFromFile() rslots.PayoutTable {
-	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	configFileName := filepath.Join(configDir, "slots", "payout", PAYOUT_FILE_NAME+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "slots", "payout", PAYOUT_FILE_NAME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default payout table",
