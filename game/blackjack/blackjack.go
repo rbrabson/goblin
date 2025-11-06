@@ -188,9 +188,16 @@ func (g *Game) EndRound() {
 		g.state = NotStarted
 	}
 
-	if status == discord.STOPPING && len(games) == 0 {
-		status = discord.STOPPED
+	gamesLock.Lock()
+	if status == discord.STOPPING {
+		for _, game := range games {
+			if game.IsActive() || game.IsWaitingForPlayers() {
+				break
+			}
+			status = discord.STOPPED
+		}
 	}
+	gamesLock.Unlock()
 }
 
 // NotStarted returns whether the blackjack game has not yet started.
