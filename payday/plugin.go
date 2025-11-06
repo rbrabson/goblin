@@ -51,7 +51,7 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 // Initialize saves the Discord bot to be used by the banking system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
-	paydayTheme := os.Getenv("DISCORD_PAYDAY_FILE")
+	paydayTheme := os.Getenv("DISCORD_PAYDAY_THEME")
 	if paydayTheme == "" {
 		paydayTheme = defaultPaydayTheme
 	}

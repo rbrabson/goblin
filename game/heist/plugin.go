@@ -59,7 +59,7 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
 	go vaultUpdater()
-	heistTheme := os.Getenv("DISCORD_HEIST_FILE")
+	heistTheme := os.Getenv("DISCORD_HEIST_THEME")
 	if heistTheme == "" {
 		heistTheme = defaultTheme
 	}

@@ -39,7 +39,7 @@ func GetBank(guildID string) *Bank {
 
 // readBankFromFile creates a new bank for the given guild.
 func readBankFromFile(guildID string) *Bank {
-	configTheme := os.Getenv("DISCORD_BANK_FILE")
+	configTheme := os.Getenv("DISCORD_BANK_THEME")
 	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "bank", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {

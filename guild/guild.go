@@ -55,7 +55,7 @@ func GetGuild(guildID string) *Guild {
 // readGuildFromFile creates a new guild configuration for a given guild (guild).
 func readGuildFromFile(guildID string) *Guild {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
-	guildTheme := os.Getenv("DISCORD_GUILD_FILE")
+	guildTheme := os.Getenv("DISCORD_GUILD_THEME")
 	if guildTheme == "" {
 		guildTheme = defaultGuildTheme
 	}

@@ -51,11 +51,11 @@ DISCORD_APP_ID="<bot_application_id>"
 # of your MongoDB instance. Prior to Goblin being able to connect to the MongoDB
 # instance, create the MongoDB database and add a database user for the database
 # with Read/Write permissions, and use those values below.
-DISCORD_BANK_FILE="clash"
+DISCORD_BANK_THEME="clash"
 DISCORD_BLACKJACK_THEME="clash"
-DISCORD_GUILD_FILE="clash"
-DISCORD_HEIST_FILE="clash"
-DISCORD_PAYDAY_FILE="clash"
+DISCORD_GUILD_THEME="clash"
+DISCORD_HEIST_THEME="clash"
+DISCORD_PAYDAY_THEME="clash"
 DISCORD_RACE_FILE="clash"
 DISCORD_SLOTS_THEME="clash"
 
