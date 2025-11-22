@@ -88,11 +88,6 @@ func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // playBlackjack handles the /blackjack/play command.
 func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	// resp := disgomsg.NewResponse(
-	// 	disgomsg.WithContent("Not implemented yet."),
-	// )
-	// resp.SendEphemeral(s, i.Interaction)
-
 	uid := getUID(i.GuildID, i.Member.User.ID)
 	game := GetGame(i.GuildID, uid)
 
