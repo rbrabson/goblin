@@ -494,7 +494,6 @@ func showJoinGame(s *discordgo.Session, i *discordgo.InteractionCreate, game *Ga
 		}); err != nil {
 			slog.Error("error sending blackjack interaction response",
 				slog.String("guildID", game.guildID),
-				slog.String("memberID", game.interaction.Member.User.ID),
 				slog.Any("error", err),
 			)
 		}
