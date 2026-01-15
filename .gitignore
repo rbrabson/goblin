@@ -43,3 +43,6 @@ go.work
 
 # IntelliJ IDEA
 .idea/
+
+# GitHub workflows
+.github/

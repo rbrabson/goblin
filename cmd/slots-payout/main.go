@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
+	"github.com/rbrabson/goblin/discord"
 	"github.com/rbrabson/goblin/game/slots"
 	rslots "github.com/rbrabson/slots"
 )
@@ -20,6 +22,7 @@ type PayoutProbability struct {
 
 func main() {
 	godotenv.Load(".env")
+	discord.DISCORD_CONFIG_DIR = os.Getenv("DISCORD_CONFIG_DIR")
 
 	sm := rslots.NewSlotMachine(
 		rslots.WithLookupTable(slots.GetLookupTable()),
