@@ -179,31 +179,6 @@ var (
 					},
 				},
 				{
-					Name:        "theme",
-					Description: "Commands that interact with the heist themes.",
-					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Name:        "list",
-							Description: "Gets the list of available heist themes.",
-							Type:        discordgo.ApplicationCommandOptionSubCommand,
-						},
-						{
-							Name:        "set",
-							Description: "Sets the current heist theme.",
-							Options: []*discordgo.ApplicationCommandOption{
-								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "Name of the theme to set.",
-									Required:    true,
-								},
-							},
-							Type: discordgo.ApplicationCommandOptionSubCommand,
-						},
-					},
-				},
-				{
 					Name:        "reset",
 					Description: "Resets a new heist that is hung.",
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -316,8 +291,6 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resetHeist(s, i)
 	case "vault-reset":
 		resetVaults(s, i)
-	case "theme":
-		theme(s, i)
 	}
 }
 
@@ -371,17 +344,6 @@ func enableBoost(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.Error("failed to send response",
 			slog.Any("error", err),
 		)
-	}
-}
-
-// theme routes the theme commands to the proper handlers.
-func theme(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	options := i.ApplicationCommandData().Options[0].Options
-	switch options[0].Name {
-	case "list":
-		listThemes(s, i)
-	case "set":
-		setTheme(s, i)
 	}
 }
 
@@ -442,7 +404,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	waitForHeistToStart(s, i, heist)
+	waitForHeistToStart(s, heist)
 
 	if len(heist.Crew) < 2 {
 		heist.End()
@@ -454,7 +416,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		p := message.NewPrinter(language.AmericanEnglish)
 		msg := disgomsg.NewMessage(
-			disgomsg.WithContent(p.Sprintf("The %s was cancelled due to lack of interest.", heist.theme.Heist)),
+			disgomsg.WithContent(p.Sprintf("The %s was cancelled due to lack of interest.", heist.config.Theme.Heist)),
 		)
 		if _, err := msg.Send(s, i.ChannelID); err != nil {
 			slog.Error("failed to send message",
@@ -463,7 +425,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		slog.Info("heist cancelled due to lack of interest",
 			slog.String("guild", heist.GuildID),
-			slog.String("heist", heist.theme.Heist),
+			slog.String("heist", heist.config.Theme.Heist),
 		)
 
 		return
@@ -505,7 +467,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	p := message.NewPrinter(language.AmericanEnglish)
 	msg := disgomsg.NewMessage(
-		disgomsg.WithContent(p.Sprintf("The %s is starting with %d members.", heist.theme.Heist, len(heist.Crew))),
+		disgomsg.WithContent(p.Sprintf("The %s is starting with %d members.", heist.config.Theme.Heist, len(heist.Crew))),
 	)
 	if _, err := msg.Send(s, i.ChannelID); err != nil {
 		slog.Error("failed to send message",
@@ -527,7 +489,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 // waitForHeistToStart waits until the planning stage for the heist expires.
-func waitForHeistToStart(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) {
+func waitForHeistToStart(s *discordgo.Session, heist *Heist) {
 	// Wait for the heist to be ready to start
 	waitTime := heist.StartTime.Add(heist.config.WaitTime)
 	slog.Debug("wait for heist to start",
@@ -774,7 +736,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	p := message.NewPrinter(language.AmericanEnglish)
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(p.Sprintf("You have joined the %s at a cost of %d credits.", heist.theme.Heist, heist.config.HeistCost)),
+		disgomsg.WithContent(p.Sprintf("You have joined the %s at a cost of %d credits.", heist.config.Theme.Heist, heist.config.HeistCost)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 		slog.Error("failed to send response",
@@ -1030,11 +992,11 @@ func heistMessage(s *discordgo.Session, heist *Heist) error {
 	caser := cases.Title(language.Und, cases.NoLower)
 	p := message.NewPrinter(language.AmericanEnglish)
 	description := p.Sprintf("A new %s is being planned by %s. You can join the %s for a cost of %d credits at any time prior to the %s starting.",
-		heist.theme.Heist,
+		heist.config.Theme.Heist,
 		heist.Organizer.guildMember.Name,
-		heist.theme.Heist,
+		heist.config.Theme.Heist,
 		heist.config.HeistCost,
-		heist.theme.Heist,
+		heist.config.Theme.Heist,
 	)
 
 	embeds := []*discordgo.MessageEmbed{
@@ -1049,7 +1011,7 @@ func heistMessage(s *discordgo.Session, heist *Heist) error {
 					Inline: true,
 				},
 				{
-					Name:   fmt.Sprintf("%s (%d members)", caser.String(heist.theme.Crew), len(crew)),
+					Name:   fmt.Sprintf("%s (%d members)", caser.String(heist.config.Theme.Crew), len(crew)),
 					Value:  strings.Join(crew, ", "),
 					Inline: true,
 				},
@@ -1117,7 +1079,7 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(fmt.Sprintf("The %s has been reset", heist.theme.Heist)),
+		disgomsg.WithContent(fmt.Sprintf("The %s has been reset", heist.config.Theme.Heist)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("unable to send the response",
@@ -1226,85 +1188,6 @@ func clearMember(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistMember.ClearJailAndDeathStatus()
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Cleared %s's criminal record", member.Name)),
-	)
-	if err := resp.Send(s, i.Interaction); err != nil {
-		slog.Error("failed to send the response",
-			slog.Any("error", err),
-		)
-	}
-}
-
-// listThemes returns the list of available themes that may be used for heists
-func listThemes(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	themes, err := GetThemeNames(i.GuildID)
-	if err != nil {
-		slog.Warn("Unable to get the themes",
-			slog.String("guildID", i.GuildID),
-			slog.Any("error", err),
-		)
-	}
-
-	embeds := []*discordgo.MessageEmbed{
-		{
-			Type:        discordgo.EmbedTypeRich,
-			Title:       "Available Themes",
-			Description: "Available Themes for the Heist bot",
-			Fields: []*discordgo.MessageEmbedField{
-				{
-					Name:   "Themes",
-					Value:  strings.Join(themes[:], ", "),
-					Inline: true,
-				},
-			},
-		},
-	}
-
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: embeds,
-			Flags:  discordgo.MessageFlagsEphemeral,
-		},
-	})
-	if err != nil {
-		slog.Error("Unable to send list of themes to the user for `list themes`",
-			slog.String("guildID", i.GuildID),
-			slog.String("memberID", i.Member.User.ID),
-			slog.Any("error", err),
-		)
-	}
-}
-
-// setTheme sets the heist theme to the one specified in the command
-func setTheme(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var themeName string
-	options := i.ApplicationCommandData().Options[0].Options[0].Options
-	for _, option := range options {
-		if option.Name == "name" {
-			themeName = strings.TrimSpace(option.StringValue())
-		}
-	}
-
-	config := GetConfig(i.GuildID)
-	if themeName == config.Theme {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Theme `" + themeName + "` is already being used."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response",
-				slog.Any("error", err),
-			)
-		}
-		return
-	}
-	theme := GetTheme(i.GuildID)
-	config.Theme = theme.Name
-	slog.Debug("now using theme ",
-		slog.String("theme", config.Theme),
-	)
-
-	resp := disgomsg.NewResponse(
-		disgomsg.WithContent("Theme `" + themeName + "` is now being used."),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("failed to send the response",
@@ -1434,6 +1317,9 @@ func configBoost(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := GetConfig(i.GuildID)
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
 	boost := options[0].FloatValue()
+	if boost < 0 {
+		boost = 0
+	}
 	config.BoostPercentage = boost
 
 	p := message.NewPrinter(language.AmericanEnglish)

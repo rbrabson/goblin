@@ -2,6 +2,7 @@ package discord
 
 import (
 	"log/slog"
+	"maps"
 	"os"
 
 	"github.com/bwmarrin/discordgo"
@@ -91,23 +92,15 @@ func NewBot(botName string, version string, revision string) *Bot {
 
 	// Add commands and handlers for the bot itself
 	commands = append(commands, helpCommands...)
-	for key, value := range helpCommandHandler {
-		commandHandlers[key] = value
-	}
+	maps.Copy(commandHandlers, helpCommandHandler)
 	commands = append(commands, serverCommands...)
-	for key, value := range serverCommandHandler {
-		commandHandlers[key] = value
-	}
+	maps.Copy(commandHandlers, serverCommandHandler)
 
 	// Add commands and handlers for each plugin
 	for _, plugin := range ListPlugin() {
 		commands = append(commands, plugin.GetCommands()...)
-		for key, handler := range plugin.GetCommandHandlers() {
-			commandHandlers[key] = handler
-		}
-		for key, handler := range plugin.GetComponentHandlers() {
-			componentHandlers[key] = handler
-		}
+		maps.Copy(commandHandlers, plugin.GetCommandHandlers())
+		maps.Copy(componentHandlers, plugin.GetComponentHandlers())
 	}
 
 	// Register a function to add the command or component handler for each plugin

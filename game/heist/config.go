@@ -12,25 +12,19 @@ import (
 )
 
 const (
-	defaultTheme = "clash"
-)
-
-const (
-	BailBase          = 250
-	CrewOutput        = "None"
-	DeathTimer        = 45 * time.Second
-	HeistCost         = 1000
-	PoliceAlert       = 60 * time.Second
-	SentenceBase      = 45 * time.Second
-	WaitTime          = 60 * time.Second
-	HeistDefaultTheme = "clash"
+	BailBase     = 250
+	CrewOutput   = "None"
+	DeathTimer   = 45 * time.Second
+	HeistCost    = 1000
+	PoliceAlert  = 60 * time.Second
+	SentenceBase = 45 * time.Second
+	WaitTime     = 60 * time.Second
 )
 
 // Config is the configuration data for new heists
 type Config struct {
 	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID         string             `json:"guild_id" bson:"guild_id"`
-	Theme           string             `json:"theme" bson:"theme"`
 	BailBase        int                `json:"bail_base" bson:"bail_base"`
 	BoostPercentage float64            `json:"boost_percentage" bson:"boost_percentage"`
 	BoostEnabled    bool               `json:"boost_enabled" bson:"boost_enabled"`
@@ -39,8 +33,9 @@ type Config struct {
 	HeistCost       int                `json:"heist_cost" bson:"heist_cost"`
 	PoliceAlert     time.Duration      `json:"police_alert" bson:"police_alert"`
 	SentenceBase    time.Duration      `json:"sentence_base" bson:"sentence_base"`
-	Targets         string             `json:"targets" bson:"targets"`
 	WaitTime        time.Duration      `json:"wait_time" bson:"wait_time"`
+	Theme           *Theme             `json:"-" bson:"-"`
+	Targets         []*Target          `json:"-" bson:"-"`
 }
 
 // GetConfig retrieves the heist configuration for the specified guild. If
@@ -57,14 +52,13 @@ func GetConfig(guildID string) *Config {
 // If the default configuration file cannot be read or decoded, then a default
 // configuration is created.
 func readConfigFromFile(guildID string) *Config {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "config", heistTheme+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "config", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default heist config",
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
-		return getDefaultConfig(guildID)
 	}
 
 	config := &Config{}
@@ -74,7 +68,6 @@ func readConfigFromFile(guildID string) *Config {
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
-		return getDefaultConfig(guildID)
 	}
 	config.GuildID = guildID
 
@@ -82,27 +75,6 @@ func readConfigFromFile(guildID string) *Config {
 	slog.Info("create new heist config",
 		slog.String("guildID", config.GuildID),
 	)
-
-	return config
-}
-
-// NewConfig creates a new default configuration for the specified guild.
-func getDefaultConfig(guildID string) *Config {
-	config := &Config{
-		GuildID:         guildID,
-		BailBase:        BailBase,
-		BoostPercentage: 0,
-		BoostEnabled:    false,
-		CrewOutput:      CrewOutput,
-		DeathTimer:      DeathTimer,
-		HeistCost:       HeistCost,
-		PoliceAlert:     PoliceAlert,
-		SentenceBase:    SentenceBase,
-		Targets:         HeistDefaultTheme,
-		Theme:           HeistDefaultTheme,
-		WaitTime:        WaitTime,
-	}
-	writeConfig(config)
 
 	return config
 }

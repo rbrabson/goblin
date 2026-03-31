@@ -40,9 +40,6 @@ func TestGetConfig(t *testing.T) {
 	}
 	configs = append(configs, config)
 
-	if config.Theme != HeistDefaultTheme {
-		t.Errorf("Expected %s, got %s", HeistDefaultTheme, config.Theme)
-	}
 	if config.BailBase != BailBase {
 		t.Errorf("Expected %d, got %d", BailBase, config.BailBase)
 	}
@@ -63,8 +60,5 @@ func TestGetConfig(t *testing.T) {
 	}
 	if config.WaitTime != WaitTime {
 		t.Errorf("Expected %d, got %d", WaitTime, config.WaitTime)
-	}
-	if config.Targets != HeistDefaultTheme {
-		t.Errorf("Expected empty string, got %s", config.Targets)
 	}
 }

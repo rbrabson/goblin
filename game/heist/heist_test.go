@@ -338,7 +338,7 @@ func testSetup() {
 	// Create a default target for testing
 	target := &Target{
 		GuildID:  GuildId,
-		Theme:    HeistDefaultTheme,
+		Theme:    HEIST_THEME,
 		Name:     "Test Target",
 		CrewSize: 5,
 		Success:  0.5,
@@ -389,7 +389,7 @@ func TestGetTargets(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	targets := GetTargets(GuildId, HeistDefaultTheme)
+	targets := GetTargets(GuildId, HEIST_THEME)
 	if targets == nil {
 		t.Errorf("Expected targets, got nil")
 		return
@@ -413,7 +413,7 @@ func TestStealFromVault(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	targets := GetTargets(GuildId, HeistDefaultTheme)
+	targets := GetTargets(GuildId, HEIST_THEME)
 	if len(targets) == 0 {
 		t.Errorf("Expected targets, got empty")
 		return
@@ -467,7 +467,7 @@ func TestGetTarget(t *testing.T) {
 	targets := []*Target{
 		{
 			GuildID:  GuildId,
-			Theme:    HeistDefaultTheme,
+			Theme:    HEIST_THEME,
 			Name:     "Small Target",
 			CrewSize: 3,
 			Success:  0.7,
@@ -476,7 +476,7 @@ func TestGetTarget(t *testing.T) {
 		},
 		{
 			GuildID:  GuildId,
-			Theme:    HeistDefaultTheme,
+			Theme:    HEIST_THEME,
 			Name:     "Medium Target",
 			CrewSize: 5,
 			Success:  0.5,
@@ -485,7 +485,7 @@ func TestGetTarget(t *testing.T) {
 		},
 		{
 			GuildID:  GuildId,
-			Theme:    HeistDefaultTheme,
+			Theme:    HEIST_THEME,
 			Name:     "Large Target",
 			CrewSize: 10,
 			Success:  0.3,
@@ -517,7 +517,7 @@ func TestResetVaultsToMaximumValue(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	targets := GetTargets(GuildId, HeistDefaultTheme)
+	targets := GetTargets(GuildId, HEIST_THEME)
 	if len(targets) == 0 {
 		t.Errorf("Expected targets, got empty")
 		return
@@ -550,7 +550,7 @@ func TestResetVaultsToMaximumValue(t *testing.T) {
 	ResetVaultsToMaximumValue(GuildId)
 
 	// Get updated target
-	targets = GetTargets(GuildId, HeistDefaultTheme)
+	targets = GetTargets(GuildId, HEIST_THEME)
 	for _, tgt := range targets {
 		if tgt.GuildID == GuildId && tgt.Name == "Test Target" {
 			target = tgt
@@ -628,7 +628,6 @@ func TestGetTheme(t *testing.T) {
 
 	// Set up config to use our test theme
 	config := GetConfig(GuildId)
-	config.Theme = "Test Theme"
 	writeConfig(config)
 
 	// Get the theme
@@ -737,7 +736,7 @@ func TestCalculateSuccessRate(t *testing.T) {
 	}
 
 	// Get a target
-	targets := GetTargets(GuildId, HeistDefaultTheme)
+	targets := GetTargets(GuildId, HEIST_THEME)
 	if len(targets) == 0 {
 		t.Errorf("Expected targets, got empty")
 		return
@@ -748,7 +747,7 @@ func TestCalculateSuccessRate(t *testing.T) {
 
 	// Verify success rate is within expected range
 	if successRate < 0 || successRate > 100 {
-		t.Errorf("Expected success rate between 0 and 100, got %d", successRate)
+		t.Errorf("Expected success rate between 0 and 100, got %f", successRate)
 	}
 }
 
@@ -774,7 +773,7 @@ func TestCalculateBonusRate(t *testing.T) {
 	}
 
 	// Get a target
-	targets := GetTargets(GuildId, HeistDefaultTheme)
+	targets := GetTargets(GuildId, HEIST_THEME)
 	if len(targets) == 0 {
 		t.Errorf("Expected targets, got empty")
 		return
@@ -785,7 +784,7 @@ func TestCalculateBonusRate(t *testing.T) {
 
 	// Verify bonus rate is within expected range
 	if bonusRate < 0 || bonusRate > 100 {
-		t.Errorf("Expected bonus rate between 0 and 100, got %d", bonusRate)
+		t.Errorf("Expected bonus rate between 0 and 100, got %f", bonusRate)
 	}
 }
 
@@ -811,7 +810,7 @@ func TestCalculateCredits(t *testing.T) {
 	}
 
 	// Get a target
-	targets := GetTargets(GuildId, HeistDefaultTheme)
+	targets := GetTargets(GuildId, HEIST_THEME)
 	if len(targets) == 0 {
 		t.Errorf("Expected targets, got empty")
 		return

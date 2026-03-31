@@ -106,7 +106,7 @@ func getTarget(targets []*Target, crewSize int) *Target {
 // readTargetsFromFIle returns the default targets for a server.
 // If the file is not found or cannot be decoded, the default targets are used.
 func readTargetsFromFIle(guildID string) []*Target {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "targets", heistTheme+".json")
+	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "targets", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default targets",
@@ -114,7 +114,6 @@ func readTargetsFromFIle(guildID string) []*Target {
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
-		return getDefaultTargets(guildID)
 	}
 
 	var targets []*Target
@@ -126,11 +125,10 @@ func readTargetsFromFIle(guildID string) []*Target {
 			slog.String("targets", string(bytes)),
 			slog.Any("error", err),
 		)
-		return getDefaultTargets(guildID)
 	}
 	for _, target := range targets {
 		target.GuildID = guildID
-		target.Theme = heistTheme
+		target.Theme = HEIST_THEME
 		target.Vault = target.VaultMax
 		target.IsAtMax = true
 	}
@@ -142,45 +140,6 @@ func readTargetsFromFIle(guildID string) []*Target {
 	)
 
 	return targets
-}
-
-// getDefaultTargets returns the default targets for a server.
-func getDefaultTargets(guildID string) []*Target {
-	targets := []*Target{
-		newTarget(guildID, "clash", "Goblin Forest", 2, 29.3, 16000),
-		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000),
-		newTarget(guildID, "clash", "Goblin Outpost", 3, 20.65, 24000),
-		newTarget(guildID, "clash", "Rocky Fort", 5, 14.5, 42000),
-		newTarget(guildID, "clash", "Goblin Gauntlet", 8, 9.5, 71000),
-		newTarget(guildID, "clash", "Gobbotown", 11, 6.75, 101000),
-		newTarget(guildID, "clash", "Fort Knobs", 14, 5.2, 133000),
-		newTarget(guildID, "clash", "Bouncy Castle", 17, 4.25, 167000),
-		newTarget(guildID, "clash", "Gobbo Campus", 21, 3.5, 213000),
-		newTarget(guildID, "clash", "Walls Of Steel", 25, 2.91, 263000),
-		newTarget(guildID, "clash", "Obsidian Tower", 29, 2.49, 314000),
-		newTarget(guildID, "clash", "Queen's Gambit", 34, 2.15, 379000),
-		newTarget(guildID, "clash", "Faulty Towers", 39, 1.86, 448000),
-		newTarget(guildID, "clash", "Megamansion", 44, 1.64, 512000),
-		newTarget(guildID, "clash", "P.e.k.k.a's Playhouse", 49, 1.46, 598000),
-		newTarget(guildID, "clash", "Sherbet Towers", 55, 1.31, 688000),
-	}
-
-	return targets
-}
-
-// newTarget creates a new target for a heist
-func newTarget(guildID string, theme string, name string, maxCrewSize int, success float64, maxVault int) *Target {
-	target := Target{
-		GuildID:  guildID,
-		Theme:    theme,
-		Name:     name,
-		CrewSize: maxCrewSize,
-		Success:  success,
-		Vault:    maxVault,
-		VaultMax: maxVault,
-		IsAtMax:  true,
-	}
-	return &target
 }
 
 // ResetVaultsToMaximumValue resets all vaults in a guild to the maximum amount.
@@ -201,12 +160,13 @@ func ResetVaultsToMaximumValue(guildID string) {
 
 // vaultUpdater updates the vault balance for any target whose vault is not at the maximum value
 func vaultUpdater() {
-	const timer = 1 * time.Minute
-
+	// Get all vaults not at the max value
 	filter := bson.D{{Key: "is_at_max", Value: false}}
-	// Update the vaults forever
-	for {
-		time.Sleep(timer)
+
+	// Update the vaults once a minute forever
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
 		for _, target := range getAllTargets(filter) {
 			recoverAmount := int(float64(target.VaultMax) * VaultRecoverPercent)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
