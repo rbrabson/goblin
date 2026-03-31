@@ -55,7 +55,7 @@ func readConfigFromFile(guildID string) *Config {
 	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "config", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		slog.Error("failed to read default heist config",
+		slog.Error("failed to read heist config",
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
