@@ -351,6 +351,31 @@ func enableBoost(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 
+	heist, err := createHeist(s, i)
+	if err != nil {
+		return
+	}
+
+	waitForMembersToJoin(s, heist)
+
+	if err = checkIfHeistCanStart(s, i, heist); err != nil {
+		return
+	}
+
+	res, err := startHeist(s, i, heist)
+	if err != nil {
+		return
+	}
+	defer heist.End()
+
+	sendHeistResults(s, i, heist, res)
+
+	res.Target.StealFromValut(res.TotalStolen)
+}
+
+// createHeist creates a new heist and sends the initial message. This does not start the heist, it only sets up
+// the information and waits for players to join.
+func createHeist(s *discordgo.Session, i *discordgo.InteractionCreate) (*Heist, error) {
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
@@ -365,7 +390,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				slog.Any("error", err),
 			)
 		}
-		return
+		return nil, ErrHeistInProgress
 	}
 
 	// The organizer has to pay a fee to plan the heist.
@@ -383,7 +408,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 		heist.Cancel()
-		return
+		return nil, ErrNotEnoughCredits{CreditsNeeded: heist.config.HeistCost}
 	}
 
 	theme := GetTheme(i.GuildID)
@@ -404,8 +429,43 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	waitForHeistToStart(s, heist)
+	return heist, nil
+}
 
+// waitForMembersToJoin waits until the planning stage for the heist expires.
+func waitForMembersToJoin(s *discordgo.Session, heist *Heist) {
+	// Wait for the heist to be ready to start
+	waitTime := heist.StartTime.Add(heist.config.WaitTime)
+	slog.Debug("wait for heist to start",
+		slog.String("guildID", heist.GuildID),
+		slog.Time("waitTime", waitTime),
+		slog.Duration("configWaitTime", heist.config.WaitTime),
+		slog.Time("currentTime", time.Now()),
+	)
+	for !time.Now().After(waitTime) {
+		maximumWait := time.Until(waitTime)
+		timeToWait := min(maximumWait, 1*time.Second)
+		if timeToWait < 0 {
+			slog.Debug("wait for the heist to start is over",
+				slog.String("guildID", heist.GuildID),
+				slog.Duration("maximumWait", maximumWait),
+				slog.Duration("timeToWait", timeToWait),
+			)
+			break
+		}
+		time.Sleep(timeToWait)
+
+		if err := heistMessage(s, heist); err != nil {
+			slog.Error("failed to send heist message",
+				slog.Any("error", err),
+			)
+		}
+	}
+}
+
+// checkIfHeistCanStart checks if the heist can start. This is called after the wait time has expired
+// to ensure that there are enough members to start the heist and that the police are not on high alert.
+func checkIfHeistCanStart(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) error {
 	if len(heist.Crew) < 2 {
 		heist.End()
 
@@ -428,9 +488,15 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.String("heist", heist.config.Theme.Heist),
 		)
 
-		return
+		return ErrNotEnoughMembers{Theme: heist.config.Theme}
 	}
 
+	return nil
+}
+
+// startHeist starts the heist and returns the results of the heist. This does not process the results,
+// it only runs the heist and gets the results.
+func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) (*HeistResult, error) {
 	res, err := heist.Start()
 	if err != nil {
 		slog.Error("unable to start the heist",
@@ -445,20 +511,20 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				slog.Any("error", err),
 			)
 		}
-		return
+		return nil, err
 	}
-	defer heist.End()
 
-	slog.Debug("heist is starting",
-		slog.String("guildID", heist.GuildID),
-	)
+	return res, nil
+}
 
+// sendHeistResults runs the heist and sends the results to the channel. This processes the results of the heist and updates the
+// player statuses and accounts accordingly.
+func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist, res *HeistResult) {
 	mute := channel.NewChannelMute(s, i)
 	mute.MuteChannel()
 	defer mute.UnmuteChannel()
 
-	err = heistMessage(s, heist)
-	if err != nil {
+	if err := heistMessage(s, heist); err != nil {
 		slog.Error("unable to mark the heist message as started",
 			slog.String("guildID", heist.GuildID),
 			slog.Any("error", err),
@@ -483,44 +549,11 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	sendHeistResults(s, i, res)
-
-	res.Target.StealFromValut(res.TotalStolen)
+	sendMemberResults(s, i, res)
 }
 
-// waitForHeistToStart waits until the planning stage for the heist expires.
-func waitForHeistToStart(s *discordgo.Session, heist *Heist) {
-	// Wait for the heist to be ready to start
-	waitTime := heist.StartTime.Add(heist.config.WaitTime)
-	slog.Debug("wait for heist to start",
-		slog.String("guildID", heist.GuildID),
-		slog.Time("waitTime", waitTime),
-		slog.Duration("configWaitTime", heist.config.WaitTime),
-		slog.Time("currentTime", time.Now()),
-	)
-	for !time.Now().After(waitTime) {
-		maximumWait := time.Until(waitTime)
-		timeToWait := min(maximumWait, 5*time.Second)
-		if timeToWait < 0 {
-			slog.Debug("wait for the heist to start is over",
-				slog.String("guildID", heist.GuildID),
-				slog.Duration("maximumWait", maximumWait),
-				slog.Duration("timeToWait", timeToWait),
-			)
-			break
-		}
-		time.Sleep(timeToWait)
-
-		if err := heistMessage(s, heist); err != nil {
-			slog.Error("failed to send heist message",
-				slog.Any("error", err),
-			)
-		}
-	}
-}
-
-// sendHeistResults sends the results of the heist to the channel
-func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, res *HeistResult) {
+// sendMemberResults sends the results of the heist to the channel
+func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res *HeistResult) {
 	p := message.NewPrinter(language.AmericanEnglish)
 	theme := GetTheme(i.GuildID)
 

@@ -146,7 +146,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 
 	if len(h.Crew) < 2 {
 		slog.Error("not enough members to start heist", "guildID", h.GuildID)
-		return nil, ErrNotEnoughMembers{*h.config.Theme}
+		return nil, ErrNotEnoughMembers{h.config.Theme}
 	}
 
 	target := getTarget(h.config.Targets, len(h.Crew))

@@ -18,7 +18,7 @@ var (
 
 // ErrNotEnoughMembers is returned when there are not enough members to start a heist.
 type ErrNotEnoughMembers struct {
-	Theme Theme
+	Theme *Theme
 }
 
 // Error returns the error message for ErrNotEnoughMembers.
