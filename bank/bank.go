@@ -43,32 +43,22 @@ func readBankFromFile(guildID string) *Bank {
 	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "bank", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		slog.Error("failed to read default bank config",
-			slog.Any("error", err),
-		)
+		slog.Error("failed to read default bank config", "error", err)
 		return getDefaultBank(guildID)
 	}
 
 	bank := &Bank{}
 	err = json.Unmarshal(bytes, bank)
 	if err != nil {
-		slog.Error("failed to unmarshal default bank config",
-			slog.String("file", configFileName),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to unmarshal default bank config", "file", configFileName, "error", err)
 		return getDefaultBank(guildID)
 	}
 	bank.GuildID = guildID
 
 	if err := writeBank(bank); err != nil {
-		slog.Error("error writing bank",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Error("error writing bank", "guildID", guildID, "error", err)
 	}
-	slog.Info("create new bank",
-		slog.String("guildID", bank.GuildID),
-	)
+	slog.Info("create new bank", "guildID", bank.GuildID)
 
 	return bank
 }
@@ -84,14 +74,9 @@ func getDefaultBank(guildID string) *Bank {
 		DefaultBalance: DefaultBalance,
 	}
 	if err := writeBank(bank); err != nil {
-		slog.Error("error writing bank",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Error("error writing bank", "guildID", guildID, "error", err)
 	}
-	slog.Info("create new bank",
-		slog.String("guildID", bank.GuildID),
-	)
+	slog.Info("create new bank", "guildID", bank.GuildID)
 
 	return bank
 }
@@ -101,15 +86,9 @@ func (b *Bank) SetDefaultBalance(balance int) {
 	if balance != b.DefaultBalance {
 		b.DefaultBalance = balance
 		if err := writeBank(b); err != nil {
-			slog.Error("error writing bank",
-				slog.String("guildID", b.GuildID),
-				slog.Any("error", err),
-			)
+			slog.Error("error writing bank", "guildID", b.GuildID, "error", err)
 		}
-		slog.Info("set default balance",
-			slog.String("guildID", b.GuildID),
-			slog.Int("balance", b.DefaultBalance),
-		)
+		slog.Info("set default balance", "guildID", b.GuildID, "balance", b.DefaultBalance)
 	}
 }
 
@@ -118,15 +97,9 @@ func (b *Bank) SetName(name string) {
 	if name != b.Name {
 		b.Name = name
 		if err := writeBank(b); err != nil {
-			slog.Error("error writing bank",
-				slog.String("guildID", b.GuildID),
-				slog.Any("error", err),
-			)
+			slog.Error("error writing bank", "guildID", b.GuildID, "error", err)
 		}
-		slog.Info("set bank name",
-			slog.String("name", b.Name),
-			slog.String("guildID", b.GuildID),
-		)
+		slog.Info("set bank name", "name", b.Name, "guildID", b.GuildID)
 	}
 }
 
@@ -135,15 +108,9 @@ func (b *Bank) SetCurrency(currency string) {
 	if currency != b.Currency {
 		b.Currency = currency
 		if err := writeBank(b); err != nil {
-			slog.Error("error writing bank",
-				slog.String("guildID", b.GuildID),
-				slog.Any("error", err),
-			)
+			slog.Error("error writing bank", "guildID", b.GuildID, "error", err)
 		}
-		slog.Info("set currency",
-			slog.String("guildID", b.GuildID),
-			slog.String("currency", b.Currency),
-		)
+		slog.Info("set currency", "guildID", b.GuildID, "currency", b.Currency)
 	}
 }
 

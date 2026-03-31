@@ -18,9 +18,7 @@ func ResetMonthlyBalances() {
 	update := bson.M{"monthly_balance": 0}
 	err := db.UpdateMany(AccountCollection, filter, update)
 	if err != nil {
-		slog.Error("unable to reset monthly balances for all accounts",
-			slog.Any("error", err),
-		)
+		slog.Error("unable to reset monthly balances for all accounts", "error", err)
 	}
 }
 
@@ -31,15 +29,10 @@ func readBank(guildID string) *Bank {
 	var bank Bank
 	err := db.FindOne(BankCollection, filter, &bank)
 	if err != nil {
-		slog.Debug("bank not found in the database",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Debug("bank not found in the database", "guildID", guildID, "error", err)
 		return nil
 	}
-	slog.Debug("read bank from the database",
-		slog.String("guildID", guildID),
-	)
+	slog.Debug("read bank from the database", "guildID", guildID)
 	return &bank
 }
 
@@ -48,15 +41,10 @@ func writeBank(bank *Bank) error {
 	filter := bson.M{"guild_id": bank.GuildID}
 	err := db.UpdateOrInsert(BankCollection, filter, bank)
 	if err != nil {
-		slog.Error("unable to save bank to the database",
-			slog.String("guildID", bank.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to save bank to the database", "guildID", bank.GuildID, "error", err)
 		return err
 	}
-	slog.Debug("save bank to the database",
-		slog.String("guildID", bank.GuildID),
-	)
+	slog.Debug("save bank to the database", "guildID", bank.GuildID)
 
 	return nil
 }
@@ -66,16 +54,10 @@ func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit 
 	var accounts []*Account
 	err := db.FindMany(AccountCollection, filter, &accounts, sortBy, limit)
 	if err != nil {
-		slog.Error("unable to read accounts from the database",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to read accounts from the database", "guildID", guildID, "error", err)
 		return nil
 	}
-	slog.Debug("read accounts from the database",
-		slog.String("guildID", guildID),
-		slog.Int("count", len(accounts)),
-	)
+	slog.Debug("read accounts from the database", "guildID", guildID, "count", len(accounts))
 
 	return accounts
 }
@@ -87,17 +69,10 @@ func readAccount(guildID string, memberID string) *Account {
 	var account Account
 	err := db.FindOne(AccountCollection, filter, &account)
 	if err != nil {
-		slog.Debug("account not found in the database",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Debug("account not found in the database", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil
 	}
-	slog.Debug("read account from the database",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-	)
+	slog.Debug("read account from the database", "guildID", guildID, "memberID", memberID)
 
 	return &account
 }
@@ -112,17 +87,10 @@ func writeAccount(account *Account) error {
 	}
 	err := db.UpdateOrInsert(AccountCollection, filter, account)
 	if err != nil {
-		slog.Error("unable to save bank account to the database",
-			slog.String("guildID", account.GuildID),
-			slog.String("memberID", account.MemberID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to save bank account to the database", "guildID", account.GuildID, "memberID", account.MemberID, "error", err)
 		return err
 	}
-	slog.Debug("save bank account to the database",
-		slog.String("guildID", account.GuildID),
-		slog.String("memberID", account.MemberID),
-	)
+	slog.Debug("save bank account to the database", "guildID", account.GuildID, "memberID", account.MemberID)
 
 	return nil
 }

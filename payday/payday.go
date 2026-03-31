@@ -52,10 +52,7 @@ func (payday *Payday) SetPaydayAmount(amount int) {
 	payday.Amount = amount
 
 	if err := writePayday(payday); err != nil {
-		slog.Error("error writing payday",
-			slog.String("guildID", payday.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("error writing payday", "guildID", payday.GuildID, "error", err)
 	}
 }
 
@@ -64,10 +61,7 @@ func (payday *Payday) SetPaydayFrequency(frequency time.Duration) {
 	payday.PaydayFrequency = frequency
 
 	if err := writePayday(payday); err != nil {
-		slog.Error("error writing payday",
-			slog.String("guildID", payday.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("error writing payday", "guildID", payday.GuildID, "error", err)
 	}
 }
 
@@ -79,35 +73,22 @@ func readPaydayFromFile(guildID string) *Payday {
 	configFileName := filepath.Join(configDir, "payday", "config", paydayTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		slog.Error("failed to read default payday config",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to read default payday config", "guildID", guildID, "error", err)
 		return getDefaultPayday(guildID)
 	}
 
 	payday := &Payday{}
 	err = json.Unmarshal(bytes, payday)
 	if err != nil {
-		slog.Error("failed to unmarshal default payday config",
-			slog.String("guildID", guildID),
-			slog.String("file", configFileName),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to unmarshal default payday config", "guildID", guildID, "file", configFileName, "error", err)
 		return getDefaultPayday(guildID)
 	}
 	payday.GuildID = guildID
 
 	if err := writePayday(payday); err != nil {
-		slog.Error("error writing payday",
-			slog.String("guildID", payday.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("error writing payday", "guildID", payday.GuildID, "error", err)
 	}
-	slog.Info("create new payday config",
-		slog.String("guildID", payday.GuildID),
-		slog.Any("payday", payday),
-	)
+	slog.Info("create new payday config", "guildID", payday.GuildID, "payday", payday)
 
 	return payday
 }
@@ -120,14 +101,9 @@ func getDefaultPayday(guildID string) *Payday {
 		PaydayFrequency: DefaultPaydayFrequency,
 	}
 	if err := writePayday(payday); err != nil {
-		slog.Error("error writing payday",
-			slog.String("guildID", payday.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("error writing payday", "guildID", payday.GuildID, "error", err)
 	}
-	slog.Debug("created new payday",
-		slog.String("guildID", payday.GuildID),
-	)
+	slog.Debug("created new payday", "guildID", payday.GuildID)
 
 	return payday
 }

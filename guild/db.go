@@ -21,11 +21,7 @@ func readMember(guildID string, memberID string) *Member {
 	var member Member
 	err := db.FindOne(MemberCollection, filter, &member)
 	if err != nil {
-		slog.Debug("guild member not found in the database",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Debug("guild member not found in the database", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil
 	}
 	return &member
@@ -39,19 +35,11 @@ func writeMember(member *Member) error {
 	}
 	err := db.UpdateOrInsert(MemberCollection, filter, member)
 	if err != nil {
-		slog.Error("unable to create or update guild in the database",
-			slog.String("guildID", member.GuildID),
-			slog.String("memberID", member.MemberID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to create or update guild in the database", "guildID", member.GuildID, "memberID", member.MemberID, "error", err)
 		return err
 	}
 
-	slog.Debug("write guild member to the database",
-		slog.String("guildID", member.GuildID),
-		slog.String("memberID", member.MemberID),
-		slog.String("name", member.Name),
-	)
+	slog.Debug("write guild member to the database", "guildID", member.GuildID, "memberID", member.MemberID)
 	return nil
 }
 
@@ -61,10 +49,7 @@ func readGuild(guildID string) *Guild {
 	var guild Guild
 	err := db.FindOne(GuildCollection, filter, &guild)
 	if err != nil {
-		slog.Debug("guild not found in the database",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Debug("guild not found in the database", "guildID", guildID, "error", err)
 		return nil
 	}
 	return &guild
@@ -75,15 +60,10 @@ func writeGuild(guild *Guild) error {
 	filter := bson.M{"guild_id": guild.GuildID}
 	err := db.UpdateOrInsert(GuildCollection, filter, guild)
 	if err != nil {
-		slog.Error("unable to save guild to the database",
-			slog.String("guildID", guild.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to save guild to the database", "guildID", guild.GuildID, "error", err)
 		return err
 	}
-	slog.Debug("save guild to the database",
-		slog.String("guildID", guild.GuildID),
-	)
+	slog.Debug("save guild to the database", "guildID", guild.GuildID)
 
 	return nil
 }

@@ -26,9 +26,7 @@ func GetAdminRoles(guildID string) []string {
 	server := &Guild{}
 	err := db.FindOne(GuildCollection, filter, server)
 	if err != nil {
-		slog.Debug("server not found in the database",
-			slog.String("guildID", guildID),
-		)
+		slog.Debug("server not found in the database", "guildID", guildID)
 		return nil
 	}
 	if server.GuildID == "" {
@@ -42,11 +40,7 @@ func GetAdminRoles(guildID string) []string {
 func GetGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
 	guildRoles, err := s.GuildRoles(guildID)
 	if err != nil {
-		slog.Error("failed to get guild roles",
-			slog.String("guildID", guildID),
-			slog.Any("guildRoles", guildRoles),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to get guild roles", "guildID", guildID, "guildRoles", guildRoles, "error", err)
 		return nil
 	}
 	return guildRoles
@@ -61,10 +55,7 @@ func GetGuildRole(s *discordgo.Session, guildID string, roleName string) *discor
 			return role
 		}
 	}
-	slog.Debug("role not found",
-		slog.String("guildID", guildID),
-		slog.String("roleName", roleName),
-	)
+	slog.Debug("role not found", "guildID", guildID, "roleName", roleName)
 	return nil
 }
 
@@ -87,29 +78,15 @@ func MemberHasRole(s *discordgo.Session, guildID string, memberID string, role *
 	// Check to see if the member already has the role
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {
-		slog.Error("failed to get member",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to get member", "guildID", guildID, "memberID", memberID, "error", err)
 		return true
 	}
 	if slices.Contains(member.Roles, role.ID) {
-		slog.Warn("member already has role",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.String("roleName", role.Name),
-			slog.Any("memberRoles", member.Roles),
-		)
+		slog.Warn("member already has role", "guildID", guildID, "memberID", memberID, "roleName", role.Name, "memberRoles", member.Roles)
 		return true
 	}
 
-	slog.Debug("member does not have role",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-		slog.String("roleName", role.Name),
-		slog.Any("memberRoles", member.Roles),
-	)
+	slog.Debug("member does not have role", "guildID", guildID, "memberID", memberID, "roleName", role.Name, "memberRoles", member.Roles)
 	return false
 }
 
@@ -124,29 +101,16 @@ func AssignRole(s *discordgo.Session, guildID string, memberID string, roleName 
 		}
 	}
 	if roleID == "" {
-		slog.Error("role not found",
-			slog.String("guildID", guildID),
-			slog.String("roleName", roleName),
-			slog.Any("guildRoles", guildRoles),
-		)
+		slog.Error("role not found", "guildID", guildID, "roleName", roleName, "guildRoles", guildRoles)
 		return nil
 	}
 
 	err := s.GuildMemberRoleAdd(guildID, memberID, roleID)
 	if err != nil {
-		slog.Error("failed to assign role",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.String("roleID", roleID),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to assign role", "guildID", guildID, "memberID", memberID, "roleID", roleID, "error", err)
 	}
 
-	slog.Info("assigned role",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-		slog.String("roleID", roleID),
-	)
+	slog.Info("assigned role", "guildID", guildID, "memberID", memberID, "roleID", roleID)
 	return err
 }
 
@@ -161,29 +125,16 @@ func UnAssignRole(s *discordgo.Session, guildID string, memberID string, roleNam
 		}
 	}
 	if roleID == "" {
-		slog.Error("role not found",
-			slog.String("guildID", guildID),
-			slog.String("roleName", roleName),
-			slog.Any("guildRoles", guildRoles),
-		)
+		slog.Error("role not found", "guildID", guildID, "roleName", roleName, "guildRoles", guildRoles)
 		return nil
 	}
 
 	err := s.GuildMemberRoleRemove(guildID, memberID, roleID)
 	if err != nil {
-		slog.Error("failed to unassign role",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.String("roleID", roleID),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to unassign role", "guildID", guildID, "memberID", memberID, "roleID", roleID, "error", err)
 	}
 
-	slog.Info("unassigned role",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-		slog.String("roleID", roleID),
-	)
+	slog.Info("unassigned role", "guildID", guildID, "memberID", memberID, "roleID", roleID)
 	return err
 }
 
@@ -208,23 +159,13 @@ func IsAdmin(s *discordgo.Session, guildID string, memberID string) bool {
 	guildRoles := GetGuildRoles(s, guildID)
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {
-		slog.Error("failed to get guild member",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to get guild member", "guildID", guildID, "memberID", memberID, "error", err)
 		return false
 	}
 	memberRoles := GetMemberRoles(guildRoles, member.Roles)
 	adminRoles := GetAdminRoles(guildID)
 	isAdmin := CheckAdminRole(adminRoles, memberRoles)
-	slog.Debug("isAdmin",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-		slog.Bool("isAdmin", isAdmin),
-		slog.Any("adminRoles", adminRoles),
-		slog.Any("memberRoles", memberRoles),
-	)
+	slog.Debug("isAdmin", "guildID", guildID, "memberID", memberID, "isAdmin", isAdmin, "adminRoles", adminRoles, "memberRoles", memberRoles)
 
 	return isAdmin
 }

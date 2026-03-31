@@ -32,7 +32,7 @@ func GetAllGuilds() []*Guild {
 	guilds := make([]*Guild, 0)
 	err := db.FindMany(GuildCollection, bson.M{}, &guilds, bson.M{}, 0)
 	if err != nil {
-		slog.Error("failed to get all guilds")
+		slog.Error("failed to get all guilds", "error", err)
 		return nil
 	}
 
@@ -62,38 +62,22 @@ func readGuildFromFile(guildID string) *Guild {
 	configFileName := filepath.Join(configDir, "guild", "config", guildTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		slog.Error("failed to read default guild config",
-			slog.String("guildID", guildID),
-			slog.String("file", configFileName),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to read default guild config", "guildID", guildID, "file", configFileName, "error", err)
 		return getDefaultGuild(guildID)
 	}
 
 	guild := &Guild{}
 	err = json.Unmarshal(bytes, guild)
 	if err != nil {
-		slog.Error("failed to unmarshal default guild config",
-			slog.String("guildID", guildID),
-			slog.String("file", configFileName),
-			slog.Any("error", err),
-			slog.String("config", string(bytes)),
-		)
+		slog.Error("failed to unmarshal default guild config", "guildID", guildID, "file", configFileName, "error", err, "config", string(bytes))
 		return getDefaultGuild(guildID)
 	}
 	guild.GuildID = guildID
 
 	if err := writeGuild(guild); err != nil {
-		slog.Error("failed to write default guild config",
-			slog.String("guildID", guildID),
-			slog.String("file", configFileName),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to write default guild config", "guildID", guildID, "file", configFileName, "error", err)
 	}
-	slog.Info("create new guild",
-		slog.String("guildID", guild.GuildID),
-		slog.String("file", configFileName),
-	)
+	slog.Info("create new guild", "guildID", guild.GuildID, "file", configFileName)
 
 	return guild
 }
@@ -105,11 +89,7 @@ func getDefaultGuild(guildID string) *Guild {
 	guild.AdminRoles = make([]string, len(DefaultAdminRoles))
 	copy(guild.AdminRoles, DefaultAdminRoles)
 	if err := writeGuild(guild); err != nil {
-		slog.Error("failed to write default guild config",
-			slog.String("guildID", guildID),
-			slog.String("file", guild.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to write default guild config", "guildID", guildID, "file", guild.GuildID, "error", err)
 	}
 
 	return guild
@@ -118,26 +98,15 @@ func getDefaultGuild(guildID string) *Guild {
 // AddAdminRole adds a role to the list of admin roles for the guild.
 func (guild *Guild) AddAdminRole(roleName string) {
 	if slices.Contains(guild.AdminRoles, roleName) {
-		slog.Warn("role already exists",
-			slog.String("guildID", guild.GuildID),
-			slog.String("roleName", roleName),
-			slog.Any("adminRoles", guild.AdminRoles),
-		)
+		slog.Warn("role already exists", "guildID", guild.GuildID, "roleName", roleName, "adminRoles", guild.AdminRoles)
 		return
 	}
 
 	guild.AdminRoles = append(guild.AdminRoles, roleName)
 	if err := writeGuild(guild); err != nil {
-		slog.Error("failed to write default guild config",
-			slog.String("guildID", guild.GuildID),
-			slog.String("file", guild.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to write default guild config", "guildID", guild.GuildID, "file", guild.GuildID, "error", err)
 	}
-	slog.Info("adde role",
-		slog.String("guildID", guild.GuildID),
-		slog.String("roleName", roleName),
-	)
+	slog.Info("added role", "guildID", guild.GuildID, "roleName", roleName)
 
 }
 
@@ -147,24 +116,13 @@ func (guild *Guild) RemoveAdminRole(roleName string) {
 		if role == roleName {
 			guild.AdminRoles = append(guild.AdminRoles[:i], guild.AdminRoles[i+1:]...)
 			if err := writeGuild(guild); err != nil {
-				slog.Error("failed to write default guild config",
-					slog.String("guildID", guild.GuildID),
-					slog.String("file", guild.GuildID),
-					slog.Any("error", err),
-				)
+				slog.Error("failed to write default guild config", "guildID", guild.GuildID, "file", guild.GuildID, "error", err)
 			}
-			slog.Info("removed admin role",
-				slog.String("guildID", guild.GuildID),
-				slog.String("roleName", roleName),
-			)
+			slog.Info("removed admin role", "guildID", guild.GuildID, "roleName", roleName)
 			return
 		}
 	}
-	slog.Warn("role not found",
-		slog.String("guildID", guild.GuildID),
-		slog.String("roleName", roleName),
-	)
-
+	slog.Warn("role not found", "guildID", guild.GuildID, "roleName", roleName)
 }
 
 // GetAdminRoles returns the list of admin roles for the guild.

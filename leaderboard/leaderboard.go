@@ -31,10 +31,7 @@ func newLeaderboard(guildID string) *Leaderboard {
 		LastSeason: disctime.CurrentMonth(time.Now()),
 	}
 	if err := writeLeaderboard(lb); err != nil {
-		slog.Error("Error writing leaderboard",
-			slog.String("guild", guildID),
-			slog.Any("error", err),
-		)
+		slog.Error("Error writing leaderboard", "guild", guildID, "error", err)
 	}
 
 	return lb
@@ -45,15 +42,10 @@ func getLeaderboards() []*Leaderboard {
 	var leaderboards []*Leaderboard
 	err := db.FindMany(LeaderboardCollection, bson.D{}, &leaderboards, bson.D{}, 0)
 	if err != nil {
-		slog.Error("unable to get leaderboards",
-			slog.Any("error", err),
-		)
-
+		slog.Error("unable to get leaderboards", "error", err)
 		return nil
 	}
-	slog.Debug("leaderboards",
-		slog.Int("count", len(leaderboards)),
-	)
+	slog.Debug("leaderboards", "count", len(leaderboards))
 	return leaderboards
 }
 
@@ -71,10 +63,7 @@ func getLeaderboard(guildID string) *Leaderboard {
 func (lb *Leaderboard) setChannel(channelID string) {
 	lb.ChannelID = channelID
 	if err := writeLeaderboard(lb); err != nil {
-		slog.Error("error writing leaderboard",
-			slog.String("guild", lb.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("error writing leaderboard", "guild", lb.GuildID, "error", err)
 	}
 }
 
@@ -216,31 +205,16 @@ func sendMonthlyLeaderboard(lb *Leaderboard) error {
 			Embeds: embeds,
 		})
 		if err != nil {
-			slog.Error("unable to send montly leaderboard",
-				slog.String("guildID", lb.GuildID),
-				slog.String("channelID", lb.ChannelID),
-				slog.Any("error", err),
-			)
+			slog.Error("unable to send montly leaderboard", "guildID", lb.GuildID, "channelID", lb.ChannelID, "error", err)
 			return err
 		}
 	} else {
-		slog.Warn("no leaderboard channel set for server",
-			slog.String("guildID", lb.GuildID),
-			slog.String("channelID", lb.ChannelID),
-		)
+		slog.Warn("no leaderboard channel set for server", "guildID", lb.GuildID, "channelID", lb.ChannelID)
 	}
 	for _, account := range accounts {
-		slog.Debug("sent monthly leaderboard",
-			slog.String("guildID", lb.GuildID),
-			slog.String("memberID", account.MemberID),
-			slog.Int("monthlyBalance", account.MonthlyBalance),
-		)
+		slog.Debug("sent monthly leaderboard", "guildID", lb.GuildID, "memberID", account.MemberID, "monthlyBalance", account.MonthlyBalance)
 	}
-	slog.Info("sent monthly leaderboard",
-		slog.String("guildID", lb.GuildID),
-		slog.String("channelID", lb.ChannelID),
-		slog.Int("leaderboardSize", leaderboardSize),
-	)
+	slog.Info("sent monthly leaderboard", "guildID", lb.GuildID, "channelID", lb.ChannelID, "leaderboardSize", leaderboardSize)
 	return nil
 }
 
@@ -266,19 +240,11 @@ func sendAllMonthlyLeaderboards() {
 		for _, lb := range leaderboards {
 			err := sendMonthlyLeaderboard(lb)
 			if err != nil {
-				slog.Error("unable to send monthly leaderboard",
-					slog.String("guildID", lb.GuildID),
-					slog.String("channelID", lb.ChannelID),
-					slog.Any("error", err),
-				)
+				slog.Error("unable to send monthly leaderboard", "guildID", lb.GuildID, "channelID", lb.ChannelID, "error", err)
 			}
 			lb.LastSeason = disctime.NextMonth(lastSeason)
 			if err := writeLeaderboard(lb); err != nil {
-				slog.Error("unable to write leaderboard to database",
-					slog.String("guildID", lb.GuildID),
-					slog.String("channelID", lb.ChannelID),
-					slog.Any("error", err),
-				)
+				slog.Error("unable to write leaderboard to database", "guildID", lb.GuildID, "channelID", lb.ChannelID, "error", err)
 			}
 		}
 		lastSeason = disctime.NextMonth(time.Now())

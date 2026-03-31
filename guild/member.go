@@ -35,19 +35,13 @@ func GetMember(guildID string, memberID string) *Member {
 // GetMemberByUser retrieves a member by the user in the guild (server). If the user is nil, or the member cannot be found, it returns an error.
 func GetMemberByUser(s *discordgo.Session, guildID string, user *discordgo.User) (*Member, error) {
 	if user == nil {
-		slog.Error("user is nil",
-			slog.String("guildID", guildID),
-		)
+		slog.Error("user is nil", "guildID", guildID)
 		return nil, ErrUserNotFound
 	}
 	memberID := user.ID
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {
-		slog.Error("failed to get guild member",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to get guild member", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil, err
 	}
 	m := GetMember(guildID, memberID).SetName(member.User.Username, member.Nick, member.User.GlobalName)
@@ -56,27 +50,17 @@ func GetMemberByUser(s *discordgo.Session, guildID string, user *discordgo.User)
 
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(username string, nickname string, globalname string) *Member {
-	slog.Debug("setting member name",
-		slog.String("guildID", member.GuildID),
-		slog.String("memberID", member.MemberID),
-		slog.String("username", username),
-		slog.String("nickname", nickname),
-		slog.String("globalname", globalname),
-	)
+	slog.Debug("setting member name", "guildID", member.GuildID, "memberID", member.MemberID, "username", username, "nickname", nickname, "globalname", globalname)
 
 	var name string
 	nickname = strings.Trim(nickname, " ")
 	if strings.HasPrefix(nickname, "<") || strings.HasPrefix(nickname, "@") || strings.HasPrefix(nickname, "&") {
-		slog.Debug("ignoring nickname",
-			slog.String("nickname", nickname),
-		)
+		slog.Debug("ignoring nickname", "nickname", nickname)
 		nickname = ""
 	}
 	globalname = strings.Trim(globalname, " ")
 	if strings.HasPrefix(globalname, "<") || strings.HasPrefix(globalname, "@") || strings.HasPrefix(globalname, "&") {
-		slog.Debug("ignoring globalname",
-			slog.String("globalname", globalname),
-		)
+		slog.Debug("ignoring globalname", "globalname", globalname)
 		globalname = ""
 	}
 	switch {
@@ -102,21 +86,11 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 		member.NickName = nickname
 		member.GlobalName = globalname
 		if err := writeMember(member); err != nil {
-			slog.Error("failed to write member",
-				slog.Any("error", err),
-			)
+			slog.Error("failed to write member", "error", err)
 		}
-		slog.Debug("set member name",
-			slog.String("guildID", member.GuildID),
-			slog.String("memberID", member.MemberID),
-			slog.String("name", member.Name),
-		)
+		slog.Debug("set member name", "guildID", member.GuildID, "memberID", member.MemberID, "name", member.Name)
 	} else {
-		slog.Debug("member name unchanged",
-			slog.String("guildID", member.GuildID),
-			slog.String("memberID", member.MemberID),
-			slog.String("name", member.Name),
-		)
+		slog.Debug("member name unchanged", "guildID", member.GuildID, "memberID", member.MemberID, "name", member.Name)
 	}
 
 	return member
@@ -129,14 +103,9 @@ func newMember(guildID string, memberID string) *Member {
 		GuildID:  guildID,
 	}
 	if err := writeMember(member); err != nil {
-		slog.Error("failed to write member",
-			slog.Any("error", err),
-		)
+		slog.Error("failed to write member", "error", err)
 	}
-	slog.Info("created new member",
-		slog.String("guildID", member.GuildID),
-		slog.String("memberID", member.MemberID),
-	)
+	slog.Info("created new member", "guildID", member.GuildID, "memberID", member.MemberID)
 
 	return member
 }
