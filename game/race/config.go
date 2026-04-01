@@ -88,7 +88,7 @@ func readConfigFromFile(guildID string) *Config {
 	config.GuildID = guildID
 
 	writeConfig(config)
-	slog.Info("create new race config",
+	slog.Debug("create new race config",
 		slog.String("guildID", guildID),
 		slog.String("theme", raceTheme),
 	)
@@ -118,7 +118,7 @@ func getDefauiltConfig(guildID string) *Config {
 	}
 
 	writeConfig(config)
-	slog.Info("race configuration created",
+	slog.Debug("race configuration created",
 		slog.String("guildID", guildID),
 		slog.String("theme", config.Theme),
 	)

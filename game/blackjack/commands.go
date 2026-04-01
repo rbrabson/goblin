@@ -167,7 +167,7 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game)
 
 	for _, player := range game.Players() {
 		result := game.EvaluateHand(player.CurrentHand())
-		slog.Info("player result",
+		slog.Debug("player result",
 			slog.String("guildID", game.guildID),
 			slog.String("playerName", player.Name()),
 			slog.Any("result", result),

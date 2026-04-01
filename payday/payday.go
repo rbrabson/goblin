@@ -88,7 +88,7 @@ func readPaydayFromFile(guildID string) *Payday {
 	if err := writePayday(payday); err != nil {
 		slog.Error("error writing payday", "guildID", payday.GuildID, "error", err)
 	}
-	slog.Info("create new payday config", "guildID", payday.GuildID, "payday", payday)
+	slog.Debug("create new payday config", "guildID", payday.GuildID, "payday", payday)
 
 	return payday
 }

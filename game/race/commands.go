@@ -209,7 +209,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.Any("error", err),
 		)
 	}
-	slog.Info("waiting for bets",
+	slog.Debug("waiting for bets",
 		slog.String("guildID", i.GuildID),
 		slog.Int("racers", len(race.Racers)),
 	)
@@ -323,7 +323,7 @@ func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	raceMember := GetRaceMember(i.GuildID, guildMember)
 	raceMember.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	race.addRaceParticipant(raceMember)
-	slog.Info("joined the race",
+	slog.Debug("joined the race",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 	)
@@ -519,7 +519,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		)
 	}
 
-	slog.Info("you have placed a bet",
+	slog.Debug("you have placed a bet",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 		slog.String("racer", raceParticipant.Member.guildMember.Name),

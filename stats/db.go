@@ -37,7 +37,7 @@ func writePlayerStats(ps *PlayerStats) error {
 
 	err := db.UpdateOrInsert(PlayerStatsCollection, filter, ps)
 	if err != nil {
-		slog.Info("Writing player stats", "collection", PlayerStatsCollection, "PlayerStats", ps, "filter", filter, "error", err)
+		slog.Debug("writing player stats", "collection", PlayerStatsCollection, "PlayerStats", ps, "filter", filter, "error", err)
 		return err
 	}
 	return nil
@@ -80,7 +80,7 @@ func writeGameStats(gs *GameStats) error {
 
 	err := db.UpdateOrInsert(GameStatsCollection, filter, gs)
 	if err != nil {
-		slog.Info("writing game stats", "collection", GameStatsCollection, "GameStats", gs, "filter", filter, "error", err)
+		slog.Debug("writing game stats", "collection", GameStatsCollection, "GameStats", gs, "filter", filter, "error", err)
 		return err
 	}
 	return nil

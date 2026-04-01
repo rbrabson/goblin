@@ -81,7 +81,7 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*Avatar {
 		writeRacer(avatar)
 	}
 
-	slog.Info("create new race avatars",
+	slog.Debug("create new race avatars",
 		slog.String("guildID", guildID),
 		slog.String("theme", themeName),
 		slog.Int("count", len(avatars)),
@@ -310,7 +310,7 @@ func getDefaultRaceAvatars(guildID string) []*Avatar {
 		writeRacer(racer)
 	}
 
-	slog.Info("created new racers",
+	slog.Debug("created new racers",
 		slog.String("guildID", guildID),
 		slog.Int("count", len(racers)),
 	)

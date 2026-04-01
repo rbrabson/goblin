@@ -110,7 +110,7 @@ func readThemeFromFile(guildID string) *Theme {
 	theme.GuildID = guildID
 	theme.Name = HEIST_THEME
 
-	slog.Info("create new theme",
+	slog.Debug("create new theme",
 		slog.String("guildID", theme.GuildID),
 		slog.String("theme", theme.Name),
 	)

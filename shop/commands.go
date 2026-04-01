@@ -1278,7 +1278,7 @@ func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 		return
 	}
 
-	slog.Info("role purchased",
+	slog.Info("custom command purchased",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 		slog.String("commandName", commandName),
@@ -1359,7 +1359,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 				slog.Error("failed to parse item duration", "guildID", guildID, "itemName", item.Name, "itemDuration", item.Duration, "error", err)
 			}
 			sb.WriteString(p.Sprintf("\nDuration: %s", disctime.FormatDuration(duration)))
-			slog.Info("item duration", "guildID", guildID, "itemName", item.Name, "itemDuration", item.Duration, "duration", duration, "formattedDuration", disctime.FormatDuration(duration))
+			slog.Debug("item duration", "guildID", guildID, "itemName", item.Name, "itemDuration", item.Duration, "duration", duration, "formattedDuration", disctime.FormatDuration(duration))
 		}
 		if len(shopItems)+1 < len(items) && len(shopItems)+1 < MaxShopItemsDisplayed {
 			sb.WriteString("\n\u200B")
@@ -1406,7 +1406,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 				slog.Error("failed to write config file", "error", err)
 			}
 		}
-		slog.Info("shop items updated", "guildID", guildID, "channelID", channelID, "messageID", messageID, "numItems", len(items))
+		slog.Debug("shop items updated", "guildID", guildID, "channelID", channelID, "messageID", messageID, "numItems", len(items))
 	}
 	if messageID == "" {
 		msg := disgomsg.NewMessage(
@@ -1425,7 +1425,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		}
 	}
 
-	slog.Info("shop items published", "guildID", guildID, "channelID", channelID, "messageID", messageID, "numItems", len(items))
+	slog.Debug("shop items published", "guildID", guildID, "channelID", channelID, "messageID", messageID, "numItems", len(items))
 	return messageID, nil
 }
 

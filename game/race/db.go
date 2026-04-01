@@ -88,7 +88,7 @@ func writeRaceMember(member *RaceMember) {
 			slog.Any("error", err),
 		)
 	}
-	slog.Info("write race member to the database",
+	slog.Debug("write race member to the database",
 		slog.String("guildID", member.GuildID),
 		slog.String("memberID", member.MemberID),
 	)
@@ -128,7 +128,7 @@ func writeRacer(racer *Avatar) {
 			slog.Any("error", err),
 		)
 	}
-	slog.Info("create or update race avatar",
+	slog.Debug("create or update race avatar",
 		slog.String("guildID", racer.GuildID),
 		slog.String("theme", racer.Theme),
 	)

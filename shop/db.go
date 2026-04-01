@@ -214,7 +214,7 @@ func writeMember(member *Member) error {
 		slog.Error("unable to save shop member to the database", "guildID", member.GuildID, "memberID", member.MemberID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Info("write the shop member to the database", "guildID", member.GuildID, "memberID", member.MemberID)
+	slog.Debug("write the shop member to the database", "guildID", member.GuildID, "memberID", member.MemberID)
 
 	return nil
 }
@@ -232,7 +232,7 @@ func deleteMember(member *Member) error {
 		slog.Error("unable to delete shop member from the database", "guildID", member.GuildID, "memberID", member.MemberID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Info("delete the shop member from the database", "guildID", member.GuildID, "memberID", member.MemberID)
+	slog.Debug("delete the shop member from the database", "guildID", member.GuildID, "memberID", member.MemberID)
 
 	return nil
 }

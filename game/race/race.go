@@ -182,7 +182,7 @@ func (r *Race) RunRace(trackLength int) {
 	previousLeg := raceLeg
 
 	// Run the race until all racers cross the finish line
-	slog.Debug("starting race",
+	slog.Info("starting race",
 		slog.String("guildID", r.GuildID),
 		slog.Int("numRacers", len(r.Racers)),
 		slog.Int("trackLength", trackLength),
@@ -212,6 +212,22 @@ func (r *Race) RunRace(trackLength int) {
 	}
 
 	calculateWinnings(r, previousLeg)
+
+	slog.Info("race finished",
+		slog.String("guildID", r.GuildID),
+		slog.Int("numRacers", len(r.Racers)),
+		slog.String("first", r.RaceResult.Win.Participant.Member.guildMember.Name),
+		slog.String("second", r.RaceResult.Place.Participant.Member.guildMember.Name),
+		slog.String("third", r.RaceResult.Show.Participant.Member.guildMember.Name),
+	)
+	lastLeg := r.RaceLegs[len(r.RaceLegs)-1]
+	for _, position := range lastLeg.ParticipantPositions {
+		slog.Info("race position",
+			slog.String("guildID", r.GuildID),
+			slog.String("memberID", position.RaceParticipant.Member.MemberID),
+			slog.Float64("raceTime", position.Speed),
+		)
+	}
 }
 
 // End ends the current race.
@@ -229,7 +245,7 @@ func (r *Race) End() {
 	delete(currentRaces, r.GuildID)
 
 	if r.RaceResult != nil && len(r.Racers) >= r.config.MinNumRacers {
-		slog.Info("processing race results",
+		slog.Debug("processing race results",
 			slog.String("guildID", r.GuildID),
 			slog.Int("numRacers", len(r.Racers)),
 		)
@@ -246,7 +262,7 @@ func (r *Race) End() {
 			}
 		}
 
-		slog.Info("processing race bets",
+		slog.Debug("processing race bets",
 			slog.String("guildID", r.GuildID),
 			slog.Int("numBetters", len(r.Betters)),
 		)
@@ -351,21 +367,21 @@ func raceStartChecks(guildID string) error {
 // raceJoinChecks checks to see if a racer is able to join the race.
 func raceJoinChecks(race *Race, memberID string) error {
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		slog.Warn("race has started",
+		slog.Info("race has started",
 			slog.String("guildID", race.GuildID),
 		)
 		return ErrRaceHasStarted
 	}
 
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		slog.Warn("betting has opened",
+		slog.Debug("betting has opened",
 			slog.String("guildID", race.GuildID),
 		)
 		return ErrBettingHasOpened
 	}
 
 	if len(race.Racers) >= race.config.MaxNumRacers {
-		slog.Warn("too many racers already joined",
+		slog.Debug("too many racers already joined",
 			slog.String("guildID", race.GuildID),
 			slog.Int("maxNumRacers", race.config.MaxNumRacers),
 			slog.Int("numRacers", len(race.Racers)),
@@ -385,14 +401,14 @@ func raceJoinChecks(race *Race, memberID string) error {
 // raceBetChecks checks to see if a better is able to place a bet on the current race.
 func raceBetChecks(race *Race, memberID string) error {
 	if time.Now().Before(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		slog.Warn("betting has opened",
+		slog.Debug("betting has opened",
 			slog.String("guildID", race.GuildID),
 		)
 		return ErrBettingNotOpened
 	}
 
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		slog.Warn("race has started",
+		slog.Debug("race has started",
 			slog.String("guildID", race.GuildID),
 		)
 		return ErrRaceHasStarted

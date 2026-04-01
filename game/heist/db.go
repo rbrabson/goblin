@@ -52,7 +52,7 @@ func readMember(guildID string, memberID string) *HeistMember {
 		slog.Debug("heist member not found in the database", slog.String("guildID", guildID), slog.String("memberID", memberID), slog.Any("error", err))
 		return nil
 	}
-	slog.Info("read heist member from the database", slog.String("guildID", guildID), slog.String("memberID", memberID))
+	slog.Debug("read heist member from the database", slog.String("guildID", guildID), slog.String("memberID", memberID))
 
 	return &heistMember
 }
@@ -109,7 +109,7 @@ func writeTarget(target *Target) {
 	if err := db.UpdateOrInsert(TargetCollection, filter, target); err != nil {
 		slog.Error("error writing target to database", slog.String("guildID", target.GuildID), slog.String("targetID", target.Name), slog.Any("error", err))
 	}
-	slog.Info("create or update target", slog.String("guild", target.GuildID), slog.String("target", target.Name), slog.String("theme", target.Theme))
+	slog.Debug("create or update target", slog.String("guild", target.GuildID), slog.String("target", target.Name), slog.String("theme", target.Theme))
 }
 
 // readAllThemes loads all available themes for a guild
@@ -149,5 +149,5 @@ func writeTheme(theme *Theme) {
 	if err := db.UpdateOrInsert(ThemeCollection, filter, theme); err != nil {
 		slog.Error("error writing theme to the database", slog.String("guildID", theme.GuildID), slog.String("name", theme.Name), slog.Any("error", err))
 	}
-	slog.Info("write theme to the database", slog.String("guild", theme.GuildID), slog.String("theme", theme.Name))
+	slog.Debug("write theme to the database", slog.String("guild", theme.GuildID), slog.String("theme", theme.Name))
 }

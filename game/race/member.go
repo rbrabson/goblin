@@ -45,7 +45,7 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 	}
 
 	writeRaceMember(member)
-	slog.Info("new race member",
+	slog.Debug("new race member",
 		slog.String("guildID", guildID),
 		slog.String("memberID", memberID),
 	)
@@ -69,7 +69,7 @@ func (m *RaceMember) WinRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	slog.Info("won race",
+	slog.Debug("won race",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("winnings", amount),
@@ -92,7 +92,7 @@ func (m *RaceMember) PlaceInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	slog.Info("placed in race",
+	slog.Debug("placed in race",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("winnings", amount),
@@ -115,7 +115,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	slog.Info("showed in race",
+	slog.Debug("showed in race",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("winnings", amount),
@@ -127,7 +127,7 @@ func (m *RaceMember) LoseRace() {
 	m.RacesLost++
 	writeRaceMember(m)
 
-	slog.Info("lost race",
+	slog.Debug("lost race",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 	)
@@ -144,8 +144,7 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 	m.BetsMade++
 	m.TotalEarnings -= betAmount
 
-	slog.Info("placed bet")
-	slog.Info("placed bet",
+	slog.Debug("placed bet",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("betAmount", betAmount),
@@ -171,7 +170,7 @@ func (m *RaceMember) WinBet(winnings int) {
 	m.TotalEarnings += winnings
 	writeRaceMember(m)
 
-	slog.Info("won bet",
+	slog.Debug("won bet",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 		slog.Int("winnings", winnings),
@@ -182,7 +181,7 @@ func (m *RaceMember) WinBet(winnings int) {
 func (m *RaceMember) LoseBet() {
 	writeRaceMember(m)
 
-	slog.Info("lost bet",
+	slog.Debug("lost bet",
 		slog.String("guildID", m.GuildID),
 		slog.String("memberID", m.MemberID),
 	)

@@ -548,12 +548,6 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 			if err := account.Deposit(result.StolenCredits + result.BonusCredits); err != nil {
 				slog.Error("failed to deposit stolen credits", slog.String("guildID", i.GuildID), slog.Any("error", err))
 			}
-			slog.Info("heist Loot",
-				slog.String("guildID", i.GuildID),
-				slog.String("memberID", account.MemberID),
-				slog.Int("stolen", result.StolenCredits),
-				slog.Int("bonus", result.BonusCredits),
-			)
 		}
 	}
 

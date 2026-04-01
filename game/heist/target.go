@@ -133,7 +133,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 		target.IsAtMax = true
 	}
 
-	slog.Info("create new targets",
+	slog.Debug("create new targets",
 		slog.String("guildID", guildID),
 		slog.String("file", configFileName),
 		slog.Int("targets", len(targets)),
@@ -170,7 +170,7 @@ func vaultUpdater() {
 		for _, target := range getAllTargets(filter) {
 			recoverAmount := int(float64(target.VaultMax) * VaultRecoverPercent)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
-			slog.Info("vault updater",
+			slog.Debug("vault updater",
 				slog.String("guildID", target.GuildID),
 				slog.String("target", target.Name),
 				slog.Int("old", target.Vault),

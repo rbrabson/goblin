@@ -48,13 +48,13 @@ func TestCalculateMovement(t *testing.T) {
 	racer := racers[0]
 
 	movement := racer.calculateMovement(1)
-	slog.Info("movement", slog.Int("movement", movement))
+	slog.Debug("movement", slog.Int("movement", movement))
 
 	movement = racer.calculateMovement(2)
-	slog.Info("movement", slog.Int("movement", movement))
+	slog.Debug("movement", slog.Int("movement", movement))
 
 	movement = racer.calculateMovement(3)
-	slog.Info("movement", slog.Int("movement", movement))
+	slog.Debug("movement", slog.Int("movement", movement))
 
 	filter := bson.M{"guild_id": "123", "theme": "clash"}
 	err := db.Delete(RacerCollection, filter)

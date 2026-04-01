@@ -96,7 +96,7 @@ func PurchaseItem(guildID, memberID string, item *ShopItem, status string, renew
 	bankAccount := bank.GetAccount(guildID, memberID)
 	err := bankAccount.WithdrawFromCurrentOnly(item.Price)
 	if err != nil {
-		slog.Warn("unable to withdraw cash from the bank account", "guildID", guildID, "memberID", memberID, "itemName", item.Name, "itemPrice", item.Price, "error", err)
+		slog.Debug("unable to withdraw cash from the bank account", "guildID", guildID, "memberID", memberID, "itemName", item.Name, "itemPrice", item.Price, "error", err)
 		return nil, errors.New(p.Sprintf("insufficient funds to buy the %s `%s` for %d", item.Type, item.Name, item.Price))
 	}
 
@@ -206,7 +206,7 @@ func (p *Purchase) HasExpired() bool {
 			}
 			slog.Info("purchase has expired", "guildID", p.GuildID, "memberID", p.MemberID, "itemName", p.Item.Name, "itemType", p.Item.Type)
 		} else {
-			slog.Info("no mod channel configured to notify of expired purchase", "guildID", p.GuildID, "memberID", p.MemberID, "itemName", p.Item.Name, "itemType", p.Item.Type)
+			slog.Warn("no mod channel configured to notify of expired purchase", "guildID", p.GuildID, "memberID", p.MemberID, "itemName", p.Item.Name, "itemType", p.Item.Type)
 		}
 	}
 
