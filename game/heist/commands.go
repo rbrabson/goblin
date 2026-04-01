@@ -347,6 +347,7 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		return
 	}
+	defer heist.End()
 
 	waitForMembersToJoin(s, heist)
 
@@ -358,7 +359,6 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		return
 	}
-	defer heist.End()
 
 	sendHeistResults(s, i, heist, res)
 
@@ -415,38 +415,35 @@ func createHeist(s *discordgo.Session, i *discordgo.InteractionCreate) (*Heist, 
 // waitForMembersToJoin waits until the planning stage for the heist expires.
 func waitForMembersToJoin(s *discordgo.Session, heist *Heist) {
 	// Wait for the heist to be ready to start
-	waitTime := heist.StartTime.Add(heist.config.WaitTime)
+	startTime := heist.StartTime.Add(heist.config.WaitTime)
 	slog.Debug("wait for heist to start",
 		slog.String("guildID", heist.GuildID),
-		slog.Time("waitTime", waitTime),
-		slog.Duration("configWaitTime", heist.config.WaitTime),
 		slog.Time("currentTime", time.Now()),
+		slog.Duration("configWaitTime", heist.config.WaitTime),
+		slog.Time("startTime", startTime),
 	)
-	for !time.Now().After(waitTime) {
-		maximumWait := time.Until(waitTime)
-		timeToWait := min(maximumWait, 1*time.Second)
-		if timeToWait < 0 {
-			slog.Debug("wait for the heist to start is over",
-				slog.String("guildID", heist.GuildID),
-				slog.Duration("maximumWait", maximumWait),
-				slog.Duration("timeToWait", timeToWait),
-			)
+
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	for {
+		if time.Now().After(startTime) {
 			break
 		}
-		time.Sleep(timeToWait)
 
 		if err := heistMessage(s, heist); err != nil {
 			slog.Error("failed to send heist message", "error", err)
 		}
+
+		<-ticker.C
 	}
+
+	slog.Debug("wait for the heist to start is over", "guildID", heist.GuildID)
 }
 
 // checkIfHeistCanStart checks if the heist can start. This is called after the wait time has expired
 // to ensure that there are enough members to start the heist and that the police are not on high alert.
 func checkIfHeistCanStart(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) error {
 	if len(heist.Crew) < 2 {
-		heist.End()
-
 		if err := heistMessage(s, heist); err != nil {
 			slog.Error("failed to send heist message", "error", err)
 		}

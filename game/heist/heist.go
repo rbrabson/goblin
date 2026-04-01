@@ -283,15 +283,11 @@ func (h *Heist) End() {
 	heistCancelled := len(h.Crew) <= 1
 	if heistCancelled {
 		h.State = Cancelled
-		slog.Debug("heist cancelled",
-			slog.String("guildID", h.GuildID),
-		)
+		slog.Debug("heist cancelled", "guildID", h.GuildID)
 	} else {
 		h.State = Completed
 		alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
-		slog.Debug("heist ended",
-			slog.String("guildID", h.GuildID),
-		)
+		slog.Debug("heist ended", "guildID", h.GuildID)
 	}
 
 	heistLock.Lock()
