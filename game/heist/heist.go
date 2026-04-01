@@ -280,7 +280,7 @@ func (h *Heist) End() {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
 
-	heistCancelled := len(h.Crew) <= 1
+	heistCancelled := len(h.Crew) < 2
 	if heistCancelled {
 		h.State = Cancelled
 		slog.Debug("heist cancelled", "guildID", h.GuildID)
@@ -311,7 +311,7 @@ func (h *Heist) Cancel() {
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.
 func heistChecks(h *Heist, member *HeistMember) error {
 	if h.State != Planning {
-		slog.Debug("heist already started or completed",
+		slog.Debug("heist already started",
 			slog.String("guildID", h.GuildID),
 			slog.String("state", string(h.State)),
 		)
@@ -333,24 +333,24 @@ func heistChecks(h *Heist, member *HeistMember) error {
 	account := bank.GetAccount(h.GuildID, member.MemberID)
 
 	if account.CurrentBalance < h.config.HeistCost {
-		return &ErrNotEnoughCredits{h.config.HeistCost}
+		return ErrNotEnoughCredits{h.config.HeistCost}
 	}
 
 	alertTime := alertTimes[h.GuildID]
 	if alertTime.After(time.Now()) {
 		remainingTime := time.Until(alertTime)
-		return &ErrPoliceOnAlert{h.config.Theme.Police, remainingTime}
+		return ErrPoliceOnAlert{h.config.Theme.Police, remainingTime}
 	}
 
 	if member.Status == Apprehended {
 		remainingTime := member.RemainingJailTime()
-		err := &ErrInJail{h.config.Theme.Jail, h.config.Theme.Sentence, remainingTime, h.config.Theme.Bail, member.BailCost}
+		err := ErrInJail{h.config.Theme.Jail, h.config.Theme.Sentence, remainingTime, h.config.Theme.Bail, member.BailCost}
 		return err
 	}
 
 	if member.Status == Dead {
 		remainingTime := member.RemainingDeathTime()
-		err := &ErrDead{remainingTime}
+		err := ErrDead{remainingTime}
 		return err
 	}
 

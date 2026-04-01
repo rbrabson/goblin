@@ -373,7 +373,7 @@ func createHeist(i *discordgo.InteractionCreate) (*Heist, error) {
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
 		slog.Warn("unable to create the heist", "error", err)
-		return nil, ErrHeistInProgress
+		return nil, err
 	}
 
 	// The organizer has to pay a fee to plan the heist.
