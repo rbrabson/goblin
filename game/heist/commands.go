@@ -230,29 +230,6 @@ var (
 	}
 )
 
-// config routes the configuration commands to the proper handlers.
-func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	options := i.ApplicationCommandData().Options[0].Options
-	switch options[0].Name {
-	case "cost":
-		configCost(s, i)
-	case "sentence":
-		configSentence(s, i)
-	case "patrol":
-		configPatrol(s, i)
-	case "bail":
-		configBail(s, i)
-	case "boost":
-		configBoost(s, i)
-	case "death":
-		configDeath(s, i)
-	case "wait":
-		configWait(s, i)
-	case "info":
-		configInfo(s, i)
-	}
-}
-
 // heistAdmin routes the commands to the subcommand and subcommandgroup handlers
 func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
@@ -287,6 +264,29 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resetHeist(s, i)
 	case "vault-reset":
 		resetVaults(s, i)
+	}
+}
+
+// config routes the configuration commands to the proper handlers.
+func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	options := i.ApplicationCommandData().Options[0].Options
+	switch options[0].Name {
+	case "cost":
+		configCost(s, i)
+	case "sentence":
+		configSentence(s, i)
+	case "patrol":
+		configPatrol(s, i)
+	case "bail":
+		configBail(s, i)
+	case "boost":
+		configBoost(s, i)
+	case "death":
+		configDeath(s, i)
+	case "wait":
+		configWait(s, i)
+	case "info":
+		configInfo(s, i)
 	}
 }
 
