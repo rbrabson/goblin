@@ -356,11 +356,6 @@ func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistMessage(s, heist)
 	waitForMembersToJoin(s, heist)
 
-	if err := checkIfHeistCanStart(heist); err != nil {
-		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).Send(s, i.Interaction)
-		return
-	}
-
 	res, err := heist.Start()
 	if err != nil {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).Send(s, i.Interaction)
@@ -371,8 +366,8 @@ func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	res.Target.StealFromValut(res.TotalStolen)
 }
 
-// createHeist creates a new heist and sends the initial message. This does not start the heist, it only sets up
-// the information and waits for players to join.
+// createHeist creates a new heist and sets the organizer. It also withdraws the cost of planning the heist
+// from the organizer's account.
 func createHeist(i *discordgo.InteractionCreate) (*Heist, error) {
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
@@ -417,18 +412,6 @@ func waitForMembersToJoin(s *discordgo.Session, heist *Heist) {
 	}
 
 	slog.Debug("wait for the heist to start is over", "guildID", heist.GuildID)
-}
-
-// checkIfHeistCanStart checks if the heist can start. This is called after the wait time has expired
-// to ensure that there are enough members to start the heist and that the police are not on high alert.
-func checkIfHeistCanStart(heist *Heist) error {
-	if len(heist.Crew) < 2 {
-		slog.Info("heist cancelled due to lack of interest", "guild", heist.GuildID, "heist", heist.config.Theme.Heist)
-
-		return ErrNotEnoughMembers{Theme: heist.config.Theme}
-	}
-
-	return nil
 }
 
 // sendHeistResults runs the heist and sends the results to the channel. This processes the results of the heist and updates the
