@@ -98,11 +98,7 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 
 	err := heistChecks(heist, heist.Organizer)
 	if err != nil {
-		slog.Debug("heist checks failed",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Debug("heist checks failed", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil, err
 	}
 
@@ -110,10 +106,7 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 	heist.Crew = append(heist.Crew, heist.Organizer)
 	currentHeists[guildID] = heist
 
-	slog.Debug("create heist",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-	)
+	slog.Debug("create heist", "guildID", guildID, "memberID", memberID)
 
 	return heist, nil
 }
@@ -130,10 +123,7 @@ func (h *Heist) AddCrewMember(member *HeistMember) error {
 
 	member.heist = h
 	h.Crew = append(h.Crew, member)
-	slog.Debug("member joined heist",
-		slog.String("guildID", member.GuildID),
-		slog.String("memberID", member.MemberID),
-	)
+	slog.Debug("member joined heist", "guildID", member.GuildID, "memberID", member.MemberID)
 	return nil
 }
 
@@ -210,11 +200,11 @@ func (h *Heist) Start() (*HeistResult, error) {
 	)
 	for _, result := range results.AllResults {
 		slog.Debug("heist member result",
-			slog.String("guild", result.Player.GuildID),
-			slog.String("member", result.Player.guildMember.Name),
-			slog.Any("status", result.Status),
-			slog.Int("payment", result.StolenCredits),
-			slog.String("message", result.Message),
+			"guild", result.Player.GuildID,
+			"member", result.Player.guildMember.Name,
+			"status", result.Status,
+			"payment", result.StolenCredits,
+			"message", result.Message,
 		)
 	}
 
@@ -311,10 +301,7 @@ func (h *Heist) Cancel() {
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.
 func heistChecks(h *Heist, member *HeistMember) error {
 	if h.State != Planning {
-		slog.Debug("heist already started",
-			slog.String("guildID", h.GuildID),
-			slog.String("state", string(h.State)),
-		)
+		slog.Debug("heist already started", "guildID", h.GuildID, "state", string(h.State))
 		return ErrHeistAlreadyStarted
 	}
 
@@ -323,10 +310,7 @@ func heistChecks(h *Heist, member *HeistMember) error {
 	if slices.ContainsFunc(h.Crew, func(m *HeistMember) bool {
 		return m.MemberID == member.MemberID
 	}) {
-		slog.Debug("member already joined heist",
-			slog.String("guildID", h.GuildID),
-			slog.String("memberID", member.MemberID),
-		)
+		slog.Debug("member already joined heist", "guildID", h.GuildID, "memberID", member.MemberID)
 		return ErrAlreadyJoinedHieist
 	}
 

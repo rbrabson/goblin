@@ -55,26 +55,18 @@ func readConfigFromFile(guildID string) *Config {
 	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "config", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		slog.Error("failed to read heist config",
-			slog.String("file", configFileName),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to read heist config", "file", configFileName, "error", err)
 	}
 
 	config := &Config{}
 	err = json.Unmarshal(bytes, config)
 	if err != nil {
-		slog.Error("failed to unmarshal default heist config",
-			slog.String("file", configFileName),
-			slog.Any("error", err),
-		)
+		slog.Error("failed to unmarshal default heist config", "file", configFileName, "error", err)
 	}
 	config.GuildID = guildID
 
 	writeConfig(config)
-	slog.Info("create new heist config",
-		slog.String("guildID", config.GuildID),
-	)
+	slog.Info("create new heist config", "guildID", config.GuildID)
 
 	return config
 }
