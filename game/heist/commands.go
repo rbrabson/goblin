@@ -351,12 +351,24 @@ func planHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	waitForMembersToJoin(s, heist)
 
-	if err = checkIfHeistCanStart(s, i, heist); err != nil {
+	if err = checkIfHeistCanStart(heist); err != nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+		)
+		if err := resp.Send(s, i.Interaction); err != nil {
+			slog.Error("failed to send response", "error", err)
+		}
 		return
 	}
 
-	res, err := startHeist(s, i, heist)
+	res, err := startHeist(heist)
 	if err != nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+		)
+		if err := resp.Send(s, i.Interaction); err != nil {
+			slog.Error("failed to send response", "error", err)
+		}
 		return
 	}
 
@@ -426,12 +438,12 @@ func waitForMembersToJoin(s *discordgo.Session, heist *Heist) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	for {
-		if time.Now().After(startTime) {
-			break
-		}
-
 		if err := heistMessage(s, heist); err != nil {
 			slog.Error("failed to send heist message", "error", err)
+		}
+
+		if time.Now().After(startTime) {
+			break
 		}
 
 		<-ticker.C
@@ -442,18 +454,8 @@ func waitForMembersToJoin(s *discordgo.Session, heist *Heist) {
 
 // checkIfHeistCanStart checks if the heist can start. This is called after the wait time has expired
 // to ensure that there are enough members to start the heist and that the police are not on high alert.
-func checkIfHeistCanStart(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) error {
+func checkIfHeistCanStart(heist *Heist) error {
 	if len(heist.Crew) < 2 {
-		if err := heistMessage(s, heist); err != nil {
-			slog.Error("failed to send heist message", "error", err)
-		}
-		p := message.NewPrinter(language.AmericanEnglish)
-		msg := disgomsg.NewMessage(
-			disgomsg.WithContent(p.Sprintf("The %s was cancelled due to lack of interest.", heist.config.Theme.Heist)),
-		)
-		if _, err := msg.Send(s, i.ChannelID); err != nil {
-			slog.Error("failed to send message", "error", err)
-		}
 		slog.Info("heist cancelled due to lack of interest", "guild", heist.GuildID, "heist", heist.config.Theme.Heist)
 
 		return ErrNotEnoughMembers{Theme: heist.config.Theme}
@@ -464,16 +466,9 @@ func checkIfHeistCanStart(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 // startHeist starts the heist and returns the results of the heist. This does not process the results,
 // it only runs the heist and gets the results.
-func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate, heist *Heist) (*HeistResult, error) {
+func startHeist(heist *Heist) (*HeistResult, error) {
 	res, err := heist.Start()
 	if err != nil {
-		slog.Error("unable to start the heist", "guildID", heist.GuildID, "error", err)
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
-		)
-		if err := resp.Send(s, i.Interaction); err != nil {
-			slog.Error("failed to send response", "error", err)
-		}
 		return nil, err
 	}
 
