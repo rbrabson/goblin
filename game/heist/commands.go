@@ -237,7 +237,7 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response", "error", err)
+			slog.Error("failed to send response", slog.Any("error", err))
 		}
 		return
 	}
@@ -247,7 +247,7 @@ func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("You do not have permission to use this command."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response", "error", err)
+			slog.Error("failed to send response", slog.Any("error", err))
 		}
 		return
 	}
@@ -297,7 +297,7 @@ func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response", "error", err)
+			slog.Error("failed to send response", slog.Any("error", err))
 		}
 		return
 	}
@@ -335,7 +335,7 @@ func enableBoost(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(content),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
-		slog.Error("failed to send response", "error", err)
+		slog.Error("failed to send response", slog.Any("error", err))
 	}
 }
 
@@ -372,14 +372,14 @@ func createHeist(i *discordgo.InteractionCreate) (*Heist, error) {
 	// Create a new heist
 	heist, err := NewHeist(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		slog.Warn("unable to create the heist", "error", err)
+		slog.Warn("unable to create the heist", slog.Any("error", err))
 		return nil, err
 	}
 
 	// The organizer has to pay a fee to plan the heist.
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	if err := account.Withdraw(heist.config.HeistCost); err != nil {
-		slog.Error("failed to withdraw heist cost", "error", err)
+		slog.Error("failed to withdraw heist cost", slog.Any("error", err))
 		heist.Cancel()
 		return nil, ErrNotEnoughCredits{CreditsNeeded: heist.config.HeistCost}
 	}
@@ -411,7 +411,7 @@ func waitForMembersToJoin(s *discordgo.Session, heist *Heist) {
 		<-ticker.C
 	}
 
-	slog.Debug("wait for the heist to start is over", "guildID", heist.GuildID)
+	slog.Debug("wait for the heist to start is over", slog.String("guildID", heist.GuildID))
 }
 
 // sendHeistResults runs the heist and sends the results to the channel. This processes the results of the heist and updates the
@@ -428,7 +428,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, heis
 		disgomsg.WithContent(p.Sprintf("The %s is starting with %d members.", heist.config.Theme.Heist, len(heist.Crew))),
 	)
 	if _, err := msg.Send(s, i.ChannelID); err != nil {
-		slog.Error("failed to send message", "channelID", i.ChannelID, "error", err)
+		slog.Error("failed to send message", slog.String("channelID", i.ChannelID), slog.Any("error", err))
 	}
 
 	time.Sleep(3 * time.Second)
@@ -442,10 +442,10 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 	p := message.NewPrinter(language.AmericanEnglish)
 	theme := GetTheme(i.GuildID)
 
-	slog.Debug("hitting "+res.Target.Name, "guildID", i.GuildID)
+	slog.Debug("hitting target", slog.String("target", res.Target.Name), slog.String("guildID", i.GuildID))
 	msg := p.Sprintf("The %s has decided to hit **%s**.", theme.Crew, res.Target.Name)
 	if _, err := s.ChannelMessageSend(i.ChannelID, msg); err != nil {
-		slog.Error("failed to send message", "channelID", i.ChannelID, "error", err)
+		slog.Error("failed to send message", slog.String("channelID", i.ChannelID), slog.Any("error", err))
 	}
 	time.Sleep(3 * time.Second)
 
@@ -459,7 +459,7 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 			msg += p.Sprintf("`%s dropped out of the game.`", name)
 		}
 		if _, err := s.ChannelMessageSend(i.ChannelID, msg); err != nil {
-			slog.Error("failed to send message", "channelID", i.ChannelID, "error", err)
+			slog.Error("failed to send message", slog.String("channelID", i.ChannelID), slog.Any("error", err))
 		}
 		time.Sleep(3 * time.Second)
 	}
@@ -467,12 +467,12 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 	if len(res.Escaped) == 0 {
 		msg = "\nNo one made it out safe."
 		if _, err := s.ChannelMessageSend(i.ChannelID, msg); err != nil {
-			slog.Error("failed to send message", "channelID", i.ChannelID, "error", err)
+			slog.Error("failed to send message", slog.String("channelID", i.ChannelID), slog.Any("error", err))
 		}
 	} else {
 		msg = "\nThe raid is now over. Distributing player spoils."
 		if _, err := s.ChannelMessageSend(i.ChannelID, msg); err != nil {
-			slog.Error("failed to send message", "channelID", i.ChannelID, "error", err)
+			slog.Error("failed to send message", slog.String("channelID", i.ChannelID), slog.Any("error", err))
 		}
 
 		var tableBuffer strings.Builder
@@ -506,15 +506,15 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 			if result.Status == Free || result.Status == Apprehended {
 				data := []string{guildMember.Name, p.Sprintf("%d", result.StolenCredits), p.Sprintf("%d", result.BonusCredits), p.Sprintf("%d", result.StolenCredits+result.BonusCredits)}
 				if err := table.Append(data); err != nil {
-					slog.Error("failed to append to table", "error", err)
+					slog.Error("failed to append to table", slog.Any("error", err))
 				}
 				numLines++
 				if numLines >= MaxWinningsPerPage {
 					if err := table.Render(); err != nil {
-						slog.Error("failed to render table", "error", err)
+						slog.Error("failed to render table", slog.Any("error", err))
 					}
 					if _, err := s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"\n```"); err != nil {
-						slog.Error("failed to send message", "channelID", i.ChannelID, "error", err)
+						slog.Error("failed to send message", slog.String("channelID", i.ChannelID), slog.Any("error", err))
 					}
 					table.Reset()
 					tableBuffer.Reset()
@@ -523,10 +523,10 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 		}
 		if numLines > 0 {
 			if err := table.Render(); err != nil {
-				slog.Error("failed to render table", "error", err)
+				slog.Error("failed to render table", slog.Any("error", err))
 			}
 			if _, err := s.ChannelMessageSend(i.ChannelID, "```\n"+tableBuffer.String()+"```"); err != nil {
-				slog.Error("failed to send message", "channelID", i.ChannelID, "error", err)
+				slog.Error("failed to send message", slog.String("channelID", i.ChannelID), slog.Any("error", err))
 			}
 		}
 	}
@@ -546,13 +546,13 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 		if len(res.Escaped) > 0 && result.StolenCredits != 0 {
 			account := bank.GetAccount(i.GuildID, result.Player.MemberID)
 			if err := account.Deposit(result.StolenCredits + result.BonusCredits); err != nil {
-				slog.Error("failed to deposit stolen credits", "guildID", i.GuildID, "error", err)
+				slog.Error("failed to deposit stolen credits", slog.String("guildID", i.GuildID), slog.Any("error", err))
 			}
 			slog.Info("heist Loot",
-				"guildID", i.GuildID,
-				"memberID", account.MemberID,
-				"stolen", result.StolenCredits,
-				"bonus", result.BonusCredits,
+				slog.String("guildID", i.GuildID),
+				slog.String("memberID", account.MemberID),
+				slog.Int("stolen", result.StolenCredits),
+				slog.Int("bonus", result.BonusCredits),
 			)
 		}
 	}
@@ -580,7 +580,7 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Withdraw the cost of the heist from the player's account.
 	account := bank.GetAccount(i.GuildID, heistMember.MemberID)
 	if err := account.Withdraw(heist.config.HeistCost); err != nil {
-		slog.Error("failed to withdraw heist", "guildID", i.GuildID, "error", err)
+		slog.Error("failed to withdraw heist", slog.String("guildID", i.GuildID), slog.Any("error", err))
 		disgomsg.NewResponse(disgomsg.WithContent(fmt.Sprintf("Unable to join the heist. Error: %s", err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -899,11 +899,11 @@ func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for _, target := range targets {
 		data := []string{target.Name, fmt.Sprintf("%d", target.CrewSize), fmt.Sprintf("%d", target.Vault), fmt.Sprintf("%d", target.VaultMax), fmt.Sprintf("%.2f", target.Success)}
 		if err := table.Append(data); err != nil {
-			slog.Error("failed to append the data to the table", "error", err)
+			slog.Error("failed to append the data to the table", slog.Any("error", err))
 		}
 	}
 	if err := table.Render(); err != nil {
-		slog.Error("failed to render the table", "error", err)
+		slog.Error("failed to render the table", slog.Any("error", err))
 	}
 
 	disgomsg.NewResponse(disgomsg.WithContent("```\n"+tableBuffer.String()+"\n```")).SendEphemeral(s, i.Interaction)
