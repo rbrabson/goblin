@@ -193,14 +193,14 @@ func (h *Heist) Start() (*HeistResult, error) {
 		calculateCredits(results)
 	}
 
-	slog.Debug("heist results",
+	slog.Info("heist results",
+		slog.String("guildID", h.GuildID),
 		slog.Int("escaped", len(results.Escaped)),
 		slog.Int("apprehended", len(results.Apprehended)),
 		slog.Int("died", len(results.Dead)),
 	)
 	for _, result := range results.AllResults {
 		slog.Info("heist member result",
-			slog.String("guild", result.Player.GuildID),
 			slog.String("member", result.Player.guildMember.Name),
 			slog.Any("status", result.Status),
 			slog.Int("payment", result.StolenCredits),
