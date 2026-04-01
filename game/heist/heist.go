@@ -199,7 +199,7 @@ func (h *Heist) Start() (*HeistResult, error) {
 		slog.Int("died", len(results.Dead)),
 	)
 	for _, result := range results.AllResults {
-		slog.Debug("heist member result",
+		slog.Info("heist member result",
 			slog.String("guild", result.Player.GuildID),
 			slog.String("member", result.Player.guildMember.Name),
 			slog.Any("status", result.Status),
