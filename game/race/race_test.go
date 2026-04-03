@@ -21,7 +21,7 @@ func init() {
 
 func TestCalculateWinnings(t *testing.T) {
 	// Create a race
-	race := GetRace("123")
+	race, _ := createNewRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
 		return
@@ -41,9 +41,9 @@ func TestCalculateWinnings(t *testing.T) {
 		MemberID: "101",
 	}
 
-	racer1 := race.addRaceParticipant(member1)
-	racer2 := race.addRaceParticipant(member2)
-	racer3 := race.addRaceParticipant(member3)
+	racer1, _ := race.addRaceParticipant(member1)
+	racer2, _ := race.addRaceParticipant(member2)
+	racer3, _ := race.addRaceParticipant(member3)
 
 	// Add a better
 	better := &RaceMember{
@@ -163,7 +163,7 @@ func TestRaceChecks(t *testing.T) {
 	}
 
 	// Create a race
-	race := GetRace("123")
+	race, _ := createNewRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
 		return
@@ -212,7 +212,7 @@ func TestRaceChecks(t *testing.T) {
 
 func TestResetRace(t *testing.T) {
 	// Create a race
-	race := GetRace("123")
+	race, _ := createNewRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
 		return
@@ -243,7 +243,7 @@ func TestResetRace(t *testing.T) {
 }
 
 func TestGetRace(t *testing.T) {
-	race := GetRace("123")
+	race, _ := createNewRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
 		return
@@ -272,7 +272,7 @@ func TestGetRace(t *testing.T) {
 	race.addRaceParticipant(member1)
 	race.addRaceParticipant(member2)
 
-	race.RunRace(60)
+	race.runRace(60)
 
 	result := race.RaceResult
 	if result.Win == nil {

@@ -39,5 +39,5 @@ type ErrRacersAreResting struct {
 // Error returns the error message for ErrRacersAreResting.
 func (e ErrRacersAreResting) Error() string {
 	p := message.NewPrinter(language.AmericanEnglish)
-	return p.Sprintf("The racers are resting. Try again in %s!", format.Duration(e.waitTime))
+	return p.Sprintf("the racers are resting. Try again in %s!", format.Duration(e.waitTime))
 }
