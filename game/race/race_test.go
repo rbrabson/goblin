@@ -21,17 +21,17 @@ func init() {
 
 func TestCalculateWinnings(t *testing.T) {
 	// Create a race
-	member1 := &RaceMember{
-		GuildID:  "123",
-		MemberID: "456",
-	}
-	race, _ := CreateNewRace("123", member1)
+	race, _ := CreateNewRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
 		return
 	}
 
 	// Add participants
+	member1 := &RaceMember{
+		GuildID:  "123",
+		MemberID: "456",
+	}
 	member2 := &RaceMember{
 		GuildID:  "123",
 		MemberID: "789",
@@ -41,6 +41,7 @@ func TestCalculateWinnings(t *testing.T) {
 		MemberID: "101",
 	}
 
+	racer1, _ := race.addRaceParticipant(member1)
 	racer2, _ := race.addRaceParticipant(member2)
 	racer3, _ := race.addRaceParticipant(member3)
 
@@ -51,7 +52,6 @@ func TestCalculateWinnings(t *testing.T) {
 	}
 
 	// Create a bet on racer1
-	racer1 := race.getRaceParticipant(member1.MemberID)
 	raceBetter := getRaceBetter(better, racer1)
 	race.addBetter(raceBetter)
 
@@ -163,15 +163,16 @@ func TestRaceChecks(t *testing.T) {
 	}
 
 	// Create a race
-	member1 := &RaceMember{
-		GuildID:  "123",
-		MemberID: "456",
-	}
-	race, _ := CreateNewRace("123", member1)
+	race, _ := CreateNewRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
 		return
 	}
+	member1 := &RaceMember{
+		GuildID:  "123",
+		MemberID: "456",
+	}
+	race.addRaceParticipant(member1)
 
 	// Test raceJoinChecks
 	err = raceJoinChecks(race, "789")
@@ -209,15 +210,16 @@ func TestRaceChecks(t *testing.T) {
 
 func TestResetRace(t *testing.T) {
 	// Create a race
-	member1 := &RaceMember{
-		GuildID:  "123",
-		MemberID: "456",
-	}
-	race, _ := CreateNewRace("123", member1)
+	race, _ := CreateNewRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
 		return
 	}
+	member1 := &RaceMember{
+		GuildID:  "123",
+		MemberID: "456",
+	}
+	race.addRaceParticipant(member1)
 
 	// Verify the race exists in the currentRaces map
 	if currentRaces["123"] == nil {
@@ -244,15 +246,16 @@ func TestResetRace(t *testing.T) {
 }
 
 func TestGetRace(t *testing.T) {
-	member1 := &RaceMember{
-		GuildID:  "123",
-		MemberID: "456",
-	}
-	race, _ := CreateNewRace("123", member1)
+	race, _ := CreateNewRace("123")
 	if race == nil {
 		t.Error("expected race to be created")
 		return
 	}
+	member1 := &RaceMember{
+		GuildID:  "123",
+		MemberID: "456",
+	}
+	race.addRaceParticipant(member1)
 	savedRace := currentRaces["123"]
 	if savedRace == nil {
 		t.Error("expected race to be found")
@@ -263,7 +266,7 @@ func TestGetRace(t *testing.T) {
 		for i, racer := range racers {
 			t.Error("racer: ", i, " ", racer)
 		}
-		t.Error("expected at least 2 racers")
+		t.Error("expected less than 2 racers")
 	}
 
 	member2 := &RaceMember{

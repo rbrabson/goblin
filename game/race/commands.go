@@ -117,20 +117,23 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // startRace starts a race that other members may join.
 func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
-	member := getRaceMember(i.GuildID, guildMember)
-	race, err := CreateNewRace(i.GuildID, member)
+	race, err := CreateNewRace(i.GuildID)
 	if err != nil {
 		slog.Warn("failed to create new race", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToLower(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
 	defer race.End()
+	slog.Debug("race created", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
+
 	race.interaction = i
+	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+	racer := getRaceMember(i.GuildID, guildMember)
+	race.addRaceParticipant(racer)
 
 	raceMessage(s, race, "start")
-	slog.Debug("race started", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
 
+	slog.Debug("waiting for members to join the race", slog.String("guildID", i.GuildID))
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
