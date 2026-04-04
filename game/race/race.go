@@ -86,7 +86,7 @@ func GetCurrentRace(guildID string) *Race {
 
 // CreateNewRace creates a new race for the guild. If a race is already in progress or the racers are resting,
 // then an error is returned.
-func CreateNewRace(guildID string, member *RaceMember) (*Race, error) {
+func CreateNewRace(guildID string, racer *RaceMember) (*Race, error) {
 	raceLock.Lock()
 	defer raceLock.Unlock()
 
@@ -106,8 +106,8 @@ func CreateNewRace(guildID string, member *RaceMember) (*Race, error) {
 		config:        config,
 		mutex:         sync.Mutex{},
 	}
-	race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
-	race.addRaceParticipant(member)
+	race.raceAvatars = getRaceAvatars(race.GuildID, race.config.Theme)
+	race.addRaceParticipant(racer)
 
 	currentRaces[guildID] = race
 	slog.Info("race started", slog.String("guildID", guildID))
@@ -309,7 +309,7 @@ func ResetRace(guildID string) {
 // getRaceAvatar returns a random race avatar to be used by a race participant.
 func getRaceAvatar(race *Race) *Avatar {
 	if len(race.raceAvatars) == 0 {
-		race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
+		race.raceAvatars = getRaceAvatars(race.GuildID, race.config.Theme)
 	}
 
 	index := len(race.raceAvatars) - 1

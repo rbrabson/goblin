@@ -21,8 +21,8 @@ type Avatar struct {
 	MovementSpeed string             `json:"movement_speed" bson:"movement_speed"`
 }
 
-// GetRaceAvatars returns the list of chracters that may be assigned to a member during a race.
-func GetRaceAvatars(guildID string, themeName string) []*Avatar {
+// getRaceAvatars returns the list of chracters that may be assigned to a member during a race.
+func getRaceAvatars(guildID string, themeName string) []*Avatar {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
 	avatars, err := readAllRacers(filter)
 	if err != nil {

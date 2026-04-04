@@ -258,7 +258,7 @@ func TestGetRace(t *testing.T) {
 		t.Error("expected race to be found")
 	}
 
-	racers := GetRaceAvatars("123", "clash")
+	racers := getRaceAvatars("123", "clash")
 	if len(racers) < 2 {
 		for i, racer := range racers {
 			t.Error("racer: ", i, " ", racer)
