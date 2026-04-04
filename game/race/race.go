@@ -76,17 +76,17 @@ type RaceParticipantPosition struct {
 	Finished        bool             // The member has crossed the finish line
 }
 
-// getCurrentRace gets the race for the guild. If a race isn't in progress, then a new one is created.
-func getCurrentRace(guildID string) *Race {
+// GetCurrentRace gets the race for the guild. If a race isn't in progress, then a new one is created.
+func GetCurrentRace(guildID string) *Race {
 	raceLock.Lock()
 	defer raceLock.Unlock()
 
 	return currentRaces[guildID]
 }
 
-// createNewRace creates a new race for the guild. If a race is already in progress or the racers are resting,
+// CreateNewRace creates a new race for the guild. If a race is already in progress or the racers are resting,
 // then an error is returned.
-func createNewRace(guildID string) (*Race, error) {
+func CreateNewRace(guildID string, member *RaceMember) (*Race, error) {
 	raceLock.Lock()
 	defer raceLock.Unlock()
 
@@ -94,11 +94,6 @@ func createNewRace(guildID string) (*Race, error) {
 		return nil, err
 	}
 
-	return newRace(guildID), nil
-}
-
-// newRace creates a new race for the guild.
-func newRace(guildID string) *Race {
 	config := GetConfig(guildID)
 
 	race := &Race{
@@ -112,11 +107,12 @@ func newRace(guildID string) *Race {
 		mutex:         sync.Mutex{},
 	}
 	race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
+	race.addRaceParticipant(member)
 
 	currentRaces[guildID] = race
-	slog.Info("new race", slog.String("guildID", guildID))
+	slog.Info("race started", slog.String("guildID", guildID))
 
-	return race
+	return race, nil
 }
 
 // addRaceParticiapnt returns a new race participant for a member in the race. The race
@@ -130,7 +126,7 @@ func (r *Race) addRaceParticipant(member *RaceMember) (*RaceParticipant, error) 
 		return nil, err
 	}
 
-	currentRace := getCurrentRace(r.GuildID)
+	currentRace := GetCurrentRace(r.GuildID)
 	if r != currentRace {
 		slog.Warn("current race has changed since addRaceParticipant was called", slog.String("guildID", r.GuildID))
 		return nil, errors.New("current race has changed")

@@ -117,18 +117,16 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // startRace starts a race that other members may join.
 func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	race, err := createNewRace(i.GuildID)
+	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
+	member := getRaceMember(i.GuildID, guildMember)
+	race, err := CreateNewRace(i.GuildID, member)
 	if err != nil {
 		slog.Warn("failed to create new race", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToLower(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
-	race.interaction = i
-
-	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
-	member := getRaceMember(i.GuildID, guildMember)
-	race.addRaceParticipant(member)
 	defer race.End()
+	race.interaction = i
 
 	raceMessage(s, race, "start")
 	slog.Info("race started", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
@@ -192,7 +190,7 @@ func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
 
 // joinRace attempts to join a race that is getting ready to start.
 func joinRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	race := getCurrentRace(i.GuildID)
+	race := GetCurrentRace(i.GuildID)
 	if race == nil {
 		slog.Warn("no race is planned", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
 		disgomsg.NewResponse(disgomsg.WithContent("No race is planned")).SendEphemeral(s, i.Interaction)
@@ -302,7 +300,7 @@ func raceStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // betOnRace processes a bet placed by a member on the race.
 func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	race := getCurrentRace(i.GuildID)
+	race := GetCurrentRace(i.GuildID)
 	if race == nil {
 		slog.Warn("no race is planned", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
 		disgomsg.NewResponse(disgomsg.WithContent("No race is planned")).SendEphemeral(s, i.Interaction)
