@@ -110,7 +110,6 @@ func CreateNewRace(guildID string, racer *RaceMember) (*Race, error) {
 	race.addRaceParticipant(racer)
 
 	currentRaces[guildID] = race
-	slog.Info("race started", slog.String("guildID", guildID))
 
 	return race, nil
 }
@@ -236,10 +235,11 @@ func (r *Race) runRace(trackLength int) {
 		slog.String("third", r.RaceResult.Show.Participant.Member.guildMember.Name),
 	)
 	lastLeg := r.RaceLegs[len(r.RaceLegs)-1]
-	for _, position := range lastLeg.ParticipantPositions {
+	for i, position := range lastLeg.ParticipantPositions {
 		slog.Info("race position",
 			slog.String("guildID", r.GuildID),
 			slog.String("memberID", position.RaceParticipant.Member.MemberID),
+			slog.Int("position", i+1),
 			slog.Float64("raceTime", position.Speed),
 		)
 	}
@@ -293,7 +293,7 @@ func (r *Race) End() {
 	}
 	stats.UpdateGameStats(r.GuildID, "race", memberIDs)
 
-	slog.Info("end race", slog.String("guildID", r.GuildID))
+	slog.Info("race ended", slog.String("guildID", r.GuildID))
 }
 
 // ResetRace resets a hung race for a given guild.
@@ -375,7 +375,7 @@ func raceStartChecks(guildID string) error {
 // raceJoinChecks checks to see if a racer is able to join the race.
 func raceJoinChecks(race *Race, memberID string) error {
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		slog.Info("race has started", slog.String("guildID", race.GuildID))
+		slog.Debug("race has started", slog.String("guildID", race.GuildID))
 		return ErrRaceHasStarted
 	}
 
@@ -411,7 +411,7 @@ func placeBet(race *Race, better *RaceBetter) error {
 	}
 
 	if err := race.addBetter(better); err != nil {
-		slog.Error("failed to add better", slog.String("guildID", race.GuildID), slog.String("memberID", better.Member.MemberID), slog.Any("error", err))
+		slog.Debug("failed to add better", slog.String("guildID", race.GuildID), slog.String("memberID", better.Member.MemberID), slog.Any("error", err))
 		return err
 	}
 	return nil

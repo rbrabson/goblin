@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	raceButtons     = make(map[string]map[string]*raceButton)
-	raceButtonMutex = sync.Mutex{}
+	betButtons     = make(map[string]map[string]*raceButton) // guild -> label -> button
+	betButtonMutex = sync.Mutex{}
 
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"join_race": joinRace,
@@ -129,7 +129,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race.interaction = i
 
 	raceMessage(s, race, "start")
-	slog.Info("race started", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
+	slog.Debug("race started", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
 
 	waitForMembersToJoin(s, race)
 
@@ -140,12 +140,12 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	raceMessage(s, race, "betting")
+	defer removeBetButtons(race)
 	slog.Debug("waiting for bets", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)))
 	waitForBetsToBePlaced(s, race)
 
 	raceMessage(s, race, "started")
-
-	slog.Info("race starting", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)), slog.Int("betsPlaced", len(race.Betters)))
+	slog.Debug("race starting", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)), slog.Int("betsPlaced", len(race.Betters)))
 
 	race.runRace(len([]rune(race.config.Track)))
 	sendRaceLegs(s, race)
@@ -154,7 +154,6 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	slog.Debug("race ended", slog.String("guildID", i.GuildID))
 
 	sendRaceResults(s, i.ChannelID, race)
-	removeRaceButtons(race)
 }
 
 // waitForMembersToJoin waits until members join the race before proceeding
@@ -337,9 +336,9 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	slog.Debug("you have placed a bet", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.String("racer", raceParticipant.Member.guildMember.Name))
 }
 
-// getRaceButtons returns the buttons for the racers, which may be used to
+// createBetButtons returns the buttons for the racers, which may be used to
 // bet on the various racers.
-func getRaceButtons(race *Race) []discordgo.ActionsRow {
+func createBetButtons(race *Race) []discordgo.ActionsRow {
 	buttonsPerRow := 5
 	rows := make([]discordgo.ActionsRow, 0, len(race.Racers)/buttonsPerRow)
 
@@ -354,7 +353,7 @@ func getRaceButtons(race *Race) []discordgo.ActionsRow {
 			button := discordgo.Button{
 				Label:    race.Racers[index].Member.guildMember.Name,
 				Style:    discordgo.PrimaryButton,
-				CustomID: getRaceButton(racer).label,
+				CustomID: createBetButton(racer).label,
 				Emoji:    nil,
 			}
 			buttons = append(buttons, button)
@@ -368,17 +367,17 @@ func getRaceButtons(race *Race) []discordgo.ActionsRow {
 	return rows
 }
 
-// getRaceButton creates and returns a new race button for the racer, as well as
+// createBetButton creates and returns a new race button for the racer, as well as
 // registers the handlers for the button with Discord.
-func getRaceButton(rp *RaceParticipant) *raceButton {
-	raceButtonMutex.Lock()
-	defer raceButtonMutex.Unlock()
+func createBetButton(rp *RaceParticipant) *raceButton {
+	betButtonMutex.Lock()
+	defer betButtonMutex.Unlock()
 
 	// Get the race buttons for the guild
-	buttons := raceButtons[rp.Member.GuildID]
+	buttons := betButtons[rp.Member.GuildID]
 	if buttons == nil {
 		buttons = make(map[string]*raceButton)
-		raceButtons[rp.Member.GuildID] = buttons
+		betButtons[rp.Member.GuildID] = buttons
 	}
 
 	// Add a new button to the guild's button list
@@ -401,18 +400,18 @@ func getRaceButton(rp *RaceParticipant) *raceButton {
 	return button
 }
 
-// removeRaceButtons removes the buttons for the current race and de-registers the
+// removeBetButtons removes the buttons for the current race and de-registers the
 // handlers for all buttons in the race from Discord.
-func removeRaceButtons(race *Race) {
-	raceButtonMutex.Lock()
-	defer raceButtonMutex.Unlock()
+func removeBetButtons(race *Race) {
+	betButtonMutex.Lock()
+	defer betButtonMutex.Unlock()
 
-	buttons := raceButtons[race.GuildID]
+	buttons := betButtons[race.GuildID]
 	for key := range buttons {
 		bot.RemoveComponentHandler(key)
 		slog.Debug("removed button component handler", slog.String("guildID", race.GuildID), slog.String("label", key))
 	}
-	raceButtons[race.GuildID] = make(map[string]*raceButton)
+	betButtons[race.GuildID] = make(map[string]*raceButton)
 }
 
 // raceMessage sends the main command used to start and join the race. It also handles the case where
@@ -508,7 +507,7 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 		})
 	case "betting":
 		var components []discordgo.MessageComponent
-		rows := getRaceButtons(race)
+		rows := createBetButtons(race)
 		for _, row := range rows {
 			components = append(components, row)
 		}
@@ -642,10 +641,10 @@ func sendRaceResults(s *discordgo.Session, channelID string, race *Race) {
 
 // getRacer takes a custom button ID and returns the corresponding racer.
 func getCurrentRaceParticipant(race *Race, customID string) *RaceParticipant {
-	raceButtonMutex.Lock()
-	defer raceButtonMutex.Unlock()
+	betButtonMutex.Lock()
+	defer betButtonMutex.Unlock()
 
-	buttons := raceButtons[race.GuildID]
+	buttons := betButtons[race.GuildID]
 	button := buttons[customID]
 	return button.racer
 }
