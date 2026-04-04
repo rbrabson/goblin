@@ -418,6 +418,10 @@ func removeRaceButtons(race *Race) {
 // raceMessage sends the main command used to start and join the race. It also handles the case where
 // the race begins, disabling the buttons to join the race.
 func raceMessage(s *discordgo.Session, race *Race, action string) error {
+	// handle edge case where a person joins before the race creation message is sent
+	if race.interaction == nil {
+		return errors.New("interaction is nil for the race")
+	}
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	racerNames := make([]string, 0, len(race.Racers))
