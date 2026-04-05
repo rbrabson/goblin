@@ -135,7 +135,6 @@ func (h *Heist) Start() (*HeistResult, error) {
 
 	if len(h.Crew) < 2 {
 		h.State = Cancelled
-		slog.Error("not enough members to start heist", slog.String("guildID", h.GuildID))
 		return nil, ErrNotEnoughMembers{h.config.Theme}
 	}
 

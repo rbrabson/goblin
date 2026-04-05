@@ -345,10 +345,12 @@ func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	heist, err := createHeist(i)
 	if err != nil {
+		slog.Warn("unable to create the heist", slog.Any("error", err))
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
 	defer heist.End()
+	slog.Info("heist created", slog.String("guildID", heist.GuildID), slog.String("organizer", heist.Organizer.guildMember.Name))
 
 	theme := GetTheme(i.GuildID)
 	disgomsg.NewResponse(disgomsg.WithContent("Planning a "+theme.Heist+"...")).Send(s, i.Interaction)
@@ -359,6 +361,7 @@ func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	res, err := heist.Start()
 	if err != nil {
+		slog.Info("failed to start the heist", slog.String("guildID", heist.GuildID), slog.Any("error", err))
 		heistMessage(s, heist)
 		disgomsg.NewMessage(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).Send(s, i.ChannelID)
 		return
@@ -369,6 +372,7 @@ func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	res.Target.StealFromVault(res.TotalStolen)
 	heist.State = Completed
 	heistMessage(s, heist)
+	slog.Info("heist completed", slog.String("guildID", heist.GuildID), slog.Int("stolenAmount", res.TotalStolen))
 }
 
 // createHeist creates a new heist and sets the organizer. It also withdraws the cost of planning the heist
