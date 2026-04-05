@@ -45,6 +45,8 @@ func GetConfig(guildID string) *Config {
 	if config == nil {
 		config = readConfigFromFile(guildID)
 	}
+	config.Theme = GetTheme(guildID)
+	config.Targets = GetTargets(guildID, config.Theme.Name)
 	return config
 }
 

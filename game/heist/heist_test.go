@@ -438,7 +438,7 @@ func TestStealFromVault(t *testing.T) {
 
 	// Steal half the vault
 	stealAmount := initialVault / 2
-	target.StealFromValut(stealAmount)
+	target.StealFromVault(stealAmount)
 
 	// Verify vault amount decreased
 	if target.Vault != initialVault-stealAmount {
@@ -451,7 +451,7 @@ func TestStealFromVault(t *testing.T) {
 	}
 
 	// Steal more than what's in the vault
-	target.StealFromValut(target.Vault + 100)
+	target.StealFromVault(target.Vault + 100)
 
 	// Verify vault is 0
 	if target.Vault != 0 {
@@ -538,7 +538,7 @@ func TestResetVaultsToMaximumValue(t *testing.T) {
 	}
 
 	// Steal from vault to reduce it
-	target.StealFromValut(500)
+	target.StealFromVault(500)
 
 	// Verify vault is reduced
 	if target.Vault >= target.VaultMax {

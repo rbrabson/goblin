@@ -117,6 +117,8 @@ func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // startRace starts a race that other members may join.
 func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// No need to worry about locking the race until the first raceMessage is sent, as no other members
+	// can join until the message with the JOIN button is sent
 	race, err := CreateNewRace(i.GuildID)
 	if err != nil {
 		slog.Warn("failed to create new race", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))

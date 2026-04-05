@@ -38,15 +38,14 @@ func GetTargets(guildID string, theme string) []*Target {
 		for _, target := range targets {
 			writeTarget(target)
 		}
-
 	}
 
 	return targets
 }
 
-// StealFromValut removes the given amount from the vault of the target.
+// StealFromVault removes the given amount from the vault of the target.
 // If the amount is greater than the vault, the vault is set to 0.
-func (t *Target) StealFromValut(amount int) {
+func (t *Target) StealFromVault(amount int) {
 	if amount <= 0 {
 		slog.Debug("nothing stolen from the vault",
 			slog.String("guildID", t.GuildID),
@@ -109,7 +108,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "targets", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		slog.Error("failed to read default targets",
+		slog.Error("failed to read targets from file",
 			slog.String("guildID", guildID),
 			slog.String("file", configFileName),
 			slog.Any("error", err),

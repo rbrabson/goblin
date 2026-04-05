@@ -355,15 +355,20 @@ func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	heistMessage(s, heist)
 	waitForMembersToJoin(s, heist)
+	heistMessage(s, heist)
 
 	res, err := heist.Start()
 	if err != nil {
-		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).Send(s, i.Interaction)
+		heistMessage(s, heist)
+		disgomsg.NewMessage(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).Send(s, i.ChannelID)
 		return
 	}
+	heistMessage(s, heist)
 	sendHeistResults(s, i, heist, res)
 
-	res.Target.StealFromValut(res.TotalStolen)
+	res.Target.StealFromVault(res.TotalStolen)
+	heist.State = Completed
+	heistMessage(s, heist)
 }
 
 // createHeist creates a new heist and sets the organizer. It also withdraws the cost of planning the heist

@@ -84,16 +84,17 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 		return nil, ErrHeistInProgress
 	}
 
+	config := GetConfig(guildID)
 	heist := &Heist{
 		GuildID:      guildID,
 		Organizer:    getHeistMember(guildID, memberID),
 		Crew:         make([]*HeistMember, 0, 10),
 		StartTime:    time.Now(),
 		State:        Planning,
-		config:       GetConfig(guildID),
+		config:       config,
 		mutex:        sync.Mutex{},
-		goodMessages: make([]*HeistMessage, 0, len(GetConfig(guildID).Theme.EscapedMessages)),
-		badMessages:  make([]*HeistMessage, 0, len(GetConfig(guildID).Theme.ApprehendedMessages)+len(GetConfig(guildID).Theme.DiedMessages)),
+		goodMessages: make([]*HeistMessage, 0, len(config.Theme.EscapedMessages)),
+		badMessages:  make([]*HeistMessage, 0, len(config.Theme.ApprehendedMessages)+len(config.Theme.DiedMessages)),
 	}
 
 	err := heistChecks(heist, heist.Organizer)
@@ -132,13 +133,13 @@ func (h *Heist) Start() (*HeistResult, error) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
 
-	h.State = InProgress
-
 	if len(h.Crew) < 2 {
+		h.State = Cancelled
 		slog.Error("not enough members to start heist", slog.String("guildID", h.GuildID))
 		return nil, ErrNotEnoughMembers{h.config.Theme}
 	}
 
+	h.State = InProgress
 	target := getTarget(h.config.Targets, len(h.Crew))
 
 	results := &HeistResult{
