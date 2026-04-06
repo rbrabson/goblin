@@ -233,22 +233,12 @@ var (
 // heistAdmin routes the commands to the subcommand and subcommandgroup handlers
 func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if status == discord.STOPPING || status == discord.STOPPED {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response", slog.Any("error", err))
-		}
+		disgomsg.NewResponse(disgomsg.WithContent("The system is shutting down.")).SendEphemeral(s, i.Interaction)
 		return
 	}
 
 	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("You do not have permission to use this command."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response", slog.Any("error", err))
-		}
+		disgomsg.NewResponse(disgomsg.WithContent("You do not have permission to use this command.")).SendEphemeral(s, i.Interaction)
 		return
 	}
 

@@ -27,7 +27,8 @@ var (
 		"surrender_blackjack":  blackjackSurrender,
 	}
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"blackjack": blackjack,
+		"blackjack":       blackjack,
+		"blackjack-admin": blackjackAdmin,
 	}
 
 	memberCommands = []*discordgo.ApplicationCommand{
@@ -56,7 +57,149 @@ var (
 			},
 		},
 	}
+
+	adminCommands = []*discordgo.ApplicationCommand{
+		{
+			Name:        "blackjack-admin",
+			Description: "Configures the blackjack game.",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "config",
+					Description: "Configures the blackjack game.",
+					Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Name:        "info",
+							Description: "Returns the configuration information for the server.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+						},
+						{
+							Name:        "bet-amount",
+							Description: "Sets the bet amount.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+						},
+						{
+							Name:        "payout-percent",
+							Description: "The base payout percentage when winning a game.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+						},
+						{
+							Name:        "single-player",
+							Description: "Controls whether the game is single-player only or allows multiple players to join.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+						},
+					},
+				},
+			},
+		},
+	}
 )
+
+// blackjackAdmin handles the /blackjack-admin command and its subcommands.
+func blackjackAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if status == discord.STOPPING || status == discord.STOPPED {
+		disgomsg.NewResponse(disgomsg.WithContent("The system is shutting down.")).SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
+		disgomsg.NewResponse(disgomsg.WithContent("You do not have permission to use this command.")).SendEphemeral(s, i.Interaction)
+		return
+	}
+
+	options := i.ApplicationCommandData().Options
+	if options[0].Name == "config" {
+		config(s, i)
+	}
+}
+
+// config handles the /blackjack-admin config command and its subcommands.
+func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	options := i.ApplicationCommandData().Options[0].Options
+	switch options[0].Name {
+	case "bet-amount":
+		configBetAmount(s, i)
+	case "payout-percent":
+		configPayoutPercent(s, i)
+	case "single-player":
+		configSinglePlayer(s, i)
+	case "info":
+		configInfo(s, i)
+	}
+}
+
+// configBetAmount sets the bet amount for the blackjack game on this server.
+func configBetAmount(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := GetConfig(i.GuildID)
+	options := i.ApplicationCommandData().Options[0].Options[0].Options
+	betAmount := options[0].IntValue()
+	config.BetAmount = int(betAmount)
+
+	p := message.NewPrinter(language.AmericanEnglish)
+	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Bet amount set to %d", betAmount))).Send(s, i.Interaction)
+	writeConfig(config)
+}
+
+// configPayoutPercent sets the payout percent for the blackjack game on this server.
+func configPayoutPercent(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := GetConfig(i.GuildID)
+	options := i.ApplicationCommandData().Options[0].Options[0].Options
+	payoutPercent := options[0].IntValue()
+	config.PayoutPercent = int(payoutPercent)
+
+	p := message.NewPrinter(language.AmericanEnglish)
+	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Payout percent set to %d", payoutPercent))).Send(s, i.Interaction)
+	writeConfig(config)
+}
+
+// configSinglePlayer sets the single-player mode for the blackjack game on this server.
+func configSinglePlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := GetConfig(i.GuildID)
+	options := i.ApplicationCommandData().Options[0].Options[0].Options
+	singlePlayer := options[0].BoolValue()
+	config.SinglePlayerMode = singlePlayer
+
+	p := message.NewPrinter(language.AmericanEnglish)
+	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Single-player mode set to %t", singlePlayer))).Send(s, i.Interaction)
+	writeConfig(config)
+}
+
+// configInfo returns the configuration for the blackjack game on this server.
+func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := GetConfig(i.GuildID)
+
+	embed := &discordgo.MessageEmbed{
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "bet amount",
+				Value:  fmt.Sprintf("%d", config.BetAmount),
+				Inline: true,
+			},
+			{
+				Name:   "payout percent",
+				Value:  fmt.Sprintf("%d", config.PayoutPercent),
+				Inline: true,
+			},
+			{
+				Name:   "single player",
+				Value:  fmt.Sprintf("%t", config.SinglePlayerMode),
+				Inline: true,
+			},
+		},
+	}
+
+	embeds := []*discordgo.MessageEmbed{
+		embed,
+	}
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Blackjack Configuration",
+			Embeds:  embeds,
+			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	})
+}
 
 // blackjack handles the /blackjack command and its subcommands.
 func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
