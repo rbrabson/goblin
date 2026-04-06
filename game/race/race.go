@@ -256,8 +256,8 @@ func (r *Race) End() {
 
 	// The race runs if there are 2 or more racers. If that is the case, then reset the time the last
 	// successful race ran.
+	raceLock.Lock()
 	if len(r.Racers) >= r.config.MinNumRacers {
-		raceLock.Lock()
 		lastRaceTimes[r.GuildID] = time.Now()
 	}
 	delete(currentRaces, r.GuildID)
