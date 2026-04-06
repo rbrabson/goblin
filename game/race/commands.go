@@ -113,9 +113,6 @@ func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // resetRace resets a hung race.
 func resetRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	raceLock.Lock()
-	defer raceLock.Unlock()
-
 	ResetRace(i.GuildID)
 	disgomsg.NewResponse(disgomsg.WithContent("Race has been reset")).SendEphemeral(s, i.Interaction)
 }
@@ -131,7 +128,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	defer race.End()
-	slog.Debug("race created", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
+	slog.Info("race created", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
 
 	race.interaction = i
 	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
@@ -140,7 +137,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	raceMessage(s, race, "start")
 
-	slog.Debug("waiting for members to join the race", slog.String("guildID", i.GuildID))
+	slog.Info("waiting for members to join the race", slog.String("guildID", i.GuildID))
 	waitForMembersToJoin(s, race)
 
 	if len(race.Racers) < race.config.MinNumRacers {
@@ -151,17 +148,17 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	raceMessage(s, race, "betting")
 	defer removeBetButtons(race)
-	slog.Debug("waiting for bets", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)))
+	slog.Info("waiting for bets", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)))
 	waitForBetsToBePlaced(s, race)
 
 	raceMessage(s, race, "started")
-	slog.Debug("race starting", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)), slog.Int("betsPlaced", len(race.Betters)))
+	slog.Info("race starting", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)), slog.Int("betsPlaced", len(race.Betters)))
 
 	race.runRace(len([]rune(race.config.Track)))
 	sendRaceLegs(s, race)
 
 	raceMessage(s, race, "ended")
-	slog.Debug("race ended", slog.String("guildID", i.GuildID))
+	slog.Info("race ended", slog.String("guildID", i.GuildID))
 
 	sendRaceResults(s, i.ChannelID, race)
 }
@@ -319,6 +316,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Check to see if the member can place a bet
 	err := raceBetChecks(race, i.Member.User.ID)
 	if err != nil {
+		slog.Error("unable to place bet", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -343,7 +341,7 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("You have placed a %d credit bet on %s", race.config.BetAmount, raceParticipant.Member.guildMember.Name))).SendEphemeral(s, i.Interaction)
 
-	slog.Debug("you have placed a bet", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.String("racer", raceParticipant.Member.guildMember.Name))
+	slog.Info("race bet placed", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.String("racer", raceParticipant.Member.guildMember.Name))
 }
 
 // createBetButtons returns the buttons for the racers, which may be used to
