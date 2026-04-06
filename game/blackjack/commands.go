@@ -162,6 +162,7 @@ func configBetAmount(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Bet amount set to %d", betAmount))).Send(s, i.Interaction)
 	writeConfig(config)
+	slog.Info("blackjack bet amount updated", slog.String("guildID", i.GuildID), slog.Int("betAmount", int(betAmount)))
 }
 
 // configPayoutPercent sets the payout percent for the blackjack game on this server.
@@ -174,6 +175,7 @@ func configPayoutPercent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Payout percent set to %d", payoutPercent))).Send(s, i.Interaction)
 	writeConfig(config)
+	slog.Info("blackjack payout percent updated", slog.String("guildID", i.GuildID), slog.Int("payoutPercent", int(payoutPercent)))
 }
 
 // configSinglePlayer sets the single-player mode for the blackjack game on this server.
@@ -186,6 +188,7 @@ func configSinglePlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Single-player mode set to %t", singlePlayer))).Send(s, i.Interaction)
 	writeConfig(config)
+	slog.Info("blackjack single-player mode updated", slog.String("guildID", i.GuildID), slog.Bool("singlePlayerMode", singlePlayer))
 }
 
 // configInfo returns the configuration for the blackjack game on this server.
