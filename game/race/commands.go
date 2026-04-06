@@ -77,6 +77,11 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	if !guild.IsAdmin(s, i.GuildID, i.Member.User.ID) {
+		disgomsg.NewResponse(disgomsg.WithContent("You do not have permission to use this command.")).SendEphemeral(s, i.Interaction)
+		return
+	}
+
 	options := i.ApplicationCommandData().Options
 	switch options[0].Name {
 	case "reset":

@@ -74,19 +74,43 @@ var (
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
 						},
 						{
-							Name:        "bet-amount",
+							Name:        "bet",
 							Description: "Sets the bet amount.",
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionInteger,
+									Name:        "amount",
+									Description: "The amount to set the bet to.",
+									Required:    true,
+								},
+							},
 						},
 						{
-							Name:        "payout-percent",
+							Name:        "payout",
 							Description: "The base payout percentage when winning a game.",
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionInteger,
+									Name:        "percent",
+									Description: "The amount to set the payout percentage to.",
+									Required:    true,
+								},
+							},
 						},
 						{
 							Name:        "single-player",
 							Description: "Controls whether the game is single-player only or allows multiple players to join.",
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionBoolean,
+									Name:        "enabled",
+									Description: "Whether single-player mode is enabled.",
+									Required:    true,
+								},
+							},
 						},
 					},
 				},
@@ -117,9 +141,9 @@ func blackjackAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	switch options[0].Name {
-	case "bet-amount":
+	case "bet":
 		configBetAmount(s, i)
-	case "payout-percent":
+	case "payout":
 		configPayoutPercent(s, i)
 	case "single-player":
 		configSinglePlayer(s, i)
