@@ -259,10 +259,9 @@ func (r *Race) End() {
 	if len(r.Racers) >= r.config.MinNumRacers {
 		raceLock.Lock()
 		lastRaceTimes[r.GuildID] = time.Now()
-		raceLock.Unlock()
 	}
-
 	delete(currentRaces, r.GuildID)
+	raceLock.Unlock()
 
 	if r.RaceResult != nil && len(r.Racers) >= r.config.MinNumRacers {
 		slog.Debug("processing race results", slog.String("guildID", r.GuildID), slog.Int("numRacers", len(r.Racers)))
