@@ -34,9 +34,7 @@ func newConfig(guildID string) *Config {
 		GuildID: guildID,
 	}
 	if err := writeConfig(config); err != nil {
-		slog.Error("error writing the shop config",
-			slog.Any("error", err.Error()),
-		)
+		slog.Error("error writing the shop config", "error", err)
 	}
 
 	return config
@@ -48,14 +46,9 @@ func (c *Config) SetChannel(channelID string) {
 		c.ChannelID = channelID
 		c.MessageID = ""
 		if err := writeConfig(c); err != nil {
-			slog.Error("error setting the shop channel",
-				slog.Any("error", err.Error()),
-			)
+			slog.Error("error setting the shop channel", "error", err)
 		}
-		slog.Debug("set shop channel",
-			slog.String("guildID", c.GuildID),
-			slog.String("channel", channelID),
-		)
+		slog.Debug("set shop channel", "guildID", c.GuildID, "channel", channelID)
 	}
 }
 
@@ -64,14 +57,9 @@ func (c *Config) SetModChannel(channelID string) {
 	if c.ModChannelID != channelID {
 		c.ModChannelID = channelID
 		if err := writeConfig(c); err != nil {
-			slog.Error("error setting the shop mod channel",
-				slog.Any("error", err.Error()),
-			)
+			slog.Error("error setting the shop mod channel", "error", err)
 		}
-		slog.Debug("set shop mod channel",
-			slog.String("guildID", c.GuildID),
-			slog.String("channel", channelID),
-		)
+		slog.Debug("set shop mod channel", "guildID", c.GuildID, "channel", channelID)
 	}
 }
 
@@ -80,14 +68,9 @@ func (c *Config) SetNotificationID(id string) {
 	if c.NotificationID != id {
 		c.NotificationID = id
 		if err := writeConfig(c); err != nil {
-			slog.Error("error setting the shop notification id",
-				slog.Any("error", err.Error()),
-			)
+			slog.Error("error setting the shop notification id", "error", err)
 		}
-		slog.Debug("set shop notification ID",
-			slog.String("guildID", c.GuildID),
-			slog.String("member", id),
-		)
+		slog.Debug("set shop notification ID", "guildID", c.GuildID, "member", id)
 	}
 }
 
@@ -96,14 +79,9 @@ func (c *Config) SetMessageID(messageID string) {
 	if c.MessageID != messageID {
 		c.MessageID = messageID
 		if err := writeConfig(c); err != nil {
-			slog.Error("error setting the shop message id",
-				slog.Any("error", err.Error()),
-			)
+			slog.Error("error setting the shop message id", "error", err)
 		}
-		slog.Debug("set shop message ID",
-			slog.String("guildID", c.GuildID),
-			slog.String("messageID", messageID),
-		)
+		slog.Debug("set shop message ID", "guildID", c.GuildID, "messageID", messageID)
 	}
 }
 

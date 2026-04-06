@@ -102,7 +102,7 @@ func TestGetAllPurchases(t *testing.T) {
 	)
 
 	locPurchases := GetAllPurchases(GuildId, MemberId)
-	slog.Info("Purchases from DB", slog.Any("purcahses", locPurchases))
+	slog.Info("purchases from DB", slog.Any("purchases", locPurchases))
 	if len(locPurchases) != 2 {
 		t.Errorf("GetAllPurchases failed to return all purchases, expected 2, got %d", len(locPurchases))
 		t.Errorf("purchases: %v", locPurchases)

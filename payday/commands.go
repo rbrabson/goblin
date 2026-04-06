@@ -38,9 +38,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.Any("error", err),
-			)
+			slog.Error("error sending response", "error", err)
 		}
 		return
 	}
@@ -56,9 +54,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(p.Sprintf("You can't get another payday yet. You need to wait %s.", format.Duration(remainingTime))),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.Any("error", err),
-			)
+			slog.Error("error sending response", "error", err)
 		}
 		return
 	}
@@ -67,11 +63,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	if err := account.Deposit(paydayAmount); err != nil {
-		slog.Error("error depositing data in the account",
-			slog.String("guildID", i.GuildID),
-			slog.String("memberID", i.Member.User.ID),
-			slog.Any("error", err),
-		)
+		slog.Error("error depositing data in the account", "guildID", i.GuildID, "memberID", i.Member.User.ID, "error", err)
 	}
 
 	paydayAccount.TotalAmountPaid += paydayAmount
@@ -81,9 +73,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(p.Sprintf("You deposited your check of %d into your bank account. You now have %d credits.", paydayAmount, account.CurrentBalance)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("error sending response",
-			slog.Any("error", err),
-		)
+		slog.Error("error sending response", "guildID", i.GuildID, "memberID", i.Member.User.ID, "error", err)
 	}
 }
 
@@ -96,9 +86,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.Any("error", err),
-			)
+			slog.Error("error sending response", "guildID", i.GuildID, "memberID", i.Member.User.ID, "error", err)
 		}
 		return
 	}
@@ -147,16 +135,9 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
 	memberID := i.Member.User.ID
 
-	slog.Debug("`/payday stats` command",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-	)
+	slog.Debug("`/payday stats` command", "guildID", guildID, "memberID", memberID)
 
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("error sending response",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Error("error sending response", "guildID", guildID, "memberID", memberID, "error", err)
 	}
 }

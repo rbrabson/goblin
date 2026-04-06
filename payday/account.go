@@ -27,9 +27,7 @@ func newAccount(payday *Payday, memberID string) *Account {
 		GuildID:  payday.GuildID,
 	}
 	if err := writeAccount(account); err != nil {
-		slog.Error("error writing account",
-			slog.Any("error", err),
-		)
+		slog.Error("error writing account", "error", err)
 	}
 
 	return account
@@ -47,20 +45,10 @@ func (a *Account) setNextPayday(minWait time.Duration) {
 	// Save the account to the database.
 	err := writeAccount(a)
 	if err != nil {
-		slog.Error("unable to save account to the database",
-			slog.String("guildID", a.GuildID),
-			slog.String("memberID", a.MemberID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to save account to the database", "guildID", a.GuildID, "memberID", a.MemberID, "error", err)
 		return
 	}
-	slog.Debug("set next payday",
-		slog.String("guildID", a.GuildID),
-		slog.String("memberID", a.MemberID),
-		slog.Int("paydayStreak", a.CurrentStreak),
-		slog.Int("maxStreak", a.MaxStreak),
-		slog.Time("nextPayday", a.NextPayday),
-	)
+	slog.Debug("set next payday", "guildID", a.GuildID, "memberID", a.MemberID, "paydayStreak", a.CurrentStreak, "maxStreak", a.MaxStreak, "nextPayday", a.NextPayday)
 }
 
 // getPayAmmount returns the amount of credits the user will receive on their next payday.

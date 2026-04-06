@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/rbrabson/goblin/discord"
-	"github.com/rbrabson/goblin/internal/emoji"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -22,8 +21,8 @@ type Avatar struct {
 	MovementSpeed string             `json:"movement_speed" bson:"movement_speed"`
 }
 
-// GetRaceAvatars returns the list of chracters that may be assigned to a member during a race.
-func GetRaceAvatars(guildID string, themeName string) []*Avatar {
+// getRaceAvatars returns the list of chracters that may be assigned to a member during a race.
+func getRaceAvatars(guildID string, themeName string) []*Avatar {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "theme", Value: themeName}}
 	avatars, err := readAllRacers(filter)
 	if err != nil {
@@ -60,7 +59,6 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*Avatar {
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
-		return getDefaultRaceAvatars(guildID)
 	}
 
 	var avatars []*Avatar
@@ -72,7 +70,6 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*Avatar {
 			slog.String("file", configFileName),
 			slog.String("data", string(bytes)),
 			slog.Any("error", err))
-		return getDefaultRaceAvatars(guildID)
 	}
 
 	for _, avatar := range avatars {
@@ -81,241 +78,13 @@ func readRaceAvatarsFromFile(guildID string, themeName string) []*Avatar {
 		writeRacer(avatar)
 	}
 
-	slog.Info("create new race avatars",
+	slog.Debug("create new race avatars",
 		slog.String("guildID", guildID),
 		slog.String("theme", themeName),
 		slog.Int("count", len(avatars)),
 	)
 
 	return avatars
-}
-
-// getDefaultRaceAvatars creates a new list of characters for the guild. The list is saved to
-// the database.
-func getDefaultRaceAvatars(guildID string) []*Avatar {
-	racers := []*Avatar{
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Minion,
-			MovementSpeed: "veryfast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Miner,
-			MovementSpeed: "veryfast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Goblin,
-			MovementSpeed: "veryfast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.BetaMinion,
-			MovementSpeed: "veryfast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.WallBreaker,
-			MovementSpeed: "fast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Valkrie,
-			MovementSpeed: "fast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.SneakyArcher,
-			MovementSpeed: "fast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.HogRider,
-			MovementSpeed: "fast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.ArcherQueen,
-			MovementSpeed: "fast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Archer,
-			MovementSpeed: "fast",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Barbarian,
-			MovementSpeed: "steady",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.CannonCart,
-			MovementSpeed: "steady",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Healer,
-			MovementSpeed: "steady",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Wizard,
-			MovementSpeed: "steady",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.BarbarianKing,
-			MovementSpeed: "steady",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.GrandWarden,
-			MovementSpeed: "steady",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.BattleMachine,
-			MovementSpeed: "steady",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Bomber,
-			MovementSpeed: "abberant",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.DropShip,
-			MovementSpeed: "abberant",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Balloon,
-			MovementSpeed: "abberant",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.ElectroDragon,
-			MovementSpeed: "predator",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Dragon,
-			MovementSpeed: "predator",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.BattleBlimp,
-			MovementSpeed: "predator",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.LavaHound,
-			MovementSpeed: "predator",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.BabyDragon,
-			MovementSpeed: "babydragon",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.RagedBarbarian,
-			MovementSpeed: "special",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.SuperPEKKA,
-			MovementSpeed: "slow",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.PEKKA,
-			MovementSpeed: "slow",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Bowler,
-			MovementSpeed: "slow",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Witch,
-			MovementSpeed: "slow",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.WallWrecker,
-			MovementSpeed: "slow",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.NightWitch,
-			MovementSpeed: "slow",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Golem,
-			MovementSpeed: "slow",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.Giant,
-			MovementSpeed: "slow",
-		},
-		{
-			GuildID:       guildID,
-			Theme:         "clash",
-			Emoji:         emoji.BoxerGiant,
-			MovementSpeed: "slow",
-		},
-	}
-
-	for _, racer := range racers {
-		writeRacer(racer)
-	}
-
-	slog.Info("created new racers",
-		slog.String("guildID", guildID),
-		slog.Int("count", len(racers)),
-	)
-
-	return racers
 }
 
 // calculateMovement calculates the distance a racer moves on a given turn

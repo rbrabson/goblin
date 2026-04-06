@@ -77,7 +77,8 @@ func SetDB(d *mongo.MongoDB) {
 
 // GetCommands returns the commands for the slots system
 func (plugin *Plugin) GetCommands() []*discordgo.ApplicationCommand {
-	commands := make([]*discordgo.ApplicationCommand, 0, len(memberCommands))
+	commands := make([]*discordgo.ApplicationCommand, 0, len(adminCommands)+len(memberCommands))
+	commands = append(commands, adminCommands...)
 	commands = append(commands, memberCommands...)
 	return commands
 }
@@ -115,5 +116,16 @@ func (plugin *Plugin) GetHelp() []string {
 
 // GetAdminHelp returns the admin help for the slots system
 func (plugin *Plugin) GetAdminHelp() []string {
-	return nil
+	help := make([]string, 0, len(adminCommands[0].Options))
+
+	commandPrefix := adminCommands[0].Name
+	for _, command := range adminCommands[0].Options {
+		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
+		help = append(help, commandDescription)
+	}
+	slices.Sort(help)
+	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
+	help = append([]string{title}, help...)
+
+	return help
 }

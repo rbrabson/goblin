@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/rbrabson/goblin/discord"
@@ -14,10 +13,6 @@ import (
 
 const (
 	defaultBabyDragonBuffPercent = 50
-)
-
-var (
-	track = strings.Repeat("•   ", 20)
 )
 
 // Config represents the configuration for the race game.
@@ -50,10 +45,7 @@ func GetConfig(guildID string) *Config {
 	if config.BabyDragonBuffPercent == 0 {
 		config.BabyDragonBuffPercent = defaultBabyDragonBuffPercent
 		writeConfig(config)
-		slog.Debug("set baby dragon buff percent",
-			slog.String("guildID", guildID),
-			slog.Int("babydragon_buff_percent", config.BabyDragonBuffPercent),
-		)
+		slog.Debug("set baby dragon buff percent", slog.String("guildID", guildID), slog.Int("babydragon_buff_percent", config.BabyDragonBuffPercent))
 	}
 	return config
 }
@@ -65,63 +57,23 @@ func readConfigFromFile(guildID string) *Config {
 	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "race", "config", raceTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
-		slog.Error("failed to read default race config",
-			slog.String("guildID", guildID),
-			slog.String("theme", raceTheme),
-			slog.Any("error", err),
-		)
-		// If the configuration file does not exist, then create a new configuration.
-		return getDefauiltConfig(guildID)
+		slog.Error("failed to read race config", slog.String("guildID", guildID), slog.String("theme", raceTheme), slog.Any("error", err))
 	}
 
 	config := &Config{}
 	err = json.Unmarshal(bytes, config)
 	if err != nil {
-		slog.Error("failed to unmarshal default race config",
+		slog.Error("failed to unmarshal race config",
 			slog.String("guildID", guildID),
 			slog.String("theme", raceTheme),
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
-		return getDefauiltConfig(guildID)
 	}
 	config.GuildID = guildID
 
 	writeConfig(config)
-	slog.Info("create new race config",
-		slog.String("guildID", guildID),
-		slog.String("theme", raceTheme),
-	)
-
-	return config
-}
-
-// getDefauiltConfig creates a new race configuration for the guild. The configuration is saved to
-// the database.
-func getDefauiltConfig(guildID string) *Config {
-	config := &Config{
-		GuildID:               guildID,
-		Theme:                 "clash",
-		BetAmount:             100,
-		Currency:              "credit",
-		StartingLine:          ":checkered_flag:",
-		EndingLine:            "<:gems:312346463453708289>",
-		Track:                 track,
-		MaxPrizeAmount:        1250,
-		MaxNumRacers:          10,
-		MinNumRacers:          2,
-		MinPrizeAmount:        750,
-		WaitBetweenRaces:      time.Second * 60,
-		WaitForBets:           time.Second * 30,
-		WaitToStart:           time.Second * 45,
-		BabyDragonBuffPercent: defaultBabyDragonBuffPercent,
-	}
-
-	writeConfig(config)
-	slog.Info("race configuration created",
-		slog.String("guildID", guildID),
-		slog.String("theme", config.Theme),
-	)
+	slog.Debug("create new race config", slog.String("guildID", guildID), slog.String("theme", raceTheme))
 
 	return config
 }

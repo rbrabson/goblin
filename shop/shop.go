@@ -22,10 +22,7 @@ func GetShop(guildID string) *Shop {
 
 	shop.Items, err = readShopItems(guildID)
 	if err != nil {
-		slog.Error("unable to read shop items from the database",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to read shop items from the database", "guildID", guildID, "error", err)
 		shop.Items = make([]*ShopItem, 0)
 	}
 

@@ -26,8 +26,8 @@ type RaceMember struct {
 	guildMember   *guild.Member      `json:"-" bson:"-"`
 }
 
-// GetRaceMember gets a race member. THe member is created if it doesn't exist.
-func GetRaceMember(guildID string, guildMember *guild.Member) *RaceMember {
+// getRaceMember gets a race member. THe member is created if it doesn't exist.
+func getRaceMember(guildID string, guildMember *guild.Member) *RaceMember {
 	member := readRaceMember(guildID, guildMember.MemberID)
 	if member == nil {
 		member = newRaceMember(guildID, guildMember.MemberID)
@@ -45,10 +45,7 @@ func newRaceMember(guildID string, memberID string) *RaceMember {
 	}
 
 	writeRaceMember(member)
-	slog.Info("new race member",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-	)
+	slog.Debug("new race member", slog.String("guildID", guildID), slog.String("memberID", memberID))
 
 	return member
 }
@@ -69,11 +66,7 @@ func (m *RaceMember) WinRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	slog.Info("won race",
-		slog.String("guildID", m.GuildID),
-		slog.String("memberID", m.MemberID),
-		slog.Int("winnings", amount),
-	)
+	slog.Debug("won race", slog.String("guildID", m.GuildID), slog.String("memberID", m.MemberID), slog.Int("winnings", amount))
 }
 
 // PlaceInRace is called when the race member places (comes in 2nd) in a race.
@@ -92,11 +85,7 @@ func (m *RaceMember) PlaceInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	slog.Info("placed in race",
-		slog.String("guildID", m.GuildID),
-		slog.String("memberID", m.MemberID),
-		slog.Int("winnings", amount),
-	)
+	slog.Debug("placed in race", slog.String("guildID", m.GuildID), slog.String("memberID", m.MemberID), slog.Int("winnings", amount))
 }
 
 // ShowInRace is called when the race member shows (comes in 3rd) in a race.
@@ -115,11 +104,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 	m.TotalEarnings += amount
 	writeRaceMember(m)
 
-	slog.Info("showed in race",
-		slog.String("guildID", m.GuildID),
-		slog.String("memberID", m.MemberID),
-		slog.Int("winnings", amount),
-	)
+	slog.Debug("showed in race", slog.String("guildID", m.GuildID), slog.String("memberID", m.MemberID), slog.Int("winnings", amount))
 }
 
 // LoseRace is called when the race member fails to win, place or show in a race.
@@ -127,14 +112,11 @@ func (m *RaceMember) LoseRace() {
 	m.RacesLost++
 	writeRaceMember(m)
 
-	slog.Info("lost race",
-		slog.String("guildID", m.GuildID),
-		slog.String("memberID", m.MemberID),
-	)
+	slog.Debug("lost race", slog.String("guildID", m.GuildID), slog.String("memberID", m.MemberID))
 }
 
-// PlaceBet is used to place a bet on a member of a race.
-func (m *RaceMember) PlaceBet(betAmount int) error {
+// placeBet is used to place a bet on a member of a race.
+func (m *RaceMember) placeBet(betAmount int) error {
 	bankAccount := bank.GetAccount(m.GuildID, m.MemberID)
 	err := bankAccount.Withdraw(betAmount)
 	if err != nil {
@@ -144,12 +126,7 @@ func (m *RaceMember) PlaceBet(betAmount int) error {
 	m.BetsMade++
 	m.TotalEarnings -= betAmount
 
-	slog.Info("placed bet")
-	slog.Info("placed bet",
-		slog.String("guildID", m.GuildID),
-		slog.String("memberID", m.MemberID),
-		slog.Int("betAmount", betAmount),
-	)
+	slog.Debug("placed bet", slog.String("guildID", m.GuildID), slog.String("memberID", m.MemberID), slog.Int("betAmount", betAmount))
 
 	return nil
 }
@@ -171,21 +148,14 @@ func (m *RaceMember) WinBet(winnings int) {
 	m.TotalEarnings += winnings
 	writeRaceMember(m)
 
-	slog.Info("won bet",
-		slog.String("guildID", m.GuildID),
-		slog.String("memberID", m.MemberID),
-		slog.Int("winnings", winnings),
-	)
+	slog.Debug("won bet", slog.String("guildID", m.GuildID), slog.String("memberID", m.MemberID), slog.Int("winnings", winnings))
 }
 
 // LoseBet is used when a member loses a bet on a race.
 func (m *RaceMember) LoseBet() {
 	writeRaceMember(m)
 
-	slog.Info("lost bet",
-		slog.String("guildID", m.GuildID),
-		slog.String("memberID", m.MemberID),
-	)
+	slog.Debug("lost bet", slog.String("guildID", m.GuildID), slog.String("memberID", m.MemberID))
 }
 
 func (m *RaceMember) String() string {

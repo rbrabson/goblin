@@ -20,16 +20,10 @@ func readConfig(guildID string) (*Config, error) {
 	var config *Config
 	err := db.FindOne(ConfigCollection, filter, &config)
 	if err != nil {
-		slog.Error("unable to read shop config from the database",
-			slog.String("guildID", guildID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to read shop config from the database", "guildID", guildID, "filter", filter, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop config from the database",
-		slog.String("guildID", guildID),
-	)
+	slog.Debug("read shop config from the database", "guildID", guildID)
 
 	return config, nil
 }
@@ -44,16 +38,10 @@ func writeConfig(config *Config) error {
 	}
 	err := db.UpdateOrInsert(ConfigCollection, filter, config)
 	if err != nil {
-		slog.Error("unable to write shop config to the database",
-			slog.String("guildID", config.GuildID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to write shop config to the database", "guildID", config.GuildID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("write shop config to the database",
-		slog.String("guildID", config.GuildID),
-	)
+	slog.Debug("write shop config to the database", "guildID", config.GuildID)
 
 	return nil
 }
@@ -65,17 +53,10 @@ func readShopItems(guildID string) ([]*ShopItem, error) {
 	var items []*ShopItem
 	err := db.FindMany(ShopItemCollection, filter, &items, sortBy, 0)
 	if err != nil {
-		slog.Error("unable to read shop items from the database",
-			slog.String("guildID", guildID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to read shop items from the database", "guildID", guildID, "filter", filter, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop items from the database",
-		slog.String("guildID", guildID),
-		slog.Int("count", len(items)),
-	)
+	slog.Debug("read shop items from the database", "guildID", guildID, "count", len(items))
 
 	return items, nil
 }
@@ -86,18 +67,10 @@ func readShopItem(guildID string, name string, itemType string) (*ShopItem, erro
 	var item *ShopItem
 	err := db.FindOne(ShopItemCollection, filter, &item)
 	if err != nil {
-		slog.Error("unable to read shop item from the database",
-			slog.String("guildID", guildID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to read shop item from the database", "guildID", guildID, "filter", filter, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop item from the database",
-		slog.String("guildID", guildID),
-		slog.String("name", name),
-		slog.String("type", itemType),
-	)
+	slog.Debug("read shop item from the database", "guildID", guildID, "name", name, "type", itemType)
 
 	return item, nil
 }
@@ -112,18 +85,10 @@ func writeShopItem(item *ShopItem) error {
 	}
 	err := db.UpdateOrInsert(ShopItemCollection, filter, item)
 	if err != nil {
-		slog.Error("unable to save shop item to the database",
-			slog.String("guildID", item.GuildID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to save shop item to the database", "guildID", item.GuildID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("write the shop item to the database",
-		slog.String("guildID", item.GuildID),
-		slog.String("name", item.Name),
-		slog.String("type", item.Type),
-	)
+	slog.Debug("write the shop item to the database", "guildID", item.GuildID, "name", item.Name, "type", item.Type)
 
 	return nil
 }
@@ -138,18 +103,10 @@ func deleteShopItem(item *ShopItem) error {
 	}
 	err := db.Delete(ShopItemCollection, filter)
 	if err != nil {
-		slog.Error("unable to delete shop item from the database",
-			slog.String("guildID", item.GuildID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to delete shop item from the database", "guildID", item.GuildID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("delete the shop item from the database",
-		slog.String("guildID", item.GuildID),
-		slog.String("name", item.Name),
-		slog.Any("filter", filter),
-	)
+	slog.Debug("delete the shop item from the database", "guildID", item.GuildID, "name", item.Name, "filter", filter)
 
 	return nil
 }
@@ -159,10 +116,7 @@ func readAllPurchases(filter interface{}) ([]*Purchase, error) {
 	var items []*Purchase
 	err := db.FindMany(PurchaseCollection, filter, &items, bson.D{}, 0)
 	if err != nil {
-		slog.Error("unable to read all purchases from the database",
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to read all purchases from the database", "filter", filter, "error", err)
 		return nil, err
 	}
 
@@ -176,12 +130,7 @@ func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 	var items []*Purchase
 	err := db.FindMany(PurchaseCollection, filter, &items, sortBy, 0)
 	if err != nil {
-		slog.Error("unable to read purchases from the database",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to read purchases from the database", "guildID", guildID, "memberID", memberID, "filter", filter, "error", err)
 		return nil, err
 	}
 
@@ -194,16 +143,10 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 	var item Purchase
 	err := db.FindOne(PurchaseCollection, filter, &item)
 	if err != nil {
-		slog.Debug("unable to read purchase from the database",
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Debug("unable to read purchase from the database", "filter", filter, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop item from the database",
-		slog.String("guildID", guildID),
-		slog.Any("filter", filter),
-	)
+	slog.Debug("read shop item from the database", "guildID", guildID, "filter", filter)
 
 	return &item, nil
 }
@@ -218,19 +161,10 @@ func writePurchase(item *Purchase) error {
 	}
 	err := db.UpdateOrInsert(PurchaseCollection, filter, item)
 	if err != nil {
-		slog.Error("unable to write purchase to the database",
-			slog.String("guildID", item.Item.GuildID),
-			slog.Any("filter", filter),
-			slog.Any("item", item),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to write purchase to the database", "guildID", item.Item.GuildID, "filter", filter, "item", item, "error", err)
 		return err
 	}
-	slog.Debug("write purchase to the database",
-		slog.String("guildID", item.Item.GuildID),
-		slog.Any("filter", filter),
-		slog.Any("item", item),
-	)
+	slog.Debug("write purchase to the database", "guildID", item.Item.GuildID, "filter", filter, "item", item)
 
 	return nil
 }
@@ -245,17 +179,10 @@ func deletePurchase(purchase *Purchase) error {
 	}
 	err := db.Delete(PurchaseCollection, filter)
 	if err != nil {
-		slog.Error("unable to delete purchasefrom the database",
-			slog.String("guildID", purchase.Item.GuildID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to delete purchase from the database", "guildID", purchase.Item.GuildID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("delete the purchase from the database",
-		slog.String("guildID", purchase.Item.GuildID),
-		slog.Any("filter", filter),
-	)
+	slog.Debug("delete the purchase from the database", "guildID", purchase.Item.GuildID, "filter", filter)
 
 	return nil
 }
@@ -266,17 +193,10 @@ func readMember(guildID string, memberID string) (*Member, error) {
 	var member *Member
 	err := db.FindOne(MemberCollection, filter, &member)
 	if err != nil {
-		slog.Debug("unable to read shop member from the datrabase",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Debug("unable to read shop member from the database", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop member from the database",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-	)
+	slog.Debug("read shop member from the database", "guildID", guildID, "memberID", memberID)
 
 	return member, nil
 }
@@ -291,18 +211,10 @@ func writeMember(member *Member) error {
 	}
 	err := db.UpdateOrInsert(MemberCollection, filter, member)
 	if err != nil {
-		slog.Error("unable to save shop member to the database",
-			slog.String("guildID", member.GuildID),
-			slog.String("memberID", member.MemberID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to save shop member to the database", "guildID", member.GuildID, "memberID", member.MemberID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Info("write the shop member to the database",
-		slog.String("guildID", member.GuildID),
-		slog.String("memberID", member.MemberID),
-	)
+	slog.Debug("write the shop member to the database", "guildID", member.GuildID, "memberID", member.MemberID)
 
 	return nil
 }
@@ -317,18 +229,10 @@ func deleteMember(member *Member) error {
 	}
 	err := db.Delete(MemberCollection, filter)
 	if err != nil {
-		slog.Error("unable to delete shop member from the database",
-			slog.String("guildID", member.GuildID),
-			slog.String("memberID", member.MemberID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to delete shop member from the database", "guildID", member.GuildID, "memberID", member.MemberID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Info("delete the shop member from the database",
-		slog.String("guildID", member.GuildID),
-		slog.String("memberID", member.MemberID),
-	)
+	slog.Debug("delete the shop member from the database", "guildID", member.GuildID, "memberID", member.MemberID)
 
 	return nil
 }
@@ -339,17 +243,10 @@ func listMembers(guildID string) ([]*Member, error) {
 	var members []*Member
 	err := db.FindMany(MemberCollection, filter, &members, bson.D{}, 0)
 	if err != nil {
-		slog.Error("unable to read shop members from the database",
-			slog.String("guildID", guildID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to read shop members from the database", "guildID", guildID, "filter", filter, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop members from the database",
-		slog.String("guildID", guildID),
-		slog.Int("count", len(members)),
-	)
+	slog.Debug("read shop members from the database", "guildID", guildID, "count", len(members))
 
 	return members, nil
 }

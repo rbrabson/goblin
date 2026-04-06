@@ -20,16 +20,10 @@ func readPayday(guildID string) *Payday {
 	var payday *Payday
 	err := db.FindOne(PaydayCollection, filter, &payday)
 	if err != nil {
-		slog.Debug("payday not found in the database",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Debug("payday not found in the database", "guildID", guildID, "error", err)
 		return nil
 	}
-	slog.Debug("read payday from the database",
-		slog.String("guildID", payday.GuildID),
-		slog.Any("payday", payday),
-	)
+	slog.Debug("read payday from the database", "guildID", payday.GuildID, "payday", payday)
 
 	return payday
 }
@@ -39,15 +33,10 @@ func writePayday(payday *Payday) error {
 	filter := bson.M{"guild_id": payday.GuildID}
 	err := db.UpdateOrInsert(PaydayCollection, filter, payday)
 	if err != nil {
-		slog.Error("unable to save payday to the database",
-			slog.String("guildID", payday.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to save payday to the database", "guildID", payday.GuildID, "error", err)
 		return err
 	}
-	slog.Debug("save payday to the database",
-		slog.String("guildID", payday.GuildID),
-	)
+	slog.Debug("save payday to the database", "guildID", payday.GuildID)
 	return nil
 }
 
@@ -57,17 +46,10 @@ func readAccount(payday *Payday, accountID string) *Account {
 	var account *Account
 	err := db.FindOne(PaydayAccountCollection, filter, &account)
 	if err != nil {
-		slog.Debug("payday account not found in the database",
-			slog.String("guildID", payday.GuildID),
-			slog.String("memberID", accountID),
-			slog.Any("error", err),
-		)
+		slog.Debug("payday account not found in the database", "guildID", payday.GuildID, "memberID", accountID, "error", err)
 		return nil
 	}
-	slog.Debug("read payday account from the database",
-		slog.String("guildID", payday.GuildID),
-		slog.String("memberID", accountID),
-	)
+	slog.Debug("read payday account from the database", "guildID", payday.GuildID, "memberID", accountID)
 	account.GuildID = payday.GuildID
 
 	return account
@@ -83,18 +65,10 @@ func writeAccount(account *Account) error {
 	}
 	err := db.UpdateOrInsert(PaydayAccountCollection, filter, account)
 	if err != nil {
-		slog.Debug("unable to write payday account to the database",
-			slog.String("guildID", account.GuildID),
-			slog.String("memberID", account.MemberID),
-			slog.Any("filter", filter),
-			slog.Any("error", err),
-		)
+		slog.Debug("unable to write payday account to the database", "guildID", account.GuildID, "memberID", account.MemberID, "filter", filter, "error", err)
 		return err
 	}
 
-	slog.Debug("wrote payday account to the database",
-		slog.String("guildID", account.GuildID),
-		slog.String("memberID", account.MemberID),
-	)
+	slog.Debug("wrote payday account to the database", "guildID", account.GuildID, "memberID", account.MemberID)
 	return nil
 }

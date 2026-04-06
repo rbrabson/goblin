@@ -1278,7 +1278,7 @@ func completePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 		return
 	}
 
-	slog.Info("role purchased",
+	slog.Info("custom command purchased",
 		slog.String("guildID", i.GuildID),
 		slog.String("memberID", i.Member.User.ID),
 		slog.String("commandName", commandName),
@@ -1335,7 +1335,7 @@ func sendConfirmationMessage(s *discordgo.Session, i *discordgo.InteractionCreat
 		disgomsg.WithEmbeds(embeds),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("unable to send ephemeral response", slog.Any("error", err))
+		slog.Error("unable to send ephemeral response", "error", err)
 	}
 }
 
@@ -1356,21 +1356,10 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		if item.Duration != "" {
 			duration, err := disctime.ParseDuration(item.Duration)
 			if err != nil {
-				slog.Error("failed to parse item duration",
-					slog.String("guildID", guildID),
-					slog.String("itemName", item.Name),
-					slog.String("itemDuration", item.Duration),
-					slog.Any("error", err),
-				)
+				slog.Error("failed to parse item duration", "guildID", guildID, "itemName", item.Name, "itemDuration", item.Duration, "error", err)
 			}
 			sb.WriteString(p.Sprintf("\nDuration: %s", disctime.FormatDuration(duration)))
-			slog.Info("item duration",
-				slog.String("guildID", guildID),
-				slog.String("itemName", item.Name),
-				slog.String("itemDuration", item.Duration),
-				slog.Any("duration", duration),
-				slog.String("formattedDuration", disctime.FormatDuration(duration)),
-			)
+			slog.Debug("item duration", "guildID", guildID, "itemName", item.Name, "itemDuration", item.Duration, "duration", duration, "formattedDuration", disctime.FormatDuration(duration))
 		}
 		if len(shopItems)+1 < len(items) && len(shopItems)+1 < MaxShopItemsDisplayed {
 			sb.WriteString("\n\u200B")
@@ -1383,10 +1372,7 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		shopItems = append(shopItems, embed)
 
 		if len(shopItems) == MaxShopItemsDisplayed {
-			slog.Warn("maximum number of shop items reached",
-				slog.String("guildID", guildID),
-				slog.Int("numItems", len(shopItems)),
-			)
+			slog.Warn("maximum number of shop items reached", "guildID", guildID, "numItems", len(shopItems))
 			break
 		}
 	}
@@ -1412,27 +1398,15 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		)
 		err := msg.WithChannelID(channelID).WithMessageID(messageID).Edit(s)
 		if err != nil {
-			slog.Error("failed to edit shop items",
-				slog.String("guildID", guildID),
-				slog.String("channelID", channelID),
-				slog.String("messageID", messageID),
-				slog.Any("error", err),
-			)
+			slog.Error("failed to edit shop items", "guildID", guildID, "channelID", channelID, "messageID", messageID, "error", err)
 			messageID = ""
 			config := GetConfig(guildID)
 			config.MessageID = messageID
 			if err := writeConfig(config); err != nil {
-				slog.Error("failed to write config file",
-					slog.Any("error", err),
-				)
+				slog.Error("failed to write config file", "error", err)
 			}
 		}
-		slog.Info("shop items updated",
-			slog.String("guildID", guildID),
-			slog.String("channelID", channelID),
-			slog.String("messageID", messageID),
-			slog.Int("numItems", len(items)),
-		)
+		slog.Debug("shop items updated", "guildID", guildID, "channelID", channelID, "messageID", messageID, "numItems", len(items))
 	}
 	if messageID == "" {
 		msg := disgomsg.NewMessage(
@@ -1441,28 +1415,17 @@ func publishShop(s *discordgo.Session, guildID string, channelID string, message
 		)
 		msgID, err := msg.Send(s, channelID)
 		if err != nil {
-			slog.Error("failed to publish shop items",
-				slog.String("guildID", guildID),
-				slog.String("channelID", channelID),
-				slog.Any("error", err),
-			)
+			slog.Error("failed to publish shop items", "guildID", guildID, "channelID", channelID, "error", err)
 			return "", err
 		}
 		config := GetConfig(guildID)
 		config.MessageID = msgID
 		if err := writeConfig(config); err != nil {
-			slog.Error("failed to write config file",
-				slog.Any("error", err),
-			)
+			slog.Error("failed to write config file", "error", err)
 		}
 	}
 
-	slog.Info("shop items published",
-		slog.String("guildID", guildID),
-		slog.String("channelID", channelID),
-		slog.String("messageID", messageID),
-		slog.Int("numItems", len(items)),
-	)
+	slog.Debug("shop items published", "guildID", guildID, "channelID", channelID, "messageID", messageID, "numItems", len(items))
 	return messageID, nil
 }
 

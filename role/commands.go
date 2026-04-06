@@ -83,9 +83,7 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("You do not have permission to use this command."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.Any("error", err),
-			)
+			slog.Error("error sending response", "error", err)
 		}
 		return
 	}
@@ -94,11 +92,7 @@ func guildAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options[0].Name == "role" {
 		role(s, i)
 	} else {
-		slog.Warn("unknown guild-admin command",
-			slog.String("guildID", i.GuildID),
-			slog.String("userID", i.Member.User.ID),
-			slog.String("command", options[0].Name),
-		)
+		slog.Warn("unknown guild-admin command", "guildID", i.GuildID, "userID", i.Member.User.ID, "command", options[0].Name)
 	}
 }
 
@@ -113,11 +107,7 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "remove":
 		removeRole(s, i)
 	default:
-		slog.Warn("unknown guild-admin role command",
-			slog.String("guildID", i.GuildID),
-			slog.String("userID", i.Member.User.ID),
-			slog.String("command", options[0].Name),
-		)
+		slog.Warn("unknown guild-admin role command", "guildID", i.GuildID, "userID", i.Member.User.ID, "command", options[0].Name)
 	}
 }
 
@@ -132,18 +122,13 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Add the role to the server configuration
 	server.AddAdminRole(roleName)
-	slog.Debug("/guild-admin role add",
-		slog.String("guildID", guildID),
-		slog.String("role", roleName),
-	)
+	slog.Debug("/guild-admin role add", "guildID", guildID, "role", roleName)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" added", roleName)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
-		slog.Error("error sending response",
-			slog.Any("error", err),
-		)
+		slog.Error("error sending response", "error", err)
 	}
 }
 
@@ -158,18 +143,13 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Remove the role from the server configuration
 	server.RemoveAdminRole(roleName)
-	slog.Debug("/guild-admin role remove",
-		slog.String("guildID", guildID),
-		slog.String("role", roleName),
-	)
+	slog.Debug("/guild-admin role remove", "guildID", guildID, "role", roleName)
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" removed", roleName)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
-		slog.Error("error sending response",
-			slog.Any("error", err),
-		)
+		slog.Error("error sending response", "error", err)
 	}
 }
 
@@ -190,17 +170,12 @@ func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sb.WriteString(role + "\n")
 	}
 	roleList := sb.String()
-	slog.Debug("/guild-admin role list",
-		slog.String("guildID", guildID),
-		slog.Int("roles", len(roles)),
-	)
+	slog.Debug("/guild-admin role list", "guildID", guildID, "roles", len(roles))
 
 	resp := disgomsg.NewResponse(
 		disgomsg.WithContent(roleList),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("error sending response",
-			slog.Any("error", err),
-		)
+		slog.Error("error sending response", "error", err)
 	}
 }

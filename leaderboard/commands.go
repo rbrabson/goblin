@@ -104,9 +104,7 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response",
-				slog.Any("error", err),
-			)
+			slog.Error("failed to send the response", "error", err)
 		}
 		return
 	}
@@ -116,17 +114,16 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("You do not have permission to use this command."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response",
-				slog.Any("error", err),
-			)
+			slog.Error("failed to send the response", "error", err)
 		}
 		return
 	}
 
 	options := i.ApplicationCommandData().Options
-	if options[0].Name == "channel" {
+	switch options[0].Name {
+	case "channel":
 		setLeaderboardChannel(s, i)
-	} else if options[0].Name == "info" {
+	case "info":
 		getLeaderboardInfo(s, i)
 	}
 }
@@ -138,9 +135,7 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("The system is shutting down."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response",
-				slog.Any("error", err),
-			)
+			slog.Error("failed to send the response", "error", err)
 		}
 		return
 	}
@@ -171,9 +166,7 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent("Invalid command: " + options[0].Name),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response",
-				slog.Any("error", err),
-			)
+			slog.Error("failed to send the response", "error", err)
 		}
 	}
 }
@@ -209,9 +202,7 @@ func setLeaderboardChannel(s *discordgo.Session, i *discordgo.InteractionCreate)
 		disgomsg.WithContent(fmt.Sprintf("Channel ID for the monthly leaderboard set to %s.", channelID)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
-		slog.Error("failed to send the response",
-			slog.Any("error", err),
-		)
+		slog.Error("failed to send the response", "error", err)
 	}
 }
 
@@ -222,9 +213,7 @@ func getLeaderboardInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(fmt.Sprintf("Channel ID for the monthly leaderboard is %s.", lb.ChannelID)),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("failed to send the response",
-			slog.Any("error", err),
-		)
+		slog.Error("failed to send the response", "error", err)
 	}
 }
 
@@ -264,10 +253,7 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					disgomsg.WithContent("The user you specified does not exist."),
 				)
 				if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-					slog.Error("error sending response",
-						slog.String("guildID", i.GuildID),
-						slog.String("error", err.Error()),
-					)
+					slog.Error("error sending response", "guildID", i.GuildID, "error", err)
 				}
 				return
 			}
@@ -283,9 +269,7 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			disgomsg.WithContent(content),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response",
-				slog.Any("error", err),
-			)
+			slog.Error("failed to send the response", "error", err)
 		}
 		return
 	}
@@ -300,9 +284,7 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.WithContent(content),
 	)
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-		slog.Error("failed to send the response",
-			slog.Any("error", err),
-		)
+		slog.Error("failed to send the response", "error", err)
 	}
 }
 
@@ -350,15 +332,11 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 		}
 		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
 		if err := table.Append(data); err != nil {
-			slog.Error("failed to append data to the table",
-				slog.Any("error", err),
-			)
+			slog.Error("failed to append data to the table", "error", err)
 		}
 	}
 	if err := table.Render(); err != nil {
-		slog.Error("failed to render the table",
-			slog.Any("error", err),
-		)
+		slog.Error("failed to render the table", "error", err)
 	}
 	embeds := []*discordgo.MessageEmbed{
 		{

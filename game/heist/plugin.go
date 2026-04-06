@@ -13,15 +13,15 @@ import (
 )
 
 const (
-	PluginName        = "heist"
-	defaultHeistTheme = "clash"
+	PluginName    = "heist"
+	DEFAULT_THEME = "clash"
 )
 
 var (
-	plugin     *Plugin
-	db         *mongo.MongoDB
-	status     = discord.RUNNING
-	heistTheme string
+	plugin      *Plugin
+	db          *mongo.MongoDB
+	status      = discord.RUNNING
+	HEIST_THEME string
 )
 
 // Plugin is the plugin for the heist game
@@ -59,9 +59,9 @@ func (plugin *Plugin) Status() discord.PluginStatus {
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
 	go vaultUpdater()
-	heistTheme := os.Getenv("DISCORD_HEIST_THEME")
-	if heistTheme == "" {
-		heistTheme = defaultTheme
+	HEIST_THEME = os.Getenv("DISCORD_HEIST_THEME")
+	if HEIST_THEME == "" {
+		HEIST_THEME = DEFAULT_THEME
 	}
 }
 

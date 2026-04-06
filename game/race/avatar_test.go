@@ -20,13 +20,13 @@ func init() {
 }
 
 func TestGetRacers(t *testing.T) {
-	racers := GetRaceAvatars("123", "clash")
+	racers := getRaceAvatars("123", "clash")
 	if len(racers) == 0 {
 		t.Error("expected racers to be created")
 		return
 	}
 
-	racers = GetRaceAvatars("123", "clash")
+	racers = getRaceAvatars("123", "clash")
 	if (len(racers)) == 0 {
 		t.Error("expected racers to be found")
 	}
@@ -40,7 +40,7 @@ func TestGetRacers(t *testing.T) {
 }
 
 func TestCalculateMovement(t *testing.T) {
-	racers := GetRaceAvatars("123", "clash")
+	racers := getRaceAvatars("123", "clash")
 	if len(racers) == 0 {
 		t.Error("expected racers to be created")
 		return
@@ -48,13 +48,13 @@ func TestCalculateMovement(t *testing.T) {
 	racer := racers[0]
 
 	movement := racer.calculateMovement(1)
-	slog.Info("movement", slog.Int("movement", movement))
+	slog.Debug("movement", slog.Int("movement", movement))
 
 	movement = racer.calculateMovement(2)
-	slog.Info("movement", slog.Int("movement", movement))
+	slog.Debug("movement", slog.Int("movement", movement))
 
 	movement = racer.calculateMovement(3)
-	slog.Info("movement", slog.Int("movement", movement))
+	slog.Debug("movement", slog.Int("movement", movement))
 
 	filter := bson.M{"guild_id": "123", "theme": "clash"}
 	err := db.Delete(RacerCollection, filter)

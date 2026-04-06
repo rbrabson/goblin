@@ -189,7 +189,8 @@ func (member *HeistMember) UpdateStatus() {
 
 // ClearJailAndDeathStatus is called when a player is released from jail or rises from the grave.
 func (member *HeistMember) ClearJailAndDeathStatus() {
-	if member.Status == Dead {
+	switch member.Status {
+	case Dead:
 		slog.Debug("heist member risen from the grave",
 			slog.Int("bail", member.BailCost),
 			slog.Any("criminalLevel", member.CriminalLevel),
@@ -204,7 +205,7 @@ func (member *HeistMember) ClearJailAndDeathStatus() {
 			slog.Int("totalDeaths", member.Deaths),
 			slog.Int("totalJail", member.TotalJail),
 		)
-	} else if member.Status == Apprehended || member.Status == OOB {
+	case Apprehended, OOB:
 		slog.Debug("heist member released from jail",
 			slog.Int("bail", member.BailCost),
 			slog.Any("criminalLevel", member.CriminalLevel),

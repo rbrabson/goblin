@@ -1,6 +1,7 @@
 package race
 
 import (
+	"errors"
 	"log/slog"
 	"math/rand/v2"
 	"sort"
@@ -75,18 +76,24 @@ type RaceParticipantPosition struct {
 	Finished        bool             // The member has crossed the finish line
 }
 
-// GetRace gets the race for the guild. If a race isn't in progress, then a new one is created.
-func GetRace(guildID string) *Race {
-	race := currentRaces[guildID]
-	if race == nil {
-		race = newRace(guildID)
-	}
+// GetCurrentRace gets the race for the guild. If a race isn't in progress, then a new one is created.
+func GetCurrentRace(guildID string) *Race {
+	raceLock.Lock()
+	defer raceLock.Unlock()
 
-	return race
+	return currentRaces[guildID]
 }
 
-// newRace creates a new race for the guild.
-func newRace(guildID string) *Race {
+// CreateNewRace creates a new race for the guild. If a race is already in progress or the racers are resting,
+// then an error is returned.
+func CreateNewRace(guildID string) (*Race, error) {
+	raceLock.Lock()
+	defer raceLock.Unlock()
+
+	if err := raceStartChecks(guildID); err != nil {
+		return nil, err
+	}
+
 	config := GetConfig(guildID)
 
 	race := &Race{
@@ -95,33 +102,41 @@ func newRace(guildID string) *Race {
 		Betters:       make([]*RaceBetter, 0, 10),
 		RaceStartTime: time.Now(),
 		RaceResult:    &RaceResult{},
+		raceAvatars:   getRaceAvatars(guildID, config.Theme),
 		interaction:   nil,
 		config:        config,
 		mutex:         sync.Mutex{},
 	}
-	race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
-
 	currentRaces[guildID] = race
-	slog.Info("new race",
-		slog.String("guildID", guildID),
-	)
 
-	return race
+	return race, nil
 }
 
 // addRaceParticiapnt returns a new race participant for a member in the race. The race
 // participant is added to the race.
-func (r *Race) addRaceParticipant(member *RaceMember) *RaceParticipant {
+func (r *Race) addRaceParticipant(member *RaceMember) (*RaceParticipant, error) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	if err := raceJoinChecks(r, member.MemberID); err != nil {
+		slog.Warn("unable to join the race", slog.String("guildID", r.GuildID), slog.String("memberID", member.MemberID), slog.Any("error", err))
+		return nil, err
+	}
+
+	currentRace := GetCurrentRace(r.GuildID)
+	if r != currentRace {
+		slog.Warn("current race has changed since addRaceParticipant was called", slog.String("guildID", r.GuildID))
+		return nil, errors.New("current race has changed")
+	}
+
 	participant := &RaceParticipant{
 		Member: member,
 		Racer:  getRaceAvatar(r),
 	}
 	member.TotalRaces++
-	r.mutex.Lock()
 	r.Racers = append(r.Racers, participant)
-	defer r.mutex.Unlock()
 
-	return participant
+	return participant, nil
 }
 
 // getRaceParticipant returns a racer for a given race. If the member isn't in the race, then
@@ -129,6 +144,7 @@ func (r *Race) addRaceParticipant(member *RaceMember) *RaceParticipant {
 func (r *Race) getRaceParticipant(memberID string) *RaceParticipant {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
+
 	for _, racer := range r.Racers {
 		if racer.Member.MemberID == memberID {
 			return racer
@@ -149,9 +165,6 @@ func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 
 // addBetter adds a better for the given race.
 func (r *Race) addBetter(better *RaceBetter) error {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
 	r.Betters = append(r.Betters, better)
 	slog.Debug("add better to current race",
 		slog.String("guildID", r.GuildID),
@@ -161,9 +174,9 @@ func (r *Race) addBetter(better *RaceBetter) error {
 	return nil
 }
 
-// RunRace runs a race, calculating the results of each leg of the race and the
+// runRace runs a race, calculating the results of each leg of the race and the
 // ultimate winners of the race.
-func (r *Race) RunRace(trackLength int) {
+func (r *Race) runRace(trackLength int) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -182,11 +195,6 @@ func (r *Race) RunRace(trackLength int) {
 	previousLeg := raceLeg
 
 	// Run the race until all racers cross the finish line
-	slog.Debug("starting race",
-		slog.String("guildID", r.GuildID),
-		slog.Int("numRacers", len(r.Racers)),
-		slog.Int("trackLength", trackLength),
-	)
 	turn := 0
 	stillRacing := true
 	for stillRacing {
@@ -200,7 +208,7 @@ func (r *Race) RunRace(trackLength int) {
 		// Run the new race leg
 		stillRacing = false
 		for _, previousPosition := range previousLeg.ParticipantPositions {
-			newPosition := Move(previousPosition, turn)
+			newPosition := moveRacer(previousPosition, turn)
 			newRaceLeg.ParticipantPositions = append(newRaceLeg.ParticipantPositions, newPosition)
 			if !newPosition.Finished {
 				stillRacing = true
@@ -212,27 +220,52 @@ func (r *Race) RunRace(trackLength int) {
 	}
 
 	calculateWinnings(r, previousLeg)
+
+	if len(r.Racers) <= 2 {
+		slog.Info("race finished",
+			slog.String("guildID", r.GuildID),
+			slog.Int("numRacers", len(r.Racers)),
+			slog.String("first", r.RaceResult.Win.Participant.Member.guildMember.Name),
+			slog.String("second", r.RaceResult.Place.Participant.Member.guildMember.Name),
+		)
+	} else {
+		slog.Info("race finished",
+			slog.String("guildID", r.GuildID),
+			slog.Int("numRacers", len(r.Racers)),
+			slog.String("first", r.RaceResult.Win.Participant.Member.guildMember.Name),
+			slog.String("second", r.RaceResult.Place.Participant.Member.guildMember.Name),
+			slog.String("third", r.RaceResult.Show.Participant.Member.guildMember.Name),
+		)
+	}
+	lastLeg := r.RaceLegs[len(r.RaceLegs)-1]
+	for i, position := range lastLeg.ParticipantPositions {
+		slog.Info("race result",
+			slog.String("guildID", r.GuildID),
+			slog.String("memberID", position.RaceParticipant.Member.MemberID),
+			slog.String("memberName", position.RaceParticipant.Member.guildMember.Name),
+			slog.Int("position", i+1),
+			slog.Float64("raceTime", position.Speed),
+		)
+	}
 }
 
 // End ends the current race.
 func (r *Race) End() {
-	raceLock.Lock()
-	defer raceLock.Unlock()
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
 	// The race runs if there are 2 or more racers. If that is the case, then reset the time the last
 	// successful race ran.
-	race := currentRaces[r.GuildID]
-	if race != nil && len(race.Racers) >= r.config.MinNumRacers {
+	if len(r.Racers) >= r.config.MinNumRacers {
+		raceLock.Lock()
 		lastRaceTimes[r.GuildID] = time.Now()
+		raceLock.Unlock()
 	}
 
 	delete(currentRaces, r.GuildID)
 
 	if r.RaceResult != nil && len(r.Racers) >= r.config.MinNumRacers {
-		slog.Info("processing race results",
-			slog.String("guildID", r.GuildID),
-			slog.Int("numRacers", len(r.Racers)),
-		)
+		slog.Debug("processing race results", slog.String("guildID", r.GuildID), slog.Int("numRacers", len(r.Racers)))
 		for _, racer := range r.Racers {
 			switch {
 			case r.RaceResult.Win != nil && racer.Member.MemberID == r.RaceResult.Win.Participant.Member.MemberID:
@@ -246,10 +279,7 @@ func (r *Race) End() {
 			}
 		}
 
-		slog.Info("processing race bets",
-			slog.String("guildID", r.GuildID),
-			slog.Int("numBetters", len(r.Betters)),
-		)
+		slog.Debug("processing race bets", slog.String("guildID", r.GuildID), slog.Int("numBetters", len(r.Betters)))
 		// Pay the winning bets
 		for _, better := range r.Betters {
 			if better.Winnings != 0 {
@@ -265,25 +295,22 @@ func (r *Race) End() {
 		memberIDs = append(memberIDs, racer.Member.MemberID)
 	}
 	stats.UpdateGameStats(r.GuildID, "race", memberIDs)
-
-	slog.Info("end race",
-		slog.String("guildID", r.GuildID),
-	)
 }
 
 // ResetRace resets a hung race for a given guild.
 func ResetRace(guildID string) {
+	raceLock.Lock()
+	defer raceLock.Unlock()
+
 	delete(currentRaces, guildID)
 	delete(lastRaceTimes, guildID)
-	slog.Info("reset race",
-		slog.String("guildID", guildID),
-	)
+	slog.Info("reset race", slog.String("guildID", guildID))
 }
 
-// getRaceAvatar returns a  random race avatar to be used by a race participant.
+// getRaceAvatar returns a random race avatar to be used by a race participant.
 func getRaceAvatar(race *Race) *Avatar {
 	if len(race.raceAvatars) == 0 {
-		race.raceAvatars = GetRaceAvatars(race.GuildID, race.config.Theme)
+		race.raceAvatars = getRaceAvatars(race.GuildID, race.config.Theme)
 	}
 
 	index := len(race.raceAvatars) - 1
@@ -293,8 +320,8 @@ func getRaceAvatar(race *Race) *Avatar {
 	return avatar
 }
 
-// Move returns the new race position for a particpant based on the previous position and the current turn.
-func Move(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantPosition {
+// moveRacer returns the new race position for a particpant based on the previous position and the current turn.
+func moveRacer(previousPosition *RaceParticipantPosition, turn int) *RaceParticipantPosition {
 	// Already done with the race
 	if previousPosition.Position <= 0 {
 		newPosition := &RaceParticipantPosition{
@@ -327,9 +354,7 @@ func raceStartChecks(guildID string) error {
 
 	race := currentRaces[guildID]
 	if race != nil {
-		slog.Debug("race already in progress",
-			slog.String("guildID", guildID),
-		)
+		slog.Debug("race already in progress", slog.String("guildID", guildID))
 		return ErrRaceAlreadyInProgress
 	}
 
@@ -351,21 +376,17 @@ func raceStartChecks(guildID string) error {
 // raceJoinChecks checks to see if a racer is able to join the race.
 func raceJoinChecks(race *Race, memberID string) error {
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		slog.Warn("race has started",
-			slog.String("guildID", race.GuildID),
-		)
+		slog.Debug("race has started", slog.String("guildID", race.GuildID))
 		return ErrRaceHasStarted
 	}
 
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		slog.Warn("betting has opened",
-			slog.String("guildID", race.GuildID),
-		)
+		slog.Debug("betting has opened", slog.String("guildID", race.GuildID))
 		return ErrBettingHasOpened
 	}
 
 	if len(race.Racers) >= race.config.MaxNumRacers {
-		slog.Warn("too many racers already joined",
+		slog.Debug("too many racers already joined",
 			slog.String("guildID", race.GuildID),
 			slog.Int("maxNumRacers", race.config.MaxNumRacers),
 			slog.Int("numRacers", len(race.Racers)),
@@ -382,19 +403,34 @@ func raceJoinChecks(race *Race, memberID string) error {
 	return nil
 }
 
+// placeBet processes a bet placed by a member on the race
+func placeBet(race *Race, better *RaceBetter) error {
+	race.mutex.Lock()
+	defer race.mutex.Unlock()
+
+	if err := better.Member.placeBet(race.config.BetAmount); err != nil {
+		return err
+	}
+
+	if err := race.addBetter(better); err != nil {
+		slog.Debug("failed to add better", slog.String("guildID", race.GuildID), slog.String("memberID", better.Member.MemberID), slog.Any("error", err))
+		return err
+	}
+	return nil
+}
+
 // raceBetChecks checks to see if a better is able to place a bet on the current race.
 func raceBetChecks(race *Race, memberID string) error {
+	race.mutex.Lock()
+	defer race.mutex.Unlock()
+
 	if time.Now().Before(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		slog.Warn("betting has opened",
-			slog.String("guildID", race.GuildID),
-		)
+		slog.Debug("betting has opened", slog.String("guildID", race.GuildID))
 		return ErrBettingNotOpened
 	}
 
 	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		slog.Warn("race has started",
-			slog.String("guildID", race.GuildID),
-		)
+		slog.Debug("race has started", slog.String("guildID", race.GuildID))
 		return ErrRaceHasStarted
 	}
 
@@ -411,6 +447,7 @@ func raceBetChecks(race *Race, memberID string) error {
 func calculateWinnings(race *Race, lastLeg *RaceLeg) {
 	source := rand.NewPCG(rand.Uint64(), rand.Uint64())
 	r := rand.New(source)
+
 	// sort the participants in the final race leg
 	sort.Slice(lastLeg.ParticipantPositions, func(i, j int) bool {
 		if lastLeg.ParticipantPositions[i].Speed == lastLeg.ParticipantPositions[j].Speed {

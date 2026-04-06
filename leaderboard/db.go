@@ -17,10 +17,7 @@ func readLeaderboard(guildID string) *Leaderboard {
 	var lb Leaderboard
 	err := db.FindOne(LeaderboardCollection, filter, &lb)
 	if err != nil {
-		slog.Debug("leaderboard not found in the database",
-			slog.String("guildID", guildID),
-			slog.Any("error", err),
-		)
+		slog.Debug("leaderboard not found in the database", "guildID", guildID, "error", err)
 		return nil
 	}
 
@@ -33,15 +30,10 @@ func writeLeaderboard(lb *Leaderboard) error {
 
 	err := db.UpdateOrInsert(LeaderboardCollection, filter, lb)
 	if err != nil {
-		slog.Error("unable to save leaderboard to the database",
-			slog.String("guildID", lb.GuildID),
-			slog.Any("error", err),
-		)
+		slog.Error("unable to save leaderboard to the database", "guildID", lb.GuildID, "error", err)
 		return err
 	}
-	slog.Debug("save leaderboard to the database",
-		slog.String("guildID", lb.GuildID),
-	)
+	slog.Debug("save leaderboard to the database", "guildID", lb.GuildID)
 
 	return nil
 }

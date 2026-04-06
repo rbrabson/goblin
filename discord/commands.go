@@ -291,7 +291,7 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				slog.Any("error", err),
 			)
 		}
-		slog.Info("user does not have permission",
+		slog.Warn("user does not have permission",
 			slog.String("userID", i.Member.User.ID),
 			slog.Bool("hasOwners", server.HasOwners()),
 			slog.Bool("isOwner", server.IsOwner(i.Member.User.ID)),

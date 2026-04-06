@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	ErrHeistInProgress     = errors.New("heist is already in progress")
+	ErrHeistInProgress     = errors.New("a heist is already in progress")
 	ErrAlreadyJoinedHieist = errors.New("you have already joined the heist")
-	ErrHeistAlreadyStarted = errors.New("heist has already started")
+	ErrHeistAlreadyStarted = errors.New("a heist has already started")
 )
 
 // ErrNotEnoughMembers is returned when there are not enough members to start a heist.
 type ErrNotEnoughMembers struct {
-	Theme Theme
+	Theme *Theme
 }
 
 // Error returns the error message for ErrNotEnoughMembers.

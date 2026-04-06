@@ -79,7 +79,7 @@ func (c *Mute) MuteChannel() {
 	)
 	err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, allowFlagsNoSend, denyFlagsNoSend)
 	if err != nil {
-		slog.Warn("failed to mute the channel",
+		slog.Error("failed to mute the channel",
 			slog.String("guildID", c.i.GuildID),
 			slog.String("channelID", c.i.ChannelID),
 			slog.Any("error", err),
@@ -101,7 +101,7 @@ func (c *Mute) UnmuteChannel() {
 	if c.everyoneID != "" {
 		err := c.s.ChannelPermissionSet(c.i.ChannelID, c.everyoneID, c.everyonePermissions.Type, c.everyonePermissions.Allow, c.everyonePermissions.Deny)
 		if err != nil {
-			slog.Warn("failed to unmute the channel",
+			slog.Error("failed to unmute the channel",
 				slog.String("guildID", c.i.GuildID),
 				slog.String("channelID", c.i.ChannelID),
 				slog.Any("error", err),

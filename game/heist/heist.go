@@ -34,16 +34,16 @@ const (
 
 // Heist is a heist that is being planned, is in progress, or has completed
 type Heist struct {
-	GuildID     string
-	Organizer   *HeistMember
-	Crew        []*HeistMember
-	StartTime   time.Time
-	State       HeistState
-	targets     []*Target
-	theme       *Theme
-	interaction *discordgo.InteractionCreate
-	config      *Config
-	mutex       sync.Mutex
+	GuildID      string
+	Organizer    *HeistMember
+	Crew         []*HeistMember
+	StartTime    time.Time
+	State        HeistState
+	interaction  *discordgo.InteractionCreate
+	config       *Config
+	mutex        sync.Mutex
+	goodMessages []*HeistMessage
+	badMessages  []*HeistMessage
 }
 
 // HeistResult are the results of a heist
@@ -84,40 +84,30 @@ func NewHeist(guildID string, memberID string) (*Heist, error) {
 		return nil, ErrHeistInProgress
 	}
 
-	theme := GetTheme(guildID)
-	organizer := getHeistMember(guildID, memberID)
+	config := GetConfig(guildID)
 	heist := &Heist{
-		GuildID:   guildID,
-		Organizer: organizer,
-		Crew:      make([]*HeistMember, 0, 10),
-		StartTime: time.Now(),
-		State:     Planning,
-		config:    GetConfig(guildID),
-		targets:   GetTargets(guildID, theme.Name),
-		theme:     theme,
-		mutex:     sync.Mutex{},
+		GuildID:      guildID,
+		Organizer:    getHeistMember(guildID, memberID),
+		Crew:         make([]*HeistMember, 0, 10),
+		StartTime:    time.Now(),
+		State:        Planning,
+		config:       config,
+		mutex:        sync.Mutex{},
+		goodMessages: make([]*HeistMessage, 0, len(config.Theme.EscapedMessages)),
+		badMessages:  make([]*HeistMessage, 0, len(config.Theme.ApprehendedMessages)+len(config.Theme.DiedMessages)),
 	}
-	heist.mutex.Lock()
-	defer heist.mutex.Unlock()
 
-	err := heistChecks(heist, organizer)
+	err := heistChecks(heist, heist.Organizer)
 	if err != nil {
-		slog.Debug("heist checks failed",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
+		slog.Debug("heist checks failed", slog.String("guildID", guildID), slog.String("memberID", memberID), slog.Any("error", err))
 		return nil, err
 	}
 
-	organizer.heist = heist
-	heist.Crew = append(heist.Crew, organizer)
+	heist.Organizer.heist = heist
+	heist.Crew = append(heist.Crew, heist.Organizer)
 	currentHeists[guildID] = heist
 
-	slog.Debug("create heist",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-	)
+	slog.Debug("create heist", slog.String("guildID", guildID), slog.String("memberID", memberID))
 
 	return heist, nil
 }
@@ -134,10 +124,7 @@ func (h *Heist) AddCrewMember(member *HeistMember) error {
 
 	member.heist = h
 	h.Crew = append(h.Crew, member)
-	slog.Debug("member joined heist",
-		slog.String("guildID", member.GuildID),
-		slog.String("memberID", member.MemberID),
-	)
+	slog.Debug("member joined heist", slog.String("guildID", member.GuildID), slog.String("memberID", member.MemberID))
 	return nil
 }
 
@@ -146,16 +133,13 @@ func (h *Heist) Start() (*HeistResult, error) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
 
-	h.State = InProgress
-
 	if len(h.Crew) < 2 {
-		slog.Error("not enough members to start heist",
-			slog.String("guildID", h.GuildID),
-		)
-		return nil, ErrNotEnoughMembers{*h.theme}
+		h.State = Cancelled
+		return nil, ErrNotEnoughMembers{h.config.Theme}
 	}
 
-	target := getTarget(h.targets, len(h.Crew))
+	h.State = InProgress
+	target := getTarget(h.config.Targets, len(h.Crew))
 
 	results := &HeistResult{
 		AllResults:  make([]*HeistMemberResult, 0, len(h.Crew)),
@@ -165,59 +149,17 @@ func (h *Heist) Start() (*HeistResult, error) {
 		heist:       h,
 		Target:      target,
 	}
-	goodResults := make([]*HeistMessage, 0, len(h.theme.EscapedMessages))
-	badResults := make([]*HeistMessage, 0, len(h.theme.ApprehendedMessages)+len(h.theme.DiedMessages))
-	goodResults = append(goodResults, h.theme.EscapedMessages...)
-	badResults = append(badResults, h.theme.ApprehendedMessages...)
-	badResults = append(badResults, h.theme.DiedMessages...)
 
 	successRate := calculateSuccessRate(h, target)
-
-	source := rand.NewPCG(rand.Uint64(), rand.Uint64())
-	r := rand.New(source)
 	for _, crewMember := range h.Crew {
 		guildMember := crewMember.guildMember
-		chance := r.IntN(100) + 1
-		slog.Debug("heist results",
-			slog.String("member", guildMember.Name),
-			slog.Int("chance", chance),
-			slog.Int("successRate", successRate),
-		)
+		heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
+
+		chance := rand.Float64()
 		if chance <= successRate {
-			index := r.IntN(len(goodResults))
-			goodResult := goodResults[index]
-			updatedResults := make([]*HeistMessage, 0, len(goodResults))
-			updatedResults = append(updatedResults, goodResults[:index]...)
-			goodResults = append(updatedResults, goodResults[index+1:]...)
-			if len(goodResults) == 0 {
-				goodResults = append(goodResults, h.theme.EscapedMessages...)
-			}
+			goodResult := h.getGoodResult()
+			bonus, msg := h.getBonusAmount(goodResult)
 
-			msg := goodResult.Message
-			bonus := goodResult.BonusAmount
-			if h.config.BoostEnabled && h.config.BoostPercentage > 0 {
-				multiplier := 1.0 + (h.config.BoostPercentage / 100.0)
-				bonus = int(float64(goodResult.BonusAmount) * multiplier)
-				slog.Debug("applying boost to bonus amount",
-					slog.String("guildID", h.GuildID),
-					slog.String("memberID", guildMember.MemberID),
-					slog.Int("originalBonus", goodResult.BonusAmount),
-					slog.Float64("boostPercentage", h.config.BoostPercentage),
-					slog.Int("multiplier", int(multiplier*100)),
-					slog.Int("newBonus", bonus),
-				)
-
-				// Update the message to reflect the new bonus amount
-				strs := strings.Split(msg, "+")
-				if len(strs) > 1 {
-					strs2 := strings.Split(strings.TrimSpace(strs[1]), " ")
-					if len(strs2) > 1 {
-						p := message.NewPrinter(language.AmericanEnglish)
-						msg = p.Sprintf("%s +%d %s", strings.TrimSpace(strs[0]), bonus, strings.TrimSpace(strs2[1]))
-					}
-				}
-			}
-			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
 			result := &HeistMemberResult{
 				Player:       heistMember,
 				Status:       Free,
@@ -228,45 +170,98 @@ func (h *Heist) Start() (*HeistResult, error) {
 			results.Escaped = append(results.Escaped, result)
 			results.AllResults = append(results.AllResults, result)
 		} else {
-			index := r.IntN(len(badResults))
-			badResult := badResults[index]
-			updatedResults := make([]*HeistMessage, 0, len(badResults))
-			updatedResults = append(updatedResults, badResults[:index]...)
-			badResults = append(updatedResults, badResults[index+1:]...)
-			if len(badResults) == 0 {
-				badResults = append(badResults, h.theme.ApprehendedMessages...)
-				badResults = append(badResults, h.theme.DiedMessages...)
-			}
+			badResult := h.getBadResult()
 
-			heistMember := getHeistMember(guildMember.GuildID, guildMember.MemberID)
 			result := &HeistMemberResult{
 				Player:       heistMember,
 				Status:       badResult.Result,
 				Message:      badResult.Message,
-				heist:        h,
 				BonusCredits: 0,
+				heist:        h,
 			}
 			if result.Status == Dead {
 				results.Dead = append(results.Dead, result)
-				results.AllResults = append(results.AllResults, result)
 			} else {
 				results.Apprehended = append(results.Apprehended, result)
-				results.AllResults = append(results.AllResults, result)
 			}
+			results.AllResults = append(results.AllResults, result)
 		}
 	}
 
 	// If at least one member escaped, then calculate the credits to distributed.
-	slog.Debug("heist results",
-		slog.Int("escaped", len(results.Escaped)),
-		slog.Int("apprehended", len(results.Apprehended)),
-		slog.Int("died", len(results.Dead)),
-	)
 	if len(results.Escaped) > 0 {
 		calculateCredits(results)
 	}
 
+	slog.Info("heist results",
+		slog.String("guildID", h.GuildID),
+		slog.Int("escaped", len(results.Escaped)),
+		slog.Int("apprehended", len(results.Apprehended)),
+		slog.Int("died", len(results.Dead)),
+	)
+	for _, result := range results.AllResults {
+		slog.Info("heist member result",
+			slog.String("member", result.Player.guildMember.Name),
+			slog.Any("status", result.Status),
+			slog.Int("payment", result.StolenCredits),
+			slog.String("message", result.Message),
+		)
+	}
+
 	return results, nil
+}
+
+// getGoodResult returns a random good result message, removing it from the list of available good messages
+// to ensure that each message is only used once per heist.
+func (h *Heist) getGoodResult() *HeistMessage {
+	if len(h.goodMessages) == 0 {
+		h.goodMessages = append(h.goodMessages, h.config.Theme.EscapedMessages...)
+	}
+	index := rand.IntN(len(h.goodMessages))
+	message := h.goodMessages[index]
+
+	h.goodMessages = append(h.goodMessages[:index], h.goodMessages[index+1:]...)
+
+	return message
+}
+
+// getBadResult returns a random bad result message, removing it from the list of available bad messages
+// to ensure that each message is only used once per heist.
+func (h *Heist) getBadResult() *HeistMessage {
+	if len(h.badMessages) == 0 {
+		h.badMessages = append(h.badMessages, h.config.Theme.ApprehendedMessages...)
+		h.badMessages = append(h.badMessages, h.config.Theme.DiedMessages...)
+	}
+	index := rand.IntN(len(h.badMessages))
+	message := h.badMessages[index]
+
+	h.badMessages = append(h.badMessages[:index], h.badMessages[index+1:]...)
+
+	return message
+}
+
+// getBonusAmount calculates the bonus amount for a given good message, based on the heist's boost configuration.
+// It returns the bonus amount and the updated message to reflect the new bonus amount. If there is no boost in
+// effect, it simply returns the original bonus amount and message.
+func (h *Heist) getBonusAmount(goodMessage *HeistMessage) (int, string) {
+	if !h.config.BoostEnabled || h.config.BoostPercentage <= 0 {
+		return goodMessage.BonusAmount, goodMessage.Message
+	}
+
+	msg := goodMessage.Message
+	multiplier := 1.0 + (h.config.BoostPercentage / 100.0)
+	bonus := int(float64(goodMessage.BonusAmount) * multiplier)
+
+	// Update the message to reflect the new bonus amount
+	strs := strings.Split(msg, "+")
+	if len(strs) > 1 {
+		strs2 := strings.Split(strings.TrimSpace(strs[1]), " ")
+		if len(strs2) > 1 {
+			p := message.NewPrinter(language.AmericanEnglish)
+			msg = p.Sprintf("%s +%d %s", strings.TrimSpace(strs[0]), bonus, strings.TrimSpace(strs2[1]))
+		}
+	}
+	return bonus, msg
 }
 
 // End ends the current heist, allowing for the cleanup of the heist.
@@ -275,18 +270,14 @@ func (h *Heist) End() {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
 
-	heistCancelled := len(h.Crew) <= 1
+	heistCancelled := len(h.Crew) < 2
 	if heistCancelled {
 		h.State = Cancelled
-		slog.Debug("heist cancelled",
-			slog.String("guildID", h.GuildID),
-		)
+		slog.Debug("heist cancelled", slog.String("guildID", h.GuildID))
 	} else {
 		h.State = Completed
 		alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
-		slog.Debug("heist ended",
-			slog.String("guildID", h.GuildID),
-		)
+		slog.Debug("heist ended", slog.String("guildID", h.GuildID))
 	}
 
 	heistLock.Lock()
@@ -310,10 +301,7 @@ func (h *Heist) Cancel() {
 // heistChecks returns an error, with appropriate message, if a heist cannot be started.
 func heistChecks(h *Heist, member *HeistMember) error {
 	if h.State != Planning {
-		slog.Debug("heist already started or completed",
-			slog.String("guildID", h.GuildID),
-			slog.String("state", string(h.State)),
-		)
+		slog.Debug("heist already started", slog.String("guildID", h.GuildID), slog.String("state", string(h.State)))
 		return ErrHeistAlreadyStarted
 	}
 
@@ -322,34 +310,31 @@ func heistChecks(h *Heist, member *HeistMember) error {
 	if slices.ContainsFunc(h.Crew, func(m *HeistMember) bool {
 		return m.MemberID == member.MemberID
 	}) {
-		slog.Debug("member already joined heist",
-			slog.String("guildID", h.GuildID),
-			slog.String("memberID", member.MemberID),
-		)
+		slog.Debug("member already joined heist", slog.String("guildID", h.GuildID), slog.String("memberID", member.MemberID))
 		return ErrAlreadyJoinedHieist
 	}
 
 	account := bank.GetAccount(h.GuildID, member.MemberID)
 
 	if account.CurrentBalance < h.config.HeistCost {
-		return &ErrNotEnoughCredits{h.config.HeistCost}
+		return ErrNotEnoughCredits{h.config.HeistCost}
 	}
 
 	alertTime := alertTimes[h.GuildID]
 	if alertTime.After(time.Now()) {
 		remainingTime := time.Until(alertTime)
-		return &ErrPoliceOnAlert{h.theme.Police, remainingTime}
+		return ErrPoliceOnAlert{h.config.Theme.Police, remainingTime}
 	}
 
 	if member.Status == Apprehended {
 		remainingTime := member.RemainingJailTime()
-		err := &ErrInJail{h.theme.Jail, h.theme.Sentence, remainingTime, h.theme.Bail, member.BailCost}
+		err := ErrInJail{h.config.Theme.Jail, h.config.Theme.Sentence, remainingTime, h.config.Theme.Bail, member.BailCost}
 		return err
 	}
 
 	if member.Status == Dead {
 		remainingTime := member.RemainingDeathTime()
-		err := &ErrDead{remainingTime}
+		err := ErrDead{remainingTime}
 		return err
 	}
 
@@ -358,46 +343,35 @@ func heistChecks(h *Heist, member *HeistMember) error {
 
 // calculateSuccessRate returns the liklihood of a successful raid for each
 // member of the heist crew.
-func calculateSuccessRate(heist *Heist, target *Target) int {
+func calculateSuccessRate(heist *Heist, target *Target) float64 {
 	bonus := calculateBonusRate(heist, target)
-	targetSuccess := int(math.Round(target.Success))
+	targetSuccess := target.Success / 100.0
 	successChance := targetSuccess + bonus
-	slog.Debug("success rate",
-		slog.Int("bunusRate", bonus),
-		slog.Int("targetSuccess", targetSuccess),
-		slog.Int("successChance", successChance),
-	)
 	return successChance
 }
 
 // calculateBonusRate calculates the bonus amount to add to the success rate
 // for a heist. The closer you are to the maximum crew size, the larger
 // the bonus amount.
-func calculateBonusRate(heist *Heist, target *Target) int {
-	percent := 100 * len(heist.Crew) / target.CrewSize
-	slog.Debug("percentage for calculating success bonus",
-		slog.Int("crewSize", len(heist.Crew)),
-		slog.Int("targetCrewSize", target.CrewSize),
-		slog.Int("percent", percent),
-	)
-	if percent <= 20 {
-		return 0
+func calculateBonusRate(heist *Heist, target *Target) float64 {
+	percent := float64(len(heist.Crew)) / float64(target.CrewSize)
+	switch {
+	case percent <= 0.2:
+		return 0.0
+	case percent <= 0.4:
+		return 0.01
+	case percent <= 0.6:
+		return 0.03
+	case percent <= 0.8:
+		return 0.04
+	default:
+		return 0.05
 	}
-	if percent <= 40 {
-		return 1
-	}
-	if percent <= 60 {
-		return 3
-	}
-	if percent <= 80 {
-		return 4
-	}
-	return 5
 }
 
 // calculateCredits determines the number of credits stolen by each surviving crew member.
 func calculateCredits(results *HeistResult) {
-	// Take 3/4 of the amount of the vault, and distribute it among those who survived.
+	// Take 3/4 of the amount of the vault, and distribute it among those who survived (escaped or apprehended)
 	numEscaped := len(results.Escaped)
 	numApprehended := len(results.Apprehended)
 	numSurvived := numEscaped + numApprehended
@@ -406,53 +380,24 @@ func calculateCredits(results *HeistResult) {
 	config := results.heist.config
 	if config.BoostEnabled && config.BoostPercentage > 0 {
 		multiplier := 1.0 + (config.BoostPercentage / 100.0)
-		oldStolenPerSurivor := stolenPerSurivor
 		stolenPerSurivor = int(float64(stolenPerSurivor) * multiplier)
-		slog.Debug("applying boost to stolen amount",
-			slog.String("guildID", results.Target.GuildID),
-			slog.String("target", results.Target.Name),
-			slog.Int("originalStolenPerSurvivor", oldStolenPerSurivor),
-			slog.Float64("boostPercentage", config.BoostPercentage),
-			slog.Int("multiplier", int(multiplier*100)),
-			slog.Int("newStolenPerSurvivor", stolenPerSurivor),
-		)
 	}
-	totalStolen := numSurvived * stolenPerSurivor
-	if totalStolen > results.Target.Vault {
-		slog.Warn("total stolen exceeds vault amount",
-			slog.String("guildID", results.Target.GuildID),
-			slog.String("target", results.Target.Name),
-			slog.Int("vault", results.Target.Vault),
-			slog.Int("totalStolen", totalStolen),
-			slog.Int("numSurvived", numSurvived),
-			slog.Int("stolenPerSurvivor", stolenPerSurivor),
-		)
-		totalStolen = results.Target.Vault
-	}
+	totalStolen := min(numSurvived*stolenPerSurivor, results.Target.Vault)
 
 	// Get a "base amount" of loot stolen. If you are apprehended, this is what you get. If you escaped you get 2x as much.
 	baseStolen := totalStolen / (2*numEscaped + numApprehended)
-	slog.Debug("looted",
-		slog.String("target", results.Target.Name),
-		slog.Int("vault", results.Target.Vault),
-		slog.Int("survivors", numSurvived),
-		slog.Int("base", baseStolen),
-	)
+	stolenPerEscaped := 2 * baseStolen
+	stolenPerApprehended := baseStolen
 
 	results.TotalStolen = 0
 	for _, heistMemberResult := range results.Escaped {
-		heistMemberResult.StolenCredits = 2 * baseStolen
+		heistMemberResult.StolenCredits = stolenPerEscaped
 		results.TotalStolen += heistMemberResult.StolenCredits
 	}
 	for _, heistMemberResult := range results.Apprehended {
-		heistMemberResult.StolenCredits = baseStolen
+		heistMemberResult.StolenCredits = stolenPerApprehended
 		results.TotalStolen += heistMemberResult.StolenCredits
 	}
-	slog.Debug("total stolen",
-		slog.String("guildID", results.Target.GuildID),
-		slog.String("target", results.Target.Name),
-		slog.Int("totalStolen", results.TotalStolen),
-	)
 }
 
 // String returns a string representation of the Heist.

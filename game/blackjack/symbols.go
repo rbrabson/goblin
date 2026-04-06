@@ -44,7 +44,7 @@ func readSymbolsFromFile() Symbols {
 		return nil
 	}
 
-	slog.Info("loaded symbols from file",
+	slog.Debug("loaded symbols from file",
 		slog.String("symbolsFile", blackjackTheme),
 	)
 
