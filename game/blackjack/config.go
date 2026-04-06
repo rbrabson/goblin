@@ -36,13 +36,13 @@ type Config struct {
 func (c *Config) String() string {
 	var sb strings.Builder
 	sb.WriteString("Config{")
-	sb.WriteString(fmt.Sprintf("ID: %s, ", c.ID.Hex()))
-	sb.WriteString(fmt.Sprintf("GuildID: %s, ", c.GuildID))
-	sb.WriteString(fmt.Sprintf("MaxPlayers: %d, ", c.MaxPlayers))
-	sb.WriteString(fmt.Sprintf("Decks: %d, ", c.Decks))
-	sb.WriteString(fmt.Sprintf("BetAmount: %d, ", c.BetAmount))
-	sb.WriteString(fmt.Sprintf("DelayBetweenGames: %v, ", c.DelayBetweenGames))
-	sb.WriteString(fmt.Sprintf("WaitForPlayers: %v", c.WaitForPlayers))
+	fmt.Fprintf(&sb, "ID: %s, ", c.ID.Hex())
+	fmt.Fprintf(&sb, "GuildID: %s, ", c.GuildID)
+	fmt.Fprintf(&sb, "MaxPlayers: %d, ", c.MaxPlayers)
+	fmt.Fprintf(&sb, "Decks: %d, ", c.Decks)
+	fmt.Fprintf(&sb, "BetAmount: %d, ", c.BetAmount)
+	fmt.Fprintf(&sb, "DelayBetweenGames: %v, ", c.DelayBetweenGames)
+	fmt.Fprintf(&sb, "WaitForPlayers: %v", c.WaitForPlayers)
 	sb.WriteString("}")
 	return sb.String()
 }
