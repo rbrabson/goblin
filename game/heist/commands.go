@@ -3,6 +3,7 @@ package heist
 import (
 	"fmt"
 	"log/slog"
+	"math"
 	"strings"
 	"time"
 
@@ -164,6 +165,19 @@ var (
 							},
 						},
 						{
+							Name:        "vault-recover",
+							Description: "Sets the percentage of the vault to recover each minute.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionInteger,
+									Name:        "percent",
+									Description: "The percentage of the vault to recover each minute.",
+									Required:    true,
+								},
+							},
+						},
+						{
 							Name:        "wait",
 							Description: "Sets how long players can gather others for a heist.",
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -273,6 +287,8 @@ func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		configBoost(s, i)
 	case "death":
 		configDeath(s, i)
+	case "vault-recover":
+		configVaultRecover(s, i)
 	case "wait":
 		configWait(s, i)
 	case "info":
@@ -1011,6 +1027,19 @@ func configDeath(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	writeConfig(config)
 }
 
+// configVaultRecover sets the percentage of the vault that is recovered after a heist.
+func configVaultRecover(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := GetConfig(i.GuildID)
+	options := i.ApplicationCommandData().Options[0].Options[0].Options
+	vaultRecoverPercent := options[0].IntValue()
+	config.VaultRecoverPercentage = float64(vaultRecoverPercent) / 100.0
+
+	p := message.NewPrinter(language.AmericanEnglish)
+	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Vault recover percentage set to %d", vaultRecoverPercent))).Send(s, i.Interaction)
+
+	writeConfig(config)
+}
+
 // configWait sets how long players wait for others to join the heist.
 func configWait(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := GetConfig(i.GuildID)
@@ -1063,6 +1092,11 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "sentence",
 				Value:  fmt.Sprintf("%.f", config.SentenceBase.Seconds()),
+				Inline: true,
+			},
+			{
+				Name:   "vault recover",
+				Value:  fmt.Sprintf("%d%%", int(math.Round(config.VaultRecoverPercentage*100))),
 				Inline: true,
 			},
 			{
