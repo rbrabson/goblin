@@ -170,9 +170,6 @@ func sendHelpMessages(s *discordgo.Session, i *discordgo.InteractionCreate, titl
 		if len(msg) == 0 {
 			continue
 		}
-		slog.Error("******",
-			slog.Any("msg", msg),
-		)
 		name := msg[0]
 		var value string
 		if len(msg) > 1 {
