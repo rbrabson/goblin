@@ -11,6 +11,7 @@ import (
 	"github.com/rbrabson/disgomsg"
 	page "github.com/rbrabson/disgopage"
 	"github.com/rbrabson/goblin/guild"
+	"github.com/rbrabson/goblin/internal/log"
 	"github.com/rbrabson/goblin/internal/unicode"
 )
 
@@ -132,6 +133,37 @@ var (
 							Name:        "list",
 							Description: "Lists the admins for this server.",
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
+						},
+					},
+				},
+				{
+					Name:        "log",
+					Description: "Sets the logging level for the server.",
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Name:        "level",
+							Description: "The logging level to set for the server.",
+							Type:        discordgo.ApplicationCommandOptionString,
+							Required:    true,
+							Choices: []*discordgo.ApplicationCommandOptionChoice{
+								{
+									Name:  "debug",
+									Value: "debug",
+								},
+								{
+									Name:  "info",
+									Value: "info",
+								},
+								{
+									Name:  "warn",
+									Value: "warn",
+								},
+								{
+									Name:  "error",
+									Value: "error",
+								},
+							},
 						},
 					},
 				},
@@ -313,6 +345,8 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		manageOwners(s, i)
 	case "admin":
 		manageAdmins(s, i)
+	case "log":
+		setLogLevel(s, i)
 	default:
 		slog.Error("unknown subcommand",
 			slog.String("subCommand", subCommand.Name),
@@ -659,4 +693,14 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			)
 		}
 	}
+}
+
+// setLogLevel sets the logging level for the server.
+func setLogLevel(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	option := i.ApplicationCommandData().Options[0]
+	level := option.Options[0].StringValue()
+	log.SetLevel(level)
+
+	disgomsg.NewResponse(disgomsg.WithContent("Set log level to "+level+".")).Send(s, i.Interaction)
+	slog.Info("set log level", slog.String("level", level))
 }
