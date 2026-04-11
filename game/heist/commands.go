@@ -416,7 +416,7 @@ func waitForMembersToJoin(s *discordgo.Session, heist *Heist) {
 		slog.Time("startTime", startTime),
 	)
 
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 	for {
 		heistMessage(s, heist)
