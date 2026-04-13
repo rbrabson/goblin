@@ -146,17 +146,19 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	race.setState(RaceWaitingForBets)
 	raceMessage(s, race, "betting")
 	defer removeBetButtons(race)
 	slog.Info("waiting for bets", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)))
 	waitForBetsToBePlaced(s, race)
 
+	race.setState(RaceInProgress)
 	raceMessage(s, race, "started")
 	slog.Info("race starting", slog.String("guildID", i.GuildID), slog.Int("racers", len(race.Racers)), slog.Int("betsPlaced", len(race.Betters)))
-
 	race.runRace(len([]rune(race.config.Track)))
 	sendRaceLegs(s, race)
 
+	race.setState(RaceFinished)
 	raceMessage(s, race, "ended")
 	slog.Info("race ended", slog.String("guildID", i.GuildID))
 

@@ -12,6 +12,13 @@ import (
 	"github.com/rbrabson/goblin/stats"
 )
 
+const (
+	RaceWaitingForRacers = iota
+	RaceWaitingForBets
+	RaceInProgress
+	RaceFinished
+)
+
 var (
 	lastRaceTimes = make(map[string]time.Time)
 	currentRaces  = make(map[string]*Race)
@@ -28,6 +35,7 @@ type Race struct {
 	RaceLegs      []*RaceLeg                   // The list of legs in the race
 	RaceResult    *RaceResult                  // The results of the race
 	RaceStartTime time.Time                    // The time at which the race is started (first created)
+	state         int                          // The state of the race
 	raceAvatars   []*Avatar                    // The avatars of the racers
 	interaction   *discordgo.InteractionCreate // Interaction used in sending message updates
 	config        *Config                      // Race configuration (avoids having to read from the database)
@@ -102,6 +110,7 @@ func CreateNewRace(guildID string) (*Race, error) {
 		Betters:       make([]*RaceBetter, 0, 10),
 		RaceStartTime: time.Now(),
 		RaceResult:    &RaceResult{},
+		state:         RaceWaitingForRacers,
 		raceAvatars:   getRaceAvatars(guildID, config.Theme),
 		interaction:   nil,
 		config:        config,
@@ -110,6 +119,14 @@ func CreateNewRace(guildID string) (*Race, error) {
 	currentRaces[guildID] = race
 
 	return race, nil
+}
+
+// Set the race state
+func (r *Race) setState(state int) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	r.state = state
 }
 
 // addRaceParticiapnt returns a new race participant for a member in the race. The race
@@ -374,22 +391,18 @@ func raceStartChecks(guildID string) error {
 
 // raceJoinChecks checks to see if a racer is able to join the race.
 func raceJoinChecks(race *Race, memberID string) error {
-	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		slog.Debug("race has started", slog.String("guildID", race.GuildID))
-		return ErrRaceHasStarted
-	}
-
-	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart)) {
+	if race.state == RaceWaitingForBets {
 		slog.Debug("betting has opened", slog.String("guildID", race.GuildID))
 		return ErrBettingHasOpened
 	}
 
+	if race.state > RaceWaitingForBets {
+		slog.Debug("race has started", slog.String("guildID", race.GuildID))
+		return ErrRaceHasStarted
+	}
+
 	if len(race.Racers) >= race.config.MaxNumRacers {
-		slog.Debug("too many racers already joined",
-			slog.String("guildID", race.GuildID),
-			slog.Int("maxNumRacers", race.config.MaxNumRacers),
-			slog.Int("numRacers", len(race.Racers)),
-		)
+		slog.Debug("too many racers already joined", slog.String("guildID", race.GuildID), slog.Int("maxNumRacers", race.config.MaxNumRacers), slog.Int("numRacers", len(race.Racers)))
 		return ErrRaceAlreadyFull
 	}
 
@@ -423,13 +436,13 @@ func raceBetChecks(race *Race, memberID string) error {
 	race.mutex.Lock()
 	defer race.mutex.Unlock()
 
-	if time.Now().Before(race.RaceStartTime.Add(race.config.WaitToStart)) {
-		slog.Debug("betting has opened", slog.String("guildID", race.GuildID))
+	if race.state < RaceWaitingForBets {
+		slog.Debug("betting has not opened yet", slog.String("guildID", race.GuildID))
 		return ErrBettingNotOpened
 	}
 
-	if time.Now().After(race.RaceStartTime.Add(race.config.WaitToStart + race.config.WaitForBets)) {
-		slog.Debug("race has started", slog.String("guildID", race.GuildID))
+	if race.state > RaceWaitingForBets {
+		slog.Debug("race has started, so not accepting bets", slog.String("guildID", race.GuildID))
 		return ErrRaceHasStarted
 	}
 
