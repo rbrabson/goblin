@@ -167,7 +167,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // to taking bets
 func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 	memberJoinTime := time.Now().Add(race.config.WaitToStart)
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	raceMessage(s, race, "update")
@@ -176,13 +176,16 @@ func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 		if time.Until(memberJoinTime) <= 0 {
 			break
 		}
+		if len(race.raceAvatars) >= race.config.MaxNumRacers {
+			break
+		}
 	}
 }
 
 // waitForBetsToBePlaced waits until bets are placed before starting the race.
 func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
 	betEndTime := time.Now().Add(race.config.WaitForBets)
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	raceMessage(s, race, "betting")

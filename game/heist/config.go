@@ -12,30 +12,33 @@ import (
 )
 
 const (
-	BailBase     = 250
-	CrewOutput   = "None"
-	DeathTimer   = 45 * time.Second
-	HeistCost    = 1000
-	PoliceAlert  = 60 * time.Second
-	SentenceBase = 45 * time.Second
-	WaitTime     = 60 * time.Second
+	BailBase                   = 250
+	CrewOutput                 = "None"
+	DeathTimer                 = 45 * time.Second
+	HeistCost                  = 1000
+	PoliceAlert                = 60 * time.Second
+	SentenceBase               = 45 * time.Second
+	WaitTime                   = 60 * time.Second
+	DefaultVaultRecoverPercent = 0.04
 )
 
 // Config is the configuration data for new heists
 type Config struct {
-	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID         string             `json:"guild_id" bson:"guild_id"`
-	BailBase        int                `json:"bail_base" bson:"bail_base"`
-	BoostPercentage float64            `json:"boost_percentage" bson:"boost_percentage"`
-	BoostEnabled    bool               `json:"boost_enabled" bson:"boost_enabled"`
-	CrewOutput      string             `json:"crew_output" bson:"crew_output"`
-	DeathTimer      time.Duration      `json:"death_timer" bson:"death_timer"`
-	HeistCost       int                `json:"heist_cost" bson:"heist_cost"`
-	PoliceAlert     time.Duration      `json:"police_alert" bson:"police_alert"`
-	SentenceBase    time.Duration      `json:"sentence_base" bson:"sentence_base"`
-	WaitTime        time.Duration      `json:"wait_time" bson:"wait_time"`
-	Theme           *Theme             `json:"-" bson:"-"`
-	Targets         []*Target          `json:"-" bson:"-"`
+	ID                 primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID            string             `json:"guild_id" bson:"guild_id"`
+	BailBase           int                `json:"bail_base" bson:"bail_base"`
+	BoostPercentage    float64            `json:"boost_percentage" bson:"boost_percentage"`
+	BoostEnabled       bool               `json:"boost_enabled" bson:"boost_enabled"`
+	CrewOutput         string             `json:"crew_output" bson:"crew_output"`
+	DeathTimer         time.Duration      `json:"death_timer" bson:"death_timer"`
+	HeistCost          int                `json:"heist_cost" bson:"heist_cost"`
+	PoliceAlert        time.Duration      `json:"police_alert" bson:"police_alert"`
+	SentenceBase       time.Duration      `json:"sentence_base" bson:"sentence_base"`
+	BaseVaultRecovery  float64            `json:"base_vault_recovery" bson:"base_vault_recovery"`
+	BoostVaultRecovery float64            `json:"boost_vault_recovery" bson:"boost_vault_recovery"`
+	WaitTime           time.Duration      `json:"wait_time" bson:"wait_time"`
+	Theme              *Theme             `json:"-" bson:"-"`
+	Targets            []*Target          `json:"-" bson:"-"`
 }
 
 // GetConfig retrieves the heist configuration for the specified guild. If
@@ -44,6 +47,11 @@ func GetConfig(guildID string) *Config {
 	config := readConfig(guildID)
 	if config == nil {
 		config = readConfigFromFile(guildID)
+	}
+	if config.BoostVaultRecovery == 0 || config.BaseVaultRecovery == 0 {
+		config.BaseVaultRecovery = 0.04
+		config.BoostVaultRecovery = 0.08
+		writeConfig(config)
 	}
 	config.Theme = GetTheme(guildID)
 	config.Targets = GetTargets(guildID, config.Theme.Name)

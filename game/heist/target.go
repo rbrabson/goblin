@@ -13,10 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const (
-	VaultRecoverPercent = 0.04 // Percentage of valuts total that is recovered every update
-)
-
 // Target is a target of a heist.
 type Target struct {
 	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
@@ -165,9 +161,20 @@ func vaultUpdater() {
 	// Update the vaults once a minute forever
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
+
+	var config *Config
 	for range ticker.C {
 		for _, target := range getAllTargets(filter) {
-			recoverAmount := int(float64(target.VaultMax) * VaultRecoverPercent)
+			if config == nil || config.GuildID != target.GuildID {
+				config = GetConfig(target.GuildID)
+			}
+			var recoverPercent float64
+			if config.BoostEnabled {
+				recoverPercent = config.BoostVaultRecovery
+			} else {
+				recoverPercent = config.BaseVaultRecovery
+			}
+			recoverAmount := int(float64(target.VaultMax) * recoverPercent)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
 			slog.Debug("vault updater",
 				slog.String("guildID", target.GuildID),

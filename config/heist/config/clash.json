@@ -7,5 +7,6 @@
   "heist_cost": 1000,
   "police_alert": 60000000000,
   "sentence_base": 45000000000,
+  "vault_recover_percentage": 0.04,
   "wait_time": 60000000000
 }

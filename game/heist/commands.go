@@ -3,6 +3,7 @@ package heist
 import (
 	"fmt"
 	"log/slog"
+	"math"
 	"strings"
 	"time"
 
@@ -164,6 +165,19 @@ var (
 							},
 						},
 						{
+							Name:        "boost-vault-recovery",
+							Description: "Sets the percentage to multiply the vault recovery percent by when boosts are enabled.",
+							Type:        discordgo.ApplicationCommandOptionSubCommand,
+							Options: []*discordgo.ApplicationCommandOption{
+								{
+									Type:        discordgo.ApplicationCommandOptionInteger,
+									Name:        "percent",
+									Description: "The percentage to multiply the vault recovery percent by when boosts are enabled.",
+									Required:    true,
+								},
+							},
+						},
+						{
 							Name:        "wait",
 							Description: "Sets how long players can gather others for a heist.",
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -273,6 +287,8 @@ func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		configBoost(s, i)
 	case "death":
 		configDeath(s, i)
+	case "boost-vault-recovery":
+		configBoostVaultRecovery(s, i)
 	case "wait":
 		configWait(s, i)
 	case "info":
@@ -400,7 +416,7 @@ func waitForMembersToJoin(s *discordgo.Session, heist *Heist) {
 		slog.Time("startTime", startTime),
 	)
 
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 	for {
 		heistMessage(s, heist)
@@ -1011,6 +1027,19 @@ func configDeath(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	writeConfig(config)
 }
 
+// configBoostVaultRecovery sets the percentage of the vault that is recovered every minute when boosts are enabled.
+func configBoostVaultRecovery(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := GetConfig(i.GuildID)
+	options := i.ApplicationCommandData().Options[0].Options[0].Options
+	boostVaultRecovery := options[0].IntValue()
+	config.BoostVaultRecovery = float64(boostVaultRecovery) / 100.0
+
+	p := message.NewPrinter(language.AmericanEnglish)
+	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Vault recovery boost set to %d", boostVaultRecovery))).Send(s, i.Interaction)
+
+	writeConfig(config)
+}
+
 // configWait sets how long players wait for others to join the heist.
 func configWait(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := GetConfig(i.GuildID)
@@ -1063,6 +1092,11 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "sentence",
 				Value:  fmt.Sprintf("%.f", config.SentenceBase.Seconds()),
+				Inline: true,
+			},
+			{
+				Name:   "boost vault recovery",
+				Value:  fmt.Sprintf("%d%%", int(math.Round(config.BoostVaultRecovery*100))),
 				Inline: true,
 			},
 			{
