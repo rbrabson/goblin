@@ -127,6 +127,7 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToLower(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
+	race.setState(RaceWaitingForRacers)
 	defer race.End()
 	slog.Info("race created", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
 
