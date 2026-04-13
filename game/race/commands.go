@@ -176,6 +176,9 @@ func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 		if time.Until(memberJoinTime) <= 0 {
 			break
 		}
+		if len(race.raceAvatars) >= race.config.MaxNumRacers {
+			break
+		}
 	}
 }
 

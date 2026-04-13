@@ -168,7 +168,13 @@ func vaultUpdater() {
 			if config == nil || config.GuildID != target.GuildID {
 				config = GetConfig(target.GuildID)
 			}
-			recoverAmount := int(float64(target.VaultMax) * config.VaultRecoverPercentage)
+			var recoverPercent float64
+			if config.BoostEnabled {
+				recoverPercent = config.BoostVaultRecovery
+			} else {
+				recoverPercent = config.BaseVaultRecovery
+			}
+			recoverAmount := int(float64(target.VaultMax) * recoverPercent)
 			newVaultAmount := min(target.Vault+recoverAmount, target.VaultMax)
 			slog.Debug("vault updater",
 				slog.String("guildID", target.GuildID),

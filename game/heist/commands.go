@@ -165,14 +165,14 @@ var (
 							},
 						},
 						{
-							Name:        "vault-recover",
-							Description: "Sets the percentage of the vault to recover each minute.",
+							Name:        "boost-vault-recovery",
+							Description: "Sets the percentage to multiply the vault recovery percent by when boosts are enabled.",
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
 							Options: []*discordgo.ApplicationCommandOption{
 								{
 									Type:        discordgo.ApplicationCommandOptionInteger,
 									Name:        "percent",
-									Description: "The percentage of the vault to recover each minute.",
+									Description: "The percentage to multiply the vault recovery percent by when boosts are enabled.",
 									Required:    true,
 								},
 							},
@@ -287,8 +287,8 @@ func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		configBoost(s, i)
 	case "death":
 		configDeath(s, i)
-	case "vault-recover":
-		configVaultRecover(s, i)
+	case "boost-vault-recovery":
+		configBoostVaultRecovery(s, i)
 	case "wait":
 		configWait(s, i)
 	case "info":
@@ -1027,15 +1027,15 @@ func configDeath(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	writeConfig(config)
 }
 
-// configVaultRecover sets the percentage of the vault that is recovered after a heist.
-func configVaultRecover(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// configBoostVaultRecovery sets the percentage of the vault that is recovered every minute when boosts are enabled.
+func configBoostVaultRecovery(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := GetConfig(i.GuildID)
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
-	vaultRecoverPercent := options[0].IntValue()
-	config.VaultRecoverPercentage = float64(vaultRecoverPercent) / 100.0
+	boostVaultRecovery := options[0].IntValue()
+	config.BoostVaultRecovery = float64(boostVaultRecovery) / 100.0
 
 	p := message.NewPrinter(language.AmericanEnglish)
-	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Vault recover percentage set to %d", vaultRecoverPercent))).Send(s, i.Interaction)
+	disgomsg.NewResponse(disgomsg.WithContent(p.Sprintf("Vault recovery boost set to %d", boostVaultRecovery))).Send(s, i.Interaction)
 
 	writeConfig(config)
 }
@@ -1095,8 +1095,8 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 			{
-				Name:   "vault recover",
-				Value:  fmt.Sprintf("%d%%", int(math.Round(config.VaultRecoverPercentage*100))),
+				Name:   "boost vault recovery",
+				Value:  fmt.Sprintf("%d%%", int(math.Round(config.BoostVaultRecovery*100))),
 				Inline: true,
 			},
 			{
