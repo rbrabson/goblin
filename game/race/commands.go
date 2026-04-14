@@ -170,12 +170,16 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // to taking bets
 func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 	memberJoinTime := time.Now().Add(race.config.WaitToStart)
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
+	count := 0
 	raceMessage(s, race, "update")
 	for range ticker.C {
-		raceMessage(s, race, "update")
+		count++
+		if count%5 == 0 {
+			raceMessage(s, race, "update")
+		}
 		if time.Until(memberJoinTime) <= 0 {
 			break
 		}
