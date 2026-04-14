@@ -192,12 +192,16 @@ func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 // waitForBetsToBePlaced waits until bets are placed before starting the race.
 func waitForBetsToBePlaced(s *discordgo.Session, race *Race) {
 	betEndTime := time.Now().Add(race.config.WaitForBets)
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
+	count := 0
 	raceMessage(s, race, "betting")
 	for range ticker.C {
-		raceMessage(s, race, "betting")
+		count++
+		if count%5 == 0 {
+			raceMessage(s, race, "betting")
+		}
 		if time.Until(betEndTime) <= 0 {
 			break
 		}
