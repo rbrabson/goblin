@@ -23,8 +23,9 @@ type GameState int
 const (
 	_ GameState = iota
 	NotStarted
-	WaitingForPlayers
 	InProgress
+	WaitingForPlayers
+	DealingHands
 )
 
 type Action int
@@ -130,7 +131,7 @@ func (g *Game) joinGame(memberID string) error {
 // addPlayer adds a player to the blackjack game with a chip manager that uses their bank account.
 // If the player already exists, no action is taken.
 func (g *Game) addPlayer(memberID string) error {
-	if g.IsActive() {
+	if g.IsDealingHands() {
 		return ErrGameActive
 	}
 	if g.GetPlayer(memberID) != nil {
@@ -148,7 +149,7 @@ func (g *Game) addPlayer(memberID string) error {
 		return err
 	}
 
-	if g.NotStarted() {
+	if g.IsActive() {
 		g.state = WaitingForPlayers
 	}
 
@@ -252,7 +253,7 @@ func (g *Game) EndRound() {
 	if status == discord.STOPPING {
 		newstatus := discord.STOPPED
 		for _, game := range games {
-			if game.IsActive() || game.IsWaitingForPlayers() {
+			if game.IsActive() || game.IsWaitingForPlayers() || game.IsDealingHands() {
 				newstatus = discord.STOPPING
 				break
 			}
@@ -276,6 +277,11 @@ func (g *Game) IsWaitingForPlayers() bool {
 	return g.state == WaitingForPlayers
 }
 
+// IsDealingHands returns whether the blackjack game is currently dealing initial hands to players.
+func (g *Game) IsDealingHands() bool {
+	return g.state == DealingHands
+}
+
 // SecondsBeforeStart returns the number of seconds remaining to wait for players
 // before starting the game. If the wait time has elapsed, it returns 0.
 func (g *Game) SecondsBeforeStart() int {
@@ -290,6 +296,8 @@ func (g *Game) SecondsBeforeStart() int {
 func (g *Game) DealInitialCards() error {
 	g.Lock()
 	defer g.Unlock()
+
+	g.state = DealingHands
 
 	if err := g.game.DealInitialCards(); err != nil {
 		return err
@@ -411,7 +419,7 @@ func (g *Game) PlayerActionRequest(memberID string, action Action) error {
 	g.Lock()
 	defer g.Unlock()
 
-	if !g.IsActive() {
+	if !g.IsDealingHands() {
 		return ErrGameNotStarted
 	}
 

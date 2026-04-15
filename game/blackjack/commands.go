@@ -261,7 +261,7 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer game.EndRound()
 
 	showJoinGame(s, i, game)
-	waitForRoundToStart(s, i, game)
+	waitForPlayersToJoin(s, i, game)
 
 	if err := game.StartNewRound(); err != nil {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).Send(s, i.Interaction)
@@ -272,11 +272,12 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	playRound(s, i, game)
 }
 
-// waitForRoundToStart waits for the round to start for the blackjack game.
-func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+// waitForPlayersToJoin waits for the round to start for the blackjack game.
+func waitForPlayersToJoin(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	if game.config.SinglePlayerMode {
 		return
 	}
+	game.SetState(WaitingForPlayers)
 
 	memberCanJoin := time.Now().Add(game.config.WaitForPlayers)
 	ticker := time.NewTicker(1 * time.Second)
@@ -287,17 +288,15 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate, g
 	for range ticker.C {
 		count++
 
-		if game.IsActive() {
-			break
-		}
 		if time.Until(memberCanJoin) <= 0 {
 			break
 		}
 		if len(game.Players()) >= game.config.MaxPlayers {
+			slog.Debug("max blackjack players reached", slog.Int("playerCount", len(game.Players())), slog.Int("maxPlayers", game.config.MaxPlayers))
 			break
 		}
 
-		if count%5 == 0 {
+		if count%2 == 0 {
 			showJoinGame(s, i, game)
 		}
 	}
@@ -305,6 +304,7 @@ func waitForRoundToStart(s *discordgo.Session, i *discordgo.InteractionCreate, g
 
 // playRound handles playing a round of blackjack.
 func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
+	game.SetState(DealingHands)
 	game.DealInitialCards()
 	showDeal(s, i, game, false)
 
