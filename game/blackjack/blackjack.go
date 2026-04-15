@@ -1,6 +1,7 @@
 package blackjack
 
 import (
+	"log/slog"
 	"strings"
 	"sync"
 	"time"
@@ -67,7 +68,7 @@ func GetGame(guildID string, uid string) *Game {
 	config := GetConfig(guildID)
 	game := games[uid]
 	if game == nil {
-		game = newGame(guildID, uid, config)
+		game = newGame(guildID, uid, config.Decks)
 		games[uid] = game
 	}
 	game.config = config
@@ -75,12 +76,11 @@ func GetGame(guildID string, uid string) *Game {
 }
 
 // newGame creates a new blackjack game for the specified guild.
-func newGame(guildID string, uid string, config *Config) *Game {
+func newGame(guildID string, uid string, numDecks int) *Game {
 	game := &Game{
 		guildID:  guildID,
 		uid:      uid,
-		game:     bj.New(config.Decks),
-		config:   config,
+		game:     bj.New(numDecks),
 		state:    NotStarted,
 		turnChan: make(chan Action, 5),
 		symbols:  GetSymbols(),
@@ -91,9 +91,42 @@ func newGame(guildID string, uid string, config *Config) *Game {
 	return game
 }
 
-// AddPlayer adds a player to the blackjack game with a chip manager that uses their bank account.
+// Start starts the blackjack game, allowing players to join and play.
+func (g *Game) Start(memberID string) error {
+	g.Lock()
+	defer g.Unlock()
+
+	if !g.NotStarted() {
+		slog.Debug("blackjack game has already started", slog.String("guildID", g.guildID), slog.String("memberID", memberID))
+		return ErrGameActive
+	}
+
+	if err := g.addPlayer(memberID); err != nil {
+		return err
+	}
+	g.state = InProgress
+
+	return nil
+}
+
+// joinGame allows a player to join the blackjack game if it has not started yet.
+func (g *Game) joinGame(memberID string) error {
+	g.Lock()
+	defer g.Unlock()
+
+	if g.NotStarted() {
+		return ErrGameNotStarted
+	}
+	if g.IsActive() {
+		return ErrGameActive
+	}
+
+	return g.addPlayer(memberID)
+}
+
+// addPlayer adds a player to the blackjack game with a chip manager that uses their bank account.
 // If the player already exists, no action is taken.
-func (g *Game) AddPlayer(memberID string) error {
+func (g *Game) addPlayer(memberID string) error {
 	if g.IsActive() {
 		return ErrGameActive
 	}
@@ -124,6 +157,11 @@ func (g *Game) AddPlayer(memberID string) error {
 	return nil
 }
 
+// SetState sets the current state of the blackjack game.
+func (g *Game) SetState(state GameState) {
+	g.state = state
+}
+
 // GetPlayer retrieves a player from the blackjack game by their member ID.
 func (g *Game) GetPlayer(memberID string) *bj.Player {
 	return g.game.GetPlayer(memberID)
@@ -141,13 +179,15 @@ func (g *Game) Players() []*bj.Player {
 
 // StartNewRound starts a new round of blackjack in the game.
 func (g *Game) StartNewRound() error {
+	g.Lock()
+	defer g.Unlock()
+
 	// If the game is already active, do nothing.
 	if g.IsActive() {
 		return nil
 	}
 
-	err := g.game.StartNewRound()
-	if err != nil {
+	if err := g.game.StartNewRound(); err != nil {
 		return err
 	}
 
@@ -157,6 +197,9 @@ func (g *Game) StartNewRound() error {
 
 // EndRound ends the current round of blackjack for the guild, removing all players from the game.
 func (g *Game) EndRound() {
+	g.Lock()
+	defer g.Unlock()
+
 	// Update the member stats
 	for _, player := range g.Players() {
 		member := GetMember(g.guildID, player.Name())
@@ -176,6 +219,7 @@ func (g *Game) EndRound() {
 	for len(g.turnChan) > 0 {
 		<-g.turnChan
 	}
+
 	if g.config.SinglePlayerMode {
 		destroyButtons(g)
 		gamesLock.Lock()
@@ -229,6 +273,9 @@ func (g *Game) SecondsBeforeStart() int {
 
 // DealInitialCards deals the initial cards to all players and the dealer.
 func (g *Game) DealInitialCards() error {
+	g.Lock()
+	defer g.Unlock()
+
 	if err := g.game.DealInitialCards(); err != nil {
 		return err
 	}
@@ -242,46 +289,128 @@ func (g *Game) DealInitialCards() error {
 
 // Dealer returns the dealer of the blackjack game.
 func (g *Game) Dealer() *bj.Dealer {
+	g.Lock()
+	defer g.Unlock()
+
 	return g.game.Dealer()
 }
 
 // PlayerHit processes a hit action for the specified player.
-func (g *Game) PlayerHit(playerName string) error {
-	return g.game.PlayerHit(playerName)
+func (g *Game) PlayerHit(player *bj.Player) error {
+	g.Lock()
+	defer g.Unlock()
+
+	return g.game.PlayerHit(player.Name())
 }
 
 // PlayerStand processes a stand action for the specified player.
-func (g *Game) PlayerStand(playerName string) error {
-	return g.game.PlayerStand(playerName)
+func (g *Game) PlayerStand(player *bj.Player) error {
+	g.Lock()
+	defer g.Unlock()
+
+	return g.game.PlayerStand(player.Name())
 }
 
-// PlayerDoubleDownHit processes a double down hit action for the specified player.
-func (g *Game) PlayerDoubleDownHit(playerName string) error {
-	return g.game.PlayerDoubleDownHit(playerName)
+// PlayerDoubleDown processes a double down hit action for the specified player.
+func (g *Game) PlayerDoubleDown(player *bj.Player) error {
+	g.Lock()
+	defer g.Unlock()
+
+	if !player.CurrentHand().CanDoubleDown() {
+		slog.Error("cannot double down", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()))
+		return ErrCannotDoubleDown
+	}
+	if err := player.CurrentHand().DoubleDown(); err != nil {
+		slog.Error("error processing player double down", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Any("error", err))
+		return err
+	}
+	return g.game.PlayerDoubleDownHit(player.Name())
 }
 
 // PlayerSplit processes a split action for the specified player.
-func (g *Game) PlayerSplit(playerName string) error {
-	return g.game.PlayerSplit(playerName)
+func (g *Game) PlayerSplit(player *bj.Player) error {
+	g.Lock()
+	defer g.Unlock()
+
+	if !player.CurrentHand().CanSplit() {
+		slog.Error("cannot split", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()))
+		return ErrCannotSplit
+	}
+
+	return g.game.PlayerSplit(player.Name())
 }
 
 // PlayerSurrender processes a surrender action for the specified player.
-func (g *Game) PlayerSurrender(playerName string) error {
-	return g.game.PlayerSurrender(playerName)
+func (g *Game) PlayerSurrender(player *bj.Player) error {
+	g.Lock()
+	defer g.Unlock()
+
+	if !player.CurrentHand().CanSurrender() {
+		slog.Error("cannot surrender", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()))
+		return ErrCannotSurrender
+	}
+
+	return g.game.PlayerSurrender(player.Name())
+}
+
+// PlayerActionRequest processes a request from a player to take an action, ensuring that the player is active and the game is in progress.
+func (g *Game) PlayerActionRequest(memberID string, action Action) error {
+	g.Lock()
+	defer g.Unlock()
+
+	if !g.IsActive() {
+		return ErrGameNotStarted
+	}
+
+	player := g.GetPlayer(memberID)
+	activePlayer := g.GetActivePlayer()
+	if player == nil || player != activePlayer {
+		return ErrNotActivePlayer
+	}
+
+	g.turnChan <- action
+	return nil
 }
 
 // DealerPlay processes the dealer's play according to blackjack rules.
 func (g *Game) DealerPlay() error {
+	g.Lock()
+	defer g.Unlock()
+
+	if !g.hasNonbustedPlayers() {
+		return ErrAllPlayersBusted
+	}
 	return g.game.DealerPlay()
+}
+
+// hasNonbustedPlayers checks if there are any players in the game who have not busted, surrendered, or gotten blackjack.
+func (g *Game) hasNonbustedPlayers() bool {
+	g.Lock()
+	defer g.Unlock()
+
+	for _, player := range g.Players() {
+		for _, hand := range player.Hands() {
+			if !(hand.IsBusted() || hand.IsSurrendered() || hand.IsBlackjack()) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // PayoutResults pays out the results of the blackjack game.
 func (g *Game) PayoutResults() {
+	g.Lock()
+	defer g.Unlock()
+
 	g.game.PayoutResults()
 }
 
 // EvaluateHand evaluates the result of a specific hand for a player.
 func (g *Game) EvaluateHand(hand *bj.Hand) bj.GameResult {
+	g.Lock()
+	defer g.Unlock()
+
 	return g.game.EvaluateHand(hand)
 }
 
