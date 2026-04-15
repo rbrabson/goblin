@@ -157,6 +157,17 @@ func (g *Game) addPlayer(memberID string) error {
 	return nil
 }
 
+// clearPendingActions clears any pending player actions from the turn channel, ensuring that
+// no stale actions are processed when a new round starts or when a player takes an action.
+func (g *Game) clearPendingActions() {
+	g.Lock()
+	defer g.Unlock()
+
+	for len(g.turnChan) > 0 {
+		<-g.turnChan
+	}
+}
+
 // SetState sets the current state of the blackjack game.
 func (g *Game) SetState(state GameState) {
 	g.state = state

@@ -343,20 +343,24 @@ func playerTurn(s *discordgo.Session, game *Game, player *bj.Player) {
 	}
 
 	for player.HasActiveHands() {
-		currentHand := player.CurrentHand()
-		playHand(s, game, player, currentHand)
-
-		// Move to next hand if current hand is done
-		if !player.CurrentHand().IsActive() {
-			if !player.MoveToNextActiveHand() {
-				player.SetActive(false)
-			}
+		game.clearPendingActions()
+		playHand(s, game, player)
+		if !player.MoveToNextActiveHand() {
+			player.SetActive(false)
 		}
 	}
 }
 
 // playHand handles the turn for a specific hand of a player in blackjack, until they have stood or busted on that hand.
-func playHand(s *discordgo.Session, game *Game, player *bj.Player, currentHand *bj.Hand) {
+func playHand(s *discordgo.Session, game *Game, player *bj.Player) {
+	hand := player.CurrentHand()
+	for hand.IsActive() {
+		playSingleHandTurn(s, game, player, hand)
+	}
+}
+
+// playSingleHandTurn handles the turn for a specific hand of a player in blackjack, until they have stood or busted on that hand.
+func playSingleHandTurn(s *discordgo.Session, game *Game, player *bj.Player, currentHand *bj.Hand) {
 	currentHandIndex := player.GetCurrentHandNumber()
 	playerName := guild.GetMember(game.guildID, player.Name()).Name
 
