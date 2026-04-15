@@ -23,7 +23,7 @@ type GameState int
 const (
 	_ GameState = iota
 	NotStarted
-	InProgress
+	Starting
 	WaitingForPlayers
 	DealingHands
 )
@@ -108,7 +108,7 @@ func (g *Game) Start(memberID string) error {
 	if err := g.addPlayer(memberID); err != nil {
 		return err
 	}
-	g.state = InProgress
+	g.state = Starting
 
 	return nil
 }
@@ -121,7 +121,7 @@ func (g *Game) joinGame(memberID string) error {
 	if g.NotStarted() {
 		return ErrGameNotStarted
 	}
-	if g.IsActive() {
+	if g.IsStarting() {
 		return ErrGameActive
 	}
 
@@ -149,7 +149,7 @@ func (g *Game) addPlayer(memberID string) error {
 		return err
 	}
 
-	if g.IsActive() {
+	if g.IsStarting() {
 		g.state = WaitingForPlayers
 	}
 
@@ -198,7 +198,7 @@ func (g *Game) StartNewRound() error {
 	defer g.Unlock()
 
 	// If the game is already active, do nothing.
-	if g.IsActive() {
+	if g.IsStarting() {
 		return nil
 	}
 
@@ -206,7 +206,7 @@ func (g *Game) StartNewRound() error {
 		return err
 	}
 
-	g.state = InProgress
+	g.state = Starting
 	return nil
 }
 
@@ -253,7 +253,7 @@ func (g *Game) EndRound() {
 	if status == discord.STOPPING {
 		newstatus := discord.STOPPED
 		for _, game := range games {
-			if game.IsActive() || game.IsWaitingForPlayers() || game.IsDealingHands() {
+			if game.IsStarting() || game.IsWaitingForPlayers() || game.IsDealingHands() {
 				newstatus = discord.STOPPING
 				break
 			}
@@ -267,9 +267,9 @@ func (g *Game) NotStarted() bool {
 	return g.state == NotStarted
 }
 
-// IsActive returns whether the blackjack game is currently active.
-func (g *Game) IsActive() bool {
-	return g.state == InProgress
+// IsStarting returns whether the blackjack game is currently active.
+func (g *Game) IsStarting() bool {
+	return g.state == Starting
 }
 
 // IsWaitingForPlayers returns whether the blackjack game is waiting for players to join.
