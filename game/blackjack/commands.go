@@ -254,6 +254,7 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	game := GetGame(i.GuildID, uid)
 
 	if err := game.Start(i.Member.User.ID); err != nil {
+		slog.Debug("error starting blackjack game", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -364,7 +365,7 @@ func playSingleHandTurn(s *discordgo.Session, game *Game, player *bj.Player, cur
 	currentHandIndex := player.GetCurrentHandNumber()
 	playerName := guild.GetMember(game.guildID, player.Name()).Name
 
-	slog.Debug("processing player hand", slog.String("playerName", playerName), slog.Any("hand", currentHand))
+	slog.Debug("playing player hand turn", slog.String("playerName", playerName), slog.Any("hand", currentHand))
 
 	if currentHand.IsBlackjack() {
 		currentHand.SetActive(false)
@@ -442,10 +443,9 @@ GetAction:
 func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	slog.Debug("starting dealer turn", slog.String("guildID", game.guildID))
 
-	if err := game.DealerPlay(); err != nil {
-		showDeal(s, i, game, true)
-		time.Sleep(game.config.ShowDealerTurn)
-	}
+	game.DealerPlay()
+	showDeal(s, i, game, true)
+	time.Sleep(game.config.ShowDealerTurn)
 }
 
 // showJoinGame displays the join game message with a button to join.
@@ -623,7 +623,6 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, 
 		if err != nil {
 			slog.Error("error editing blackjack deal message",
 				slog.String("guildID", game.guildID),
-				slog.String("memberID", game.interaction.Member.User.ID),
 				slog.Any("error", err),
 			)
 			return
@@ -636,7 +635,6 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, 
 		if err != nil {
 			slog.Error("error sending blackjack deal message",
 				slog.String("guildID", game.guildID),
-				slog.String("memberID", game.interaction.Member.User.ID),
 				slog.Any("error", err),
 			)
 			return

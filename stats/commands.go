@@ -469,10 +469,6 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	firstGameDate := getFirstServerGameDate(guildID, game)
 	startTime := getTime(since, firstGameDate)
 	endTime := today.AddDate(0, 0, -1)
-	slog.Error("*** REMOVE ME ***",
-		slog.Time("start", startTime),
-		slog.Time("end", endTime),
-	)
 
 	var gamesPlayed *GamesPlayed
 	var err error

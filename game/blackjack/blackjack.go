@@ -70,6 +70,9 @@ func GetGame(guildID string, uid string) *Game {
 	if game == nil {
 		game = newGame(guildID, uid, config.Decks)
 		games[uid] = game
+		slog.Debug("created new blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
+	} else {
+		slog.Debug("retrieved existing blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
 	}
 	game.config = config
 	return game
@@ -213,6 +216,7 @@ func (g *Game) EndRound() {
 
 	// Update the member stats
 	for _, player := range g.Players() {
+		slog.Debug("updating member stats for player", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()))
 		member := GetMember(g.guildID, player.Name())
 		member.RoundPlayed(g, player)
 	}
@@ -231,19 +235,20 @@ func (g *Game) EndRound() {
 		<-g.turnChan
 	}
 
+	gamesLock.Lock()
+	defer gamesLock.Unlock()
 	if g.config.SinglePlayerMode {
+		slog.Debug("deleting single player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
 		destroyButtons(g)
-		gamesLock.Lock()
 		delete(games, g.uid)
-		gamesLock.Unlock()
 	} else {
+		slog.Debug("clearing multiplayer game state for new round", slog.String("guildID", g.guildID))
 		g.Dealer().ClearHand()
 		g.interaction = nil
 		g.message = nil
 		g.state = NotStarted
 	}
 
-	gamesLock.Lock()
 	if status == discord.STOPPING {
 		newstatus := discord.STOPPED
 		for _, game := range games {
@@ -254,7 +259,6 @@ func (g *Game) EndRound() {
 		}
 		status = newstatus
 	}
-	gamesLock.Unlock()
 }
 
 // NotStarted returns whether the blackjack game has not yet started.
@@ -300,9 +304,6 @@ func (g *Game) DealInitialCards() error {
 
 // Dealer returns the dealer of the blackjack game.
 func (g *Game) Dealer() *bj.Dealer {
-	g.Lock()
-	defer g.Unlock()
-
 	return g.game.Dealer()
 }
 
@@ -432,14 +433,15 @@ func (g *Game) DealerPlay() error {
 	if !g.hasNonbustedPlayers() {
 		return ErrAllPlayersBusted
 	}
-	return g.game.DealerPlay()
+	if err := g.game.DealerPlay(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // hasNonbustedPlayers checks if there are any players in the game who have not busted, surrendered, or gotten blackjack.
 func (g *Game) hasNonbustedPlayers() bool {
-	g.Lock()
-	defer g.Unlock()
-
 	for _, player := range g.Players() {
 		for _, hand := range player.Hands() {
 			if !(hand.IsBusted() || hand.IsSurrendered() || hand.IsBlackjack()) {
@@ -460,9 +462,6 @@ func (g *Game) PayoutResults() {
 
 // EvaluateHand evaluates the result of a specific hand for a player.
 func (g *Game) EvaluateHand(hand *bj.Hand) bj.GameResult {
-	g.Lock()
-	defer g.Unlock()
-
 	return g.game.EvaluateHand(hand)
 }
 
