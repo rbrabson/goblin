@@ -37,9 +37,7 @@ func (c *ChipManager) AddChips(amount int) {
 	game := c.game
 	amount = amount * game.config.PayoutPercent / 100
 	if amount == 0 {
-		slog.Warn("attempted to add zero blackjack chips to account",
-			slog.String("guildID", c.game.guildID),
-			slog.String("memberID", c.memberID))
+		slog.Warn("attempted to add zero blackjack chips to account", slog.String("guildID", c.game.guildID), slog.String("memberID", c.memberID))
 		return
 	}
 	account := bank.GetAccount(c.game.guildID, c.memberID)
@@ -51,10 +49,7 @@ func (c *ChipManager) AddChips(amount int) {
 			slog.Any("error", err))
 		return
 	}
-	slog.Debug("added blackjack chips to account",
-		slog.String("guildID", c.game.guildID),
-		slog.String("memberID", c.memberID),
-		slog.Int("amount", amount))
+	slog.Debug("added blackjack chips to account", slog.String("guildID", c.game.guildID), slog.String("memberID", c.memberID), slog.Int("amount", amount))
 }
 
 // DeductChips deducts the specified amount of chips from the player's account.
@@ -68,10 +63,7 @@ func (c *ChipManager) DeductChips(amount int) error {
 			slog.Any("error", err))
 		return err
 	}
-	slog.Debug("deducted blackjack chips from account",
-		slog.String("guildID", c.game.guildID),
-		slog.String("memberID", c.memberID),
-		slog.Int("amount", amount))
+	slog.Debug("deducted blackjack chips from account", slog.String("guildID", c.game.guildID), slog.String("memberID", c.memberID), slog.Int("amount", amount))
 	return nil
 }
 

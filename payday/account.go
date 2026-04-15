@@ -64,16 +64,6 @@ func (a *Account) getPayAmmount() int {
 	if streak != 0 && streakReset != 0 && bonus != 0.0 {
 		multiplier := (streak - 1) % streakReset
 		pay = basePay + (bonus * multiplier)
-		slog.Error("**********",
-			slog.String("guildID", a.GuildID),
-			slog.String("memberID", a.MemberID),
-			slog.Int("basePay", basePay),
-			slog.Int("bonus", bonus),
-			slog.Int("streak", streak),
-			slog.Int("streakReset", streakReset),
-			slog.Int("multiplier", multiplier),
-			slog.Int("pay", pay),
-		)
 	} else {
 		pay = basePay
 	}
