@@ -363,10 +363,10 @@ func playHand(s *discordgo.Session, game *Game, player *bj.Player, currentHand *
 	slog.Debug("processing player hand", slog.String("playerName", playerName), slog.Any("hand", currentHand))
 
 	if currentHand.IsBlackjack() {
+		currentHand.SetActive(false)
 		return
 	}
 
-	// Wait for the player action or timeout
 	waitUntil := time.Now().Add(game.config.PlayerTimeout)
 	showCurrentTurn(s, game, player, currentHand, currentHandIndex, time.Until(waitUntil))
 
@@ -396,24 +396,13 @@ GetAction:
 			slog.Error("error processing player hit", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("error", err))
 			return
 		}
-
-		if currentHand.IsBusted() {
-			slog.Debug("player hand busted", slog.String("guildID", game.guildID), slog.String("playerName", playerName))
-			currentHand.SetActive(false)
-		}
-
-		if currentHand.Value() == 21 {
-			slog.Debug("player hand reached 21", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("hand", currentHand))
-		} else {
-			slog.Debug("hit", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("hand", currentHand))
-		}
+		slog.Debug("hit", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("hand", currentHand))
 
 	case Stand:
 		if err := game.PlayerStand(player); err != nil {
 			slog.Error("error processing player stand", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("error", err))
 			return
 		}
-
 		slog.Debug("standing", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("hand", currentHand))
 
 	case DoubleDown:
@@ -421,19 +410,13 @@ GetAction:
 			slog.Error("error processing player double down", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("error", err))
 			return
 		}
-
-		if currentHand.IsBusted() {
-			slog.Debug("player hand busted after double down", slog.String("guildID", game.guildID), slog.String("playerName", playerName))
-		} else {
-			slog.Debug("double down", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("hand", currentHand))
-		}
+		slog.Debug("double down", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("hand", currentHand))
 
 	case Split:
 		if err := game.PlayerSplit(player); err != nil {
 			slog.Error("error processing player split", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("error", err))
 			return
 		}
-
 		slog.Debug("split", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("hand", currentHand))
 
 	case Surrender:
@@ -441,7 +424,6 @@ GetAction:
 			slog.Error("error processing player surrender", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("error", err))
 			return
 		}
-
 		slog.Debug("surrender", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("hand", currentHand))
 
 	default:

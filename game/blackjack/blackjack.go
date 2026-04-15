@@ -300,7 +300,20 @@ func (g *Game) PlayerHit(player *bj.Player) error {
 	g.Lock()
 	defer g.Unlock()
 
-	return g.game.PlayerHit(player.Name())
+	if err := g.game.PlayerHit(player.Name()); err != nil {
+		return err
+	}
+
+	hand := player.CurrentHand()
+	if hand.IsBusted() {
+		slog.Debug("player busted", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Any("hand", hand))
+		hand.SetActive(false)
+	} else if hand.Value() == 21 {
+		slog.Debug("player hand reached 21", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Any("hand", hand))
+		hand.SetActive(false)
+	}
+
+	return nil
 }
 
 // PlayerStand processes a stand action for the specified player.
@@ -308,7 +321,15 @@ func (g *Game) PlayerStand(player *bj.Player) error {
 	g.Lock()
 	defer g.Unlock()
 
-	return g.game.PlayerStand(player.Name())
+	if err := g.game.PlayerStand(player.Name()); err != nil {
+		return err
+	}
+
+	hand := player.CurrentHand()
+	hand.SetActive(false)
+
+	return nil
+
 }
 
 // PlayerDoubleDown processes a double down hit action for the specified player.
@@ -324,7 +345,20 @@ func (g *Game) PlayerDoubleDown(player *bj.Player) error {
 		slog.Error("error processing player double down", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Any("error", err))
 		return err
 	}
-	return g.game.PlayerDoubleDownHit(player.Name())
+	if err := g.game.PlayerDoubleDownHit(player.Name()); err != nil {
+		slog.Error("error processing player double down hit", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Any("error", err))
+		return err
+	}
+
+	hand := player.CurrentHand()
+	if hand.IsBusted() {
+		slog.Debug("player busted after double down", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Any("hand", hand))
+	} else if hand.Value() == 21 {
+		slog.Debug("player hand reached 21 after double down", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Any("hand", hand))
+	}
+	hand.SetActive(false)
+
+	return nil
 }
 
 // PlayerSplit processes a split action for the specified player.
@@ -350,7 +384,14 @@ func (g *Game) PlayerSurrender(player *bj.Player) error {
 		return ErrCannotSurrender
 	}
 
-	return g.game.PlayerSurrender(player.Name())
+	if err := g.game.PlayerSurrender(player.Name()); err != nil {
+		return err
+	}
+
+	hand := player.CurrentHand()
+	hand.SetActive(false)
+
+	return nil
 }
 
 // PlayerActionRequest processes a request from a player to take an action, ensuring that the player is active and the game is in progress.
