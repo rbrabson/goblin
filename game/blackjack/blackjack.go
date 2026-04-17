@@ -236,8 +236,13 @@ func (g *Game) EndRound() {
 		<-g.turnChan
 	}
 
+	g.interaction = nil
+	g.message = nil
+	g.SetState(NotStarted)
+
 	gamesLock.Lock()
 	defer gamesLock.Unlock()
+
 	if g.config.SinglePlayerMode {
 		slog.Debug("deleting single player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
 		destroyButtons(g)
@@ -245,15 +250,12 @@ func (g *Game) EndRound() {
 	} else {
 		slog.Debug("clearing multiplayer game state for new round", slog.String("guildID", g.guildID))
 		g.Dealer().ClearHand()
-		g.interaction = nil
-		g.message = nil
-		g.state = NotStarted
 	}
 
 	if status == discord.STOPPING {
 		newstatus := discord.STOPPED
 		for _, game := range games {
-			if game.IsStarting() || game.IsWaitingForPlayers() || game.IsDealingHands() {
+			if !game.NotStarted() {
 				newstatus = discord.STOPPING
 				break
 			}
