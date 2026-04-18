@@ -69,14 +69,42 @@ func GetGame(guildID string, uid string) *Game {
 	config := GetConfig(guildID)
 	game := games[uid]
 	if game == nil {
+		slog.Warn("blackjack game not found", slog.String("guildID", guildID), slog.String("uid", uid))
+		return nil
+	}
+	game.config = config
+	return game
+}
+
+// StartGame starts a new blackjack game for the specified guild and member.
+func StartGame(guildID string, memberID string) (*Game, error) {
+	gamesLock.Lock()
+	defer gamesLock.Unlock()
+
+	uid := getUID(guildID, memberID)
+	config := GetConfig(guildID)
+	game := games[uid]
+	if game == nil {
 		game = newGame(guildID, uid, config.Decks)
 		games[uid] = game
 		slog.Debug("created new blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
 	} else {
 		slog.Debug("retrieved existing blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
 	}
+
+	if !game.NotStarted() {
+		slog.Debug("blackjack game has already started", slog.String("guildID", game.guildID), slog.String("memberID", memberID))
+		return nil, ErrGameActive
+	}
+
 	game.config = config
-	return game
+
+	if err := game.addPlayer(memberID); err != nil {
+		return nil, err
+	}
+	game.state = Starting
+
+	return game, nil
 }
 
 // newGame creates a new blackjack game for the specified guild.
@@ -95,24 +123,6 @@ func newGame(guildID string, uid string, numDecks int) *Game {
 	return game
 }
 
-// Start starts the blackjack game, allowing players to join and play.
-func (g *Game) Start(memberID string) error {
-	g.Lock()
-	defer g.Unlock()
-
-	if !g.NotStarted() {
-		slog.Debug("blackjack game has already started", slog.String("guildID", g.guildID), slog.String("memberID", memberID))
-		return ErrGameActive
-	}
-
-	if err := g.addPlayer(memberID); err != nil {
-		return err
-	}
-	g.state = Starting
-
-	return nil
-}
-
 // joinGame allows a player to join the blackjack game if it has not started yet.
 func (g *Game) joinGame(memberID string) error {
 	g.Lock()
@@ -121,7 +131,7 @@ func (g *Game) joinGame(memberID string) error {
 	if g.NotStarted() {
 		return ErrGameNotStarted
 	}
-	if g.IsStarting() {
+	if !g.IsWaitingForPlayers() {
 		return ErrGameActive
 	}
 
@@ -131,11 +141,11 @@ func (g *Game) joinGame(memberID string) error {
 // addPlayer adds a player to the blackjack game with a chip manager that uses their bank account.
 // If the player already exists, no action is taken.
 func (g *Game) addPlayer(memberID string) error {
-	if g.IsDealingHands() {
-		return ErrGameActive
-	}
 	if g.GetPlayer(memberID) != nil {
 		return ErrPlayerAlreadyInGame
+	}
+	if g.IsDealingHands() {
+		return ErrGameActive
 	}
 	if len(g.game.Players()) >= g.config.MaxPlayers {
 		return ErrGameFull
@@ -229,12 +239,14 @@ func (g *Game) EndRound() {
 	stats.UpdateGameStats(g.guildID, "blackjack", memberIDs)
 
 	for _, player := range g.game.Players() {
+		slog.Debug("removing player from blackjack game", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()))
 		g.game.RemovePlayer(player.Name())
 	}
 
 	for len(g.turnChan) > 0 {
 		<-g.turnChan
 	}
+	slog.Debug("cleared pending player actions for new round", slog.String("guildID", g.guildID))
 
 	g.interaction = nil
 	g.message = nil

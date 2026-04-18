@@ -250,10 +250,8 @@ func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 
-	uid := getUID(i.GuildID, i.Member.User.ID)
-	game := GetGame(i.GuildID, uid)
-
-	if err := game.Start(i.Member.User.ID); err != nil {
+	game, err := StartGame(i.GuildID, i.Member.User.ID)
+	if err != nil {
 		slog.Debug("error starting blackjack game", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
@@ -824,14 +822,16 @@ func showResults(s *discordgo.Session, game *Game) {
 
 // blackjackJoin handles the /blackjack/join command.
 func blackjackJoin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
-
 	uid := getUIDFromInteraction(i)
 	game := GetGame(i.GuildID, uid)
+	if game == nil {
+		disgomsg.NewResponse(disgomsg.WithContent("No active blackjack game found to join.")).SendEphemeral(s, i.Interaction)
+		return
+	}
 
 	if err := game.joinGame(i.Member.User.ID); err != nil {
-		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		slog.Error("error adding player to blackjack game", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
+		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
 	disgomsg.NewResponse(disgomsg.WithContent("You have joined the game.")).SendEphemeral(s, i.Interaction)
@@ -842,6 +842,10 @@ func blackjackJoin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func blackjackHit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	uid := getUIDFromInteraction(i)
 	game := GetGame(i.GuildID, uid)
+	if game == nil {
+		disgomsg.NewResponse(disgomsg.WithContent("No active blackjack game found.")).SendEphemeral(s, i.Interaction)
+		return
+	}
 
 	if err := game.PlayerActionRequest(i.Member.User.ID, Hit); err != nil {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
@@ -858,6 +862,10 @@ func blackjackHit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func blackjackStand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	uid := getUIDFromInteraction(i)
 	game := GetGame(i.GuildID, uid)
+	if game == nil {
+		disgomsg.NewResponse(disgomsg.WithContent("No active blackjack game found.")).SendEphemeral(s, i.Interaction)
+		return
+	}
 
 	if err := game.PlayerActionRequest(i.Member.User.ID, Stand); err != nil {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
@@ -874,6 +882,10 @@ func blackjackStand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func blackjackDoubleDown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	uid := getUIDFromInteraction(i)
 	game := GetGame(i.GuildID, uid)
+	if game == nil {
+		disgomsg.NewResponse(disgomsg.WithContent("No active blackjack game found.")).SendEphemeral(s, i.Interaction)
+		return
+	}
 
 	if err := game.PlayerActionRequest(i.Member.User.ID, DoubleDown); err != nil {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
@@ -890,6 +902,10 @@ func blackjackDoubleDown(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func blackjackSplit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	uid := getUIDFromInteraction(i)
 	game := GetGame(i.GuildID, uid)
+	if game == nil {
+		disgomsg.NewResponse(disgomsg.WithContent("No active blackjack game found to join.")).SendEphemeral(s, i.Interaction)
+		return
+	}
 
 	if err := game.PlayerActionRequest(i.Member.User.ID, Split); err != nil {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
