@@ -604,3 +604,37 @@ func getUIDFromInteraction(i *discordgo.InteractionCreate) string {
 	}
 	return uid
 }
+
+// String returns a string representation of the GameState type for logging and debugging purposes.
+func (s GameState) String() string {
+	switch s {
+	case NotStarted:
+		return "Not Started"
+	case WaitingForPlayers:
+		return "Waiting For Players"
+	case StartingRound:
+		return "Starting Round"
+	case DealingHands:
+		return "Dealing Hands"
+	default:
+		return "Unknown State"
+	}
+}
+
+// String returns a string representation of the Action type for logging and debugging purposes.
+func (a Action) String() string {
+	switch a {
+	case Hit:
+		return "Hit"
+	case Stand:
+		return "Stand"
+	case DoubleDown:
+		return "Double Down"
+	case Split:
+		return "Split"
+	case Surrender:
+		return "Surrender"
+	default:
+		return "Unknown Action"
+	}
+}
