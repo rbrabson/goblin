@@ -237,7 +237,7 @@ func (g *Game) EndRound() {
 	for len(g.turnChan) > 0 {
 		<-g.turnChan
 	}
-	slog.Debug("cleared pending player actions for new round", slog.String("guildID", g.guildID))
+	slog.Debug("cleared pending blackjack player actions for new round", slog.String("guildID", g.guildID))
 
 	g.interaction = nil
 	g.message = nil
@@ -245,11 +245,11 @@ func (g *Game) EndRound() {
 
 	gamesLock.Lock()
 	if g.config.SinglePlayerMode {
-		slog.Debug("deleting single player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
+		slog.Debug("deleting single blackjack player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
 		destroyButtons(g)
 		delete(games, g.uid)
 	} else {
-		slog.Debug("clearing multiplayer game state for new round", slog.String("guildID", g.guildID))
+		slog.Debug("clearing multiplayer blackjack game state for new round", slog.String("guildID", g.guildID))
 		g.Dealer().ClearHand()
 	}
 	gamesLock.Unlock()
