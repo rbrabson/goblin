@@ -356,11 +356,14 @@ func playerTurn(s *discordgo.Session, game *Game, player *bj.Player) {
 // playHand handles the turn for a specific hand of a player in blackjack, until they have stood or busted on that hand.
 func playHand(s *discordgo.Session, game *Game, player *bj.Player) {
 	hand := player.CurrentHand()
-	slog.Debug("playing blackjack hand", slog.String("playerID", player.Name()), slog.Any("hand", hand))
-	defer slog.Debug("finished playing blackjack hand", slog.String("playerID", player.Name()), slog.Any("hand", hand))
+	handIndex := player.GetCurrentHandNumber()
+	hand.SetActive(true) // A hack to ensure the hand is active at the start of the turn
+	slog.Debug("playing blackjack hand", slog.String("playerID", player.Name()), slog.Any("hand", hand), slog.Int("handIndex", handIndex))
+	defer slog.Debug("finished playing blackjack hand", slog.String("playerID", player.Name()), slog.Any("hand", hand), slog.Int("handIndex", handIndex))
 	for hand.IsActive() {
 		playSingleHandTurn(s, game, player, hand)
 	}
+	hand.SetActive(false)
 }
 
 // playSingleHandTurn handles the turn for a specific hand of a player in blackjack, until they have stood or busted on that hand.
@@ -399,6 +402,7 @@ GetAction:
 			showCurrentTurn(s, game, player, currentHand, currentHandIndex, time.Until(waitUntil))
 		}
 	}
+	slog.Debug("processing player action", slog.String("guildID", game.guildID), slog.String("playerName", playerName), slog.Any("action", action))
 
 	// Process the player's move
 	switch action {

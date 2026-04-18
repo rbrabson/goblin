@@ -395,7 +395,12 @@ func (g *Game) PlayerSplit(player *bj.Player) error {
 		return ErrCannotSplit
 	}
 
-	return g.game.PlayerSplit(player.Name())
+	if err := g.game.PlayerSplit(player.Name()); err != nil {
+		slog.Error("error processing player split", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Any("error", err))
+		return err
+	}
+
+	return nil
 }
 
 // PlayerSurrender processes a surrender action for the specified player.
