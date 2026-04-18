@@ -344,7 +344,7 @@ func playerTurn(s *discordgo.Session, game *Game, player *bj.Player) {
 		return
 	}
 
-	for player.HasActiveHands() {
+	for player.HasActiveHands() && player.IsActive() {
 		game.clearPendingActions()
 		playHand(s, game, player)
 		if !player.MoveToNextActiveHand() {
