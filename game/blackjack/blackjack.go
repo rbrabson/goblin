@@ -179,6 +179,7 @@ func (g *Game) clearPendingActions() {
 
 // SetState sets the current state of the blackjack game.
 func (g *Game) SetState(state GameState) {
+	slog.Debug("setting blackjack game state", slog.String("guildID", g.guildID), slog.Any("state", state))
 	g.state = state
 }
 
