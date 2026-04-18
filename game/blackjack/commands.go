@@ -250,9 +250,10 @@ func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 
+	slog.Debug("starting blackjack game", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
 	game, err := StartGame(i.GuildID, i.Member.User.ID)
 	if err != nil {
-		slog.Debug("error starting blackjack game", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
+		slog.Debug("error starting blackjack game", slog.String("guildID", i.GuildID), slog.Any("error", err))
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -268,6 +269,7 @@ func playBlackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	showStartingGame(s, i, game)
 
 	playRound(s, i, game)
+	slog.Debug("blackjack round completed", slog.String("guildID", i.GuildID))
 }
 
 // waitForPlayersToJoin waits for the round to start for the blackjack game.
@@ -275,7 +277,6 @@ func waitForPlayersToJoin(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	if game.config.SinglePlayerMode {
 		return
 	}
-	game.SetState(WaitingForPlayers)
 
 	memberCanJoin := time.Now().Add(game.config.WaitForPlayers)
 	ticker := time.NewTicker(1 * time.Second)
@@ -287,11 +288,11 @@ func waitForPlayersToJoin(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		count++
 
 		if time.Until(memberCanJoin) <= 0 {
-			break
+			return
 		}
 		if len(game.Players()) >= game.config.MaxPlayers {
 			slog.Debug("max blackjack players reached", slog.Int("playerCount", len(game.Players())), slog.Int("maxPlayers", game.config.MaxPlayers))
-			break
+			return
 		}
 
 		if count%2 == 0 {
@@ -302,7 +303,6 @@ func waitForPlayersToJoin(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 // playRound handles playing a round of blackjack.
 func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
-	game.SetState(DealingHands)
 	game.DealInitialCards()
 	showDeal(s, i, game, false)
 
@@ -327,6 +327,8 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game)
 
 // allPlayerTurns handles the turns for each player in blackjack, until all players have stood or busted.
 func allPlayerTurns(s *discordgo.Session, game *Game) {
+	slog.Debug("starting player turns for blackjack", slog.String("guildID", game.guildID))
+	defer slog.Debug("finished player turns for blackjack", slog.String("guildID", game.guildID))
 	for _, player := range game.Players() {
 		playerTurn(s, game, player)
 	}
@@ -335,7 +337,8 @@ func allPlayerTurns(s *discordgo.Session, game *Game) {
 // playerTurn handles the turns for a given player in blackjack, until they have stood or busted on their all hands.
 func playerTurn(s *discordgo.Session, game *Game, player *bj.Player) {
 	playerName := guild.GetMember(game.guildID, player.Name()).Name
-	slog.Debug("starting turn for player", slog.String("playerName", playerName))
+	slog.Debug("starting blackjack turn for player", slog.String("playerName", playerName), slog.String("playerID", player.Name()))
+	defer slog.Debug("finished blackjack turn for player", slog.String("playerName", playerName), slog.String("playerID", player.Name()))
 
 	if !player.IsActive() {
 		return
@@ -353,6 +356,8 @@ func playerTurn(s *discordgo.Session, game *Game, player *bj.Player) {
 // playHand handles the turn for a specific hand of a player in blackjack, until they have stood or busted on that hand.
 func playHand(s *discordgo.Session, game *Game, player *bj.Player) {
 	hand := player.CurrentHand()
+	slog.Debug("playing blackjack hand", slog.String("playerID", player.Name()), slog.Any("hand", hand))
+	defer slog.Debug("finished playing blackjack hand", slog.String("playerID", player.Name()), slog.Any("hand", hand))
 	for hand.IsActive() {
 		playSingleHandTurn(s, game, player, hand)
 	}
@@ -360,6 +365,9 @@ func playHand(s *discordgo.Session, game *Game, player *bj.Player) {
 
 // playSingleHandTurn handles the turn for a specific hand of a player in blackjack, until they have stood or busted on that hand.
 func playSingleHandTurn(s *discordgo.Session, game *Game, player *bj.Player, currentHand *bj.Hand) {
+	slog.Debug("playing single hand turn", slog.String("playerID", player.Name()), slog.Any("hand", currentHand))
+	defer slog.Debug("finished single hand turn", slog.String("playerID", player.Name()), slog.Any("hand", currentHand))
+
 	currentHandIndex := player.GetCurrentHandNumber()
 	playerName := guild.GetMember(game.guildID, player.Name()).Name
 
@@ -440,6 +448,7 @@ GetAction:
 // dealerTurn handles the dealer's turn in blackjack.
 func dealerTurn(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game) {
 	slog.Debug("starting dealer turn", slog.String("guildID", game.guildID))
+	defer slog.Debug("finished dealer turn", slog.String("guildID", game.guildID))
 
 	game.DealerPlay()
 	showDeal(s, i, game, true)

@@ -23,8 +23,8 @@ type GameState int
 const (
 	_ GameState = iota
 	NotStarted
-	Starting
 	WaitingForPlayers
+	StartingRound
 	DealingHands
 )
 
@@ -92,6 +92,9 @@ func StartGame(guildID string, memberID string) (*Game, error) {
 		slog.Debug("retrieved existing blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
 	}
 
+	game.Lock()
+	defer game.Unlock()
+
 	if !game.NotStarted() {
 		slog.Debug("blackjack game has already started", slog.String("guildID", game.guildID), slog.String("memberID", memberID))
 		return nil, ErrGameActive
@@ -99,10 +102,10 @@ func StartGame(guildID string, memberID string) (*Game, error) {
 
 	game.config = config
 
+	game.SetState(WaitingForPlayers)
 	if err := game.addPlayer(memberID); err != nil {
 		return nil, err
 	}
-	game.state = Starting
 
 	return game, nil
 }
@@ -128,13 +131,6 @@ func (g *Game) joinGame(memberID string) error {
 	g.Lock()
 	defer g.Unlock()
 
-	if g.NotStarted() {
-		return ErrGameNotStarted
-	}
-	if !g.IsWaitingForPlayers() {
-		return ErrGameActive
-	}
-
 	return g.addPlayer(memberID)
 }
 
@@ -144,7 +140,10 @@ func (g *Game) addPlayer(memberID string) error {
 	if g.GetPlayer(memberID) != nil {
 		return ErrPlayerAlreadyInGame
 	}
-	if g.IsDealingHands() {
+	if g.NotStarted() {
+		return ErrGameNotStarted
+	}
+	if !g.IsWaitingForPlayers() {
 		return ErrGameActive
 	}
 	if len(g.game.Players()) >= g.config.MaxPlayers {
@@ -157,10 +156,6 @@ func (g *Game) addPlayer(memberID string) error {
 	if err := player.CurrentHand().PlaceBet(g.config.BetAmount); err != nil {
 		g.game.RemovePlayer(memberID)
 		return err
-	}
-
-	if g.IsStarting() {
-		g.state = WaitingForPlayers
 	}
 
 	// If this is the first player, set the game start time to wait for additional players.
@@ -207,16 +202,11 @@ func (g *Game) StartNewRound() error {
 	g.Lock()
 	defer g.Unlock()
 
-	// If the game is already active, do nothing.
-	if g.IsStarting() {
-		return nil
-	}
-
 	if err := g.game.StartNewRound(); err != nil {
 		return err
 	}
+	g.SetState(StartingRound)
 
-	g.state = Starting
 	return nil
 }
 
@@ -253,8 +243,6 @@ func (g *Game) EndRound() {
 	g.SetState(NotStarted)
 
 	gamesLock.Lock()
-	defer gamesLock.Unlock()
-
 	if g.config.SinglePlayerMode {
 		slog.Debug("deleting single player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
 		destroyButtons(g)
@@ -263,6 +251,7 @@ func (g *Game) EndRound() {
 		slog.Debug("clearing multiplayer game state for new round", slog.String("guildID", g.guildID))
 		g.Dealer().ClearHand()
 	}
+	gamesLock.Unlock()
 
 	if status == discord.STOPPING {
 		newstatus := discord.STOPPED
@@ -281,14 +270,15 @@ func (g *Game) NotStarted() bool {
 	return g.state == NotStarted
 }
 
-// IsStarting returns whether the blackjack game is currently active.
-func (g *Game) IsStarting() bool {
-	return g.state == Starting
-}
-
 // IsWaitingForPlayers returns whether the blackjack game is waiting for players to join.
 func (g *Game) IsWaitingForPlayers() bool {
 	return g.state == WaitingForPlayers
+}
+
+// IsStartingRound returns whether the blackjack game is in the process of starting a new round,
+// which occurs after the initial hands have been dealt and before player turns begin.
+func (g *Game) IsStartingRound() bool {
+	return g.state == StartingRound
 }
 
 // IsDealingHands returns whether the blackjack game is currently dealing initial hands to players.
@@ -311,7 +301,7 @@ func (g *Game) DealInitialCards() error {
 	g.Lock()
 	defer g.Unlock()
 
-	g.state = DealingHands
+	g.SetState(DealingHands)
 
 	if err := g.game.DealInitialCards(); err != nil {
 		return err

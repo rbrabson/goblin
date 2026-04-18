@@ -127,7 +127,6 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToLower(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
-	race.setState(RaceWaitingForRacers)
 	defer race.End()
 	slog.Info("race created", slog.String("guiildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
 
@@ -431,7 +430,7 @@ func removeBetButtons(race *Race) {
 	buttons := betButtons[race.GuildID]
 	for key := range buttons {
 		bot.RemoveComponentHandler(key)
-		slog.Debug("removed button component handler", slog.String("guildID", race.GuildID), slog.String("label", key))
+		slog.Debug("removed race button component handler", slog.String("guildID", race.GuildID), slog.String("label", key))
 	}
 	betButtons[race.GuildID] = make(map[string]*raceButton)
 }

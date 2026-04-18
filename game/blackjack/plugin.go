@@ -45,7 +45,7 @@ func (plugin *Plugin) Stop() {
 
 	newState := discord.STOPPED
 	for _, game := range games {
-		if game.IsStarting() || game.IsWaitingForPlayers() || game.IsDealingHands() {
+		if game.IsWaitingForPlayers() || game.IsStartingRound() || game.IsDealingHands() {
 			newState = discord.STOPPING
 			break
 		}
