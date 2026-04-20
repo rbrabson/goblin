@@ -104,6 +104,7 @@ func StartGame(guildID string, memberID string) (*Game, error) {
 
 	game.SetState(WaitingForPlayers)
 	if err := game.addPlayer(memberID); err != nil {
+		game.SetState(NotStarted)
 		return nil, err
 	}
 
