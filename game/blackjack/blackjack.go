@@ -245,6 +245,8 @@ func (g *Game) EndRound() {
 	g.SetState(NotStarted)
 
 	gamesLock.Lock()
+	defer gamesLock.Unlock()
+
 	if g.config.SinglePlayerMode {
 		slog.Debug("deleting single blackjack player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
 		destroyButtons(g)
@@ -253,7 +255,6 @@ func (g *Game) EndRound() {
 		slog.Debug("clearing multiplayer blackjack game state for new round", slog.String("guildID", g.guildID))
 		g.Dealer().ClearHand()
 	}
-	gamesLock.Unlock()
 
 	if status == discord.STOPPING {
 		newstatus := discord.STOPPED
