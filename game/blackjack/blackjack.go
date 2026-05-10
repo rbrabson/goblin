@@ -87,9 +87,9 @@ func StartGame(guildID string, memberID string) (*Game, error) {
 	if game == nil {
 		game = newGame(guildID, uid, config.Decks)
 		games[uid] = game
-		slog.Debug("created new blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
+		slog.Info("created new blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
 	} else {
-		slog.Debug("retrieved existing blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
+		slog.Info("retrieved existing blackjack game", slog.String("guildID", guildID), slog.String("uid", uid))
 	}
 
 	game.Lock()
@@ -163,6 +163,8 @@ func (g *Game) addPlayer(memberID string) error {
 	if len(g.game.Players()) == 1 {
 		g.gameStartTime = time.Now().Add(g.config.WaitForPlayers)
 	}
+
+	slog.Info("player joined blackjack game", slog.String("guildID", g.guildID), slog.String("playerName", player.Name()), slog.Int("currentPlayers", len(g.game.Players())))
 
 	return nil
 }
@@ -248,11 +250,11 @@ func (g *Game) EndRound() {
 	defer gamesLock.Unlock()
 
 	if g.config.SinglePlayerMode {
-		slog.Debug("deleting single blackjack player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
+		slog.Info("deleting single blackjack player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
 		destroyButtons(g)
 		delete(games, g.uid)
 	} else {
-		slog.Debug("clearing multiplayer blackjack game state for new round", slog.String("guildID", g.guildID))
+		slog.Info("clearing multiplayer blackjack game state for new round", slog.String("guildID", g.guildID))
 		g.Dealer().ClearHand()
 	}
 
