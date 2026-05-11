@@ -216,6 +216,9 @@ func (g *Game) StartNewRound() error {
 
 // EndRound ends the current round of blackjack for the guild, removing all players from the game.
 func (g *Game) EndRound() {
+	gamesLock.Lock()
+	defer gamesLock.Unlock()
+
 	g.Lock()
 	defer g.Unlock()
 
@@ -245,9 +248,6 @@ func (g *Game) EndRound() {
 	g.interaction = nil
 	g.message = nil
 	g.SetState(NotStarted)
-
-	gamesLock.Lock()
-	defer gamesLock.Unlock()
 
 	if g.config.SinglePlayerMode {
 		slog.Info("deleting single blackjack player game", slog.String("guildID", g.guildID), slog.String("uid", g.uid))
