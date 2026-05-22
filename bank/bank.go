@@ -27,7 +27,7 @@ type Bank struct {
 	DefaultBalance int           `json:"default_balance" bson:"default_balance"`
 }
 
-// GetBank returns the bank for the specified build. If the bank does not exist, then one is created.
+// GetBank returns the bank for the specified guild. If the bank does not exist, then one is created.
 func GetBank(guildID string) *Bank {
 	bank := readBank(guildID)
 	if bank == nil {
@@ -116,7 +116,7 @@ func (b *Bank) SetCurrency(currency string) {
 
 // String returns a string representation of the Bank.
 func (b *Bank) String() string {
-	return fmt.Sprintf("Bank{Bank{ID: %s, GuildID: %s, Name: %s, Currency: %s, DefaultBalance: %d}",
+	return fmt.Sprintf("Bank{ID: %s, GuildID: %s, Name: %s, Currency: %s, DefaultBalance: %d}",
 		b.ID.Hex(),
 		b.GuildID,
 		b.Name,
