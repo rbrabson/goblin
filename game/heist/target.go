@@ -10,20 +10,19 @@ import (
 
 	"github.com/rbrabson/goblin/discord"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // Target is a target of a heist.
 type Target struct {
-	ID       bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID  string             `json:"guild_id" bson:"guild_id"`
-	Theme    string             `json:"theme" bson:"theme"`
-	Name     string             `json:"target_id" bson:"target_id"`
-	CrewSize int                `json:"crew" bson:"crew"`
-	Success  float64            `json:"success" bson:"success"`
-	Vault    int                `json:"vault" bson:"vault"`
-	VaultMax int                `json:"vault_max" bson:"vault_max"`
-	IsAtMax  bool               `json:"is_at_max" bson:"is_at_max"`
+	ID       bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID  string        `json:"guild_id" bson:"guild_id"`
+	Theme    string        `json:"theme" bson:"theme"`
+	Name     string        `json:"target_id" bson:"target_id"`
+	CrewSize int           `json:"crew" bson:"crew"`
+	Success  float64       `json:"success" bson:"success"`
+	Vault    int           `json:"vault" bson:"vault"`
+	VaultMax int           `json:"vault_max" bson:"vault_max"`
+	IsAtMax  bool          `json:"is_at_max" bson:"is_at_max"`
 }
 
 // GetTargets returns the list of targets for the server

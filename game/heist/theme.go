@@ -8,25 +8,25 @@ import (
 	"path/filepath"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // A Theme is a set of messages that provide a "flavor" for a heist
 type Theme struct {
-	ID                  bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID             string             `json:"guild_id" bson:"guild_id"`
-	Name                string             `json:"name" bson:"name"`
-	EscapedMessages     []*HeistMessage    `json:"escaped_messages" bson:"escaped_messages"`
-	ApprehendedMessages []*HeistMessage    `json:"apprehended_messages" bson:"apprehended_messages"`
-	DiedMessages        []*HeistMessage    `json:"died_messages" bson:"died_messages"`
-	Jail                string             `json:"jail" bson:"jail"`
-	OOB                 string             `json:"oob" bson:"oob"`
-	Police              string             `json:"police" bson:"police"`
-	Bail                string             `json:"bail" bson:"bail"`
-	Crew                string             `json:"crew" bson:"crew"`
-	Sentence            string             `json:"sentence" bson:"sentence"`
-	Heist               string             `json:"heist" bson:"heist"`
-	Vault               string             `json:"vault" bson:"vault"`
+	ID                  bson.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID             string          `json:"guild_id" bson:"guild_id"`
+	Name                string          `json:"name" bson:"name"`
+	EscapedMessages     []*HeistMessage `json:"escaped_messages" bson:"escaped_messages"`
+	ApprehendedMessages []*HeistMessage `json:"apprehended_messages" bson:"apprehended_messages"`
+	DiedMessages        []*HeistMessage `json:"died_messages" bson:"died_messages"`
+	Jail                string          `json:"jail" bson:"jail"`
+	OOB                 string          `json:"oob" bson:"oob"`
+	Police              string          `json:"police" bson:"police"`
+	Bail                string          `json:"bail" bson:"bail"`
+	Crew                string          `json:"crew" bson:"crew"`
+	Sentence            string          `json:"sentence" bson:"sentence"`
+	Heist               string          `json:"heist" bson:"heist"`
+	Vault               string          `json:"vault" bson:"vault"`
 }
 
 // A HeistMessage is a message for a successful heist outcome

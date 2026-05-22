@@ -5,16 +5,16 @@ import (
 	"slices"
 	"sync"
 
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var serverMutex sync.Mutex
 
 // Server represents the owners and admins of the bot in the database.
 type Server struct {
-	ID     bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	Owners []string           `json:"owners" bson:"owners"`
-	Admins []string           `json:"admins" bson:"admins"`
+	ID     bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Owners []string      `json:"owners" bson:"owners"`
+	Admins []string      `json:"admins" bson:"admins"`
 }
 
 // GetServer retrieves the bot from the database.
@@ -26,7 +26,7 @@ func GetServer() *Server {
 	return server
 }
 
-// NewServer creates a new server in the database, and writes the newly created server to the database.
+// NewServer creates a new server in the database and writes the newly created server to the database.
 func NewServer() *Server {
 	server := &Server{
 		Owners: []string{},

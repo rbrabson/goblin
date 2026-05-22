@@ -5,26 +5,27 @@ import (
 	"time"
 
 	bj "github.com/rbrabson/blackjack"
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // Member represents a member's statistics for the blackjack game.
 type Member struct {
-	ID           bson.ObjectID`json:"id" bson:"_id,omitempty"`
-	GuildID      string             `json:"guild_id" bson:"guild_id"`
-	MemberID     string             `json:"member_id" bson:"member_id"`
-	RoundsPlayed int                `json:"rounds_played" bson:"rounds_played"`
-	HandsPlayed  int                `json:"hands_played" bson:"hands_played"`
-	Wins         int                `json:"wins" bson:"wins"`
-	Losses       int                `json:"losses" bson:"losses"`
-	Pushes       int                `json:"pushes" bson:"pushes"`
-	Blackjacks   int                `json:"blackjacks" bson:"blackjacks"`
-	Splits       int                `json:"splits" bson:"splits"`
-	Surrenders   int                `json:"surrenders" bson:"surrenders"`
-	CreditsBet   int                `json:"credits_bet" bson:"credits_bet"`
-	CreditsWon   int                `json:"credits_won" bson:"credits_won"`
-	CreditsLost  int                `json:"credits_lost" bson:"credits_lost"`
-	LastPlayed   time.Time          `json:"last_played" bson:"last_played"`
+	ID           bson.ObjectID `json:"id" bson:"_id,omitempty"`
+	GuildID      string        `json:"guild_id" bson:"guild_id"`
+	MemberID     string        `json:"member_id" bson:"member_id"`
+	RoundsPlayed int           `json:"rounds_played" bson:"rounds_played"`
+	HandsPlayed  int           `json:"hands_played" bson:"hands_played"`
+	Wins         int           `json:"wins" bson:"wins"`
+	Losses       int           `json:"losses" bson:"losses"`
+	Pushes       int           `json:"pushes" bson:"pushes"`
+	Blackjacks   int           `json:"blackjacks" bson:"blackjacks"`
+	Splits       int           `json:"splits" bson:"splits"`
+	Surrenders   int           `json:"surrenders" bson:"surrenders"`
+	CreditsBet   int           `json:"credits_bet" bson:"credits_bet"`
+	CreditsWon   int           `json:"credits_won" bson:"credits_won"`
+	CreditsLost  int           `json:"credits_lost" bson:"credits_lost"`
+	LastPlayed   time.Time     `json:"last_played" bson:"last_played"`
 }
 
 // String returns a string representation of the Member struct.

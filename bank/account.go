@@ -5,19 +5,19 @@ import (
 	"log/slog"
 	"time"
 
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // An Account represents the "bank" account for a given user. This keeps track of the
 // in-game currency for the given member of a guild (server).
 type Account struct {
-	ID              bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID         string             `json:"guild_id" bson:"guild_id"`
-	MemberID        string             `json:"member_id" bson:"member_id"`
-	CreatedAt       time.Time          `json:"created_at" bson:"created_at"`
-	CurrentBalance  int                `json:"current_balance" bson:"current_balance"`
-	MonthlyBalance  int                `json:"monthly_balance" bson:"monthly_balance"`
-	LifetimeBalance int                `json:"lifetime_balance" bson:"lifetime_balance"`
+	ID              bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID         string        `json:"guild_id" bson:"guild_id"`
+	MemberID        string        `json:"member_id" bson:"member_id"`
+	CreatedAt       time.Time     `json:"created_at" bson:"created_at"`
+	CurrentBalance  int           `json:"current_balance" bson:"current_balance"`
+	MonthlyBalance  int           `json:"monthly_balance" bson:"monthly_balance"`
+	LifetimeBalance int           `json:"lifetime_balance" bson:"lifetime_balance"`
 }
 
 // GetAccount gets the bank account for the given member. If the account doesn't

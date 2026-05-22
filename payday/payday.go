@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -18,12 +18,12 @@ const (
 
 // Payday is the daily payment for members of a guild (server).
 type Payday struct {
-	ID                bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID           string             `json:"guild_id" bson:"guild_id"`
-	Amount            int                `json:"payday_amount" bson:"payday_amount"`
-	PaydayFrequency   time.Duration      `json:"payday_frequency" bson:"payday_frequency"`
-	MaxStreak         int                `json:"max_streak" bson:"max_streak"`
-	StreakPerDayBonus int                `json:"streak_per_day_bonus" bson:"streak_per_day_bonus"`
+	ID                bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID           string        `json:"guild_id" bson:"guild_id"`
+	Amount            int           `json:"payday_amount" bson:"payday_amount"`
+	PaydayFrequency   time.Duration `json:"payday_frequency" bson:"payday_frequency"`
+	MaxStreak         int           `json:"max_streak" bson:"max_streak"`
+	StreakPerDayBonus int           `json:"streak_per_day_bonus" bson:"streak_per_day_bonus"`
 }
 
 // GetPayday returns the payday information for a server, creating a new one if necessary.

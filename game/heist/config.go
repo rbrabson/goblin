@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -24,21 +24,21 @@ const (
 
 // Config is the configuration data for new heists
 type Config struct {
-	ID                 bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID            string             `json:"guild_id" bson:"guild_id"`
-	BailBase           int                `json:"bail_base" bson:"bail_base"`
-	BoostPercentage    float64            `json:"boost_percentage" bson:"boost_percentage"`
-	BoostEnabled       bool               `json:"boost_enabled" bson:"boost_enabled"`
-	CrewOutput         string             `json:"crew_output" bson:"crew_output"`
-	DeathTimer         time.Duration      `json:"death_timer" bson:"death_timer"`
-	HeistCost          int                `json:"heist_cost" bson:"heist_cost"`
-	PoliceAlert        time.Duration      `json:"police_alert" bson:"police_alert"`
-	SentenceBase       time.Duration      `json:"sentence_base" bson:"sentence_base"`
-	BaseVaultRecovery  float64            `json:"base_vault_recovery" bson:"base_vault_recovery"`
-	BoostVaultRecovery float64            `json:"boost_vault_recovery" bson:"boost_vault_recovery"`
-	WaitTime           time.Duration      `json:"wait_time" bson:"wait_time"`
-	Theme              *Theme             `json:"-" bson:"-"`
-	Targets            []*Target          `json:"-" bson:"-"`
+	ID                 bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID            string        `json:"guild_id" bson:"guild_id"`
+	BailBase           int           `json:"bail_base" bson:"bail_base"`
+	BoostPercentage    float64       `json:"boost_percentage" bson:"boost_percentage"`
+	BoostEnabled       bool          `json:"boost_enabled" bson:"boost_enabled"`
+	CrewOutput         string        `json:"crew_output" bson:"crew_output"`
+	DeathTimer         time.Duration `json:"death_timer" bson:"death_timer"`
+	HeistCost          int           `json:"heist_cost" bson:"heist_cost"`
+	PoliceAlert        time.Duration `json:"police_alert" bson:"police_alert"`
+	SentenceBase       time.Duration `json:"sentence_base" bson:"sentence_base"`
+	BaseVaultRecovery  float64       `json:"base_vault_recovery" bson:"base_vault_recovery"`
+	BoostVaultRecovery float64       `json:"boost_vault_recovery" bson:"boost_vault_recovery"`
+	WaitTime           time.Duration `json:"wait_time" bson:"wait_time"`
+	Theme              *Theme        `json:"-" bson:"-"`
+	Targets            []*Target     `json:"-" bson:"-"`
 }
 
 // GetConfig retrieves the heist configuration for the specified guild. If

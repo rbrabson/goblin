@@ -9,16 +9,15 @@ import (
 
 	"github.com/rbrabson/goblin/discord"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // Avatar represents a character that may be assigned to a member that partipates in a race
 type Avatar struct {
-	ID            bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID       string             `json:"guild_id" bson:"guild_id"`
-	Theme         string             `json:"theme" bson:"theme"`
-	Emoji         string             `json:"emoji" bson:"emoji"`
-	MovementSpeed string             `json:"movement_speed" bson:"movement_speed"`
+	ID            bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID       string        `json:"guild_id" bson:"guild_id"`
+	Theme         string        `json:"theme" bson:"theme"`
+	Emoji         string        `json:"emoji" bson:"emoji"`
+	MovementSpeed string        `json:"movement_speed" bson:"movement_speed"`
 }
 
 // getRaceAvatars returns the list of chracters that may be assigned to a member during a race.

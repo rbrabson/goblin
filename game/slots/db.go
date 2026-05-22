@@ -3,8 +3,8 @@ package slots
 import (
 	"log/slog"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 

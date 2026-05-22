@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // Default values when a new bank is created for a previously unknown guild.
@@ -20,11 +20,11 @@ const (
 
 // A Bank is the repository for all bank accounts for a given guild (server).
 type Bank struct {
-	ID             bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID        string             `json:"guild_id" bson:"guild_id"`
-	Name           string             `json:"bank_name" bson:"bank_name"`
-	Currency       string             `json:"currency" bson:"currency"`
-	DefaultBalance int                `json:"default_balance" bson:"default_balance"`
+	ID             bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID        string        `json:"guild_id" bson:"guild_id"`
+	Name           string        `json:"bank_name" bson:"bank_name"`
+	Currency       string        `json:"currency" bson:"currency"`
+	DefaultBalance int           `json:"default_balance" bson:"default_balance"`
 }
 
 // GetBank returns the bank for the specified build. If the bank does not exist, then one is created.

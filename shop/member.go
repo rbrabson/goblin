@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"slices"
 
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -13,10 +13,10 @@ const (
 
 // Member represents a member of a guild with restrictions on what they can or cannot do in a shop.
 type Member struct {
-	ID           bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID      string             `json:"guild_id,omitempty" bson:"guild_id,omitempty"`
-	MemberID     string             `json:"member_id,omitempty" bson:"member_id,omitempty"`
-	Restrictions []string           `json:"restrictions,omitempty" bson:"restrictions,omitempty"`
+	ID           bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID      string        `json:"guild_id,omitempty" bson:"guild_id,omitempty"`
+	MemberID     string        `json:"member_id,omitempty" bson:"member_id,omitempty"`
+	Restrictions []string      `json:"restrictions,omitempty" bson:"restrictions,omitempty"`
 }
 
 // GetMember retrieves a member from the database, creating one if it doesn't exist.

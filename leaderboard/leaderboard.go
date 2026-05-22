@@ -11,17 +11,16 @@ import (
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/internal/disctime"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/bson/bson "
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
 // A Leaderboard is used to send a monthly leaderboard to the Discord server for each guild.
 type Leaderboard struct {
-	ID         bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID    string             `json:"guild_id" bson:"guild_id"`
-	ChannelID  string             `json:"channel_id" bson:"channel_id"`
-	LastSeason time.Time          `json:"last_season" bson:"last_season"`
+	ID         bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID    string        `json:"guild_id" bson:"guild_id"`
+	ChannelID  string        `json:"channel_id" bson:"channel_id"`
+	LastSeason time.Time     `json:"last_season" bson:"last_season"`
 }
 
 // newLeaderboard creates a new leaderboard for the given guildID and sets the last season to the current month.
