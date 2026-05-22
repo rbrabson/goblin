@@ -33,7 +33,7 @@ var (
 
 // payday handles the `/payday` command.
 func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
@@ -81,7 +81,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)

@@ -258,11 +258,11 @@ func (g *Game) EndRound() {
 		g.Dealer().ClearHand()
 	}
 
-	if status == discord.STOPPING {
-		newstatus := discord.STOPPED
+	if status == discord.PluginStopping {
+		newstatus := discord.PluginStopped
 		for _, game := range games {
 			if !game.NotStarted() {
-				newstatus = discord.STOPPING
+				newstatus = discord.PluginStopping
 				break
 			}
 		}

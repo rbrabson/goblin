@@ -101,7 +101,7 @@ func getTarget(targets []*Target, crewSize int) *Target {
 // readTargetsFromFIle returns the default targets for a server.
 // If the file is not found or cannot be decoded, the default targets are used.
 func readTargetsFromFIle(guildID string) []*Target {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "targets", HEIST_THEME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "heist", "targets", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read targets from file",

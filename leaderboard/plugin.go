@@ -19,7 +19,7 @@ var (
 	plugin *Plugin
 	bot    *discord.Bot
 	db     *mongo.MongoDB
-	status = discord.RUNNING
+	status = discord.PluginRunning
 )
 
 // Plugin is the plugin for the leaderboard
@@ -43,7 +43,7 @@ func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 
 // Stop stops the leaderboard. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
-	status = discord.STOPPED
+	status = discord.PluginStopped
 }
 
 // Status returns the status of the leaderboard.	This is used to determine

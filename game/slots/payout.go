@@ -43,7 +43,7 @@ func newPayoutTable() rslots.PayoutTable {
 
 // readPayoutTableFromFile reads the payout table from a JSON file.
 func readPayoutTableFromFile() rslots.PayoutTable {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "slots", "payout", PAYOUT_FILE_NAME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "slots", "payout", PAYOUT_FILE_NAME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default payout table",

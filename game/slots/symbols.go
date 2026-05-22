@@ -71,7 +71,7 @@ func newSymbolTable() SymbolTable {
 
 // readSymbolTableFromFile reads the symbol table from a JSON file.
 func readSymbolTableFromFile() SymbolTable {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "slots", "symbols", slotsTheme+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "slots", "symbols", slotsTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read symbols file",

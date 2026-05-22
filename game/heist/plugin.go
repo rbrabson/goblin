@@ -20,7 +20,7 @@ const (
 var (
 	plugin      *Plugin
 	db          *mongo.MongoDB
-	status      = discord.RUNNING
+	status      = discord.PluginRunning
 	HEIST_THEME string
 )
 
@@ -38,16 +38,16 @@ func Start() {
 
 // Stop stops the heist game. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
-	status = discord.STOPPING
+	status = discord.PluginStopping
 }
 
 // Status returns the status of the heist game.	This is used to determine
 // if the plugin is running or not.
 func (plugin *Plugin) Status() discord.PluginStatus {
-	if status == discord.STOPPING {
+	if status == discord.PluginStopping {
 		heistLock.Lock()
 		if len(currentHeists) == 0 {
-			status = discord.STOPPED
+			status = discord.PluginStopped
 		}
 		heistLock.Unlock()
 	}

@@ -85,7 +85,7 @@ func defaultConfig() *Config {
 
 // readConfigFromFile reads the configuration from a JSON file and returns a Config instance.
 func readConfigFromFile() *Config {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "blackjack", "config", CONFIG_FILE_NAME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "blackjack", "config", CONFIG_FILE_NAME+".json")
 	bytes, _ := os.ReadFile(configFileName)
 
 	var config Config

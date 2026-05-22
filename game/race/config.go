@@ -54,7 +54,7 @@ func GetConfig(guildID string) *Config {
 // read from the configuration file or decdoded, then a default configuration is
 // returned.
 func readConfigFromFile(guildID string) *Config {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "race", "config", raceTheme+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "race", "config", raceTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read race config", slog.String("guildID", guildID), slog.String("theme", raceTheme), slog.Any("error", err))

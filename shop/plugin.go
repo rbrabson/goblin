@@ -22,7 +22,7 @@ var (
 	plugin *Plugin
 	bot    *discord.Bot
 	db     *mongo.MongoDB
-	status = discord.RUNNING
+	status = discord.PluginRunning
 )
 
 // Plugin is the plugin for the banking system used by the bot
@@ -40,7 +40,7 @@ func Start() {
 // Stop stops the heist game. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
 	paginator.Close()
-	status = discord.STOPPED
+	status = discord.PluginStopped
 }
 
 // Status returns the status of the heist game.	This is used to determine

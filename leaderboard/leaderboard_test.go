@@ -629,8 +629,8 @@ func TestPlugin(t *testing.T) {
 	}
 
 	// Test Status
-	if testPlugin.Status() != discord.RUNNING {
-		t.Errorf("Status() returned incorrect status: got %v, want %v", testPlugin.Status(), discord.RUNNING)
+	if testPlugin.Status() != discord.PluginRunning {
+		t.Errorf("Status() returned incorrect status: got %v, want %v", testPlugin.Status(), discord.PluginRunning)
 	}
 
 	// Test GetCommands
@@ -667,12 +667,12 @@ func TestPlugin(t *testing.T) {
 
 	// Test Stop
 	testPlugin.Stop()
-	if status != discord.STOPPED {
-		t.Errorf("Stop() did not set status to STOPPED: got %v, want %v", status, discord.STOPPED)
+	if status != discord.PluginStopped {
+		t.Errorf("Stop() did not set status to STOPPED: got %v, want %v", status, discord.PluginStopped)
 	}
 
 	// Reset status for other tests
-	status = discord.RUNNING
+	status = discord.PluginRunning
 }
 
 func TestPluginInitialize(t *testing.T) {

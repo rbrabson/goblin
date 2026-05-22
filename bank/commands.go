@@ -134,7 +134,7 @@ var (
 
 // bankAdmin routes the bankAdmin commands to the proper handers.
 func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
@@ -181,7 +181,7 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // bank routes the bank commands to the proper handlers.
 func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)

@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
 )
@@ -14,6 +15,11 @@ func GetenvBool(key string) bool {
 	}
 	v, err := strconv.ParseBool(s)
 	if err != nil {
+		slog.Warn("invalid boolean environment variable",
+			slog.String("key", key),
+			slog.String("value", s),
+			slog.Any("error", err),
+		)
 		return false
 	}
 	return v

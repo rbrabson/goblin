@@ -15,9 +15,9 @@ var (
 type PluginStatus int
 
 const (
-	RUNNING PluginStatus = iota
-	STOPPING
-	STOPPED
+	PluginRunning PluginStatus = iota
+	PluginStopping
+	PluginStopped
 )
 
 // Plugin defines the game that is registered to run on the system
@@ -35,7 +35,10 @@ type Plugin interface {
 
 // ListPlugin returns the list of plugins that have been registered for use within the bot
 func ListPlugin() []Plugin {
-	return plugins
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	return append([]Plugin(nil), plugins...)
 }
 
 // RegisterPlugin registers the plugin to be used within the bot
@@ -46,14 +49,14 @@ func RegisterPlugin(plugin Plugin) {
 	plugins = append(plugins, plugin)
 }
 
-// Gets the string representation of the plugin status.
+// String gets the string representation of the plugin status.
 func (s PluginStatus) String() string {
 	switch s {
-	case RUNNING:
+	case PluginRunning:
 		return "Running"
-	case STOPPING:
+	case PluginStopping:
 		return "Stopping"
-	case STOPPED:
+	case PluginStopped:
 		return "Stopped"
 	default:
 		return "Unknown"

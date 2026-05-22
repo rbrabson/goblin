@@ -19,12 +19,12 @@ const (
 )
 
 var (
-	Version            string
-	Revision           string
-	BotName            = "Goblin"
-	db                 *mongo.MongoDB
-	bot                *Bot
-	DISCORD_CONFIG_DIR string
+	Version   string
+	Revision  string
+	BotName   = "Goblin"
+	ConfigDir string
+	db        *mongo.MongoDB
+	bot       *Bot
 )
 
 var (
@@ -44,7 +44,7 @@ type Bot struct {
 	timer   chan int
 }
 
-// NewBot creates a nbew Discord bot that can run Discord commands.
+// NewBot creates a new Discord bot that can run Discord commands.
 func NewBot(botName string, version string, revision string) *Bot {
 	// Get the bot version and revision
 	BotName = botName
@@ -55,7 +55,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 	appID := os.Getenv("DISCORD_APP_ID")
 	token := os.Getenv("DISCORD_BOT_TOKEN")
 	guildID := os.Getenv("DISCORD_GUILD_ID")
-	DISCORD_CONFIG_DIR = os.Getenv("DISCORD_CONFIG_DIR")
+	ConfigDir = os.Getenv("DISCORD_CONFIG_DIR")
 
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -160,7 +160,7 @@ func NewBot(botName string, version string, revision string) *Bot {
 // DeleteCommands deletes the current set of slash commands. This can be useful when developing
 // a new bot and the set of loaded slash commands changes.
 func (bot *Bot) DeleteCommands() {
-	// Delete all bot commands indivdually
+	// Delete all bot commands individually
 	// commands, _ := bot.Session.ApplicationCommands(bot.appID, bot.guildID)
 	// for _, command := range commands {
 	// 	bot.Session.ApplicationCommandDelete(bot.appID, bot.guildID, command.ID)

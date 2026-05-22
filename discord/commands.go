@@ -42,7 +42,7 @@ var (
 		},
 		{
 			Name:        "version",
-			Description: "Returns the version of heist running on the server.",
+			Description: "Returns the version of the bot running on the server.",
 		},
 	}
 	serverCommands = []*discordgo.ApplicationCommand{
@@ -109,8 +109,8 @@ var (
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
 							Options: []*discordgo.ApplicationCommandOption{
 								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "member",
+									Type:        discordgo.ApplicationCommandOptionUser,
+									Name:        "user",
 									Description: "The member to add as an admin.",
 									Required:    true,
 								},
@@ -218,7 +218,7 @@ func sendHelpMessages(s *discordgo.Session, i *discordgo.InteractionCreate, titl
 	paginator := page.NewPaginator(
 		page.WithDiscordConfig(
 			page.DiscordConfig{
-				Session:                bot.Session,
+				Session:                s,
 				AddComponentHandler:    bot.AddComponentHandler,
 				RemoveComponentHandler: bot.RemoveComponentHandler,
 			},
@@ -309,19 +309,11 @@ func getAdminHelp() [][]string {
 // serverAdmin handles server admin commands.
 func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server := GetServer()
-	server.mutex.Lock()
-	defer server.mutex.Unlock()
-	if server.HasOwners() && !server.IsOwner(i.Member.User.ID) && !server.IsAdmin(i.Member.User.ID) {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("You do not have permission to use this command."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send help response",
-				slog.Any("error", err),
-			)
-		}
+	if !server.CanManage(i.Member.User.ID) {
+		sendError(s, i, ErrNoPermissions)
 		slog.Warn("user does not have permission",
-			slog.String("userID", i.Member.User.ID),
+			slog.String("server", i.GuildID),
+			slog.String("user", i.Member.User.ID),
 			slog.Bool("hasOwners", server.HasOwners()),
 			slog.Bool("isOwner", server.IsOwner(i.Member.User.ID)),
 			slog.Bool("isAdmin", server.IsAdmin(i.Member.User.ID)),
@@ -330,8 +322,9 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	subCommand := i.ApplicationCommandData().Options[0]
-	slog.Info(fmt.Sprintf("processing `server/%s` command", subCommand.Name),
-		slog.String("userID", i.Member.User.ID),
+	slog.Debug(fmt.Sprintf("processing `server/%s` command", subCommand.Name),
+		slog.String("server", i.GuildID),
+		slog.String("user", i.Member.User.ID),
 		slog.Bool("hasOwners", server.HasOwners()),
 		slog.Bool("isOwner", server.IsOwner(i.Member.User.ID)),
 		slog.Bool("isAdmin", server.IsAdmin(i.Member.User.ID)),
@@ -348,9 +341,7 @@ func serverAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "log":
 		setLogLevel(s, i)
 	default:
-		slog.Error("unknown subcommand",
-			slog.String("subCommand", subCommand.Name),
-		)
+		sendError(s, i, ErrUnrecognizedCommand)
 	}
 }
 
@@ -382,11 +373,11 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	botStatus := "Running"
 	for _, plugin := range plugins {
 		switch plugin.Status() {
-		case RUNNING:
+		case PluginRunning:
 			botStatus = "Running"
-		case STOPPING:
+		case PluginStopping:
 			botStatus = "Stopping"
-		case STOPPED:
+		case PluginStopped:
 			if botStatus != "Stopping" {
 				botStatus = "Stopped"
 			}
@@ -431,7 +422,7 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // manageOwners manages the server owners.
 func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	server := GetServer()
-	if server.HasOwners() && !server.IsOwner(i.Member.User.ID) {
+	if !server.CanManageOwners(i.Member.User.ID) {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("You do not have permission to use this command."),
 		)
@@ -440,6 +431,7 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				slog.Any("error", err),
 			)
 		}
+		return
 	}
 
 	option := i.ApplicationCommandData().Options[0].Options[0]
@@ -478,7 +470,7 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Added " + memberID + " as a a server owner."),
+			disgomsg.WithContent("Added " + memberID + " as a server owner."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -489,8 +481,8 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			slog.String("userID", memberID),
 		)
 	case "list":
-		owers := server.ListOwners()
-		if len(owers) == 0 {
+		owners := server.ListOwners()
+		if len(owners) == 0 {
 			resp := disgomsg.NewResponse(
 				disgomsg.WithContent("There are no owners for this server."),
 			)
@@ -502,7 +494,7 @@ func manageOwners(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Owners: " + strings.Join(owers, ", ")),
+			disgomsg.WithContent("Owners: " + strings.Join(owners, ", ")),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -577,32 +569,12 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		option := i.ApplicationCommandData().Options[0].Options[0].Options[0]
 		member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
 		if err != nil {
-			resp := disgomsg.NewResponse(
-				disgomsg.WithContent("The requested user cannot be found."),
-			)
-			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-				slog.Error("error sending response",
-					slog.String("guildID", i.GuildID),
-					slog.String("error", err.Error()),
-				)
-			}
+			sendError(s, i, err)
 			return
 		}
 		memberID := member.MemberID
-		err = server.AddAdmin(memberID)
-		if err != nil {
-			resp := disgomsg.NewResponse(
-				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
-			)
-			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-				slog.Error("failed to send response",
-					slog.Any("error", err),
-				)
-			}
-			slog.Error("failed to add admin",
-				slog.String("userID", memberID),
-				slog.Any("error", err),
-			)
+		if err := server.AddAdmin(memberID); err != nil {
+			sendError(s, i, err)
 			return
 		}
 		resp := disgomsg.NewResponse(
@@ -613,24 +585,17 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				slog.Any("error", err),
 			)
 		}
-		slog.Error("added admin",
+		slog.Info("added admin",
 			slog.String("userID", memberID),
 		)
 	case "list":
-		owers := server.ListAdmins()
-		if len(owers) == 0 {
-			resp := disgomsg.NewResponse(
-				disgomsg.WithContent("There are no admins for this server."),
-			)
-			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-				slog.Error("failed to send response",
-					slog.Any("error", err),
-				)
-			}
+		owners := server.ListAdmins()
+		if len(owners) == 0 {
+			sendError(s, i, ErrNoAdmins)
 			return
 		}
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Admins: " + strings.Join(owers, ", ")),
+			disgomsg.WithContent("Admins: " + strings.Join(owners, ", ")),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
@@ -641,58 +606,45 @@ func manageAdmins(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		option := i.ApplicationCommandData().Options[0].Options[0].Options[0]
 		member, err := guild.GetMemberByUser(s, i.GuildID, option.UserValue(s))
 		if err != nil {
-			resp := disgomsg.NewResponse(
-				disgomsg.WithContent("The requested user cannot be found."),
-			)
-			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-				slog.Error("error sending response",
-					slog.String("guildID", i.GuildID),
-					slog.String("error", err.Error()),
-				)
-			}
+			sendError(s, i, err)
 			return
 		}
 		memberID := member.MemberID
-		err = server.RemoveAdmin(memberID)
-		if err != nil {
-			resp := disgomsg.NewResponse(
-				disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
-			)
-			if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-				slog.Error("failed to send response",
-					slog.Any("error", err),
-				)
-			}
-			slog.Error("failed to add admin",
-				slog.String("userID", memberID),
-				slog.Any("error", err),
-			)
+		if err := server.RemoveAdmin(memberID); err != nil {
+			sendError(s, i, err)
 			return
 		}
 		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Removed " + memberID + " as an server admin."),
+			disgomsg.WithContent("Removed " + memberID + " as a server admin."),
 		)
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("failed to send response",
 				slog.Any("error", err),
 			)
 		}
-		slog.Error("removed admin",
+		slog.Info("removed admin",
 			slog.String("userID", memberID),
 		)
 	default:
-		slog.Error("unknown subcommand",
-			slog.String("subCommand", options[0].Name),
-		)
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("Unknown subcommand: " + options[0].Name),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response",
-				slog.Any("error", err),
-			)
-		}
+		sendError(s, i, ErrUnrecognizedCommand)
+		return
 	}
+}
+
+// sendError sends a failure message to the command invoker based on a returned error
+func sendError(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
+	resp := disgomsg.NewResponse(
+		disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
+	)
+	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+		slog.Error("failed to send response",
+			slog.Any("error", err),
+		)
+	}
+	slog.Error("unable to perform command",
+		slog.Any("error", err),
+	)
+	return
 }
 
 // setLogLevel sets the logging level for the server.
@@ -701,6 +653,10 @@ func setLogLevel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	level := option.Options[0].StringValue()
 	log.SetLevel(level)
 
-	disgomsg.NewResponse(disgomsg.WithContent("Set log level to "+level+".")).Send(s, i.Interaction)
+	if err := disgomsg.NewResponse(disgomsg.WithContent("Set log level to "+level+".")).Send(s, i.Interaction); err != nil {
+		slog.Error("failed to send response",
+			slog.Any("error", err),
+		)
+	}
 	slog.Info("set log level", slog.String("level", level))
 }

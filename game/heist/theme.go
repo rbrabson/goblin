@@ -87,7 +87,7 @@ func GetTheme(guildID string) *Theme {
 // readThemeFromFile returns the default theme for a guild. If the theme can't be read
 // from the configuration file or can't be decoded, then a default theme is returned
 func readThemeFromFile(guildID string) *Theme {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "themes", HEIST_THEME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "heist", "themes", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default theme",

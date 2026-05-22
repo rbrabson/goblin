@@ -8,15 +8,14 @@ import (
 )
 
 const (
-	ServerCollection = "goblin"
+	serverCollection = "goblin"
 )
 
 // ReadServer reads the server from the database
 func ReadServer() *Server {
 	filter := bson.M{}
 	var server Server
-	err := db.FindOne(ServerCollection, filter, &server)
-	if err != nil {
+	if err := db.FindOne(serverCollection, filter, &server); err != nil {
 		slog.Debug("server not found in the database",
 			slog.Any("error", err),
 		)
@@ -34,8 +33,7 @@ func WriteServer(server *Server) error {
 	} else {
 		filter = bson.M{"_id": server.ID}
 	}
-	err := db.UpdateOrInsert(ServerCollection, filter, server)
-	if err != nil {
+	if err := db.UpdateOrInsert(serverCollection, filter, server); err != nil {
 		slog.Error("unable to save server to the database",
 			slog.Any("filter", filter),
 			slog.Any("error", err),

@@ -62,7 +62,7 @@ func GetConfig(guildID string) *Config {
 // If the default configuration file cannot be read or decoded, then a default
 // configuration is created.
 func readConfigFromFile(guildID string) *Config {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "config", HEIST_THEME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "heist", "config", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read heist config", slog.String("file", configFileName), slog.Any("error", err))

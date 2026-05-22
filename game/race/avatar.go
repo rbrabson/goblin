@@ -50,7 +50,7 @@ func getRaceAvatars(guildID string, themeName string) []*Avatar {
 // readRaceAvatarsFromFile reads the list of characters for the theme and guild from the database. If the list
 // does not exist, then an error is returned.
 func readRaceAvatarsFromFile(guildID string, themeName string) []*Avatar {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "race", "avatars", themeName+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "race", "avatars", themeName+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default race avatars",

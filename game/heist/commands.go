@@ -246,7 +246,7 @@ var (
 
 // heistAdmin routes the commands to the subcommand and subcommandgroup handlers
 func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		disgomsg.NewResponse(disgomsg.WithContent("The system is shutting down.")).SendEphemeral(s, i.Interaction)
 		return
 	}
@@ -298,7 +298,7 @@ func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // heist routes the commands to the subcommand and subcommandgroup handlers
 func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)

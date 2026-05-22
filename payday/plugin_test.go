@@ -93,14 +93,14 @@ func TestPluginStatus(t *testing.T) {
 	p := &Plugin{}
 
 	// Test RUNNING status
-	status = discord.RUNNING
-	if p.Status() != discord.RUNNING {
+	status = discord.PluginRunning
+	if p.Status() != discord.PluginRunning {
 		t.Errorf("expected status to be RUNNING, got %v", p.Status())
 	}
 
 	// Test STOPPED status
-	status = discord.STOPPED
-	if p.Status() != discord.STOPPED {
+	status = discord.PluginStopped
+	if p.Status() != discord.PluginStopped {
 		t.Errorf("expected status to be STOPPED, got %v", p.Status())
 	}
 }
@@ -115,13 +115,13 @@ func TestPluginStop(t *testing.T) {
 	p := &Plugin{}
 
 	// Set status to RUNNING
-	status = discord.RUNNING
+	status = discord.PluginRunning
 
 	// Call Stop
 	p.Stop()
 
 	// Check that status is now STOPPED
-	if status != discord.STOPPED {
+	if status != discord.PluginStopped {
 		t.Errorf("expected status to be STOPPED after Stop(), got %v", status)
 	}
 }
