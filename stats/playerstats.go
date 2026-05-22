@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -523,7 +522,7 @@ func getString(value interface{}) string {
 func getTimeFromPipeline(value interface{}) time.Time {
 	var t time.Time
 	switch v := value.(type) {
-	case primitive.DateTime:
+	case bson.DateTime:
 		t = v.Time()
 	case time.Time:
 		t = v

@@ -11,7 +11,6 @@ require (
 	github.com/rbrabson/disgomsg v0.12.1
 	github.com/rbrabson/disgopage v0.3.0
 	github.com/rbrabson/slots v1.0.3
-	go.mongodb.org/mongo-driver v1.17.9
 	go.mongodb.org/mongo-driver/v2 v2.6.0
 	golang.org/x/text v0.37.0
 )
