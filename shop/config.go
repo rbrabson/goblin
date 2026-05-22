@@ -3,7 +3,6 @@ package shop
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -31,7 +30,6 @@ func GetConfig(guildID string) *Config {
 // newConfig creates a new configuration for the given guild ID and writes it to the database.
 func newConfig(guildID string) *Config {
 	config := &Config{
-		ID:      primitive.NewObjectID(),
 		GuildID: guildID,
 	}
 	if err := writeConfig(config); err != nil {

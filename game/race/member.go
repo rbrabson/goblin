@@ -6,6 +6,7 @@ import (
 
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // RaceMember represents a member of a guild that is assigned a racer

@@ -3,7 +3,6 @@ package slots
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -221,7 +220,7 @@ func GetPayoutAverages(guildID string) (*PayoutAverages, error) {
 }
 
 // Helper function to safely extract float64 values from aggregation results
-func getFloatFromResult(result primitive.M, key string) float64 {
+func getFloatFromResult(result bson.M, key string) float64 {
 	if val, ok := result[key]; ok && val != nil {
 		switch v := val.(type) {
 		case float64:
@@ -240,7 +239,7 @@ func getFloatFromResult(result primitive.M, key string) float64 {
 }
 
 // Helper function to safely extract int64 values from aggregation results
-func getInt64FromResult(result primitive.M, key string) int64 {
+func getInt64FromResult(result bson.M, key string) int64 {
 	if val, ok := result[key]; ok && val != nil {
 		switch v := val.(type) {
 		case int64:

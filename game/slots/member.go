@@ -5,7 +5,6 @@ import (
 
 	"github.com/rbrabson/goblin/stats"
 	rslots "github.com/rbrabson/slots"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -39,7 +38,6 @@ func GetMember(guildID, userID string) *Member {
 // newMember creates a new Member instance with default values and writes it to the database.
 func newMember(guildID, userID string) *Member {
 	member := &Member{
-		ID:       primitive.NewObjectID(),
 		GuildID:  guildID,
 		MemberID: userID,
 	}
