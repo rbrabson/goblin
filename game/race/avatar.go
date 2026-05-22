@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // Avatar represents a character that may be assigned to a member that partipates in a race
 type Avatar struct {
-	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID            bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID       string             `json:"guild_id" bson:"guild_id"`
 	Theme         string             `json:"theme" bson:"theme"`
 	Emoji         string             `json:"emoji" bson:"emoji"`

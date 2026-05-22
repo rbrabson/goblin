@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // Target is a target of a heist.
 type Target struct {
-	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID       bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID  string             `json:"guild_id" bson:"guild_id"`
 	Theme    string             `json:"theme" bson:"theme"`
 	Name     string             `json:"target_id" bson:"target_id"`

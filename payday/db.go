@@ -3,8 +3,7 @@ package payday
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -58,7 +57,7 @@ func readAccount(payday *Payday, accountID string) *Account {
 // writeAccount saves the payday information for a given account in the guild into the database.
 func writeAccount(account *Account) error {
 	var filter bson.M
-	if account.ID != primitive.NilObjectID {
+	if account.ID != bson.NilObjectID {
 		filter = bson.M{"_id": account.ID}
 	} else {
 		filter = bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}

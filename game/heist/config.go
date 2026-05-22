@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 
 // Config is the configuration data for new heists
 type Config struct {
-	ID                 primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID                 bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID            string             `json:"guild_id" bson:"guild_id"`
 	BailBase           int                `json:"bail_base" bson:"bail_base"`
 	BoostPercentage    float64            `json:"boost_percentage" bson:"boost_percentage"`

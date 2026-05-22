@@ -3,8 +3,7 @@ package discord
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -28,7 +27,7 @@ func ReadServer() *Server {
 // WriteServer writes the server to the database
 func WriteServer(server *Server) error {
 	var filter bson.M
-	if server.ID == primitive.NilObjectID {
+	if server.ID == bson.NilObjectID {
 		filter = bson.M{}
 	} else {
 		filter = bson.M{"_id": server.ID}

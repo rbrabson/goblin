@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"slices"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 
 // Member represents a member of a guild with restrictions on what they can or cannot do in a shop.
 type Member struct {
-	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID           bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID      string             `json:"guild_id,omitempty" bson:"guild_id,omitempty"`
 	MemberID     string             `json:"member_id,omitempty" bson:"member_id,omitempty"`
 	Restrictions []string           `json:"restrictions,omitempty" bson:"restrictions,omitempty"`

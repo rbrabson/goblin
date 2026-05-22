@@ -3,8 +3,7 @@ package shop
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -31,7 +30,7 @@ func readConfig(guildID string) (*Config, error) {
 // writeConfig writes the configuration to the database.
 func writeConfig(config *Config) error {
 	var filter bson.D
-	if config.ID != primitive.NilObjectID {
+	if config.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: config.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: config.GuildID}}
@@ -78,7 +77,7 @@ func readShopItem(guildID string, name string, itemType string) (*ShopItem, erro
 // writeShopItem writes the shop item to the database.
 func writeShopItem(item *ShopItem) error {
 	var filter bson.D
-	if item.ID != primitive.NilObjectID {
+	if item.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: item.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: item.GuildID}, {Key: "name", Value: item.Name}, {Key: "type", Value: item.Type}}
@@ -96,7 +95,7 @@ func writeShopItem(item *ShopItem) error {
 // deleteShopItem deletes the shop item from the database.
 func deleteShopItem(item *ShopItem) error {
 	var filter bson.D
-	if item.ID != primitive.NilObjectID {
+	if item.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: item.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: item.GuildID}, {Key: "name", Value: item.Name}, {Key: "type", Value: item.Type}}
@@ -154,7 +153,7 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 // writePurchases writes the purchase to the database.
 func writePurchase(item *Purchase) error {
 	var filter bson.D
-	if item.ID != primitive.NilObjectID {
+	if item.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: item.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: item.Item.GuildID}, {Key: "member_id", Value: item.MemberID}, {Key: "name", Value: item.Item.Name}, {Key: "type", Value: item.Item.Type}, {Key: "is_expired", Value: false}}
@@ -172,7 +171,7 @@ func writePurchase(item *Purchase) error {
 // deletePurchase deletes the purchase from the database.
 func deletePurchase(purchase *Purchase) error {
 	var filter bson.D
-	if purchase.Item.ID != primitive.NilObjectID {
+	if purchase.Item.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: purchase.Item.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: purchase.Item.GuildID}, {Key: "member_id", Value: purchase.MemberID}, {Key: "name", Value: purchase.Item.Name}, {Key: "type", Value: purchase.Item.Type}}
@@ -204,7 +203,7 @@ func readMember(guildID string, memberID string) (*Member, error) {
 // writeMember writes the member to the database.
 func writeMember(member *Member) error {
 	var filter bson.D
-	if member.ID != primitive.NilObjectID {
+	if member.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: member.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: member.GuildID}, {Key: "member_id", Value: member.MemberID}}
@@ -222,7 +221,7 @@ func writeMember(member *Member) error {
 // deleteShopItem deletes the shop item from the database.
 func deleteMember(member *Member) error {
 	var filter bson.D
-	if member.ID != primitive.NilObjectID {
+	if member.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: member.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: member.GuildID}, {Key: "member_id", Value: member.MemberID}}

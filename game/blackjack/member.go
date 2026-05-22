@@ -5,12 +5,12 @@ import (
 	"time"
 
 	bj "github.com/rbrabson/blackjack"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // Member represents a member's statistics for the blackjack game.
 type Member struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	ID           bson.ObjectID`json:"id" bson:"_id,omitempty"`
 	GuildID      string             `json:"guild_id" bson:"guild_id"`
 	MemberID     string             `json:"member_id" bson:"member_id"`
 	RoundsPlayed int                `json:"rounds_played" bson:"rounds_played"`

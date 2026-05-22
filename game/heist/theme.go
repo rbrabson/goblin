@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // A Theme is a set of messages that provide a "flavor" for a heist
 type Theme struct {
-	ID                  primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID                  bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID             string             `json:"guild_id" bson:"guild_id"`
 	Name                string             `json:"name" bson:"name"`
 	EscapedMessages     []*HeistMessage    `json:"escaped_messages" bson:"escaped_messages"`

@@ -5,12 +5,12 @@ import (
 	"log/slog"
 
 	"github.com/rbrabson/goblin/bank"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // ShopItem represents an item in the shop, which represents any purchasable item.
 type ShopItem struct {
-	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID            bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID       string             `json:"guild_id" bson:"guild_id"`
 	Name          string             `json:"name" bson:"name"`
 	Description   string             `json:"description" bson:"description"`

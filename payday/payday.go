@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 
 // Payday is the daily payment for members of a guild (server).
 type Payday struct {
-	ID                primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID                bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID           string             `json:"guild_id" bson:"guild_id"`
 	Amount            int                `json:"payday_amount" bson:"payday_amount"`
 	PaydayFrequency   time.Duration      `json:"payday_frequency" bson:"payday_frequency"`

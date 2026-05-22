@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rbrabson/goblin/guild"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 type CriminalLevel int
@@ -33,7 +33,7 @@ const (
 
 // HeistMember is the status of a member who has participated in at least one heist
 type HeistMember struct {
-	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID            bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID       string             `json:"guild_id" bson:"guild_id"`
 	MemberID      string             `json:"member_id" bson:"member_id"`
 	BailCost      int                `json:"bail_cost" bson:"bail_cost"`

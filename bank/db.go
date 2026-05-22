@@ -3,8 +3,7 @@ package bank
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -80,7 +79,7 @@ func readAccount(guildID string, memberID string) *Account {
 // writeAccount creates or updates the member data in the database being used by the Discord bot.
 func writeAccount(account *Account) error {
 	var filter bson.D
-	if account.ID != primitive.NilObjectID {
+	if account.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: account.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: account.GuildID}, {Key: "member_id", Value: account.MemberID}}

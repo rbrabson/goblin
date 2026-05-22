@@ -4,13 +4,13 @@ import (
 	"log/slog"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // GameStats represents the statistics for a specific game in a guild on a specific day.
 type GameStats struct {
-	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID            bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID       string             `json:"guild_id" bson:"guild_id"`
 	Game          string             `json:"game" bson:"game"`
 	Day           time.Time          `json:"day" bson:"day"`

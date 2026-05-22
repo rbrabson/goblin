@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // Default values when a new bank is created for a previously unknown guild.
@@ -20,7 +20,7 @@ const (
 
 // A Bank is the repository for all bank accounts for a given guild (server).
 type Bank struct {
-	ID             primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID             bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID        string             `json:"guild_id" bson:"guild_id"`
 	Name           string             `json:"bank_name" bson:"bank_name"`
 	Currency       string             `json:"currency" bson:"currency"`

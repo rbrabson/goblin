@@ -10,15 +10,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/internal/disctime"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
 // A Leaderboard is used to send a monthly leaderboard to the Discord server for each guild.
 type Leaderboard struct {
-	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID         bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID    string             `json:"guild_id" bson:"guild_id"`
 	ChannelID  string             `json:"channel_id" bson:"channel_id"`
 	LastSeason time.Time          `json:"last_season" bson:"last_season"`

@@ -8,8 +8,7 @@ import (
 	"path/filepath"
 	"slices"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -22,9 +21,9 @@ var (
 
 // Guild is the configuration for a guild (guild).
 type Guild struct {
-	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID    string             `json:"guild_id" bson:"guild_id"`
-	AdminRoles []string           `json:"admin_roles" bson:"admin_roles"`
+	ID         bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID    string        `json:"guild_id" bson:"guild_id"`
+	AdminRoles []string      `json:"admin_roles" bson:"admin_roles"`
 }
 
 // GetAllGuilds returns all guilds in the database.

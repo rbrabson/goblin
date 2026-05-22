@@ -6,24 +6,23 @@ import (
 
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // RaceMember represents a member of a guild that is assigned a racer
 type RaceMember struct {
-	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID       string             `json:"guild_id" bson:"guild_id"`
-	MemberID      string             `json:"member_id" bson:"member_id"`
-	RacesLost     int                `json:"races_lost" bson:"races_lost"`
-	RacesPlaced   int                `json:"races_placed" bson:"races_placed"`
-	RacesShowed   int                `json:"races_showed" bson:"races_showed"`
-	RacesWon      int                `json:"races_won" bson:"races_won"`
-	TotalRaces    int                `json:"total_races" bson:"total_races"`
-	BetsEarnings  int                `json:"bets_earnings" bson:"bets_earnings"`
-	BetsMade      int                `json:"bets_made" bson:"bets_made"`
-	BetsWon       int                `json:"bets_won" bson:"bets_won"`
-	TotalEarnings int                `json:"total_earnings" bson:"total_earnings"`
-	guildMember   *guild.Member      `json:"-" bson:"-"`
+	ID            bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID       string        `json:"guild_id" bson:"guild_id"`
+	MemberID      string        `json:"member_id" bson:"member_id"`
+	RacesLost     int           `json:"races_lost" bson:"races_lost"`
+	RacesPlaced   int           `json:"races_placed" bson:"races_placed"`
+	RacesShowed   int           `json:"races_showed" bson:"races_showed"`
+	RacesWon      int           `json:"races_won" bson:"races_won"`
+	TotalRaces    int           `json:"total_races" bson:"total_races"`
+	BetsEarnings  int           `json:"bets_earnings" bson:"bets_earnings"`
+	BetsMade      int           `json:"bets_made" bson:"bets_made"`
+	BetsWon       int           `json:"bets_won" bson:"bets_won"`
+	TotalEarnings int           `json:"total_earnings" bson:"total_earnings"`
+	guildMember   *guild.Member `json:"-" bson:"-"`
 }
 
 // getRaceMember gets a race member. THe member is created if it doesn't exist.

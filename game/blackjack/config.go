@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 
 // Config holds the configuration settings for the blackjack game.
 type Config struct {
-	ID                primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	ID                bson.ObjectID`json:"id,omitempty" bson:"_id,omitempty"`
 	GuildID           string             `json:"guild_id" bson:"guild_id"`
 	MaxPlayers        int                `json:"max_players" bson:"max_players"`
 	Decks             int                `json:"decks" bson:"decks"`

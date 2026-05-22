@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 const (
@@ -20,7 +20,7 @@ var (
 
 // PlayerStats holds the statistics of a player in a game.
 type PlayerStats struct {
-	ID                  primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID                  bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID             string             `json:"guild_id" bson:"guild_id"`
 	MemberID            string             `json:"member_id" bson:"member_id"`
 	Game                string             `json:"game" bson:"game"`

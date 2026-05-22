@@ -3,12 +3,12 @@ package shop
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // Config represents the configuration for the shop in a guild.
 type Config struct {
-	ID             primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID             bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID        string             `json:"guild_id" bson:"guild_id"`
 	ChannelID      string             `json:"channel_id" bson:"channel_id"`
 	MessageID      string             `json:"message_id" bson:"message_id"`

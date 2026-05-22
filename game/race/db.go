@@ -3,8 +3,7 @@ package race
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -31,7 +30,7 @@ func readConfig(guildID string) *Config {
 // writeConfig stores the race configuration in the database.
 func writeConfig(config *Config) {
 	var filter bson.M
-	if config.ID != primitive.NilObjectID {
+	if config.ID != bson.NilObjectID {
 		filter = bson.M{"_id": config.ID}
 	} else {
 		filter = bson.M{"guild_id": config.GuildID}
@@ -60,7 +59,7 @@ func readRaceMember(guildID string, memberID string) *RaceMember {
 // writeRaceMember creates or updates the race member in the database
 func writeRaceMember(member *RaceMember) {
 	var filter bson.M
-	if member.ID != primitive.NilObjectID {
+	if member.ID != bson.NilObjectID {
 		filter = bson.M{"_id": member.ID}
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
@@ -90,7 +89,7 @@ func readAllRacers(filter bson.D) ([]*Avatar, error) {
 // writeRacer creates or updates the target in the database.
 func writeRacer(racer *Avatar) {
 	var filter bson.D
-	if racer.ID != primitive.NilObjectID {
+	if racer.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: racer.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: racer.GuildID}, {Key: "theme", Value: racer.Theme}, {Key: "emoji", Value: racer.Emoji}, {Key: "movement_speed", Value: racer.MovementSpeed}}

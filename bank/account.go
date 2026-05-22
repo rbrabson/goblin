@@ -5,13 +5,13 @@ import (
 	"log/slog"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // An Account represents the "bank" account for a given user. This keeps track of the
 // in-game currency for the given member of a guild (server).
 type Account struct {
-	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID              bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID         string             `json:"guild_id" bson:"guild_id"`
 	MemberID        string             `json:"member_id" bson:"member_id"`
 	CreatedAt       time.Time          `json:"created_at" bson:"created_at"`

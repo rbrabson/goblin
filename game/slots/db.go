@@ -3,9 +3,9 @@ package slots
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 const (
@@ -37,7 +37,7 @@ func readMember(guildID string, memberID string) *Member {
 // Write creates or updates the slots member in the database
 func writeMember(member *Member) {
 	var filter bson.M
-	if member.ID != primitive.NilObjectID {
+	if member.ID != bson.NilObjectID {
 		filter = bson.M{"_id": member.ID}
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}

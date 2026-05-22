@@ -7,12 +7,12 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson/bson "
 )
 
 // Member is a member of a given guild
 type Member struct {
-	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID         bson.ObjectID`json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID    string             `json:"guild_id" bson:"guild_id"`
 	MemberID   string             `json:"member_id" bson:"member_id"`
 	UserName   string             `json:"username" bson:"username"`
