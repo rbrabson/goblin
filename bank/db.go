@@ -61,8 +61,7 @@ func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit 
 	return accounts
 }
 
-// readAccount reads the account from the database and returns the value, if it exists, or returns nil if the
-// account does not exist in the database
+// readAccounts gets all matching accounts for the given bank.
 func readAccount(guildID string, memberID string) *Account {
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	var account Account

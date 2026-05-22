@@ -75,7 +75,7 @@ func (account *Account) Withdraw(amt int) error {
 			slog.Int("balance", account.CurrentBalance),
 			slog.Int("amount", amt),
 		)
-		return ErrInsufficentFunds
+		return ErrInsufficientFunds
 	}
 	account.CurrentBalance -= amt
 	account.MonthlyBalance -= amt
@@ -101,7 +101,7 @@ func (account *Account) WithdrawFromCurrentOnly(amt int) error {
 			slog.Int("balance", account.CurrentBalance),
 			slog.Int("amount", amt),
 		)
-		return ErrInsufficentFunds
+		return ErrInsufficientFunds
 	}
 	account.CurrentBalance -= amt
 

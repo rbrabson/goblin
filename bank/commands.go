@@ -67,7 +67,7 @@ var (
 					Type:        discordgo.ApplicationCommandOptionSubCommand,
 					Options: []*discordgo.ApplicationCommandOption{
 						{
-							Type:        discordgo.ApplicationCommandOptionString,
+							Type:        discordgo.ApplicationCommandOptionInteger,
 							Name:        "value",
 							Description: "The the default balance for the bank for the server.",
 							Required:    true,
