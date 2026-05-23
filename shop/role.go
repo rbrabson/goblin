@@ -18,6 +18,9 @@ type Role ShopItem
 // GetRole retrieves a role from the shop by its name for a specific guild.
 func GetRole(guildID string, name string) *Role {
 	item := getShopItem(guildID, name, ROLE)
+	if item == nil {
+		return nil
+	}
 	role := Role(*item)
 	return &role
 }
