@@ -1063,7 +1063,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	itemName := strs[2]
 
 	switch itemType {
-	case ROLE:
+	case roleItemType:
 		initiatePurchaseOfRoleFromShop(s, i, itemName)
 	case CustomCommandCollection:
 		initiatePurchaseOfCustomCommandFromShop(s, i, itemName)
@@ -1166,7 +1166,7 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	itemName := strs[3]
 
 	switch itemType {
-	case ROLE:
+	case roleItemType:
 		completePurchaseOfRoleFromShop(s, i, itemName)
 	case CustomCommandCollection:
 		completePurchaseOfCustomCommandFromShop(s, i, itemName)

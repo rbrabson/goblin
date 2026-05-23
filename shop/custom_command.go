@@ -116,7 +116,7 @@ func customCommandCreateChecks(guildID string, commandName string) error {
 // customCommandPurchaseChecks performs checks to see if a role can be purchased.
 func customCommandPurchaseChecks(guildID string, memberID string, commandName string) error {
 	// Make sure the role is still available in the shop
-	shopItem := getShopItem(guildID, commandName, CUSTOM_COMMAND)
+	shopItem := getShopItem(guildID, commandName, customCommandItemType)
 	if shopItem == nil {
 		slog.Error("failed to read custom command from shop",
 			slog.String("guildID", guildID),

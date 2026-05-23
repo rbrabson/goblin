@@ -150,7 +150,7 @@ func (p *Purchase) HasExpired() bool {
 		return false
 	case p.ExpiresOn.Before(time.Now().UTC()):
 		switch p.Item.Type {
-		case ROLE:
+		case roleItemType:
 			// Unassign the role to the user. If it can't be unassigned, log the error but don't mark it as expired
 			// so that it can be retried later.
 			err := guild.UnAssignRole(bot.Session, p.GuildID, p.MemberID, p.Item.Name)

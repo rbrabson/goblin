@@ -133,7 +133,12 @@ func startRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	race.interaction = i
 	guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	racer := getRaceMember(i.GuildID, guildMember)
-	race.addRaceParticipant(racer)
+	if _, err := race.addRaceParticipant(racer); err != nil {
+		slog.Error("failed to add the race starter as a participant", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
+		disgomsg.NewResponse(disgomsg.WithContent("Failed to add you as a participant to the race")).SendEphemeral(s, i.Interaction)
+		race.End()
+		return
+	}
 
 	raceMessage(s, race, "start")
 
@@ -182,7 +187,7 @@ func waitForMembersToJoin(s *discordgo.Session, race *Race) {
 		if time.Until(memberJoinTime) <= 0 {
 			break
 		}
-		if len(race.Racers) >= race.config.MaxNumRacers {
+		if race.IsFull() {
 			break
 		}
 	}
@@ -335,8 +340,13 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	participant := race.getRaceParticipant(i.Member.User.ID)
+	if participant == nil {
+		slog.Error("race participant not found", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
+		disgomsg.NewResponse(disgomsg.WithContent("Race participant not found")).SendEphemeral(s, i.Interaction)
+		return
+	}
 	var betMember *RaceMember
-	if (participant != nil) && (participant.Member != nil) {
+	if participant.Member != nil {
 		betMember = participant.Member
 	} else {
 		guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
@@ -344,6 +354,11 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	raceParticipant := getCurrentRaceParticipant(race, i.Interaction.MessageComponentData().CustomID)
+	if raceParticipant == nil {
+		slog.Error("race participant not found", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.String("customID", i.Interaction.MessageComponentData().CustomID))
+		disgomsg.NewResponse(disgomsg.WithContent("Race participant not found")).SendEphemeral(s, i.Interaction)
+		return
+	}
 	better := getRaceBetter(betMember, raceParticipant)
 	if err = placeBet(race, better); err != nil {
 		slog.Error("unable to place bet", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
@@ -444,9 +459,9 @@ func raceMessage(s *discordgo.Session, race *Race, action string) error {
 	}
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	racerNames := make([]string, 0, len(race.Racers))
-	for _, racer := range race.Racers {
-		racerNames = append(racerNames, racer.Member.guildMember.Name)
+	racerNames := race.GetRacerNames()
+	if len(racerNames) == 0 {
+		racerNames = []string{"None yet"}
 	}
 
 	var msg string
@@ -666,6 +681,12 @@ func getCurrentRaceParticipant(race *Race, customID string) *RaceParticipant {
 	defer betButtonMutex.Unlock()
 
 	buttons := betButtons[race.GuildID]
+	if buttons == nil {
+		return nil
+	}
 	button := buttons[customID]
+	if button == nil {
+		return nil
+	}
 	return button.racer
 }

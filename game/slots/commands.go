@@ -123,7 +123,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	config := GetConfig()
 	member := GetMember(guildID, userID)
-	if !member.IsInCooldown(config) {
+	if member.IsInCooldown(config) {
 		remaining := member.GetCooldownRemaining(config)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(fmt.Sprintf("You are on cooldown. Please wait %d seconds before playing again.", int(remaining.Seconds())+1)),

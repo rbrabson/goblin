@@ -17,9 +17,8 @@ const (
 func readConfig(guildID string) (*Config, error) {
 	filter := bson.M{"guild_id": guildID}
 	var config *Config
-	err := db.FindOne(ConfigCollection, filter, &config)
-	if err != nil {
-		slog.Error("unable to read shop config from the database", "guildID", guildID, "filter", filter, "error", err)
+	if err := db.FindOne(ConfigCollection, filter, &config); err != nil {
+		slog.Debug("shop config not found in the database", "guildID", guildID, "filter", filter, "error", err)
 		return nil, err
 	}
 	slog.Debug("read shop config from the database", "guildID", guildID)
@@ -64,9 +63,8 @@ func readShopItems(guildID string) ([]*ShopItem, error) {
 func readShopItem(guildID string, name string, itemType string) (*ShopItem, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "name", Value: name}, {Key: "type", Value: itemType}}
 	var item *ShopItem
-	err := db.FindOne(ShopItemCollection, filter, &item)
-	if err != nil {
-		slog.Error("unable to read shop item from the database", "guildID", guildID, "filter", filter, "error", err)
+	if err := db.FindOne(ShopItemCollection, filter, &item); err != nil {
+		slog.Debug("unable to read shop item from the database", "guildID", guildID, "filter", filter, "error", err)
 		return nil, err
 	}
 	slog.Debug("read shop item from the database", "guildID", guildID, "name", name, "type", itemType)
@@ -140,8 +138,7 @@ func readPurchases(guildID string, memberID string) ([]*Purchase, error) {
 func readPurchase(guildID string, memberID string, itemName string, itemType string) (*Purchase, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}, {Key: "name", Value: itemName}, {Key: "type", Value: itemType}, {Key: "is_expired", Value: false}}
 	var item Purchase
-	err := db.FindOne(PurchaseCollection, filter, &item)
-	if err != nil {
+	if err := db.FindOne(PurchaseCollection, filter, &item); err != nil {
 		slog.Debug("unable to read purchase from the database", "filter", filter, "error", err)
 		return nil, err
 	}
@@ -150,7 +147,7 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 	return &item, nil
 }
 
-// writePurchases writes the purchase to the database.
+// writePurchase writes the purchase to the database.
 func writePurchase(item *Purchase) error {
 	var filter bson.D
 	if item.ID != bson.NilObjectID {
@@ -171,8 +168,8 @@ func writePurchase(item *Purchase) error {
 // deletePurchase deletes the purchase from the database.
 func deletePurchase(purchase *Purchase) error {
 	var filter bson.D
-	if purchase.Item.ID != bson.NilObjectID {
-		filter = bson.D{{Key: "_id", Value: purchase.Item.ID}}
+	if purchase.ID != bson.NilObjectID {
+		filter = bson.D{{Key: "_id", Value: purchase.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: purchase.Item.GuildID}, {Key: "member_id", Value: purchase.MemberID}, {Key: "name", Value: purchase.Item.Name}, {Key: "type", Value: purchase.Item.Type}}
 	}
@@ -190,8 +187,7 @@ func deletePurchase(purchase *Purchase) error {
 func readMember(guildID string, memberID string) (*Member, error) {
 	filter := bson.D{{Key: "guild_id", Value: guildID}, {Key: "member_id", Value: memberID}}
 	var member *Member
-	err := db.FindOne(MemberCollection, filter, &member)
-	if err != nil {
+	if err := db.FindOne(MemberCollection, filter, &member); err != nil {
 		slog.Debug("unable to read shop member from the database", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil, err
 	}
@@ -218,7 +214,7 @@ func writeMember(member *Member) error {
 	return nil
 }
 
-// deleteShopItem deletes the shop item from the database.
+// deleteMember deletes the shop item from the database.
 func deleteMember(member *Member) error {
 	var filter bson.D
 	if member.ID != bson.NilObjectID {

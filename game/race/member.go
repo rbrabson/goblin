@@ -23,7 +23,7 @@ type RaceMember struct {
 	BetsMade      int           `json:"bets_made" bson:"bets_made"`
 	BetsWon       int           `json:"bets_won" bson:"bets_won"`
 	TotalEarnings int           `json:"total_earnings" bson:"total_earnings"`
-	guildMember   *guild.Member `json:"-" bson:"-"`
+	guildMember   *guild.Member `bson:"-"`
 }
 
 // getRaceMember gets a race member. THe member is created if it doesn't exist.
@@ -62,6 +62,7 @@ func (m *RaceMember) WinRace(amount int) {
 		)
 	}
 
+	m.TotalRaces++
 	m.RacesWon++
 	m.TotalEarnings += amount
 	writeRaceMember(m)
@@ -81,6 +82,7 @@ func (m *RaceMember) PlaceInRace(amount int) {
 		)
 	}
 
+	m.TotalRaces++
 	m.RacesPlaced++
 	m.TotalEarnings += amount
 	writeRaceMember(m)
@@ -100,6 +102,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 		)
 	}
 
+	m.TotalRaces++
 	m.RacesShowed++
 	m.TotalEarnings += amount
 	writeRaceMember(m)
@@ -109,6 +112,7 @@ func (m *RaceMember) ShowInRace(amount int) {
 
 // LoseRace is called when the race member fails to win, place or show in a race.
 func (m *RaceMember) LoseRace() {
+	m.TotalRaces++
 	m.RacesLost++
 	writeRaceMember(m)
 

@@ -35,6 +35,7 @@ func getMember(guildID, memberID string) (*Member, error) {
 
 // newMember creates a new member with the given guild ID and member ID.
 func newMember(guildID, memberID string) *Member {
+	// Don't write the member to the database, since it doesn't have any restrictions yet.
 	return &Member{
 		GuildID:      guildID,
 		MemberID:     memberID,

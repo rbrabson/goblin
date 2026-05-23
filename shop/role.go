@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	ROLE           = "role"
-	CUSTOM_COMMAND = "command"
+	roleItemType          = "role"
+	customCommandItemType = "command"
 )
 
 // Role represents a role item in the shop.
@@ -18,7 +18,7 @@ type Role ShopItem
 
 // GetRole retrieves a role from the shop by its name for a specific guild.
 func GetRole(guildID string, name string) *Role {
-	item := getShopItem(guildID, name, ROLE)
+	item := getShopItem(guildID, name, roleItemType)
 	if item == nil {
 		return nil
 	}
@@ -28,7 +28,7 @@ func GetRole(guildID string, name string) *Role {
 
 // NewRole creates a new role for the shop.
 func NewRole(guildID string, name string, description string, price int, duration string, autoRenewable bool) *Role {
-	item := newShopItem(guildID, name, description, ROLE, price, duration, autoRenewable, 0)
+	item := newShopItem(guildID, name, description, roleItemType, price, duration, autoRenewable, 0)
 	role := (*Role)(item)
 	return role
 }
@@ -36,7 +36,7 @@ func NewRole(guildID string, name string, description string, price int, duratio
 // Update updates the role's properties in the shop.
 func (r *Role) Update(name string, description string, price int, duration string, autoRenewable bool) error {
 	item := (*ShopItem)(r)
-	return item.update(name, description, ROLE, price, duration, autoRenewable)
+	return item.update(name, description, roleItemType, price, duration, autoRenewable)
 }
 
 // Purchase allows a member to purchase the role from the shop.
@@ -59,22 +59,20 @@ func (r *Role) RemoveFromShop(s *Shop) error {
 
 // roleCreateChecks performs checks to see if a role can be added to the shop.
 func roleCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
-	// Verify the role exists on the server
-	if role := guild.GetGuildRole(s, i.GuildID, roleName); role == nil {
-		slog.Error("role not found on server", "guildID", i.GuildID, "roleName", roleName)
-		return fmt.Errorf("role `%s` not found on the server", roleName)
+	// Verify the role does not exists on the server
+	if role, _ := getExistingGuildRole(s, i.GuildID, roleName); role != nil {
+		return fmt.Errorf("role `%s` already exists on the server", roleName)
 	}
 
-	return createChecks(i.GuildID, roleName, ROLE)
+	return createChecks(i.GuildID, roleName, roleItemType)
 }
 
 // rolePurchaseChecks performs checks to see if a role can be purchased.
 func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
 	// Verify the role exists on the server
-	guildRole := guild.GetGuildRole(s, i.GuildID, roleName)
-	if guildRole == nil {
-		slog.Error("role not found on server", "guildID", i.GuildID, "roleName", roleName)
-		return fmt.Errorf("role `%s` not found on the server", roleName)
+	guildRole, err := getExistingGuildRole(s, i.GuildID, roleName)
+	if err != nil {
+		return err
 	}
 
 	// Make sure the member doesn't already have the role
@@ -83,17 +81,28 @@ func rolePurchaseChecks(s *discordgo.Session, i *discordgo.InteractionCreate, ro
 	}
 
 	// Make sure the role is still available in the shop
-	shopItem := getShopItem(i.GuildID, roleName, ROLE)
+	shopItem := getShopItem(i.GuildID, roleName, roleItemType)
 	if shopItem == nil {
 		slog.Error("failed to read role from shop", "guildID", i.GuildID, "roleName", roleName)
 		return fmt.Errorf("role `%s` not found in the shop", roleName)
 	}
 
 	// Make common checks for all purchases
-	err := purchaseChecks(i.GuildID, i.Member.User.ID, ROLE, roleName)
+	err = purchaseChecks(i.GuildID, i.Member.User.ID, roleItemType, roleName)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// getExistingGuildRole retrieves an existing role from the guild. If the role does not exist, an error is returned.
+func getExistingGuildRole(s *discordgo.Session, guildID string, roleName string) (*discordgo.Role, error) {
+	role := guild.GetGuildRole(s, guildID, roleName)
+	if role == nil {
+		slog.Error("role not found on server", "guildID", guildID, "roleName", roleName)
+		return nil, fmt.Errorf("role `%s` not found on the server", roleName)
+	}
+
+	return role, nil
 }

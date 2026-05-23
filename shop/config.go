@@ -36,6 +36,8 @@ func newConfig(guildID string) *Config {
 		slog.Error("error writing the shop config", "error", err)
 	}
 
+	slog.Info("created new shop config", "guildID", guildID)
+
 	return config
 }
 
