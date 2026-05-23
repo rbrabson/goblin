@@ -33,7 +33,7 @@ func getMember(guildID, memberID string) (*Member, error) {
 	return readMember(guildID, memberID)
 }
 
-// NewMember creates a new member with the given guild ID and member ID.
+// newMember creates a new member with the given guild ID and member ID.
 func newMember(guildID, memberID string) *Member {
 	return &Member{
 		GuildID:      guildID,
@@ -56,16 +56,18 @@ func (m *Member) RemoveRestriction(restriction string) error {
 	for i, r := range m.Restrictions {
 		if r == restriction {
 			m.Restrictions = append(m.Restrictions[:i], m.Restrictions[i+1:]...)
-			break
+
+			if len(m.Restrictions) == 0 {
+				return deleteMember(m)
+			}
+			return writeMember(m)
 		}
 	}
 
-	if len(m.Restrictions) == 0 {
-		return deleteMember(m)
-	} else {
-		return writeMember(m)
-	}
+	return fmt.Errorf("the user does not have the `%s` restriction", restriction)
 }
+
+// ... existing code ...
 
 // HasRestriction checks if the member has a specific restriction.
 func (m *Member) HasRestriction(restriction string) bool {
