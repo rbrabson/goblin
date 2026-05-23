@@ -134,6 +134,16 @@ func (b *Bank) SetCurrency(currency string) {
 	}
 }
 
+// lockBank and unlockBank are used to lock and unlock the bank.
+func (b *Bank) lockBank() {
+	b.lock.Lock()
+}
+
+// unlockBank is used to unlock the bank.
+func (b *Bank) unlockBank() {
+	b.lock.Unlock()
+}
+
 // String returns a string representation of the Bank.
 func (b *Bank) String() string {
 	b.lock.Lock()
