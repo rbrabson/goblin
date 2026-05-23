@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	ROLE = "role"
+	ROLE           = "role"
+	CUSTOM_COMMAND = "command"
 )
 
 // Role represents a role item in the shop.

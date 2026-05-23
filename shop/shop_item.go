@@ -157,6 +157,10 @@ func purchaseChecks(guildID string, memberID string, itemType string, itemName s
 
 	// Make sure the member has sufficient funds to purchase the item
 	item := getShopItem(guildID, itemName, itemType)
+	if item == nil {
+		slog.Error("failed to read item from shop", "guildID", guildID, "itemName", itemName, "itemType", itemType)
+		return fmt.Errorf("%s `%s` not found in the shop", itemType, itemName)
+	}
 	bankAccount := bank.GetAccount(guildID, memberID)
 	if bankAccount.CurrentBalance < item.Price {
 		slog.Debug("insufficient funds to purchase item", "guild", guildID, "name", itemName, "type", itemType, "member", memberID)
