@@ -134,16 +134,7 @@ var (
 
 // bankAdmin routes the bankAdmin commands to the proper handers.
 func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.String("guildID", i.GuildID),
-				slog.String("error", err.Error()),
-			)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -181,13 +172,7 @@ func bankAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // bank routes the bank commands to the proper handlers.
 func bank(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response", "guildID", i.GuildID, "error", err)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 

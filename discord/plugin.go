@@ -1,9 +1,11 @@
 package discord
 
 import (
+	"log/slog"
 	"sync"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rbrabson/disgomsg"
 	"github.com/rbrabson/goblin/database/mongo"
 )
 
@@ -47,6 +49,45 @@ func RegisterPlugin(plugin Plugin) {
 	defer mutex.Unlock()
 
 	plugins = append(plugins, plugin)
+}
+
+// getBotStatus returns the status of the bot.
+func getBotStatus() PluginStatus {
+	botStatus := PluginRunning
+	for _, plugin := range plugins {
+		switch plugin.Status() {
+		case PluginStopping:
+			botStatus = PluginStopping
+		case PluginStopped:
+			if botStatus == PluginRunning {
+				botStatus = PluginStopped
+			}
+		default:
+			// NO-OP
+		}
+	}
+	return botStatus
+}
+
+// IsShuttingDown returns true if the bot is shutting down. It also sends an ephemeral message to the user if the bot
+// is shutting down.
+func IsShuttingDown(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
+	status := getBotStatus()
+	shuttingDown := status != PluginRunning
+
+	if shuttingDown {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The system is shutting down."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response",
+				slog.String("guildID", i.GuildID),
+				slog.String("error", err.Error()),
+			)
+		}
+	}
+
+	return shuttingDown
 }
 
 // String gets the string representation of the plugin status.

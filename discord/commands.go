@@ -370,17 +370,17 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	plugins := ListPlugin()
 	pluginStatus := make([]*discordgo.MessageEmbedField, 0, len(plugins))
 
-	botStatus := "Running"
+	botStatus := PluginRunning
 	for _, plugin := range plugins {
 		switch plugin.Status() {
-		case PluginRunning:
-			botStatus = "Running"
 		case PluginStopping:
-			botStatus = "Stopping"
+			botStatus = PluginStopping
 		case PluginStopped:
-			if botStatus != "Stopping" {
-				botStatus = "Stopped"
+			if botStatus == PluginRunning {
+				botStatus = PluginStopped
 			}
+		default:
+			// NO-OP
 		}
 		pluginStatus = append(pluginStatus, &discordgo.MessageEmbedField{
 			Name:   unicode.FirstToUpper(plugin.GetName()),
@@ -392,7 +392,7 @@ func serverStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	embeds := []*discordgo.MessageEmbed{
 		{
 			Title:       "Server Status",
-			Description: botStatus,
+			Description: botStatus.String(),
 		},
 		{
 			Title:  "Plugin Status",
