@@ -513,8 +513,9 @@ func removeRoleFromShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	role := GetRole(i.GuildID, roleName)
 	if role == nil {
-		slog.Error("role not found in shop",
+		slog.Error("failed to remove role",
 			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
 			slog.String("roleName", roleName),
 		)
 		resp := disgomsg.NewResponse(
@@ -1099,6 +1100,20 @@ func initiatePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	}
 
 	role := GetRole(i.GuildID, roleName)
+	if role == nil {
+		slog.Error("failed to purchase role",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.String("roleName", roleName),
+		)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Role `%s` not found.", roleName)),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
+		}
+		return
+	}
 	shopItem := (*ShopItem)(role)
 	sendConfirmationMessage(s, i, shopItem)
 	slog.Info("purchase of role initiated",
@@ -1191,6 +1206,20 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 
 	// Purchase the role
 	role := GetRole(i.GuildID, roleName)
+	if role == nil {
+		slog.Error("failed to purchase role",
+			slog.String("guildID", i.GuildID),
+			slog.String("memberID", i.Member.User.ID),
+			slog.String("roleName", roleName),
+		)
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent(fmt.Sprintf("Role `%s` not found.", roleName)),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("unable to send ephemeral response", slog.Any("error", err))
+		}
+		return
+	}
 	purchase, err := role.Purchase(i.Member.User.ID, false)
 	if err != nil {
 		slog.Error("failed to purchase role",
