@@ -77,17 +77,17 @@ func (plugin *Plugin) GetName() string {
 	return PluginName
 }
 
-// GetHelp returns the member help for the banking system
+// GetHelp returns the member help for the stats system
 func (plugin *Plugin) GetHelp() []string {
 	return getHelp(memberCommands[0])
 }
 
-// GetAdminHelp returns the admin help for the banking system
+// GetAdminHelp returns the admin help for the stats system
 func (plugin *Plugin) GetAdminHelp() []string {
 	return getHelp(adminCommands[0])
 }
 
-// getHelp returns the help for the banking system based on the provided commands. It formats the help as a list of
+// getHelp returns the help for the stats system based on the provided commands. It formats the help as a list of
 // strings, with each string representing a command and its description. The help is sorted alphabetically by command
 // name and includes a title for the plugin.
 func getHelp(command *discordgo.ApplicationCommand) []string {
