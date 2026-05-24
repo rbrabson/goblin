@@ -72,8 +72,7 @@ type raceButton struct {
 
 // raceAdmin routes various `race-raceAdmin` subcommands to the appropriate handlers.
 func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		disgomsg.NewResponse(disgomsg.WithContent("System is shutting down")).SendEphemeral(s, i.Interaction)
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -94,8 +93,7 @@ func raceAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // race routes the various `race` subcommands to the appropriate handlers.
 func race(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		disgomsg.NewResponse(disgomsg.WithContent("System is shutting down")).SendEphemeral(s, i.Interaction)
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 

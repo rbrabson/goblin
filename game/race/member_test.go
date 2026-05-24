@@ -81,7 +81,7 @@ func TestRaceMemberWinRace(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.AccountCollection, filter)
+	err = db.Delete(bank.accountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -117,7 +117,7 @@ func TestRaceMemberPlacedInRace(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.AccountCollection, filter)
+	err = db.Delete(bank.accountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -153,7 +153,7 @@ func TestRaceMemberHowedInRace(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.AccountCollection, filter)
+	err = db.Delete(bank.accountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -189,7 +189,7 @@ func TestRaceMemberLoseRace(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.AccountCollection, filter)
+	err = db.Delete(bank.accountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -229,7 +229,7 @@ func TestRaceBetOnRace(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.AccountCollection, filter)
+	err = db.Delete(bank.accountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -265,7 +265,7 @@ func TestRaceWinBet(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.AccountCollection, filter)
+	err = db.Delete(bank.accountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -324,7 +324,7 @@ func TestRaceLoseBet(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.Delete(bank.AccountCollection, filter)
+	err = db.Delete(bank.accountCollection, filter)
 	if err != nil {
 		t.Error(err)
 	}

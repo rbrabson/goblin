@@ -296,15 +296,7 @@ var (
 
 // statsAdmin handles the /stats-admin command.
 func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response",
-				slog.Any("error", err),
-			)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -559,15 +551,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // stats handles the /stats command.
 func stats(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response",
-				slog.Any("error", err),
-			)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 

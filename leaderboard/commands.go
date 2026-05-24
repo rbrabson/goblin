@@ -99,13 +99,7 @@ var (
 
 // leaderboardAdmin updates the leaderboardAdmin channel.
 func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response", "error", err)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -130,13 +124,7 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // leaderboard handles the leaderboard commands.
 func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response", "error", err)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -171,21 +159,21 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// currentLeaderboard returns the top ranked accounts for the current balance.
+// currentLeaderboard returns the top-ranked accounts for the current balance.
 func currentLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getCurrentLeaderboard()
 	sendLeaderboard(s, i, CurrentLeaderboard, leaderboard)
 }
 
-// monthlyLeaderboard returns the top ranked accounts for the current months.
+// monthlyLeaderboard returns the top-ranked accounts for the current months.
 func monthlyLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getMonthlyLeaderboard()
 	sendLeaderboard(s, i, MonthlyLeaderboard, leaderboard)
 }
 
-// lifetimeLeaderboard returns the top ranked accounts for the lifetime of the server.
+// lifetimeLeaderboard returns the top-ranked accounts for the lifetime of the server.
 func lifetimeLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getLifetimeLeaderboard()
@@ -313,10 +301,16 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 			},
 		}),
 	)
+	defer func(table *tablewriter.Table) {
+		if err := table.Close(); err != nil {
+			slog.Error("failed to close the table", "error", err)
+			return
+		}
+	}(table)
 
 	table.Header([]string{"#", "Name", "Balance"})
 
-	// A bit of a hack, but good enough....
+	// A bit of a hack, but good enough...
 	for i, account := range accounts {
 		member := guild.GetMember(accounts[0].GuildID, account.MemberID)
 		var balance int

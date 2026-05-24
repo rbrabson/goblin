@@ -79,17 +79,7 @@ var (
 
 // slots allows a user to play the slot machine.
 func slots(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response",
-				slog.String("guildID", i.GuildID),
-				slog.String("memberID", i.Member.User.ID),
-				slog.Any("error", err),
-			)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 

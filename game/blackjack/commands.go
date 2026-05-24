@@ -122,8 +122,7 @@ var (
 
 // blackjackAdmin handles the /blackjack-admin command and its subcommands.
 func blackjackAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		disgomsg.NewResponse(disgomsg.WithContent("The system is shutting down.")).SendEphemeral(s, i.Interaction)
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -231,8 +230,7 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // blackjack handles the /blackjack command and its subcommands.
 func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		disgomsg.NewResponse(disgomsg.WithContent("The system is shutting down.")).SendEphemeral(s, i.Interaction)
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 

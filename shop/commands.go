@@ -243,13 +243,7 @@ var (
 
 // shopAdmin routes the shop admin commands to the proper handers.
 func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", slog.Any("error", err))
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -946,13 +940,7 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // shop routes the shop commands to the proper handers.
 func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", slog.Any("error", err))
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -1034,13 +1022,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 // initiatePurchase is used to buy an item from the shop using a button in the shop channel.
 func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", slog.Any("error", err))
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -1150,13 +1132,7 @@ func initiatePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 // completePurchase is used to finalize the purchase of an item from the shop.
 // It is called when the member confirms the purchase using a "Buy" button.
 func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("unable to send ephemeral response", slog.Any("error", err))
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 

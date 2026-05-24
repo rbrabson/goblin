@@ -104,38 +104,18 @@ func (account *Account) DepositToCurrentOnly(amt int) error {
 
 // Withdraw deducts the amount from the balance of the account
 func (account *Account) Withdraw(amt int) error {
-	bank := GetBank(account.GuildID)
-	bank.lockBank()
-	defer bank.unlockBank()
-
-	account.Refresh()
-
-	if amt > account.CurrentBalance {
-		slog.Warn("insufficient funds for withdrawl",
-			slog.String("guildID", account.GuildID),
-			slog.String("memberID", account.MemberID),
-			slog.Int("balance", account.CurrentBalance),
-			slog.Int("amount", amt),
-		)
-		return ErrInsufficientFunds
-	}
-	account.CurrentBalance -= amt
-	account.MonthlyBalance -= amt
-	account.LifetimeBalance -= amt
-
-	err := writeAccount(account)
-	slog.Info("withdraw from account",
-		slog.String("guildID", account.GuildID),
-		slog.String("memberID", account.MemberID),
-		slog.Int("balance", account.CurrentBalance),
-		slog.Int("amount", amt),
-	)
-	return err
+	return account.withdraw(amt, true)
 }
 
 // WithdrawFromCurrentOnly deducts the amount from the current balance of the account. This
 // is useful for transactions that should not affect the monthly or lifetime balance.
 func (account *Account) WithdrawFromCurrentOnly(amt int) error {
+	return account.withdraw(amt, false)
+}
+
+// withdraw deducts the amount from the balance of the account. If updateTotals is true, it also updates the monthly
+// and lifetime balances. If false, it only updates the current balance.
+func (account *Account) withdraw(amt int, updateTotals bool) error {
 	bank := GetBank(account.GuildID)
 	bank.lockBank()
 	defer bank.unlockBank()
@@ -151,7 +131,12 @@ func (account *Account) WithdrawFromCurrentOnly(amt int) error {
 		)
 		return ErrInsufficientFunds
 	}
+
 	account.CurrentBalance -= amt
+	if updateTotals {
+		account.MonthlyBalance -= amt
+		account.LifetimeBalance -= amt
+	}
 
 	err := writeAccount(account)
 	slog.Info("withdraw from account",
@@ -197,7 +182,7 @@ func (account *Account) GetBalance() int {
 }
 
 // Refresh updates the account's balances from the database. This is useful if the account has been modified by another
-// process and you want to ensure that you have the most up-to-date information before performing an operation on the
+// process, and you want to ensure that you have the most up-to-date information before performing an operation on the
 // account.
 func (account *Account) Refresh() {
 	currentAccount := readAccount(account.GuildID, account.MemberID)

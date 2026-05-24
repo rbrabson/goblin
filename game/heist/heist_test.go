@@ -856,12 +856,12 @@ func testTeardown() {
 			slog.Any("error", err),
 		)
 	}
-	if err := db.DeleteMany(bank.AccountCollection, bson.M{"guild_id": GuildId}); err != nil {
+	if err := db.DeleteMany(bank.accountCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all account",
 			slog.Any("error", err),
 		)
 	}
-	if err := db.DeleteMany(bank.BankCollection, bson.M{"guild_id": GuildId}); err != nil {
+	if err := db.DeleteMany(bank.bankCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all banks",
 			slog.Any("error", err),
 		)

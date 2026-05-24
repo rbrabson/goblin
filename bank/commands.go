@@ -366,7 +366,7 @@ func addAccountBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// setDefaultBalance sets the default balance for bank for the guild (server).
+// setDefaultBalance sets the default balance for the bank for the guild (server).
 func setDefaultBalance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var balance int
 	options := i.ApplicationCommandData().Options[0].Options

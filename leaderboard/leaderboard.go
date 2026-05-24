@@ -48,7 +48,7 @@ func getLeaderboards() []*Leaderboard {
 	return leaderboards
 }
 
-// getLeaderboard returns the leaderbord for the given guild
+// getLeaderboard returns the leaderboard for the given guild
 func getLeaderboard(guildID string) *Leaderboard {
 	lb := readLeaderboard(guildID)
 	if lb == nil {
@@ -204,7 +204,7 @@ func sendMonthlyLeaderboard(lb *Leaderboard) error {
 			Embeds: embeds,
 		})
 		if err != nil {
-			slog.Error("unable to send montly leaderboard", "guildID", lb.GuildID, "channelID", lb.ChannelID, "error", err)
+			slog.Error("unable to send monthly leaderboard", "guildID", lb.GuildID, "channelID", lb.ChannelID, "error", err)
 			return err
 		}
 	} else {
