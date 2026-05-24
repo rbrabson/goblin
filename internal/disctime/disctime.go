@@ -121,6 +121,8 @@ func FormatDuration(duration time.Duration) string {
 	return durationPart(int64(seconds), "second")
 }
 
+// appendDurationPart appends a duration part to the string builder if the value is greater than 0. If the string builder
+// already has content, a comma and space are added before the new part.
 func appendDurationPart(sb *strings.Builder, value int64, unit string) {
 	if value <= 0 {
 		return
@@ -131,6 +133,8 @@ func appendDurationPart(sb *strings.Builder, value int64, unit string) {
 	sb.WriteString(durationPart(value, unit))
 }
 
+// roundedDurationPart rounds the duration part up if the remainder exceeds the roundUpAfter threshold and returns
+// the formatted duration part.
 func roundedDurationPart(value, remainder, roundUpAfter int64, unit string) string {
 	if remainder > roundUpAfter {
 		value++
@@ -138,6 +142,7 @@ func roundedDurationPart(value, remainder, roundUpAfter int64, unit string) stri
 	return durationPart(value, unit)
 }
 
+// durationPart returns a formatted duration part. If the value is 1, the unit is singular; otherwise, it is plural.
 func durationPart(value int64, unit string) string {
 	if value == 1 {
 		return fmt.Sprintf("1 %s", unit)
