@@ -4,9 +4,8 @@ import (
 	"log/slog"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 const (
@@ -29,7 +28,7 @@ func readPlayerStats(guildID string, memberID string, game string) (*PlayerStats
 // writePlayerStats updates or inserts the player statistics for a specific member in a guild.
 func writePlayerStats(ps *PlayerStats) error {
 	var filter bson.M
-	if ps.ID != primitive.NilObjectID {
+	if ps.ID != bson.NilObjectID {
 		filter = bson.M{"_id": ps.ID}
 	} else {
 		filter = bson.M{"guild_id": ps.GuildID, "member_id": ps.MemberID, "game": ps.Game}
@@ -46,7 +45,7 @@ func writePlayerStats(ps *PlayerStats) error {
 // deletePlayerStats removes the player statistics for a specific member in a guild.
 func deletePlayerStats(ps *PlayerStats) error {
 	var filter bson.M
-	if ps.ID != primitive.NilObjectID {
+	if ps.ID != bson.NilObjectID {
 		filter = bson.M{"_id": ps.ID}
 	} else {
 		filter = bson.M{"guild_id": ps.GuildID, "member_id": ps.MemberID, "game": ps.Game}
@@ -72,7 +71,7 @@ func readGameStats(guildID string, game string, day time.Time) (*GameStats, erro
 // writeGameStats updates or inserts the game statistics a guild.
 func writeGameStats(gs *GameStats) error {
 	var filter bson.M
-	if gs.ID != primitive.NilObjectID {
+	if gs.ID != bson.NilObjectID {
 		filter = bson.M{"_id": gs.ID}
 	} else {
 		filter = bson.M{"guild_id": gs.GuildID, "game": gs.Game, "day": gs.Day}
@@ -89,7 +88,7 @@ func writeGameStats(gs *GameStats) error {
 // deleteGameStats removes the game statistics for a specific game in a guild.
 func deleteGameStats(gs *GameStats) error {
 	var filter bson.M
-	if gs.ID != primitive.NilObjectID {
+	if gs.ID != bson.NilObjectID {
 		filter = bson.M{"_id": gs.ID}
 	} else {
 		filter = bson.M{"guild_id": gs.GuildID, "game": gs.Game, "day": gs.Day}

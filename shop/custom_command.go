@@ -18,6 +18,9 @@ type CustomCommand ShopItem
 // GetCustomCommand retrieves a custom command from the shop by its name for a specific guild.
 func GetCustomCommand(guildID string, name string) *CustomCommand {
 	item := getShopItem(guildID, name, CustomCommandCollection)
+	if item == nil {
+		return nil
+	}
 	command := CustomCommand(*item)
 	return &command
 }
@@ -105,7 +108,7 @@ func (cc *CustomCommand) RemoveFromShop(s *Shop) error {
 	return item.removeFromShop(s)
 }
 
-// customCommandCreateChecks performs checkst to see if a custom command can be added to the shop.
+// customCommandCreateChecks performs checks to see if a custom command can be added to the shop.
 func customCommandCreateChecks(guildID string, commandName string) error {
 	return createChecks(guildID, commandName, CustomCommandCollection)
 }
@@ -113,7 +116,7 @@ func customCommandCreateChecks(guildID string, commandName string) error {
 // customCommandPurchaseChecks performs checks to see if a role can be purchased.
 func customCommandPurchaseChecks(guildID string, memberID string, commandName string) error {
 	// Make sure the role is still available in the shop
-	shopItem := getShopItem(guildID, commandName, ROLE)
+	shopItem := getShopItem(guildID, commandName, customCommandItemType)
 	if shopItem == nil {
 		slog.Error("failed to read custom command from shop",
 			slog.String("guildID", guildID),

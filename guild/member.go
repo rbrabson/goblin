@@ -6,19 +6,18 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // Member is a member of a given guild
 type Member struct {
-	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID    string             `json:"guild_id" bson:"guild_id"`
-	MemberID   string             `json:"member_id" bson:"member_id"`
-	UserName   string             `json:"username" bson:"username"`
-	GlobalName string             `json:"global_name" bson:"global_name"`
-	NickName   string             `json:"nickname" bson:"nickname"`
-	Name       string             `json:"name" bson:"name"`
+	ID         bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID    string        `json:"guild_id" bson:"guild_id"`
+	MemberID   string        `json:"member_id" bson:"member_id"`
+	UserName   string        `json:"username" bson:"username"`
+	GlobalName string        `json:"global_name" bson:"global_name"`
+	NickName   string        `json:"nickname" bson:"nickname"`
+	Name       string        `json:"name" bson:"name"`
 }
 
 // GetMember returns a member in the guild (server). If one doesnt' exist, then one is created with a blank name.

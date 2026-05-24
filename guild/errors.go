@@ -3,5 +3,5 @@ package guild
 import "errors"
 
 var (
-	ErrUserNotFound = errors.New("user not found")
+	ErrUserNotFound = errors.New("the user cannot be found")
 )

@@ -5,24 +5,24 @@ import (
 
 	"github.com/rbrabson/goblin/stats"
 	rslots "github.com/rbrabson/slots"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // Member represents a member's statistics for the slots game.
 type Member struct {
-	ID                  primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	GuildID             string             `json:"guild_id" bson:"guild_id"`
-	MemberID            string             `json:"member_id" bson:"member_id"`
-	CurrentWinStreak    int                `json:"current_win_streak" bson:"current_win_streak"`
-	LongestWinStreak    int                `json:"longest_win_streak" bson:"longest_win_streak"`
-	CurrentLosingStreak int                `json:"current_losing_streak" bson:"current_losing_streak"`
-	LongestLosingStreak int                `json:"longest_losing_streak" bson:"longest_losing_streak"`
-	TotalWins           int                `json:"total_wins" bson:"total_wins"`
-	TotalLosses         int                `json:"total_losses" bson:"total_losses"`
-	TotalBet            int                `json:"total_bet" bson:"total_bet"`
-	TotalWinnings       int                `json:"total_winnings" bson:"total_winnings"`
-	MaxWin              int                `json:"max_win" bson:"max_win"`
-	LastPlayed          time.Time          `json:"last_played" bson:"last_played"`
+	ID                  bson.ObjectID `json:"id" bson:"_id,omitempty"`
+	GuildID             string        `json:"guild_id" bson:"guild_id"`
+	MemberID            string        `json:"member_id" bson:"member_id"`
+	CurrentWinStreak    int           `json:"current_win_streak" bson:"current_win_streak"`
+	LongestWinStreak    int           `json:"longest_win_streak" bson:"longest_win_streak"`
+	CurrentLosingStreak int           `json:"current_losing_streak" bson:"current_losing_streak"`
+	LongestLosingStreak int           `json:"longest_losing_streak" bson:"longest_losing_streak"`
+	TotalWins           int           `json:"total_wins" bson:"total_wins"`
+	TotalLosses         int           `json:"total_losses" bson:"total_losses"`
+	TotalBet            int           `json:"total_bet" bson:"total_bet"`
+	TotalWinnings       int           `json:"total_winnings" bson:"total_winnings"`
+	MaxWin              int           `json:"max_win" bson:"max_win"`
+	LastPlayed          time.Time     `json:"last_played" bson:"last_played"`
 }
 
 // GetMember retrieves the member statistics for a specific guild and user.
@@ -38,7 +38,6 @@ func GetMember(guildID, userID string) *Member {
 // newMember creates a new Member instance with default values and writes it to the database.
 func newMember(guildID, userID string) *Member {
 	member := &Member{
-		ID:       primitive.NewObjectID(),
 		GuildID:  guildID,
 		MemberID: userID,
 	}
@@ -50,12 +49,12 @@ func newMember(guildID, userID string) *Member {
 // IsInCooldown checks if the member is in cooldown. If not, it updates the LastPlayed time and returns false.
 // If the member is in cooldown, it returns true.
 func (m *Member) IsInCooldown(config *Config) bool {
-	if time.Since(m.LastPlayed) < time.Duration(config.Cooldown) {
-		return false
+	if time.Since(m.LastPlayed) < config.Cooldown {
+		return true
 	}
 	m.LastPlayed = time.Now()
 	writeMember(m)
-	return true
+	return false
 }
 
 // GetCooldownRemaining returns the remaining cooldown time for the member.

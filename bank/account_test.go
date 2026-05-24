@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rbrabson/goblin/database/mongo"
-	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func init() {
@@ -420,7 +420,7 @@ func TestWithdrawInsufficientFunds(t *testing.T) {
 
 	// Try to withdraw more than the balance
 	err := account.Withdraw(100)
-	if err != ErrInsufficentFunds {
+	if err != ErrInsufficientFunds {
 		t.Errorf("Expected ErrInsufficentFunds, got %v", err)
 	}
 
@@ -431,7 +431,7 @@ func TestWithdrawInsufficientFunds(t *testing.T) {
 
 	// Test WithdrawFromCurrentOnly with insufficient funds
 	err = account.WithdrawFromCurrentOnly(100)
-	if err != ErrInsufficentFunds {
+	if err != ErrInsufficientFunds {
 		t.Errorf("Expected ErrInsufficentFunds for WithdrawFromCurrentOnly, got %v", err)
 	}
 

@@ -11,7 +11,7 @@ import (
 type Plugin struct{}
 
 func (p *Plugin) Stop() {
-	status = discord.STOPPED
+	status = discord.PluginStopped
 }
 
 func (p *Plugin) Status() discord.PluginStatus {
@@ -31,7 +31,7 @@ var (
 		"guild-admin": func(s *discordgo.Session, i *discordgo.InteractionCreate) {},
 	}
 
-	status = discord.RUNNING
+	status = discord.PluginRunning
 )
 
 // TestPluginStatusSimple tests that the plugin status can be retrieved and set correctly
@@ -42,7 +42,7 @@ func TestPluginStatusSimple(t *testing.T) {
 	// Test that the plugin can return its status
 	initialStatus := p.Status()
 	// Verify the initial status is as expected
-	if initialStatus != discord.RUNNING {
+	if initialStatus != discord.PluginRunning {
 		t.Errorf("Expected initial status to be RUNNING, got %v", initialStatus)
 	}
 
@@ -53,7 +53,7 @@ func TestPluginStatusSimple(t *testing.T) {
 		// Stop the plugin to set status to STOPPED
 		newPlugin.Stop()
 		// Verify it was stopped
-		if newPlugin.Status() != discord.STOPPED {
+		if newPlugin.Status() != discord.PluginStopped {
 			t.Errorf("Failed to restore plugin status to STOPPED")
 		}
 	}()

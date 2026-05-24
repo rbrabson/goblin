@@ -150,7 +150,6 @@ func (r *Race) addRaceParticipant(member *RaceMember) (*RaceParticipant, error) 
 		Member: member,
 		Racer:  getRaceAvatar(r),
 	}
-	member.TotalRaces++
 	r.Racers = append(r.Racers, participant)
 
 	return participant, nil
@@ -182,6 +181,9 @@ func getRaceBetter(member *RaceMember, racer *RaceParticipant) *RaceBetter {
 
 // addBetter adds a better for the given race.
 func (r *Race) addBetter(better *RaceBetter) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
 	r.Betters = append(r.Betters, better)
 	slog.Debug("add better to current race",
 		slog.String("guildID", r.GuildID),
@@ -310,7 +312,9 @@ func (r *Race) End() {
 	for _, racer := range r.Racers {
 		memberIDs = append(memberIDs, racer.Member.MemberID)
 	}
-	stats.UpdateGameStats(r.GuildID, "race", memberIDs)
+	if len(memberIDs) > 0 {
+		stats.UpdateGameStats(r.GuildID, "race", memberIDs)
+	}
 }
 
 // ResetRace resets a hung race for a given guild.
@@ -321,6 +325,26 @@ func ResetRace(guildID string) {
 	delete(currentRaces, guildID)
 	delete(lastRaceTimes, guildID)
 	slog.Info("reset race", slog.String("guildID", guildID))
+}
+
+// IsFull checks to see if the race has already reached the maximum number of racers.
+func (r *Race) IsFull() bool {
+	raceLock.Lock()
+	defer raceLock.Unlock()
+
+	return len(r.Racers) >= r.config.MaxNumRacers
+}
+
+// GetRacerNames returns the names of the racers in the race.
+func (r *Race) GetRacerNames() []string {
+	raceLock.Lock()
+	defer raceLock.Unlock()
+
+	racerNames := make([]string, 0, len(r.Racers))
+	for _, racer := range r.Racers {
+		racerNames = append(racerNames, racer.Member.guildMember.Name)
+	}
+	return racerNames
 }
 
 // getRaceAvatar returns a random race avatar to be used by a race participant.
@@ -352,7 +376,7 @@ func moveRacer(previousPosition *RaceParticipantPosition, turn int) *RacePartici
 	newPosition := &RaceParticipantPosition{
 		RaceParticipant: previousPosition.RaceParticipant,
 		Position:        previousPosition.Position - movement,
-		Movement:        previousPosition.Movement,
+		Movement:        movement,
 		Turn:            previousPosition.Turn + 1,
 		Finished:        false,
 	}
@@ -417,9 +441,6 @@ func raceJoinChecks(race *Race, memberID string) error {
 
 // placeBet processes a bet placed by a member on the race
 func placeBet(race *Race, better *RaceBetter) error {
-	race.mutex.Lock()
-	defer race.mutex.Unlock()
-
 	if err := better.Member.placeBet(race.config.BetAmount); err != nil {
 		return err
 	}

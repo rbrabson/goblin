@@ -3,7 +3,7 @@ package account
 import (
 	"sync"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var (
@@ -12,10 +12,10 @@ var (
 
 // AltID represents an alternate ID associated with a guild member.
 type AltID struct {
-	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID string             `json:"guild_id" bson:"guild_id"`
-	OwnerID string             `json:"owner_id" bson:"owner_id"`
-	AltID   string             `json:"alt_id" bson:"alt_id"`
+	ID      bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID string        `json:"guild_id" bson:"guild_id"`
+	OwnerID string        `json:"owner_id" bson:"owner_id"`
+	AltID   string        `json:"alt_id" bson:"alt_id"`
 }
 
 // GetAltID retrieves an existing alt ID from the database, or creates a new one if it does not exist.

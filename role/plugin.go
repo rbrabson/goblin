@@ -18,7 +18,7 @@ const (
 var (
 	plugin *Plugin
 	db     *mongo.MongoDB
-	status = discord.RUNNING
+	status = discord.PluginRunning
 )
 
 // Plugin is the plugin for the server
@@ -35,7 +35,7 @@ func Start() {
 
 // Stop stops the heist game. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
-	status = discord.STOPPED
+	status = discord.PluginStopped
 }
 
 // Status returns the status of the heist game.	This is used to determine

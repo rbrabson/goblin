@@ -32,7 +32,7 @@ func main() {
 	defer db.Close()
 	slots.SetDB(db)
 
-	discord.DISCORD_CONFIG_DIR = os.Getenv("DISCORD_CONFIG_DIR")
+	discord.ConfigDir = os.Getenv("DISCORD_CONFIG_DIR")
 
 	averages, err := slots.GetPayoutAverages(guildID)
 	if err != nil {

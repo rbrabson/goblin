@@ -5,28 +5,52 @@ import (
 	"log/slog"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // An Account represents the "bank" account for a given user. This keeps track of the
 // in-game currency for the given member of a guild (server).
 type Account struct {
-	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID         string             `json:"guild_id" bson:"guild_id"`
-	MemberID        string             `json:"member_id" bson:"member_id"`
-	CreatedAt       time.Time          `json:"created_at" bson:"created_at"`
-	CurrentBalance  int                `json:"current_balance" bson:"current_balance"`
-	MonthlyBalance  int                `json:"monthly_balance" bson:"monthly_balance"`
-	LifetimeBalance int                `json:"lifetime_balance" bson:"lifetime_balance"`
+	ID              bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID         string        `json:"guild_id" bson:"guild_id"`
+	MemberID        string        `json:"member_id" bson:"member_id"`
+	CreatedAt       time.Time     `json:"created_at" bson:"created_at"`
+	CurrentBalance  int           `json:"current_balance" bson:"current_balance"`
+	MonthlyBalance  int           `json:"monthly_balance" bson:"monthly_balance"`
+	LifetimeBalance int           `json:"lifetime_balance" bson:"lifetime_balance"`
 }
 
-// GetAccount gets the bank account for the given member. If the account doesn't
-// exist, then nil is returned.
+// GetAccount gets the bank account for the given member.
 func GetAccount(guildID string, memberID string) *Account {
 	account := readAccount(guildID, memberID)
 	if account == nil {
 		account = newAccount(guildID, memberID)
+		if err := writeAccount(account); err != nil {
+			slog.Error("error writing account",
+				slog.String("guildID", guildID),
+				slog.String("memberID", memberID),
+				slog.Any("error", err),
+			)
+		}
 	}
+
+	return account
+}
+
+// newAccount creates a new bank account for a member in the guild (server).
+func newAccount(guildID string, memberID string) *Account {
+	bank := GetBank(guildID)
+	account := &Account{
+		GuildID:         guildID,
+		MemberID:        memberID,
+		CurrentBalance:  bank.DefaultBalance,
+		LifetimeBalance: bank.DefaultBalance,
+		CreatedAt:       time.Now(),
+	}
+	slog.Info("created new bank account",
+		slog.String("guildID", account.GuildID),
+		slog.String("memberID", account.MemberID),
+	)
 
 	return account
 }
@@ -38,6 +62,12 @@ func GetAccounts(guildID string, filter interface{}, sortBy interface{}, limit i
 
 // Deposit adds the amount to the balance of the account.
 func (account *Account) Deposit(amt int) error {
+	bank := GetBank(account.GuildID)
+	bank.lockBank()
+	defer bank.unlockBank()
+
+	account.Refresh()
+
 	account.CurrentBalance += amt
 	account.MonthlyBalance += amt
 	account.LifetimeBalance += amt
@@ -54,6 +84,12 @@ func (account *Account) Deposit(amt int) error {
 
 // DepositToCurrentOnly adds the amount to the balance of the account.
 func (account *Account) DepositToCurrentOnly(amt int) error {
+	bank := GetBank(account.GuildID)
+	bank.lockBank()
+	defer bank.unlockBank()
+
+	account.Refresh()
+
 	account.CurrentBalance += amt
 
 	err := writeAccount(account)
@@ -68,6 +104,12 @@ func (account *Account) DepositToCurrentOnly(amt int) error {
 
 // Withdraw deducts the amount from the balance of the account
 func (account *Account) Withdraw(amt int) error {
+	bank := GetBank(account.GuildID)
+	bank.lockBank()
+	defer bank.unlockBank()
+
+	account.Refresh()
+
 	if amt > account.CurrentBalance {
 		slog.Warn("insufficient funds for withdrawl",
 			slog.String("guildID", account.GuildID),
@@ -75,7 +117,7 @@ func (account *Account) Withdraw(amt int) error {
 			slog.Int("balance", account.CurrentBalance),
 			slog.Int("amount", amt),
 		)
-		return ErrInsufficentFunds
+		return ErrInsufficientFunds
 	}
 	account.CurrentBalance -= amt
 	account.MonthlyBalance -= amt
@@ -94,6 +136,12 @@ func (account *Account) Withdraw(amt int) error {
 // WithdrawFromCurrentOnly deducts the amount from the current balance of the account. This
 // is useful for transactions that should not affect the monthly or lifetime balance.
 func (account *Account) WithdrawFromCurrentOnly(amt int) error {
+	bank := GetBank(account.GuildID)
+	bank.lockBank()
+	defer bank.unlockBank()
+
+	account.Refresh()
+
 	if amt > account.CurrentBalance {
 		slog.Warn("insufficient funds for withdrawal",
 			slog.String("guildID", account.GuildID),
@@ -101,7 +149,7 @@ func (account *Account) WithdrawFromCurrentOnly(amt int) error {
 			slog.Int("balance", account.CurrentBalance),
 			slog.Int("amount", amt),
 		)
-		return ErrInsufficentFunds
+		return ErrInsufficientFunds
 	}
 	account.CurrentBalance -= amt
 
@@ -115,9 +163,15 @@ func (account *Account) WithdrawFromCurrentOnly(amt int) error {
 	return err
 }
 
-// SetBalance sets the account's balance to the specified amount. This is typically used
-// by an admin to correct an error in the system.
+// SetBalance sets the account's balance to the specified amount. An admin typically uses this
+// to correct an error in the system, increasing a user's balance. It cannot be used
+// to decrease the user's balance.
 func (account *Account) SetBalance(balance int) error {
+	bank := GetBank(account.GuildID)
+	bank.lockBank()
+	defer bank.unlockBank()
+
+	account.Refresh()
 	account.CurrentBalance = balance
 
 	if balance > account.LifetimeBalance {
@@ -142,29 +196,21 @@ func (account *Account) GetBalance() int {
 	return account.CurrentBalance
 }
 
-// newAccount creates a new bank account for a member in the guild (server).
-func newAccount(guildID string, memberID string) *Account {
-	bank := GetBank(guildID)
-	account := &Account{
-		GuildID:         guildID,
-		MemberID:        memberID,
-		CurrentBalance:  bank.DefaultBalance,
-		LifetimeBalance: bank.DefaultBalance,
-		CreatedAt:       time.Now(),
-	}
-	if err := writeAccount(account); err != nil {
-		slog.Error("error writing account",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
+// Refresh updates the account's balances from the database. This is useful if the account has been modified by another
+// process and you want to ensure that you have the most up-to-date information before performing an operation on the
+// account.
+func (account *Account) Refresh() {
+	currentAccount := readAccount(account.GuildID, account.MemberID)
+	if currentAccount != nil {
+		account.CurrentBalance = currentAccount.CurrentBalance
+		account.MonthlyBalance = currentAccount.MonthlyBalance
+		account.LifetimeBalance = currentAccount.LifetimeBalance
+	} else {
+		slog.Warn("account not found in database",
+			slog.String("guildID", account.GuildID),
+			slog.String("memberID", account.MemberID),
 		)
 	}
-	slog.Info("created new bank account",
-		slog.String("guildID", account.GuildID),
-		slog.String("memberID", account.MemberID),
-	)
-
-	return account
 }
 
 // String returns a string representation of the account.

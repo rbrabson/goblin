@@ -3,8 +3,7 @@ package blackjack
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -29,7 +28,7 @@ func readConfig(guildID string) *Config {
 // writeConfig creates or updates the blackjack configuration in the database
 func writeConfig(config *Config) {
 	var filter bson.M
-	if config.ID != primitive.NilObjectID {
+	if config.ID != bson.NilObjectID {
 		filter = bson.M{"_id": config.ID}
 	} else {
 		filter = bson.M{"guild_id": config.GuildID}
@@ -58,7 +57,7 @@ func readMember(guildID, memberID string) *Member {
 // writeMember creates or updates the blackjack member in the database
 func writeMember(member *Member) {
 	var filter bson.M
-	if member.ID != primitive.NilObjectID {
+	if member.ID != bson.NilObjectID {
 		filter = bson.M{"_id": member.ID}
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}

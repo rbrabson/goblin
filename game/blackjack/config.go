@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -18,18 +18,18 @@ const (
 
 // Config holds the configuration settings for the blackjack game.
 type Config struct {
-	ID                primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	GuildID           string             `json:"guild_id" bson:"guild_id"`
-	MaxPlayers        int                `json:"max_players" bson:"max_players"`
-	Decks             int                `json:"decks" bson:"decks"`
-	BetAmount         int                `json:"bet_amount" bson:"bet_amount"`
-	DelayBetweenGames time.Duration      `json:"delay_between_games" bson:"delay_between_games"`
-	WaitForPlayers    time.Duration      `json:"wait_for_players" bson:"wait_for_players"`
-	PlayerTimeout     time.Duration      `json:"player_timeout" bson:"player_timeout"`
-	ShowPlayerTurn    time.Duration      `json:"show_player_turn" bson:"show_player_turn"`
-	ShowDealerTurn    time.Duration      `json:"show_dealer_turn" bson:"show_dealer_turn"`
-	PayoutPercent     int                `json:"payout_percent" bson:"payout_percent"`
-	SinglePlayerMode  bool               `json:"single_player_mode" bson:"single_player_mode"`
+	ID                bson.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	GuildID           string        `json:"guild_id" bson:"guild_id"`
+	MaxPlayers        int           `json:"max_players" bson:"max_players"`
+	Decks             int           `json:"decks" bson:"decks"`
+	BetAmount         int           `json:"bet_amount" bson:"bet_amount"`
+	DelayBetweenGames time.Duration `json:"delay_between_games" bson:"delay_between_games"`
+	WaitForPlayers    time.Duration `json:"wait_for_players" bson:"wait_for_players"`
+	PlayerTimeout     time.Duration `json:"player_timeout" bson:"player_timeout"`
+	ShowPlayerTurn    time.Duration `json:"show_player_turn" bson:"show_player_turn"`
+	ShowDealerTurn    time.Duration `json:"show_dealer_turn" bson:"show_dealer_turn"`
+	PayoutPercent     int           `json:"payout_percent" bson:"payout_percent"`
+	SinglePlayerMode  bool          `json:"single_player_mode" bson:"single_player_mode"`
 }
 
 // String returns a string representation of the Config struct.
@@ -85,7 +85,7 @@ func defaultConfig() *Config {
 
 // readConfigFromFile reads the configuration from a JSON file and returns a Config instance.
 func readConfigFromFile() *Config {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "blackjack", "config", CONFIG_FILE_NAME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "blackjack", "config", CONFIG_FILE_NAME+".json")
 	bytes, _ := os.ReadFile(configFileName)
 
 	var config Config

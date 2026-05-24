@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 const (
@@ -39,7 +39,7 @@ func NewDatabase() *MongoDB {
 
 	var err error
 	m.clientOpts = options.Client().ApplyURI(m.uri)
-	m.Client, err = mongo.Connect(ctx, m.clientOpts)
+	m.Client, err = mongo.Connect(m.clientOpts)
 	if err != nil {
 		slog.Error("unable to connect to the MongoDB database", "uri", m.uri, "database", m.dbname, "error", err)
 		return nil
@@ -60,7 +60,7 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter any) ([]string, error
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return nil, err
 	}
@@ -107,46 +107,12 @@ func (m *MongoDB) FindAllIDs(collectionName string, filter any) ([]string, error
 	return idList, nil
 }
 
-// FindMany reads all documents from the database that match the filter
-func (m *MongoDB) FindMany(collectionName string, filter any, data any, sortBy any, limit int64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
-	defer cancel()
-
-	collection, err := m.getCollection(ctx, collectionName)
-	if err != nil {
-		return err
-	}
-
-	// Limit the number of documents to return
-	findOptions := options.Find()
-	findOptions.Sort = sortBy
-	findOptions.SetLimit(limit)
-
-	cur, err := collection.Find(ctx, filter, findOptions)
-	if err != nil {
-		slog.Debug("unable to find the document", "database", m.dbname, "collection", collectionName, "error", err)
-		return err
-	}
-	defer func() {
-		if err := cur.Close(ctx); err != nil {
-			slog.Error("failed to close the mongodb cursor", "database", m.dbname, "collection", collectionName, "error", err)
-		}
-	}()
-	err = cur.All(ctx, data)
-	if err != nil {
-		slog.Error("unable to decode the documents", "database", m.dbname, "collection", collectionName, "error", err, "data", data)
-		return ErrInvalidDocument
-	}
-
-	return nil
-}
-
 // FindOne loads a document identified by documentID from the collection into data.
 func (m *MongoDB) FindOne(collectionName string, filter any, data any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return err
 	}
@@ -168,18 +134,52 @@ func (m *MongoDB) FindOne(collectionName string, filter any, data any) error {
 	return nil
 }
 
+// FindMany reads all documents from the database that match the filter
+func (m *MongoDB) FindMany(collectionName string, filter any, data any, sortBy any, limit int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
+	defer cancel()
+
+	collection, err := m.getCollection(collectionName)
+	if err != nil {
+		return err
+	}
+
+	// Limit the number of documents to return
+	findOptions := options.Find()
+	findOptions.SetSort(sortBy)
+	findOptions.SetLimit(limit)
+
+	cur, err := collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		slog.Debug("unable to find the document", "database", m.dbname, "collection", collectionName, "error", err)
+		return err
+	}
+	defer func() {
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close the mongodb cursor", "database", m.dbname, "collection", collectionName, "error", err)
+		}
+	}()
+	err = cur.All(ctx, data)
+	if err != nil {
+		slog.Error("unable to decode the documents", "database", m.dbname, "collection", collectionName, "error", err, "data", data)
+		return ErrInvalidDocument
+	}
+
+	return nil
+}
+
 // UpdateOrInsert stores data into a documeent within the specified collection.
 func (m *MongoDB) UpdateOrInsert(collectionName string, filter any, data any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return err
 	}
 
 	update := bson.M{"$set": data}
-	_, err = collection.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	_, err = collection.UpdateOne(ctx, filter, update, options.UpdateOne().SetUpsert(true))
 	if err != nil {
 		slog.Error("unable to insert or update the document the collection", "database", m.dbname, "collection", collectionName, "filter", filter, "data", data)
 		return err
@@ -193,13 +193,13 @@ func (m *MongoDB) UpdateMany(collectionName string, filter any, data any) error 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return err
 	}
 
 	update := bson.M{"$set": data}
-	_, err = collection.UpdateMany(ctx, filter, update, options.Update().SetUpsert(true))
+	_, err = collection.UpdateMany(ctx, filter, update, options.UpdateMany().SetUpsert(true))
 	if err != nil {
 		slog.Error("unable to insert or update the document the collection", "database", m.dbname, "collection", collectionName, "error", err, "filter", filter, "data", data)
 		return err
@@ -214,7 +214,7 @@ func (m *MongoDB) Count(collectionName string, filter any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return 0, err
 	}
@@ -230,23 +230,41 @@ func (m *MongoDB) Count(collectionName string, filter any) (int, error) {
 	return int(count), nil
 }
 
-// Distinct returns a list of distinct values for the specified field in the collection that match the filter.
+// DistinctCount returns the count of distinct values for the specified field in the collection that match the filter.
 func (m *MongoDB) DistinctCount(collectionName string, filter any, field string) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return 0, err
 	}
 
-	distinctValues, err := collection.Distinct(ctx, field, filter)
-	if err != nil {
-		slog.Error("Failed to read the collection", "database", m.dbname, "collection", collectionName, "error", err, "filter", filter, "field", field)
+	distinctResult := collection.Distinct(ctx, field, filter)
+	if distinctResult.Err() != nil {
+		slog.Error("Failed to read the collection",
+			"database", m.dbname,
+			"collection", collectionName,
+			"error", distinctResult.Err(),
+			"filter", filter,
+			"field", field,
+		)
 		return 0, ErrCollectionNotAccessible
 	}
 
-	return len(distinctValues), nil
+	var values []any
+	if err := distinctResult.Decode(&values); err != nil {
+		slog.Error("unable to decode distinct values",
+			"database", m.dbname,
+			"collection", collectionName,
+			"error", err,
+			"filter", filter,
+			"field", field,
+		)
+		return 0, ErrInvalidDocument
+	}
+
+	return len(values), nil
 }
 
 // Delete removes a document from the collection that matches the filter.
@@ -254,7 +272,7 @@ func (m *MongoDB) Delete(collectionName string, filter any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return err
 	}
@@ -277,7 +295,7 @@ func (m *MongoDB) DeleteMany(collectionName string, filter any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return err
 	}
@@ -311,7 +329,7 @@ func (m *MongoDB) Aggregate(collectionName string, pipeline mongo.Pipeline) ([]b
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
 
-	collection, err := m.getCollection(ctx, collectionName)
+	collection, err := m.getCollection(collectionName)
 	if err != nil {
 		return nil, err
 	}
@@ -331,11 +349,11 @@ func (m *MongoDB) Aggregate(collectionName string, pipeline mongo.Pipeline) ([]b
 }
 
 // getCollection returns a collection from the database that may be used for database operations.
-func (m *MongoDB) getCollection(ctx context.Context, collectionName string) (*mongo.Collection, error) {
+func (m *MongoDB) getCollection(collectionName string) (*mongo.Collection, error) {
 	if m.clientOpts == nil {
 		var err error
 		m.clientOpts = options.Client().ApplyURI(m.uri)
-		m.Client, err = mongo.Connect(ctx, m.clientOpts)
+		m.Client, err = mongo.Connect(m.clientOpts)
 		if err != nil {
 			slog.Error("unable to connect to the MongoDB database", "database", m.dbname, "error", err)
 			return nil, err

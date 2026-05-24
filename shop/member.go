@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"slices"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -13,10 +13,10 @@ const (
 
 // Member represents a member of a guild with restrictions on what they can or cannot do in a shop.
 type Member struct {
-	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID      string             `json:"guild_id,omitempty" bson:"guild_id,omitempty"`
-	MemberID     string             `json:"member_id,omitempty" bson:"member_id,omitempty"`
-	Restrictions []string           `json:"restrictions,omitempty" bson:"restrictions,omitempty"`
+	ID           bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID      string        `json:"guild_id,omitempty" bson:"guild_id,omitempty"`
+	MemberID     string        `json:"member_id,omitempty" bson:"member_id,omitempty"`
+	Restrictions []string      `json:"restrictions,omitempty" bson:"restrictions,omitempty"`
 }
 
 // GetMember retrieves a member from the database, creating one if it doesn't exist.
@@ -33,8 +33,9 @@ func getMember(guildID, memberID string) (*Member, error) {
 	return readMember(guildID, memberID)
 }
 
-// NewMember creates a new member with the given guild ID and member ID.
+// newMember creates a new member with the given guild ID and member ID.
 func newMember(guildID, memberID string) *Member {
+	// Don't write the member to the database, since it doesn't have any restrictions yet.
 	return &Member{
 		GuildID:      guildID,
 		MemberID:     memberID,
@@ -56,16 +57,18 @@ func (m *Member) RemoveRestriction(restriction string) error {
 	for i, r := range m.Restrictions {
 		if r == restriction {
 			m.Restrictions = append(m.Restrictions[:i], m.Restrictions[i+1:]...)
-			break
+
+			if len(m.Restrictions) == 0 {
+				return deleteMember(m)
+			}
+			return writeMember(m)
 		}
 	}
 
-	if len(m.Restrictions) == 0 {
-		return deleteMember(m)
-	} else {
-		return writeMember(m)
-	}
+	return fmt.Errorf("the user does not have the `%s` restriction", restriction)
 }
+
+// ... existing code ...
 
 // HasRestriction checks if the member has a specific restriction.
 func (m *Member) HasRestriction(restriction string) bool {

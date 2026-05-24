@@ -3,17 +3,17 @@ package shop
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // Config represents the configuration for the shop in a guild.
 type Config struct {
-	ID             primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID        string             `json:"guild_id" bson:"guild_id"`
-	ChannelID      string             `json:"channel_id" bson:"channel_id"`
-	MessageID      string             `json:"message_id" bson:"message_id"`
-	ModChannelID   string             `json:"mod_channel_id" bson:"mod_channel_id"`
-	NotificationID string             `json:"notification_id" bson:"notification_id"`
+	ID             bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID        string        `json:"guild_id" bson:"guild_id"`
+	ChannelID      string        `json:"channel_id" bson:"channel_id"`
+	MessageID      string        `json:"message_id" bson:"message_id"`
+	ModChannelID   string        `json:"mod_channel_id" bson:"mod_channel_id"`
+	NotificationID string        `json:"notification_id" bson:"notification_id"`
 }
 
 // GetConfig reads the configuration from the database. If the config does not exist,
@@ -30,12 +30,13 @@ func GetConfig(guildID string) *Config {
 // newConfig creates a new configuration for the given guild ID and writes it to the database.
 func newConfig(guildID string) *Config {
 	config := &Config{
-		ID:      primitive.NewObjectID(),
 		GuildID: guildID,
 	}
 	if err := writeConfig(config); err != nil {
 		slog.Error("error writing the shop config", "error", err)
 	}
+
+	slog.Info("created new shop config", "guildID", guildID)
 
 	return config
 }

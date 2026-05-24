@@ -15,7 +15,7 @@ import (
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/log"
 	"github.com/rbrabson/goblin/stats"
-	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -63,7 +63,7 @@ func main() {
 	defer db.Close()
 	guild.SetDB(db)
 
-	discord.DISCORD_CONFIG_DIR = os.Getenv("DISCORD_CONFIG_DIR")
+	discord.ConfigDir = os.Getenv("DISCORD_CONFIG_DIR")
 
 	// Get all players who have
 

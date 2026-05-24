@@ -9,21 +9,20 @@ import (
 	"time"
 
 	"github.com/rbrabson/goblin/discord"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // Target is a target of a heist.
 type Target struct {
-	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID  string             `json:"guild_id" bson:"guild_id"`
-	Theme    string             `json:"theme" bson:"theme"`
-	Name     string             `json:"target_id" bson:"target_id"`
-	CrewSize int                `json:"crew" bson:"crew"`
-	Success  float64            `json:"success" bson:"success"`
-	Vault    int                `json:"vault" bson:"vault"`
-	VaultMax int                `json:"vault_max" bson:"vault_max"`
-	IsAtMax  bool               `json:"is_at_max" bson:"is_at_max"`
+	ID       bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID  string        `json:"guild_id" bson:"guild_id"`
+	Theme    string        `json:"theme" bson:"theme"`
+	Name     string        `json:"target_id" bson:"target_id"`
+	CrewSize int           `json:"crew" bson:"crew"`
+	Success  float64       `json:"success" bson:"success"`
+	Vault    int           `json:"vault" bson:"vault"`
+	VaultMax int           `json:"vault_max" bson:"vault_max"`
+	IsAtMax  bool          `json:"is_at_max" bson:"is_at_max"`
 }
 
 // GetTargets returns the list of targets for the server
@@ -101,7 +100,7 @@ func getTarget(targets []*Target, crewSize int) *Target {
 // readTargetsFromFIle returns the default targets for a server.
 // If the file is not found or cannot be decoded, the default targets are used.
 func readTargetsFromFIle(guildID string) []*Target {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "heist", "targets", HEIST_THEME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "heist", "targets", HEIST_THEME+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read targets from file",

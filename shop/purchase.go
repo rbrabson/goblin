@@ -12,8 +12,7 @@ import (
 	"github.com/rbrabson/goblin/bank"
 	"github.com/rbrabson/goblin/guild"
 	"github.com/rbrabson/goblin/internal/disctime"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -25,15 +24,15 @@ const (
 
 // Purchase is a purchase made from the shop.
 type Purchase struct {
-	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID     string             `json:"guild_id" bson:"guild_id"`
-	MemberID    string             `json:"member_id" bson:"member_id"`
-	Item        *ShopItem          `json:"item" bson:"item,inline"`
-	Status      string             `json:"status" bson:"status"`
-	PurchasedOn time.Time          `json:"purchased_on" bson:"purchased_on"`
-	ExpiresOn   time.Time          `json:"expires_on" bson:"expires_on"`
-	AutoRenew   bool               `json:"auto_renew" bson:"auto_renew"`
-	IsExpired   bool               `json:"is_expired" bson:"is_expired"`
+	ID          bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID     string        `json:"guild_id" bson:"guild_id"`
+	MemberID    string        `json:"member_id" bson:"member_id"`
+	Item        *ShopItem     `json:"item" bson:"item,inline"`
+	Status      string        `json:"status" bson:"status"`
+	PurchasedOn time.Time     `json:"purchased_on" bson:"purchased_on"`
+	ExpiresOn   time.Time     `json:"expires_on" bson:"expires_on"`
+	AutoRenew   bool          `json:"auto_renew" bson:"auto_renew"`
+	IsExpired   bool          `json:"is_expired" bson:"is_expired"`
 }
 
 // GetAllPurchases returns all the purchases made by a member in the guild.
@@ -151,7 +150,7 @@ func (p *Purchase) HasExpired() bool {
 		return false
 	case p.ExpiresOn.Before(time.Now().UTC()):
 		switch p.Item.Type {
-		case ROLE:
+		case roleItemType:
 			// Unassign the role to the user. If it can't be unassigned, log the error but don't mark it as expired
 			// so that it can be retried later.
 			err := guild.UnAssignRole(bot.Session, p.GuildID, p.MemberID, p.Item.Name)

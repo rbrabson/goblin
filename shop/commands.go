@@ -243,7 +243,7 @@ var (
 
 // shopAdmin routes the shop admin commands to the proper handers.
 func shopAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
@@ -361,8 +361,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Verify the role can be added to the shop
-	err := roleCreateChecks(s, i, roleName)
-	if err != nil {
+	if err := roleExistsChecks(s, i, roleName); err != nil {
 		slog.Error("failed to perform role create checks",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
@@ -374,13 +373,13 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
+		return
 	}
 
 	// Add the role to the shop.
 	shop := GetShop(i.GuildID)
 	role := NewRole(i.GuildID, roleName, roleDesc, roleCost, roleDuration, roleRenewable)
-	err = role.AddToShop(shop)
-	if err != nil {
+	if err := role.AddToShop(shop); err != nil {
 		slog.Error("failed to add role to shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
@@ -947,7 +946,7 @@ func refreshShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // shop routes the shop commands to the proper handers.
 func shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
@@ -1035,7 +1034,7 @@ func listPurchasesFromShop(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 // initiatePurchase is used to buy an item from the shop using a button in the shop channel.
 func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
@@ -1063,7 +1062,7 @@ func initiatePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	itemName := strs[2]
 
 	switch itemType {
-	case ROLE:
+	case roleItemType:
 		initiatePurchaseOfRoleFromShop(s, i, itemName)
 	case CustomCommandCollection:
 		initiatePurchaseOfCustomCommandFromShop(s, i, itemName)
@@ -1151,7 +1150,7 @@ func initiatePurchaseOfCustomCommandFromShop(s *discordgo.Session, i *discordgo.
 // completePurchase is used to finalize the purchase of an item from the shop.
 // It is called when the member confirms the purchase using a "Buy" button.
 func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
@@ -1166,7 +1165,7 @@ func completePurchase(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	itemName := strs[3]
 
 	switch itemType {
-	case ROLE:
+	case roleItemType:
 		completePurchaseOfRoleFromShop(s, i, itemName)
 	case CustomCommandCollection:
 		completePurchaseOfCustomCommandFromShop(s, i, itemName)
@@ -1193,8 +1192,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	// Make sure the member can purchase the role
-	err := rolePurchaseChecks(s, i, roleName)
-	if err != nil {
+	if err := rolePurchaseChecks(s, i, roleName); err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)

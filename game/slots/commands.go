@@ -79,7 +79,7 @@ var (
 
 // slots allows a user to play the slot machine.
 func slots(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
@@ -123,7 +123,7 @@ func playSlots(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	config := GetConfig()
 	member := GetMember(guildID, userID)
-	if !member.IsInCooldown(config) {
+	if member.IsInCooldown(config) {
 		remaining := member.GetCooldownRemaining(config)
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(fmt.Sprintf("You are on cooldown. Please wait %d seconds before playing again.", int(remaining.Seconds())+1)),

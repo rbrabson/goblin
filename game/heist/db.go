@@ -3,8 +3,7 @@ package heist
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -32,7 +31,7 @@ func readConfig(guildID string) *Config {
 // writeConfig stores the configuration in the database.
 func writeConfig(config *Config) {
 	var filter bson.M
-	if config.ID != primitive.NilObjectID {
+	if config.ID != bson.NilObjectID {
 		filter = bson.M{"_id": config.ID}
 	} else {
 		filter = bson.M{"guild_id": config.GuildID}
@@ -60,7 +59,7 @@ func readMember(guildID string, memberID string) *HeistMember {
 // Write creates or updates the heist member in the database
 func writeMember(member *HeistMember) {
 	var filter bson.M
-	if member.ID != primitive.NilObjectID {
+	if member.ID != bson.NilObjectID {
 		filter = bson.M{"_id": member.ID}
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
@@ -100,7 +99,7 @@ func readTargets(guildID string, theme string) ([]*Target, error) {
 // writeTarget writes the set of targets to the database. If they already exist, the are updated; otherwise, the set is created.
 func writeTarget(target *Target) {
 	var filter bson.D
-	if target.ID != primitive.NilObjectID {
+	if target.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: target.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: target.GuildID}, {Key: "target_id", Value: target.Name}}
@@ -141,7 +140,7 @@ func readTheme(guildID string, themeName string) (*Theme, error) {
 // write creates or updates the theme in the database
 func writeTheme(theme *Theme) {
 	var filter bson.M
-	if theme.ID != primitive.NilObjectID {
+	if theme.ID != bson.NilObjectID {
 		filter = bson.M{"_id": theme.ID}
 	} else {
 		filter = bson.M{"guild_id": theme.GuildID, "name": theme.Name}

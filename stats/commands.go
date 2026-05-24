@@ -296,7 +296,7 @@ var (
 
 // statsAdmin handles the /stats-admin command.
 func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)
@@ -559,7 +559,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // stats handles the /stats command.
 func stats(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)

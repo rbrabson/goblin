@@ -87,7 +87,7 @@ var (
 
 // accountAdmin handles the `/account-admin` command.
 func accountAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.STOPPING || status == discord.STOPPED {
+	if status == discord.PluginStopping || status == discord.PluginStopped {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent("The system is shutting down."),
 		)

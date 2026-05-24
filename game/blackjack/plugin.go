@@ -22,7 +22,7 @@ var (
 	plugin         *Plugin
 	db             *mongo.MongoDB
 	bot            *discord.Bot
-	status         = discord.RUNNING
+	status         = discord.PluginRunning
 	blackjackTheme string
 )
 
@@ -43,10 +43,10 @@ func (plugin *Plugin) Stop() {
 	gamesLock.Lock()
 	defer gamesLock.Unlock()
 
-	newState := discord.STOPPED
+	newState := discord.PluginStopped
 	for _, game := range games {
 		if game.IsWaitingForPlayers() || game.IsStartingRound() || game.IsDealingHands() {
-			newState = discord.STOPPING
+			newState = discord.PluginStopping
 			break
 		}
 	}

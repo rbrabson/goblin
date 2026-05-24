@@ -3,8 +3,7 @@ package bank
 import (
 	"log/slog"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -62,8 +61,7 @@ func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit 
 	return accounts
 }
 
-// readAccount reads the account from the database and returns the value, if it exists, or returns nil if the
-// account does not exist in the database
+// readAccounts gets all matching accounts for the given bank.
 func readAccount(guildID string, memberID string) *Account {
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	var account Account
@@ -80,7 +78,7 @@ func readAccount(guildID string, memberID string) *Account {
 // writeAccount creates or updates the member data in the database being used by the Discord bot.
 func writeAccount(account *Account) error {
 	var filter bson.D
-	if account.ID != primitive.NilObjectID {
+	if account.ID != bson.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: account.ID}}
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: account.GuildID}, {Key: "member_id", Value: account.MemberID}}

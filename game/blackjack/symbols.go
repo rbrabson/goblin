@@ -24,7 +24,7 @@ func GetSymbols() Symbols {
 
 // readSymbolsFromFile reads the symbols from the configuration file. If the file cannot be read or unmarshaled, nil is returned.
 func readSymbolsFromFile() Symbols {
-	configFileName := filepath.Join(discord.DISCORD_CONFIG_DIR, "blackjack", "symbols", blackjackTheme+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "blackjack", "symbols", blackjackTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read the symbols file",

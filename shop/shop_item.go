@@ -5,20 +5,20 @@ import (
 	"log/slog"
 
 	"github.com/rbrabson/goblin/bank"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // ShopItem represents an item in the shop, which represents any purchasable item.
 type ShopItem struct {
-	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	GuildID       string             `json:"guild_id" bson:"guild_id"`
-	Name          string             `json:"name" bson:"name"`
-	Description   string             `json:"description" bson:"description"`
-	Type          string             `json:"type" bson:"type"`
-	Price         int                `json:"price" bson:"price"`
-	Duration      string             `json:"duration,omitempty" bson:"duration,omitempty"`
-	AutoRenewable bool               `json:"auto_renewable,omitempty" bson:"auto_renewable,omitempty"`
-	MaxPurhases   int                `json:"max_purchases,omitempty" bson:"max_purchases,omitempty"`
+	ID            bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID       string        `json:"guild_id" bson:"guild_id"`
+	Name          string        `json:"name" bson:"name"`
+	Description   string        `json:"description" bson:"description"`
+	Type          string        `json:"type" bson:"type"`
+	Price         int           `json:"price" bson:"price"`
+	Duration      string        `json:"duration,omitempty" bson:"duration,omitempty"`
+	AutoRenewable bool          `json:"auto_renewable,omitempty" bson:"auto_renewable,omitempty"`
+	MaxPurhases   int           `json:"max_purchases,omitempty" bson:"max_purchases,omitempty"`
 }
 
 // getShopItem returns the shop item with the given guild ID, name, and type. If the item does
@@ -157,6 +157,10 @@ func purchaseChecks(guildID string, memberID string, itemType string, itemName s
 
 	// Make sure the member has sufficient funds to purchase the item
 	item := getShopItem(guildID, itemName, itemType)
+	if item == nil {
+		slog.Error("failed to read item from shop", "guildID", guildID, "itemName", itemName, "itemType", itemType)
+		return fmt.Errorf("%s `%s` not found in the shop", itemType, itemName)
+	}
 	bankAccount := bank.GetAccount(guildID, memberID)
 	if bankAccount.CurrentBalance < item.Price {
 		slog.Debug("insufficient funds to purchase item", "guild", guildID, "name", itemName, "type", itemType, "member", memberID)
