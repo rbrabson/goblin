@@ -338,10 +338,10 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
-	
+
 	participant := race.getRaceParticipant(i.Member.User.ID)
 	var betMember *RaceMember
-	if participant.Member != nil {
+	if participant != nil && participant.Member != nil {
 		betMember = participant.Member
 	} else {
 		guildMember := guild.GetMember(i.GuildID, i.Member.User.ID).SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
