@@ -184,7 +184,7 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 		TotalGamesPlayed:   getInt(result["total_games_played"]),
 	}
 	gamesPlayed.UniquePlayers, _ = GetUniquePlayers(guildID, game, startDate, endDate)
-	gamesPlayed.NumberOfDays = float64(endDate.Sub(startDate).Hours() / 24)
+	gamesPlayed.NumberOfDays = endDate.Sub(startDate).Hours() / 24.0
 	gamesPlayed.TotalPlayersPerDay = float64(gamesPlayed.TotalPlayers) / gamesPlayed.NumberOfDays
 	gamesPlayed.UniquePlayersPerDay = float64(gamesPlayed.TotalUniquePlayers) / gamesPlayed.NumberOfDays
 	gamesPlayed.AverageGamesPerDay = float64(gamesPlayed.TotalGamesPlayed) / gamesPlayed.NumberOfDays

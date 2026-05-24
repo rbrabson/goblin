@@ -748,7 +748,7 @@ func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.Me
 	table.Header([]string{"#", "Name", "Games"})
 
 	p := message.NewPrinter(language.AmericanEnglish)
-	// A bit of a hack, but good enough....
+	// A bit of a hack, but good enough...
 	for i, ps := range playerStats {
 		member := guild.GetMember(ps.GuildID, ps.MemberID)
 		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", ps.NumberOfTimesPlayed)}

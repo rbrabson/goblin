@@ -79,27 +79,23 @@ func (plugin *Plugin) GetName() string {
 
 // GetHelp returns the member help for the banking system
 func (plugin *Plugin) GetHelp() []string {
-	help := make([]string, 0, len(memberCommands[0].Options))
-
-	commandPrefix := memberCommands[0].Name
-	for _, command := range memberCommands[0].Options {
-		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
-		help = append(help, commandDescription)
-	}
-	slices.Sort(help)
-	title := fmt.Sprintf("## %s\n", cases.Title(language.AmericanEnglish, cases.Compact).String(PluginName))
-	help = append([]string{title}, help...)
-
-	return help
+	return getHelp(memberCommands[0])
 }
 
 // GetAdminHelp returns the admin help for the banking system
 func (plugin *Plugin) GetAdminHelp() []string {
-	help := make([]string, 0, len(adminCommands[0].Options))
+	return getHelp(adminCommands[0])
+}
 
-	commandPrefix := adminCommands[0].Name
-	for _, command := range adminCommands[0].Options {
-		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, command.Name, command.Description)
+// getHelp returns the help for the banking system based on the provided commands. It formats the help as a list of
+// strings, with each string representing a command and its description. The help is sorted alphabetically by command
+// name and includes a title for the plugin.
+func getHelp(command *discordgo.ApplicationCommand) []string {
+	help := make([]string, 0, len(command.Options))
+
+	commandPrefix := command.Name
+	for _, option := range command.Options {
+		commandDescription := fmt.Sprintf("- `/%s %s`: %s\n", commandPrefix, option.Name, option.Description)
 		help = append(help, commandDescription)
 	}
 	slices.Sort(help)
