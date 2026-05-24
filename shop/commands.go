@@ -361,8 +361,7 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// Verify the role can be added to the shop
-	err := roleCreateChecks(s, i, roleName)
-	if err != nil {
+	if err := roleExistsChecks(s, i, roleName); err != nil {
 		slog.Error("failed to perform role create checks",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
@@ -374,13 +373,13 @@ func addRoleToShop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 			slog.Error("unable to send ephemeral response", slog.Any("error", err))
 		}
+		return
 	}
 
 	// Add the role to the shop.
 	shop := GetShop(i.GuildID)
 	role := NewRole(i.GuildID, roleName, roleDesc, roleCost, roleDuration, roleRenewable)
-	err = role.AddToShop(shop)
-	if err != nil {
+	if err := role.AddToShop(shop); err != nil {
 		slog.Error("failed to add role to shop",
 			slog.String("guildID", i.GuildID),
 			slog.String("roleName", roleName),
@@ -1193,8 +1192,7 @@ func completePurchaseOfRoleFromShop(s *discordgo.Session, i *discordgo.Interacti
 	p := message.NewPrinter(language.AmericanEnglish)
 
 	// Make sure the member can purchase the role
-	err := rolePurchaseChecks(s, i, roleName)
-	if err != nil {
+	if err := rolePurchaseChecks(s, i, roleName); err != nil {
 		resp := disgomsg.NewResponse(
 			disgomsg.WithContent(unicode.FirstToUpper(err.Error())),
 		)

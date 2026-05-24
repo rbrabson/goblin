@@ -57,11 +57,11 @@ func (r *Role) RemoveFromShop(s *Shop) error {
 	return item.removeFromShop(s)
 }
 
-// roleCreateChecks performs checks to see if a role can be added to the shop.
-func roleCreateChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
-	// Verify the role does not exists on the server
-	if role, _ := getExistingGuildRole(s, i.GuildID, roleName); role != nil {
-		return fmt.Errorf("role `%s` already exists on the server", roleName)
+// roleExistsChecks performs checks to see if a role can be added to the shop.
+func roleExistsChecks(s *discordgo.Session, i *discordgo.InteractionCreate, roleName string) error {
+	// Verify the role exists on the server
+	if role, _ := getExistingGuildRole(s, i.GuildID, roleName); role == nil {
+		return fmt.Errorf("role `%s` does not exist on the server", roleName)
 	}
 
 	return createChecks(i.GuildID, roleName, roleItemType)

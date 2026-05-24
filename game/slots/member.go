@@ -49,12 +49,12 @@ func newMember(guildID, userID string) *Member {
 // IsInCooldown checks if the member is in cooldown. If not, it updates the LastPlayed time and returns false.
 // If the member is in cooldown, it returns true.
 func (m *Member) IsInCooldown(config *Config) bool {
-	if time.Since(m.LastPlayed) < time.Duration(config.Cooldown) {
-		return false
+	if time.Since(m.LastPlayed) < config.Cooldown {
+		return true
 	}
 	m.LastPlayed = time.Now()
 	writeMember(m)
-	return true
+	return false
 }
 
 // GetCooldownRemaining returns the remaining cooldown time for the member.
