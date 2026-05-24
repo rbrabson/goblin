@@ -1,6 +1,6 @@
 package unicode
 
-// SplitString splits a string after `n` unicode chartacters
+// SplitString splits a string after `n` Unicode chartacters
 func SplitString(s string, n int) (start, end string) {
 	i := 0
 	for j := range s {
