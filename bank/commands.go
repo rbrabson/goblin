@@ -464,7 +464,7 @@ func getBankInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err := resp.SendEphemeral(s, i.Interaction); err != nil {
 		slog.Error("error sending response",
 			slog.String("guildID", i.GuildID),
-			slog.String("error", err.Error()),
+			slog.Any("error", err),
 		)
 	}
 }
