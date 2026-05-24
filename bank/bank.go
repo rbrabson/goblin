@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	bankLock = sync.Mutex{}
+	bankLock = sync.RWMutex{}
 	banks    = make(map[string]*Bank)
 )
 
@@ -31,7 +31,7 @@ type Bank struct {
 	Name           string        `json:"bank_name" bson:"bank_name"`
 	Currency       string        `json:"currency" bson:"currency"`
 	DefaultBalance int           `json:"default_balance" bson:"default_balance"`
-	lock           *sync.Mutex   `bson:"-"`
+	lock           *sync.RWMutex `bson:"-"`
 }
 
 // GetBank returns the bank for the specified guild. If the bank does not exist, then one is created.
@@ -45,32 +45,37 @@ func GetBank(guildID string) *Bank {
 		bank = readBank(guildID)
 		if bank == nil {
 			bank = readBankFromFile(guildID)
+			if bank == nil {
+				bank = getDefaultBank(guildID)
+			}
+			if err := writeBank(bank); err != nil {
+				slog.Error("error writing bank", "guildID", guildID, "error", err)
+			}
 		}
-		bank.lock = &sync.Mutex{}
+		bank.lock = &sync.RWMutex{}
+		banks[guildID] = bank
 	}
 
 	return bank
 }
 
-// readBankFromFile creates a new bank for the given guild.
+// readBankFromFile creates a new bank for the given guild by reading the default bank config file. If the config
+// file is not found or is invalid, then nil is returned.
 func readBankFromFile(guildID string) *Bank {
 	configTheme := os.Getenv("DISCORD_BANK_THEME")
 	configFileName := filepath.Join(discord.ConfigDir, "bank", "config", configTheme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default bank config", "error", err)
-		return getDefaultBank(guildID)
+		return nil
 	}
 
 	bank := &Bank{}
 	if err := json.Unmarshal(bytes, bank); err != nil {
 		slog.Error("failed to unmarshal default bank config", "file", configFileName, "error", err)
-		bank = getDefaultBank(guildID)
+		return nil
 	}
 	bank.GuildID = guildID
-	if err := writeBank(bank); err != nil {
-		slog.Error("error writing bank", "guildID", guildID, "error", err)
-	}
 
 	slog.Info("create new bank", "guildID", bank.GuildID)
 
@@ -146,8 +151,8 @@ func (b *Bank) unlockBank() {
 
 // String returns a string representation of the Bank.
 func (b *Bank) String() string {
-	b.lock.Lock()
-	defer b.lock.Unlock()
+	b.lock.RLock()
+	defer b.lock.RUnlock()
 
 	return fmt.Sprintf("Bank{ID: %s, GuildID: %s, Name: %s, Currency: %s, DefaultBalance: %d}",
 		b.ID.Hex(),

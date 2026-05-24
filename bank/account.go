@@ -20,12 +20,18 @@ type Account struct {
 	LifetimeBalance int           `json:"lifetime_balance" bson:"lifetime_balance"`
 }
 
-// GetAccount gets the bank account for the given member. If the account doesn't
-// exist, then nil is returned.
+// GetAccount gets the bank account for the given member.
 func GetAccount(guildID string, memberID string) *Account {
 	account := readAccount(guildID, memberID)
 	if account == nil {
 		account = newAccount(guildID, memberID)
+		if err := writeAccount(account); err != nil {
+			slog.Error("error writing account",
+				slog.String("guildID", guildID),
+				slog.String("memberID", memberID),
+				slog.Any("error", err),
+			)
+		}
 	}
 
 	return account
@@ -40,13 +46,6 @@ func newAccount(guildID string, memberID string) *Account {
 		CurrentBalance:  bank.DefaultBalance,
 		LifetimeBalance: bank.DefaultBalance,
 		CreatedAt:       time.Now(),
-	}
-	if err := writeAccount(account); err != nil {
-		slog.Error("error writing account",
-			slog.String("guildID", guildID),
-			slog.String("memberID", memberID),
-			slog.Any("error", err),
-		)
 	}
 	slog.Info("created new bank account",
 		slog.String("guildID", account.GuildID),
@@ -164,8 +163,9 @@ func (account *Account) WithdrawFromCurrentOnly(amt int) error {
 	return err
 }
 
-// SetBalance sets the account's balance to the specified amount. This is typically used
-// by an admin to correct an error in the system.
+// SetBalance sets the account's balance to the specified amount. An admin typically uses this
+// to correct an error in the system, increasing a user's balance. It cannot be used
+// to decrease the user's balance.
 func (account *Account) SetBalance(balance int) error {
 	bank := GetBank(account.GuildID)
 	bank.lockBank()
@@ -205,6 +205,11 @@ func (account *Account) Refresh() {
 		account.CurrentBalance = currentAccount.CurrentBalance
 		account.MonthlyBalance = currentAccount.MonthlyBalance
 		account.LifetimeBalance = currentAccount.LifetimeBalance
+	} else {
+		slog.Warn("account not found in database",
+			slog.String("guildID", account.GuildID),
+			slog.String("memberID", account.MemberID),
+		)
 	}
 }
 
