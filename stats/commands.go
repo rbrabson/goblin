@@ -484,7 +484,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	var embeds []*discordgo.MessageEmbed
-	if game == "" || game == "all" {
+	if game == "all" {
 		embeds = []*discordgo.MessageEmbed{
 			{
 				Title:  titleCaser.String("Games Played"),
