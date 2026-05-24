@@ -338,13 +338,8 @@ func betOnRace(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
 		return
 	}
-
+	
 	participant := race.getRaceParticipant(i.Member.User.ID)
-	if participant == nil {
-		slog.Error("race participant not found", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID))
-		disgomsg.NewResponse(disgomsg.WithContent("Race participant not found")).SendEphemeral(s, i.Interaction)
-		return
-	}
 	var betMember *RaceMember
 	if participant.Member != nil {
 		betMember = participant.Member
