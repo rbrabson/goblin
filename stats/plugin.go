@@ -21,29 +21,29 @@ var (
 	status = discord.PluginRunning
 )
 
-// Plugin is the plugin for the banking system used by the bot
+// Plugin is the plugin for the stats system used by the bot
 type Plugin struct{}
 
 // Ensure the plugin implements the Plugin interface
 var _ discord.Plugin = (*Plugin)(nil)
 
-// Start creates and registers the plugin for the banking system
+// Start creates and registers the plugin for the stats system
 func Start() {
 	plugin = &Plugin{}
 	discord.RegisterPlugin(plugin)
 }
 
-// Initialize saves the Discord bot to be used by the banking system
+// Initialize saves the Discord bot to be used by the stats system
 func (plugin *Plugin) Initialize(b *discord.Bot, d *mongo.MongoDB) {
 	db = d
 }
 
-// Stop stops the banking system. This is called when the bot is shutting down.
+// Stop stops the stats system. This is called when the bot is shutting down.
 func (plugin *Plugin) Stop() {
 	status = discord.PluginStopped
 }
 
-// Status returns the status of the banking system.	This is used to determine
+// Status returns the status of the stats system.	This is used to determine
 // if the plugin is running or not.
 func (plugin *Plugin) Status() discord.PluginStatus {
 	return status
@@ -54,7 +54,7 @@ func SetDB(d *mongo.MongoDB) {
 	db = d
 }
 
-// GetCommands returns the commands for the banking system
+// GetCommands returns the commands for the stats system
 func (plugin *Plugin) GetCommands() []*discordgo.ApplicationCommand {
 	commands := make([]*discordgo.ApplicationCommand, 0, len(adminCommands)+len(memberCommands))
 	commands = append(commands, adminCommands...)
@@ -62,17 +62,17 @@ func (plugin *Plugin) GetCommands() []*discordgo.ApplicationCommand {
 	return commands
 }
 
-// GetCommandHandlers returns the command handlers for the banking system
+// GetCommandHandlers returns the command handlers for the stats system
 func (plugin *Plugin) GetCommandHandlers() map[string]func(*discordgo.Session, *discordgo.InteractionCreate) {
 	return commandHandlers
 }
 
-// GetComponentHandlers returns the component handlers for the banking system
+// GetComponentHandlers returns the component handlers for the stats system
 func (plugin *Plugin) GetComponentHandlers() map[string]func(*discordgo.Session, *discordgo.InteractionCreate) {
 	return nil
 }
 
-// GetName returns the name of the banking system plugin
+// GetName returns the name of the stats system plugin
 func (plugin *Plugin) GetName() string {
 	return PluginName
 }
