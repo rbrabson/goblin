@@ -443,7 +443,14 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, heis
 // sendMemberResults sends the results of the heist to the channel
 func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res *HeistResult) {
 	p := message.NewPrinter(language.AmericanEnglish)
-	theme := res.heist.Theme
+	theme := GetTheme(i.GuildID, HEIST_THEME)
+	if theme == nil {
+		slog.Error("failed to get heist theme", slog.String("guildID", i.GuildID))
+		if _, err := s.ChannelMessageSend(i.ChannelID, "Internal error: failed to get the heist theme"); err != nil {
+			slog.Error("failed to send message", slog.String("channelID", i.ChannelID), slog.Any("error", err))
+		}
+		return
+	}
 
 	slog.Debug("hitting target", slog.String("target", res.Target.Name), slog.String("guildID", i.GuildID))
 	msg := p.Sprintf("The %s has decided to hit **%s**.", theme.Crew, res.Target.Name)
