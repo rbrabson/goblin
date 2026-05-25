@@ -201,10 +201,11 @@ func (account *Account) Refresh() {
 // GetLifetimeRanking returns the lifetime ranking of the account in the guild (server). The ranking is based on the
 // lifetime balance of the account, with the highest balance being ranked first.
 func (account *Account) GetLifetimeRanking() int {
-	filter := bson.D{
-		{Key: "guild_id", Value: account.GuildID},
-		{Key: "lifetime_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
+	filter := bson.M{
+		"guild_id":         account.GuildID,
+		"lifetime_balance": bson.M{"$gt": account.LifetimeBalance},
 	}
+
 	rank, _ := db.Count(accountCollection, filter)
 	rank++
 	slog.Debug("lifetime ranking",
@@ -218,9 +219,9 @@ func (account *Account) GetLifetimeRanking() int {
 // GetMonthlyRanking returns the monthly global ranking on the server for a given player. The ranking is based on the
 // monthly balance of the account, with the highest balance being ranked first.
 func (account *Account) GetMonthlyRanking() int {
-	filter := bson.D{
-		{Key: "guild_id", Value: account.GuildID},
-		{Key: "monthly_balance", Value: bson.D{{Key: "$gt", Value: account.MonthlyBalance}}},
+	filter := bson.M{
+		"guild_id":        account.GuildID,
+		"monthly_balance": bson.M{"$gt": account.MonthlyBalance},
 	}
 	rank, _ := db.Count(accountCollection, filter)
 	rank++
@@ -234,9 +235,9 @@ func (account *Account) GetMonthlyRanking() int {
 // GetCurrentRanking returns the current ranking of the account in the guild (server). The ranking is based on the
 // current balance of the account, with the highest balance being ranked first.
 func (account *Account) GetCurrentRanking() int {
-	filter := bson.D{
-		{Key: "guild_id", Value: account.GuildID},
-		{Key: "current_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
+	filter := bson.M{
+		"guild_id":        account.GuildID,
+		"current_balance": bson.M{"$gt": account.CurrentBalance},
 	}
 	rank, _ := db.Count(accountCollection, filter)
 	rank++
