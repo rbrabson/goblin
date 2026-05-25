@@ -335,7 +335,7 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		slog.String("guildID", guildID),
 	)
 
-	embeds := []*discordgo.MessageEmbed{}
+	embeds := make([]*discordgo.MessageEmbed, 0, 1)
 	if payTable != nil {
 		embed := &discordgo.MessageEmbed{
 			Title:       "Slot Machine Pay Table",
@@ -345,17 +345,17 @@ func payTable(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		sm := GetSlotMachine()
-		twoConsecTroops := false
+		twoConsecutiveTroops := false
 		for _, payout := range payTable {
 			payoutStr := strconv.FormatFloat(payout.Payout, 'f', -1, 64)
 			betPayouts := p.Sprintf("Payout %s:%d\n", payoutStr, payout.Bet)
 
 			name := getPayoutDisplayMessage(payout.Win, sm.symbols)
 			if name == "two consecutive troops" {
-				if twoConsecTroops {
+				if twoConsecutiveTroops {
 					continue
 				}
-				twoConsecTroops = true
+				twoConsecutiveTroops = true
 			}
 
 			field := &discordgo.MessageEmbedField{

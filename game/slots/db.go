@@ -8,15 +8,15 @@ import (
 )
 
 const (
-	SlotsMemberCollection = "slots_members"
+	MemberCollection = "slots_members"
 )
 
-// readMember loads the slots member from the database. If it does not exist then
+// readMember loads the slots member from the database. If it does not exist, then
 // a `nil` value is returned.
 func readMember(guildID string, memberID string) *Member {
 	var member Member
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
-	err := db.FindOne(SlotsMemberCollection, filter, &member)
+	err := db.FindOne(MemberCollection, filter, &member)
 	if err != nil {
 		slog.Debug("slots member not found in the database",
 			slog.String("guildID", guildID),
@@ -41,7 +41,7 @@ func writeMember(member *Member) {
 	} else {
 		filter = bson.M{"guild_id": member.GuildID, "member_id": member.MemberID}
 	}
-	if err := db.UpdateOrInsert(SlotsMemberCollection, filter, member); err != nil {
+	if err := db.UpdateOrInsert(MemberCollection, filter, member); err != nil {
 		slog.Error("error writing slots member to the database",
 			slog.String("guildID", member.GuildID),
 			slog.String("memberID", member.MemberID),
@@ -176,7 +176,7 @@ func GetPayoutAverages(guildID string) (*PayoutAverages, error) {
 		},
 	}
 
-	docs, err := db.Aggregate(SlotsMemberCollection, pipeline)
+	docs, err := db.Aggregate(MemberCollection, pipeline)
 	if err != nil {
 		slog.Error("failed to get payout averages",
 			slog.String("guildID", guildID),

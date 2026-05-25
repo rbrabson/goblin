@@ -160,7 +160,7 @@ func (s Symbols) GetHandWithoutValue(hand *bj.Hand, hidden bool) string {
 func GetHandValue(hand *bj.Hand, hidden bool) string {
 	switch {
 	case hand.IsBlackjack():
-		return (" (blackjack)")
+		return " (blackjack)"
 	case hand.IsBusted():
 		return fmt.Sprintf("%d, busted", handValue(hand, hidden))
 	case hand.IsSurrendered():

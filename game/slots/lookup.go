@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	LOOKUP_TABLE_NAME = "lookup"
-	NUM_SPINS         = 3
+	LookupFileName = "lookup"
 )
 
 // GetLookupTable retrieves the lookup table for the specified guild.
@@ -32,7 +31,7 @@ func newLookupTable() rslots.LookupTable {
 // and contain an array of reels, where each reel is an object with a "Slots" field
 // that is an array of slot symbols.
 func readLookupTableFromFile() rslots.LookupTable {
-	configFileName := filepath.Join(discord.ConfigDir, "slots", "lookuptable", LOOKUP_TABLE_NAME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "slots", "lookuptable", LookupFileName+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		return nil

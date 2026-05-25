@@ -100,7 +100,7 @@ func (plugin *Plugin) GetName() string {
 
 // GetHelp returns the member help for the slots system
 func (plugin *Plugin) GetHelp() []string {
-	help := make([]string, 0, 1)
+	var help = make([]string, 0, 1)
 
 	commandPrefix := memberCommands[0].Name
 	for _, command := range memberCommands[0].Options {
@@ -116,7 +116,7 @@ func (plugin *Plugin) GetHelp() []string {
 
 // GetAdminHelp returns the admin help for the slots system
 func (plugin *Plugin) GetAdminHelp() []string {
-	help := make([]string, 0, len(adminCommands[0].Options))
+	var help = make([]string, 0, len(adminCommands[0].Options))
 
 	commandPrefix := adminCommands[0].Name
 	for _, command := range adminCommands[0].Options {
