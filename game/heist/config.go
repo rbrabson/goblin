@@ -52,7 +52,7 @@ func GetConfig(guildID string) *Config {
 		config.BoostVaultRecovery = 0.08
 		writeConfig(config)
 	}
-	config.Theme = GetTheme(HEIST_THEME, guildID)
+	config.Theme = GetTheme(guildID, HEIST_THEME)
 	config.Targets = GetTargets(guildID, config.Theme.Name)
 	return config
 }

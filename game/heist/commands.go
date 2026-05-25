@@ -561,7 +561,7 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heist := GetHeist(i.GuildID)
 	if heist == nil {
-		theme := GetTheme(HEIST_THEME, i.GuildID)
+		theme := GetTheme(i.GuildID, HEIST_THEME)
 		if theme != nil {
 			disgomsg.NewResponse(disgomsg.WithContent(fmt.Sprintf("No %s is being planned", theme.Heist))).SendEphemeral(s, i.Interaction)
 		} else {
@@ -845,7 +845,7 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistLock.Unlock()
 
 	if heist == nil {
-		theme := GetTheme(HEIST_THEME, i.GuildID)
+		theme := GetTheme(i.GuildID, HEIST_THEME)
 		if theme != nil {
 			disgomsg.NewResponse(disgomsg.WithContent(fmt.Sprintf("No %s is being planned", theme.Heist))).SendEphemeral(s, i.Interaction)
 		} else {
@@ -867,7 +867,7 @@ func resetVaults(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // listTargets displays a list of available heist targets.
 func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	theme := GetTheme(HEIST_THEME, i.GuildID)
+	theme := GetTheme(i.GuildID, HEIST_THEME)
 	if theme == nil {
 		disgomsg.NewResponse(disgomsg.WithContent("There aren't any targets!")).SendEphemeral(s, i.Interaction)
 		return

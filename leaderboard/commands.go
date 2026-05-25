@@ -3,7 +3,6 @@ package leaderboard
 import (
 	"fmt"
 	"log/slog"
-	"strconv"
 	"strings"
 
 	"github.com/olekukonko/tablewriter/renderer"
@@ -278,6 +277,7 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // formatAccounts formats the leaderboard to be sent to a Discord server
 func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
 	var tableBuffer strings.Builder
+
 	table := tablewriter.NewTable(&tableBuffer,
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 			Borders: tw.BorderNone,
@@ -293,11 +293,6 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
 				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
 			},
-			Header: tw.CellConfig{
-				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
-				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
-				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
-			},
 		}),
 	)
 	defer func(table *tablewriter.Table) {
@@ -307,7 +302,12 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 		}
 	}(table)
 
-	table.Header([]string{"#", "Name", "Balance"})
+	header := []string{
+		fmt.Sprintf("%-3s %-25s %-15s", "#", "NAME", "BALANCE"),
+	}
+	if err := table.Append(header); err != nil {
+		slog.Error("failed to append header to the table", "error", err)
+	}
 
 	// A bit of a hack, but good enough...
 	for i, account := range accounts {
@@ -323,7 +323,11 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 		default:
 			balance = account.MonthlyBalance
 		}
-		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
+		data := []string{
+			fmt.Sprintf("%-3d %-25s %-15s", i+1, member.Name, p.Sprintf("%d", balance)),
+		}
+
+		// strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
 		if err := table.Append(data); err != nil {
 			slog.Error("failed to append data to the table", "error", err)
 		}
@@ -337,7 +341,8 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 			Title: title,
 			Fields: []*discordgo.MessageEmbedField{
 				{
-					Value: p.Sprintf("```\n%s```\n", tableBuffer.String()),
+					Value:  p.Sprintf("```\n%s```\n", tableBuffer.String()),
+					Inline: false,
 				},
 			},
 		},

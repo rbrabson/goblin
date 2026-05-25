@@ -722,6 +722,7 @@ func activePlayers(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // formatPlayerStats formats the player stats to be sent to a Discord server
 func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.MessageEmbed {
 	var tableBuffer strings.Builder
+
 	table := tablewriter.NewTable(&tableBuffer,
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 			Borders: tw.BorderNone,
