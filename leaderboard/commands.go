@@ -303,7 +303,7 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 	}(table)
 
 	header := []string{
-		fmt.Sprintf("%-3s %-25s %-15s", "#", "NAME", "BALANCE"),
+		p.Sprintf("%-3s %-25s %-15s", "#", "NAME", "BALANCE"),
 	}
 	if err := table.Append(header); err != nil {
 		slog.Error("failed to append header to the table", "error", err)
@@ -324,10 +324,8 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 			balance = account.MonthlyBalance
 		}
 		data := []string{
-			fmt.Sprintf("%-3d %-25s %-15s", i+1, member.Name, p.Sprintf("%d", balance)),
+			p.Sprintf("%-3d %-25s %-15s", i+1, member.Name, p.Sprintf("%d", balance)),
 		}
-
-		// strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
 		if err := table.Append(data); err != nil {
 			slog.Error("failed to append data to the table", "error", err)
 		}
