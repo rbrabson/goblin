@@ -47,7 +47,7 @@ func (payday *Payday) GetAccount(memberID string) *Account {
 	return account
 }
 
-// SetPaydayAmount sets the amount of credits a player deposits into their account on a given payday.
+// SetPaydayAmount sets the number of credits a player deposits into their account on a given payday.
 func (payday *Payday) SetPaydayAmount(amount int) {
 	payday.Amount = amount
 
@@ -66,7 +66,7 @@ func (payday *Payday) SetPaydayFrequency(frequency time.Duration) {
 }
 
 // readPaydayFromFile creates new payday information for a server/guild.
-// If the default payday configuration file cannot be read or dedcoded, then a
+// If the default payday configuration file cannot be read or decoded, then a
 // default payday configuration is created.
 func readPaydayFromFile(guildID string) *Payday {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")

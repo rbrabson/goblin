@@ -53,7 +53,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	paydayAmount := paydayAccount.getPayAmmount()
+	paydayAmount := paydayAccount.getPayAmount()
 
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	if err := account.Deposit(paydayAmount); err != nil {
@@ -83,7 +83,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	paydayAccount := payday.GetAccount(i.Member.User.ID)
 	currentStreak := paydayAccount.CurrentStreak
 	maxStreak := paydayAccount.MaxStreak
-	pay := paydayAccount.getPayAmmount()
+	pay := paydayAccount.getPayAmount()
 	nextPayday := paydayAccount.getNextPayday().Format(time.DateTime)
 
 	embeds := []*discordgo.MessageEmbed{
