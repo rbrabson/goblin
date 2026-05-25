@@ -51,8 +51,8 @@ func (a *Account) setNextPayday(minWait time.Duration) {
 	slog.Debug("set next payday", "guildID", a.GuildID, "memberID", a.MemberID, "paydayStreak", a.CurrentStreak, "maxStreak", a.MaxStreak, "nextPayday", a.NextPayday)
 }
 
-// getPayAmmount returns the amount of credits the user will receive on their next payday.
-func (a *Account) getPayAmmount() int {
+// getPayAmount returns the number of credits the user will receive on their next payday.
+func (a *Account) getPayAmount() int {
 	payday := GetPayday(a.GuildID)
 	a.updateStreak(payday.PaydayFrequency)
 	basePay := payday.Amount
