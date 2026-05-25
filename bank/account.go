@@ -198,16 +198,16 @@ func (account *Account) Refresh() {
 	}
 }
 
-// GetLifetimeRanking returns the current ranking of the account in the guild (server). The ranking is based on the
+// GetLifetimeRanking returns the lifetime ranking of the account in the guild (server). The ranking is based on the
 // lifetime balance of the account, with the highest balance being ranked first.
 func (account *Account) GetLifetimeRanking() int {
 	filter := bson.D{
 		{Key: "guild_id", Value: account.GuildID},
-		{Key: "current_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
+		{Key: "lifetime_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
 	}
 	rank, _ := db.Count(accountCollection, filter)
 	rank++
-	slog.Debug("current ranking",
+	slog.Debug("lifetime ranking",
 		slog.String("guildID", account.GuildID),
 		slog.String("account", account.MemberID),
 		slog.Int("rank", rank),
