@@ -11,7 +11,7 @@ const (
 	blackjackConfigCollection = "blackjack_configs"
 )
 
-// readConfig loads the blackjack configuration from the database. If it does not exist then
+// readConfig loads the blackjack configuration from the database. If it does not exist, then
 // a `nil` value is returned.
 func readConfig(guildID string) *Config {
 	var config Config
@@ -39,7 +39,7 @@ func writeConfig(config *Config) {
 	slog.Debug("write blackjack config to the database", slog.String("guildID", config.GuildID))
 }
 
-// readMember loads the blackjack member from the database. If it does not exist then
+// readMember loads the blackjack member from the database. If it does not exist, then
 // a `nil` value is returned.
 func readMember(guildID, memberID string) *Member {
 	var member Member
