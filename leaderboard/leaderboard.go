@@ -135,59 +135,6 @@ func (lb *Leaderboard) getLifetimeLeaderboard() []*bank.Account {
 	return accounts
 }
 
-// getMonthlyRanking returns the monthly global ranking on the server for a given player.
-func getCurrentRanking(lb *Leaderboard, account *bank.Account) int {
-	filter := bson.D{
-		{Key: "guild_id", Value: lb.GuildID},
-		{Key: "current_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
-	}
-	rank, _ := db.Count(bank.AccountCollection, filter)
-	rank++
-	slog.Debug("current ranking",
-		slog.String("guildID", lb.GuildID),
-		slog.String("account", account.MemberID),
-		slog.Int("rank", rank),
-	)
-
-	return rank
-}
-
-// getMonthlyRanking returns the monthly global ranking on the server for a given player.
-func getMonthlyRanking(lb *Leaderboard, account *bank.Account) int {
-	filter := bson.D{
-		{Key: "guild_id", Value: lb.GuildID},
-		{Key: "monthly_balance", Value: bson.D{{Key: "$gt", Value: account.MonthlyBalance}}},
-	}
-
-	rank, _ := db.Count(bank.AccountCollection, filter)
-	rank++
-	slog.Debug("monthly ranking",
-		slog.String("guildID", lb.GuildID),
-		slog.String("account", account.MemberID),
-		slog.Int("rank", rank),
-	)
-
-	return rank
-}
-
-// getLifetimeRanking returns the lifetime global ranking on the server for a given player.
-func getLifetimeRanking(lb *Leaderboard, account *bank.Account) int {
-	filter := bson.D{
-		{Key: "guild_id", Value: lb.GuildID},
-		{Key: "lifetime_balance", Value: bson.D{{Key: "$gt", Value: account.LifetimeBalance}}},
-	}
-
-	rank, _ := db.Count(bank.AccountCollection, filter)
-	rank++
-	slog.Debug("lifetime ranking",
-		slog.String("guildID", lb.GuildID),
-		slog.String("account", account.MemberID),
-		slog.Int("rank", rank),
-	)
-
-	return rank
-}
-
 // sendMonthlyLeaderboard publishes the monthly leaderboard to the bank channel.
 func sendMonthlyLeaderboard(lb *Leaderboard) error {
 	// Get the top 10 accounts for this month

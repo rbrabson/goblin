@@ -23,7 +23,7 @@ func TestDeposit(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
-			if err := db.Delete(BankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
+			if err := db.Delete(bankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
 				slog.Error("error deleting bank",
 					slog.String("guildID", bank.GuildID),
 					slog.Any("error", err),
@@ -34,7 +34,7 @@ func TestDeposit(t *testing.T) {
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			if err := db.Delete(AccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+			if err := db.Delete(accountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
 				slog.Error("error deleting account",
 					slog.String("guildID", account.GuildID),
 					slog.String("memberID", account.MemberID),
@@ -86,7 +86,7 @@ func TestDepositToCurrentOnly(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
-			if err := db.Delete(BankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
+			if err := db.Delete(bankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
 				slog.Error("error deleting bank",
 					slog.String("guildID", bank.GuildID),
 					slog.Any("error", err),
@@ -97,7 +97,7 @@ func TestDepositToCurrentOnly(t *testing.T) {
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			if err := db.Delete(AccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+			if err := db.Delete(accountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
 				slog.Error("error deleting account",
 					slog.String("guildID", account.GuildID),
 					slog.String("memberID", account.MemberID),
@@ -154,7 +154,7 @@ func TestWithdraw(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
-			if err := db.Delete(BankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
+			if err := db.Delete(bankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
 				slog.Error("error deleting bank",
 					slog.String("guildID", bank.GuildID),
 					slog.Any("error", err),
@@ -165,7 +165,7 @@ func TestWithdraw(t *testing.T) {
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			if err := db.Delete(AccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+			if err := db.Delete(accountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
 				slog.Error("error deleting account",
 					slog.String("guildID", account.GuildID),
 					slog.String("memberID", account.MemberID),
@@ -211,7 +211,7 @@ func TestWithdrawFromCurrentOnly(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
-			if err := db.Delete(BankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
+			if err := db.Delete(bankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
 				slog.Error("error deleting bank",
 					slog.String("guildID", bank.GuildID),
 					slog.Any("error", err),
@@ -222,7 +222,7 @@ func TestWithdrawFromCurrentOnly(t *testing.T) {
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			if err := db.Delete(AccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+			if err := db.Delete(accountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
 				slog.Error("error deleting account",
 					slog.String("guildID", account.GuildID),
 					slog.String("memberID", account.MemberID),
@@ -295,7 +295,7 @@ func TestGetAccounts(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
-			if err := db.Delete(BankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
+			if err := db.Delete(bankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
 				slog.Error("error deleting bank",
 					slog.String("guildID", bank.GuildID),
 					slog.Any("error", err),
@@ -306,7 +306,7 @@ func TestGetAccounts(t *testing.T) {
 	accounts := make([]*Account, 0, 3)
 	defer func() {
 		for _, account := range accounts {
-			if err := db.Delete(AccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+			if err := db.Delete(accountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
 				slog.Error("error deleting account",
 					slog.String("guildID", account.GuildID),
 					slog.String("memberID", account.MemberID),
@@ -374,7 +374,7 @@ func TestWithdrawInsufficientFunds(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
-			if err := db.Delete(BankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
+			if err := db.Delete(bankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
 				slog.Error("error deleting bank",
 					slog.String("guildID", bank.GuildID),
 					slog.Any("error", err),
@@ -385,7 +385,7 @@ func TestWithdrawInsufficientFunds(t *testing.T) {
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			if err := db.Delete(AccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+			if err := db.Delete(accountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
 				slog.Error("error deleting account",
 					slog.String("guildID", account.GuildID),
 					slog.String("memberID", account.MemberID),

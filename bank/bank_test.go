@@ -23,7 +23,7 @@ func TestGetBank(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
-			if err := db.Delete(BankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
+			if err := db.Delete(bankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
 				slog.Error("error deleting bank",
 					slog.String("guildID", bank.GuildID),
 					slog.Any("error", err),
@@ -43,7 +43,7 @@ func TestGetAccountsWithFilter(t *testing.T) {
 	banks := make([]*Bank, 0, 1)
 	defer func() {
 		for _, bank := range banks {
-			if err := db.Delete(BankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
+			if err := db.Delete(bankCollection, bson.M{"guild_id": bank.GuildID}); err != nil {
 				slog.Error("error deleting bank",
 					slog.String("guildID", bank.GuildID),
 					slog.Any("error", err),
@@ -54,7 +54,7 @@ func TestGetAccountsWithFilter(t *testing.T) {
 	accounts := make([]*Account, 0, 1)
 	defer func() {
 		for _, account := range accounts {
-			if err := db.Delete(AccountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
+			if err := db.Delete(accountCollection, bson.M{"guild_id": account.GuildID, "member_id": account.MemberID}); err != nil {
 				slog.Error("error deleting account",
 					slog.String("guildID", account.GuildID),
 					slog.String("memberID", account.MemberID),

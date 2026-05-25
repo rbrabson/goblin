@@ -262,10 +262,9 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	lb := getLeaderboard(i.GuildID)
-	currentRank := getCurrentRanking(lb, account)
-	monthlyRank := getMonthlyRanking(lb, account)
-	lifetimeRank := getLifetimeRanking(lb, account)
+	currentRank := account.GetCurrentRanking()
+	monthlyRank := account.GetMonthlyRanking()
+	lifetimeRank := account.GetLifetimeRanking()
 
 	content := p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank)
 	resp := disgomsg.NewResponse(

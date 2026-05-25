@@ -7,26 +7,26 @@ import (
 )
 
 const (
-	BankCollection    = "banks"
-	AccountCollection = "bank_accounts"
+	bankCollection    = "banks"
+	accountCollection = "bank_accounts"
 )
 
 // ResetMonthlyBalances resets the monthly balances for all accounts in all banks.
 func ResetMonthlyBalances() {
 	filter := bson.M{}
 	update := bson.M{"monthly_balance": 0}
-	err := db.UpdateMany(AccountCollection, filter, update)
+	err := db.UpdateMany(accountCollection, filter, update)
 	if err != nil {
 		slog.Error("unable to reset monthly balances for all accounts", "error", err)
 	}
 }
 
-// readBank gets the bank from the database and returns the value, if it exists, or returns nil if the
+// readBank gets the bank from the database and returns the value if it exists, or returns nil if the
 // bank does not exist in the database.
 func readBank(guildID string) *Bank {
 	filter := bson.M{"guild_id": guildID}
 	var bank Bank
-	err := db.FindOne(BankCollection, filter, &bank)
+	err := db.FindOne(bankCollection, filter, &bank)
 	if err != nil {
 		slog.Debug("bank not found in the database", "guildID", guildID, "error", err)
 		return nil
@@ -43,7 +43,7 @@ func writeBank(bank *Bank) error {
 	} else {
 		filter = bson.M{"guild_id": bank.GuildID}
 	}
-	err := db.UpdateOrInsert(BankCollection, filter, bank)
+	err := db.UpdateOrInsert(bankCollection, filter, bank)
 	if err != nil {
 		slog.Error("unable to save bank to the database", "guildID", bank.GuildID, "error", err)
 		return err
@@ -56,7 +56,7 @@ func writeBank(bank *Bank) error {
 // readAccounts all the matching accounts for the given bank.
 func readAccounts(filter interface{}, sortBy interface{}, limit int64) []*Account {
 	var accounts []*Account
-	err := db.FindMany(AccountCollection, filter, &accounts, sortBy, limit)
+	err := db.FindMany(accountCollection, filter, &accounts, sortBy, limit)
 	if err != nil {
 		slog.Error("unable to read accounts from the database", "error", err)
 		return nil
@@ -70,7 +70,7 @@ func readAccounts(filter interface{}, sortBy interface{}, limit int64) []*Accoun
 func readAccount(guildID string, memberID string) *Account {
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	var account Account
-	err := db.FindOne(AccountCollection, filter, &account)
+	err := db.FindOne(accountCollection, filter, &account)
 	if err != nil {
 		slog.Debug("account not found in the database", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil
@@ -88,7 +88,7 @@ func writeAccount(account *Account) error {
 	} else {
 		filter = bson.D{{Key: "guild_id", Value: account.GuildID}, {Key: "member_id", Value: account.MemberID}}
 	}
-	err := db.UpdateOrInsert(AccountCollection, filter, account)
+	err := db.UpdateOrInsert(accountCollection, filter, account)
 	if err != nil {
 		slog.Error("unable to save bank account to the database", "guildID", account.GuildID, "memberID", account.MemberID, "error", err)
 		return err

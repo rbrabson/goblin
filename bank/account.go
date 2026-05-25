@@ -198,6 +198,57 @@ func (account *Account) Refresh() {
 	}
 }
 
+// GetLifetimeRanking returns the current ranking of the account in the guild (server). The ranking is based on the
+// lifetime balance of the account, with the highest balance being ranked first.
+func (account *Account) GetLifetimeRanking() int {
+	filter := bson.D{
+		{Key: "guild_id", Value: account.GuildID},
+		{Key: "current_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
+	}
+	rank, _ := db.Count(accountCollection, filter)
+	rank++
+	slog.Debug("current ranking",
+		slog.String("guildID", account.GuildID),
+		slog.String("account", account.MemberID),
+		slog.Int("rank", rank),
+	)
+	return rank
+}
+
+// GetMonthlyRanking returns the monthly global ranking on the server for a given player. The ranking is based on the
+// monthly balance of the account, with the highest balance being ranked first.
+func (account *Account) GetMonthlyRanking() int {
+	filter := bson.D{
+		{Key: "guild_id", Value: account.GuildID},
+		{Key: "monthly_balance", Value: bson.D{{Key: "$gt", Value: account.MonthlyBalance}}},
+	}
+	rank, _ := db.Count(accountCollection, filter)
+	rank++
+	slog.Debug("monthly ranking",
+		slog.String("guildID", account.GuildID),
+		slog.String("account", account.MemberID),
+		slog.Int("rank", rank))
+	return rank
+}
+
+// GetCurrentRanking returns the current ranking of the account in the guild (server). The ranking is based on the
+// current balance of the account, with the highest balance being ranked first.
+func (account *Account) GetCurrentRanking() int {
+	filter := bson.D{
+		{Key: "guild_id", Value: account.GuildID},
+		{Key: "current_balance", Value: bson.D{{Key: "$gt", Value: account.CurrentBalance}}},
+	}
+	rank, _ := db.Count(accountCollection, filter)
+	rank++
+	slog.Debug("current ranking",
+		slog.String("guildID", account.GuildID),
+		slog.String("account", account.MemberID),
+		slog.Int("rank", rank),
+	)
+
+	return rank
+}
+
 // String returns a string representation of the account.
 func (account *Account) String() string {
 	return fmt.Sprintf("Account{ID: %s, GuildID: %s, MemberID: %s, CurrentBalance: %d, MonthlyBalance: %d, LifetimeBalance: %d}",
