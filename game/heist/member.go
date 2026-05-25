@@ -46,8 +46,8 @@ type HeistMember struct {
 	Spree         int           `json:"spree" bson:"spree"`
 	Status        MemberStatus  `json:"status" bson:"status"`
 	TotalJail     int           `json:"total_jail" bson:"total_jail"`
-	heist         *Heist        `json:"-" bson:"-"`
-	guildMember   *guild.Member `json:"-" bson:"-"`
+	heist         *Heist
+	guildMember   *guild.Member
 }
 
 // getHeistMember gets a member for heists. If the member does not exist, then nil is returned.
@@ -61,7 +61,7 @@ func getHeistMember(guildID string, memberID string) *HeistMember {
 	return member
 }
 
-// newHeistMember creates a new member for heists. It is called when guild member
+// newHeistMember creates a new member for heists. It is called when a guild member
 // first plans or joins a heist.
 func newHeistMember(guildID string, memberID string) *HeistMember {
 	member := &HeistMember{
@@ -81,6 +81,14 @@ func newHeistMember(guildID string, memberID string) *HeistMember {
 
 // Apprehended updates the member when they are caught during a heist.
 func (member *HeistMember) Apprehended() {
+	if member.heist == nil {
+		slog.Error("member cannot be apprehendd active heist",
+			slog.String("guild", member.GuildID),
+			slog.String("member", member.MemberID),
+		)
+		return
+	}
+
 	bailCost := member.heist.config.BailBase
 	if member.Status == OOB {
 		bailCost *= 3
@@ -113,6 +121,14 @@ func (member *HeistMember) Apprehended() {
 
 // Died updates the member when they die during a heist.
 func (member *HeistMember) Died() {
+	if member.heist == nil {
+		slog.Error("member cannot die without active heist",
+			slog.String("guild", member.GuildID),
+			slog.String("member", member.MemberID),
+		)
+		return
+	}
+
 	member.BailCost = 0
 	member.CriminalLevel = 0
 	member.Deaths++
@@ -143,6 +159,16 @@ func (member *HeistMember) Died() {
 
 // Escaped updates the member when they successfully escape during a heist.
 func (member *HeistMember) Escaped() {
+	if member.heist == nil {
+		slog.Error("member cannot escape without active heist",
+			slog.String("guild", member.GuildID),
+			slog.String("member", member.MemberID),
+		)
+		return
+	}
+	if member.Status != OOB {
+		member.Status = Free
+	}
 	member.Spree++
 	writeMember(member)
 
@@ -241,7 +267,7 @@ func (member *HeistMember) RemainingJailTime() time.Duration {
 	return time.Until(member.JailTimer)
 }
 
-// RemainingDeathTime returns the amount of time before the member can be resurected.
+// RemainingDeathTime returns the amount of time before the member can be resurrected.
 func (member *HeistMember) RemainingDeathTime() time.Duration {
 	if member.DeathTimer.Before(time.Now()) {
 		return 0

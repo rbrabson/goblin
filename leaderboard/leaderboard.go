@@ -72,7 +72,7 @@ func (lb *Leaderboard) getCurrentLeaderboard() []*bank.Account {
 	sort := bson.D{{Key: "current_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
 
-	accounts := bank.GetAccounts(lb.GuildID, filter, sort, limit)
+	accounts := bank.GetAccounts(filter, sort, limit)
 	slices.SortFunc(accounts, func(a, b *bank.Account) int {
 		switch {
 		case a.CurrentBalance > b.CurrentBalance:
@@ -95,7 +95,7 @@ func (lb *Leaderboard) getMonthlyLeaderboard() []*bank.Account {
 	sort := bson.D{{Key: "monthly_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
 
-	accounts := bank.GetAccounts(lb.GuildID, filter, sort, limit)
+	accounts := bank.GetAccounts(filter, sort, limit)
 	slices.SortFunc(accounts, func(a, b *bank.Account) int {
 		switch {
 		case a.MonthlyBalance > b.MonthlyBalance:
@@ -118,7 +118,7 @@ func (lb *Leaderboard) getLifetimeLeaderboard() []*bank.Account {
 	sort := bson.D{{Key: "lifetime_balance", Value: -1}, {Key: "_id", Value: 1}}
 	limit := int64(10)
 
-	accounts := bank.GetAccounts(lb.GuildID, filter, sort, limit)
+	accounts := bank.GetAccounts(filter, sort, limit)
 	slices.SortFunc(accounts, func(a, b *bank.Account) int {
 		switch {
 		case a.LifetimeBalance > b.LifetimeBalance:

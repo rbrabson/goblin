@@ -37,7 +37,12 @@ func readBank(guildID string) *Bank {
 
 // writeBank creates or updates the bank data in the database being used by the Discord bot.
 func writeBank(bank *Bank) error {
-	filter := bson.M{"guild_id": bank.GuildID}
+	var filter bson.M
+	if bank.ID != bson.NilObjectID {
+		filter = bson.M{"_id": bank.ID}
+	} else {
+		filter = bson.M{"guild_id": bank.GuildID}
+	}
 	err := db.UpdateOrInsert(BankCollection, filter, bank)
 	if err != nil {
 		slog.Error("unable to save bank to the database", "guildID", bank.GuildID, "error", err)
@@ -48,20 +53,20 @@ func writeBank(bank *Bank) error {
 	return nil
 }
 
-// Get all the matching accounts for the given bank.
-func readAccounts(guildID string, filter interface{}, sortBy interface{}, limit int64) []*Account {
+// readAccounts all the matching accounts for the given bank.
+func readAccounts(filter interface{}, sortBy interface{}, limit int64) []*Account {
 	var accounts []*Account
 	err := db.FindMany(AccountCollection, filter, &accounts, sortBy, limit)
 	if err != nil {
-		slog.Error("unable to read accounts from the database", "guildID", guildID, "error", err)
+		slog.Error("unable to read accounts from the database", "error", err)
 		return nil
 	}
-	slog.Debug("read accounts from the database", "guildID", guildID, "count", len(accounts))
+	slog.Debug("read accounts from the database", "count", len(accounts))
 
 	return accounts
 }
 
-// readAccounts gets all matching accounts for the given bank.
+// readAccount gets the member's account in a given bank.
 func readAccount(guildID string, memberID string) *Account {
 	filter := bson.M{"guild_id": guildID, "member_id": memberID}
 	var account Account

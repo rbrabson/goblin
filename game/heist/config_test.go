@@ -25,7 +25,7 @@ func TestGetConfig(t *testing.T) {
 	configs := make([]*Config, 0, 1)
 	defer func() {
 		for _, config := range configs {
-			if err := db.Delete(ConfigCollection, bson.M{"guild_id": config.GuildID}); err != nil {
+			if err := db.Delete(configCollection, bson.M{"guild_id": config.GuildID}); err != nil {
 				slog.Error("error deleting config",
 					slog.Any("error", err),
 				)

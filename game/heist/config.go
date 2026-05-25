@@ -12,14 +12,13 @@ import (
 )
 
 const (
-	BailBase                   = 250
-	CrewOutput                 = "None"
-	DeathTimer                 = 45 * time.Second
-	HeistCost                  = 1000
-	PoliceAlert                = 60 * time.Second
-	SentenceBase               = 45 * time.Second
-	WaitTime                   = 60 * time.Second
-	DefaultVaultRecoverPercent = 0.04
+	BailBase     = 250
+	CrewOutput   = "None"
+	DeathTimer   = 45 * time.Second
+	HeistCost    = 1000
+	PoliceAlert  = 60 * time.Second
+	SentenceBase = 45 * time.Second
+	WaitTime     = 60 * time.Second
 )
 
 // Config is the configuration data for new heists
@@ -53,7 +52,7 @@ func GetConfig(guildID string) *Config {
 		config.BoostVaultRecovery = 0.08
 		writeConfig(config)
 	}
-	config.Theme = GetTheme(guildID)
+	config.Theme = GetTheme(HEIST_THEME, guildID)
 	config.Targets = GetTargets(guildID, config.Theme.Name)
 	return config
 }

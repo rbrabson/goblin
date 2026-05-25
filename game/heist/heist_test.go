@@ -866,22 +866,22 @@ func testTeardown() {
 			slog.Any("error", err),
 		)
 	}
-	if err := db.DeleteMany(ConfigCollection, bson.M{"guild_id": GuildId}); err != nil {
+	if err := db.DeleteMany(configCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all configs",
 			slog.Any("error", err),
 		)
 	}
-	if err := db.DeleteMany(HeistMemberCollection, bson.M{"guild_id": GuildId}); err != nil {
+	if err := db.DeleteMany(memberCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all heist members",
 			slog.Any("error", err),
 		)
 	}
-	if err := db.DeleteMany(TargetCollection, bson.M{"guild_id": GuildId}); err != nil {
+	if err := db.DeleteMany(targetCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all targets",
 			slog.Any("error", err),
 		)
 	}
-	if err := db.DeleteMany(ThemeCollection, bson.M{"guild_id": GuildId}); err != nil {
+	if err := db.DeleteMany(themeCollection, bson.M{"guild_id": GuildId}); err != nil {
 		slog.Error("error deleting all themes",
 			slog.Any("error", err),
 		)

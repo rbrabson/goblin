@@ -56,8 +56,8 @@ func newAccount(guildID string, memberID string) *Account {
 }
 
 // GetAccounts returns a list of all accounts for the given bank
-func GetAccounts(guildID string, filter interface{}, sortBy interface{}, limit int64) []*Account {
-	return readAccounts(guildID, filter, sortBy, limit)
+func GetAccounts(filter interface{}, sortBy interface{}, limit int64) []*Account {
+	return readAccounts(filter, sortBy, limit)
 }
 
 // Deposit adds the amount to the balance of the account.

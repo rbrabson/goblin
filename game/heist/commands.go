@@ -30,11 +30,6 @@ const (
 	MaxWinningsPerPage = 30
 )
 
-const (
-	Enable  = "enable"
-	Disable = "disable"
-)
-
 // componentHandlers are the buttons that appear on messages sent by this bot.
 var (
 	componentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -244,7 +239,7 @@ var (
 	}
 )
 
-// heistAdmin routes the commands to the subcommand and subcommandgroup handlers
+// heistAdmin routes the commands to the subcommand and subcommand group handlers
 func heistAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if discord.IsShuttingDown(s, i) {
 		return
@@ -295,7 +290,7 @@ func config(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// heist routes the commands to the subcommand and subcommandgroup handlers
+// heist routes the commands to the subcommand and subcommand group handlers
 func heist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if discord.IsShuttingDown(s, i) {
 		return
@@ -351,7 +346,7 @@ func startHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	defer heist.End()
 	slog.Info("heist created", slog.String("guildID", heist.GuildID), slog.String("organizer", heist.Organizer.guildMember.Name))
 
-	theme := GetTheme(i.GuildID)
+	theme := heist.config.Theme
 	disgomsg.NewResponse(disgomsg.WithContent("Planning a "+theme.Heist+"...")).Send(s, i.Interaction)
 
 	heistMessage(s, heist)
@@ -448,7 +443,7 @@ func sendHeistResults(s *discordgo.Session, i *discordgo.InteractionCreate, heis
 // sendMemberResults sends the results of the heist to the channel
 func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res *HeistResult) {
 	p := message.NewPrinter(language.AmericanEnglish)
-	theme := GetTheme(i.GuildID)
+	theme := res.heist.Theme
 
 	slog.Debug("hitting target", slog.String("target", res.Target.Name), slog.String("guildID", i.GuildID))
 	msg := p.Sprintf("The %s has decided to hit **%s**.", theme.Crew, res.Target.Name)
@@ -566,8 +561,12 @@ func sendMemberResults(s *discordgo.Session, i *discordgo.InteractionCreate, res
 func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heist := GetHeist(i.GuildID)
 	if heist == nil {
-		theme := GetTheme(i.GuildID)
-		disgomsg.NewResponse(disgomsg.WithContent(fmt.Sprintf("No %s is being planned", theme.Heist))).SendEphemeral(s, i.Interaction)
+		theme := GetTheme(HEIST_THEME, i.GuildID)
+		if theme != nil {
+			disgomsg.NewResponse(disgomsg.WithContent(fmt.Sprintf("No %s is being planned", theme.Heist))).SendEphemeral(s, i.Interaction)
+		} else {
+			disgomsg.NewResponse(disgomsg.WithContent("No heist is being planned")).SendEphemeral(s, i.Interaction)
+		}
 		return
 	}
 
@@ -596,7 +595,6 @@ func joinHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	theme := GetTheme(i.GuildID)
 	player := getHeistMember(i.GuildID, i.Member.User.ID)
 	player.guildMember.SetName(i.Member.User.Username, i.Member.Nick, i.Member.User.GlobalName)
 	caser := cases.Title(language.Und, cases.NoLower)
@@ -614,6 +612,7 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		sentence = "None"
 	}
+	theme := player.heist.config.Theme
 
 	embeds := []*discordgo.MessageEmbed{
 		{
@@ -751,7 +750,7 @@ func bailoutPlayer(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	disgomsg.NewResponse(disgomsg.WithContent(content)).Send(s, i.Interaction)
 }
 
-// heistMessage sends the main command used to plan, join and leave a heist. It also handles the case where
+// heistMessage sends the main command used to plan, join, and leave a heist. It also handles the case where
 // the heist starts, disabling the buttons to join/leave/cancel the heist.
 func heistMessage(s *discordgo.Session, heist *Heist) error {
 	heist.mutex.Lock()
@@ -823,11 +822,11 @@ func heistMessage(s *discordgo.Session, heist *Heist) error {
 			},
 		}},
 	}
-	emptymsg := ""
+	empty := ""
 	s.InteractionResponseEdit(heist.interaction.Interaction, &discordgo.WebhookEdit{
 		Embeds:     &embeds,
 		Components: &components,
-		Content:    &emptymsg,
+		Content:    &empty,
 	})
 
 	return nil
@@ -846,8 +845,12 @@ func resetHeist(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	heistLock.Unlock()
 
 	if heist == nil {
-		theme := GetTheme(i.GuildID)
-		disgomsg.NewResponse(disgomsg.WithContent(fmt.Sprintf("No %s is being planned", theme.Heist))).SendEphemeral(s, i.Interaction)
+		theme := GetTheme(HEIST_THEME, i.GuildID)
+		if theme != nil {
+			disgomsg.NewResponse(disgomsg.WithContent(fmt.Sprintf("No %s is being planned", theme.Heist))).SendEphemeral(s, i.Interaction)
+		} else {
+			disgomsg.NewResponse(disgomsg.WithContent("No heist is being planned")).SendEphemeral(s, i.Interaction)
+		}
 		return
 	}
 	heist.End()
@@ -864,15 +867,19 @@ func resetVaults(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // listTargets displays a list of available heist targets.
 func listTargets(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	theme := GetTheme(i.GuildID)
-	targets := GetTargets(i.GuildID, theme.Name)
+	theme := GetTheme(HEIST_THEME, i.GuildID)
+	if theme == nil {
+		disgomsg.NewResponse(disgomsg.WithContent("There aren't any targets!")).SendEphemeral(s, i.Interaction)
+		return
+	}
 
+	targets := GetTargets(i.GuildID, theme.Name)
 	if len(targets) == 0 {
 		disgomsg.NewResponse(disgomsg.WithContent("There aren't any targets!")).SendEphemeral(s, i.Interaction)
 		return
 	}
 
-	// Returns the data in an Ascii table. Ideally, it would be using a Discord embed, but unfortunately
+	// Returns the data in an Ascii table. Ideally, it would be using a Discord embed, but unfortunately,
 	// Discord only puts three columns per row, which isn't enough for our purposes.
 	var tableBuffer strings.Builder
 	table := tablewriter.NewTable(&tableBuffer,
@@ -936,7 +943,7 @@ func configCost(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	writeConfig(config)
 }
 
-// configSentence sets the base aprehension time when a player is apprehended.
+// configSentence sets the base apprehension time when a player is apprehended.
 func configSentence(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0]
 	if options == nil {

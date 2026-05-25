@@ -18,9 +18,10 @@ import (
 )
 
 var (
-	alertTimes    = make(map[string]time.Time)
-	currentHeists = make(map[string]*Heist)
-	heistLock     = sync.Mutex{}
+	alertTimes     = make(map[string]time.Time)
+	currentHeists  = make(map[string]*Heist)
+	heistLock      = sync.Mutex{}
+	alertTimesLock = sync.Mutex{}
 )
 
 type HeistState string
@@ -39,6 +40,7 @@ type Heist struct {
 	Crew         []*HeistMember
 	StartTime    time.Time
 	State        HeistState
+	Theme        *Theme
 	interaction  *discordgo.InteractionCreate
 	config       *Config
 	mutex        sync.Mutex
@@ -218,11 +220,11 @@ func (h *Heist) getGoodResult() *HeistMessage {
 		h.goodMessages = append(h.goodMessages, h.config.Theme.EscapedMessages...)
 	}
 	index := rand.IntN(len(h.goodMessages))
-	message := h.goodMessages[index]
+	result := h.goodMessages[index]
 
 	h.goodMessages = append(h.goodMessages[:index], h.goodMessages[index+1:]...)
 
-	return message
+	return result
 }
 
 // getBadResult returns a random bad result message, removing it from the list of available bad messages
@@ -233,11 +235,11 @@ func (h *Heist) getBadResult() *HeistMessage {
 		h.badMessages = append(h.badMessages, h.config.Theme.DiedMessages...)
 	}
 	index := rand.IntN(len(h.badMessages))
-	message := h.badMessages[index]
+	result := h.badMessages[index]
 
 	h.badMessages = append(h.badMessages[:index], h.badMessages[index+1:]...)
 
-	return message
+	return result
 }
 
 // getBonusAmount calculates the bonus amount for a given good message, based on the heist's boost configuration.
@@ -276,29 +278,45 @@ func (h *Heist) End() {
 		slog.Debug("heist cancelled", slog.String("guildID", h.GuildID))
 	} else {
 		h.State = Completed
+
+		alertTimesLock.Lock()
 		alertTimes[h.GuildID] = time.Now().Add(h.config.PoliceAlert)
+		alertTimesLock.Unlock()
+
 		slog.Debug("heist ended", slog.String("guildID", h.GuildID))
 	}
 
-	heistLock.Lock()
-	delete(currentHeists, h.GuildID)
-	heistLock.Unlock()
+	h.removeCurrentHeist()
 
 	memberIDs := make([]string, 0, len(h.Crew))
 	for _, member := range h.Crew {
 		memberIDs = append(memberIDs, member.MemberID)
+		member.heist = nil
 	}
 	stats.UpdateGameStats(h.GuildID, "heist", memberIDs)
 }
 
 // Cancel cancels the current heist, removing it from the current heists.
 func (h *Heist) Cancel() {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	h.State = Cancelled
+	h.removeCurrentHeist()
+
+	for _, member := range h.Crew {
+		member.heist = nil
+	}
+}
+
+// removeCurrentHeist deletes the current heist from the currentHeists map.
+func (h *Heist) removeCurrentHeist() {
 	heistLock.Lock()
 	delete(currentHeists, h.GuildID)
 	heistLock.Unlock()
 }
 
-// heistChecks returns an error, with appropriate message, if a heist cannot be started.
+// heistChecks returns an error, with the appropriate message if a heist cannot be started.
 func heistChecks(h *Heist, member *HeistMember) error {
 	if h.State != Planning {
 		slog.Debug("heist already started", slog.String("guildID", h.GuildID), slog.String("state", string(h.State)))
@@ -311,7 +329,7 @@ func heistChecks(h *Heist, member *HeistMember) error {
 		return m.MemberID == member.MemberID
 	}) {
 		slog.Debug("member already joined heist", slog.String("guildID", h.GuildID), slog.String("memberID", member.MemberID))
-		return ErrAlreadyJoinedHieist
+		return ErrAlreadyJoinedHeist
 	}
 
 	account := bank.GetAccount(h.GuildID, member.MemberID)
@@ -320,7 +338,10 @@ func heistChecks(h *Heist, member *HeistMember) error {
 		return ErrNotEnoughCredits{h.config.HeistCost}
 	}
 
+	alertTimesLock.Lock()
 	alertTime := alertTimes[h.GuildID]
+	alertTimesLock.Unlock()
+
 	if alertTime.After(time.Now()) {
 		remainingTime := time.Until(alertTime)
 		return ErrPoliceOnAlert{h.config.Theme.Police, remainingTime}
@@ -341,7 +362,7 @@ func heistChecks(h *Heist, member *HeistMember) error {
 	return nil
 }
 
-// calculateSuccessRate returns the liklihood of a successful raid for each
+// calculateSuccessRate returns the likelihood of a successful raid for each
 // member of the heist crew.
 func calculateSuccessRate(heist *Heist, target *Target) float64 {
 	bonus := calculateBonusRate(heist, target)
@@ -375,14 +396,18 @@ func calculateCredits(results *HeistResult) {
 	numEscaped := len(results.Escaped)
 	numApprehended := len(results.Apprehended)
 	numSurvived := numEscaped + numApprehended
-	stolenPerSurivor := int(math.Round(float64(results.Target.Vault) * 0.75 / float64(numSurvived)))
+	if numEscaped == 0 || numSurvived == 0 {
+		return
+	}
+
+	stolenPerSurvivor := int(math.Round(float64(results.Target.Vault) * 0.75 / float64(numSurvived)))
 
 	config := results.heist.config
 	if config.BoostEnabled && config.BoostPercentage > 0 {
 		multiplier := 1.0 + (config.BoostPercentage / 100.0)
-		stolenPerSurivor = int(float64(stolenPerSurivor) * multiplier)
+		stolenPerSurvivor = int(float64(stolenPerSurvivor) * multiplier)
 	}
-	totalStolen := min(numSurvived*stolenPerSurivor, results.Target.Vault)
+	totalStolen := min(numSurvived*stolenPerSurvivor, results.Target.Vault)
 
 	// Get a "base amount" of loot stolen. If you are apprehended, this is what you get. If you escaped you get 2x as much.
 	baseStolen := totalStolen / (2*numEscaped + numApprehended)
@@ -410,7 +435,7 @@ func (h *Heist) String() string {
 	)
 }
 
-// String returns a string representation of the HeistMember.
+// String returns a string representation of the HeistResult..
 func (hr *HeistResult) String() string {
 	return fmt.Sprintf("HeistResult{Escaped: %d, Apprehended: %d, Dead: %d, Target: %s, TotalStolen: %d}",
 		len(hr.Escaped),

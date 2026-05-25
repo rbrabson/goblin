@@ -29,7 +29,7 @@ type Target struct {
 func GetTargets(guildID string, theme string) []*Target {
 	targets, _ := readTargets(guildID, theme)
 	if targets == nil {
-		targets = readTargetsFromFIle(guildID)
+		targets = readTargetsFromFile(guildID, theme)
 		for _, target := range targets {
 			writeTarget(target)
 		}
@@ -69,7 +69,7 @@ func (t *Target) StealFromVault(amount int) {
 }
 
 // getAllTargets returns all targets that match the filter.
-func getAllTargets(filter bson.D) []*Target {
+func getAllTargets(filter bson.M) []*Target {
 	allTargets, _ := readAllTargets(filter)
 
 	return allTargets
@@ -79,6 +79,13 @@ func getAllTargets(filter bson.D) []*Target {
 // crew members. If no target matches the criteria, then the target with the maximum crew size
 // is used.
 func getTarget(targets []*Target, crewSize int) *Target {
+	if len(targets) == 0 {
+		slog.Error("no heist targets available",
+			slog.Int("crewSize", crewSize),
+		)
+		return nil
+	}
+
 	var target *Target
 	for _, possible := range targets {
 		if possible.CrewSize >= crewSize {
@@ -97,10 +104,10 @@ func getTarget(targets []*Target, crewSize int) *Target {
 	return target
 }
 
-// readTargetsFromFIle returns the default targets for a server.
+// readTargetsFromFile returns the default targets for a server.
 // If the file is not found or cannot be decoded, the default targets are used.
-func readTargetsFromFIle(guildID string) []*Target {
-	configFileName := filepath.Join(discord.ConfigDir, "heist", "targets", HEIST_THEME+".json")
+func readTargetsFromFile(guildID string, theme string) []*Target {
+	configFileName := filepath.Join(discord.ConfigDir, "heist", "targets", theme+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read targets from file",
@@ -108,6 +115,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
+		return nil
 	}
 
 	var targets []*Target
@@ -119,10 +127,11 @@ func readTargetsFromFIle(guildID string) []*Target {
 			slog.String("targets", string(bytes)),
 			slog.Any("error", err),
 		)
+		return nil
 	}
 	for _, target := range targets {
 		target.GuildID = guildID
-		target.Theme = HEIST_THEME
+		target.Theme = theme
 		target.Vault = target.VaultMax
 		target.IsAtMax = true
 	}
@@ -138,7 +147,7 @@ func readTargetsFromFIle(guildID string) []*Target {
 
 // ResetVaultsToMaximumValue resets all vaults in a guild to the maximum amount.
 func ResetVaultsToMaximumValue(guildID string) {
-	filter := bson.D{{Key: "guild_id", Value: guildID}}
+	filter := bson.M{"guild_id": guildID}
 	targets := getAllTargets(filter)
 	for _, target := range targets {
 		target.Vault = target.VaultMax
@@ -155,7 +164,7 @@ func ResetVaultsToMaximumValue(guildID string) {
 // vaultUpdater updates the vault balance for any target whose vault is not at the maximum value
 func vaultUpdater() {
 	// Get all vaults not at the max value
-	filter := bson.D{{Key: "is_at_max", Value: false}}
+	filter := bson.M{"is_at_max": false}
 
 	// Update the vaults once a minute forever
 	ticker := time.NewTicker(1 * time.Minute)
