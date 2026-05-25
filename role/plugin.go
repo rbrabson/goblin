@@ -78,8 +78,7 @@ func (plugin *Plugin) GetHelp() []string {
 
 // GetAdminHelp returns the admin help for the banking system
 func (plugin *Plugin) GetAdminHelp() []string {
-	help := make([]string, 0, len(adminCommands[0].Options))
-
+	var help = make([]string, 0, len(adminCommands[0].Options))
 	commandPrefix := adminCommands[0].Name
 	for _, command := range adminCommands[0].Options {
 		commandDescription := fmt.Sprintf("- `/%s %s`:  %s\n", commandPrefix, command.Name, command.Description)

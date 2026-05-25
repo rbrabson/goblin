@@ -10,7 +10,7 @@ const (
 	AltCollection = "alt_ids"
 )
 
-// readAltID reads the alt ID from the database and returns the value, if it exists, or returns nil if the
+// readAltID reads the alt ID from the database and returns the value if it exists, or returns nil if the
 // alt ID does not exist in the database.
 func readAltID(guildID string, altID string) *AltID {
 	filter := bson.M{

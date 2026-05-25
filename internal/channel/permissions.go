@@ -43,9 +43,9 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 	}
 
 	guildRoles := guild.GetGuildRoles(s, channel.GuildID)
-	for _, guildlRole := range guildRoles {
-		if guildlRole.Name == "@everyone" {
-			c.everyoneID = guildlRole.ID
+	for _, guildRole := range guildRoles {
+		if guildRole.Name == "@everyone" {
+			c.everyoneID = guildRole.ID
 		}
 	}
 
@@ -59,7 +59,7 @@ func NewChannelMute(s *discordgo.Session, i *discordgo.InteractionCreate) *Mute 
 	return &c
 }
 
-// MuteChannel sets the channel so that `@everyone`	 can't send messages to the channel.
+// MuteChannel sets the channel so that `@everyone`	can't send messages to the channel.
 func (c *Mute) MuteChannel() {
 	if c == nil {
 		slog.Error("channelMute is nil")

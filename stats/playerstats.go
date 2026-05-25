@@ -288,7 +288,7 @@ func GetPlayerRetention(guildID string, game string, after time.Time, inactiveDu
 		slog.Time("end_date", endDate),
 		slog.Int("inactive_days", int(inactiveDuration.Hours())/24),
 		slog.Int("total_eligible_players", getInt(result["total_players"])),
-		slog.Int("aactive_players", retention.ActivePlayers),
+		slog.Int("active_players", retention.ActivePlayers),
 		slog.Float64("active_percentage", retention.ActivePercentage),
 		slog.Int("inactive_players", retention.InactivePlayers),
 		slog.Float64("inactive_percentage", retention.InactivePercentage),
@@ -406,7 +406,7 @@ func getAggregatePlayerStats(guildID string, memberID string, game string) (*Pla
 	return ps, nil
 }
 
-// getPlayerStatsForMostActiveMembers returns the most active players using aggregation pipeline
+// getPlayerStatsForMostActiveMembers returns the most active players using the aggregation pipeline
 func getPlayerStatsForMostActiveMembers(guildID string, game string) []*PlayerStats {
 	slog.Debug("getting most active members",
 		slog.String("guild_id", guildID),
@@ -444,7 +444,7 @@ func getPlayerStatsForMostActiveMembers(guildID string, game string) []*PlayerSt
 		}},
 	})
 
-	// Stage 3: Sort by total_games_played (descending) and _id (ascending for tie-breaking)
+	// Stage 3: Sort by total_games_played (descending) and _id (ascending for tiebreaking)
 	pipeline = append(pipeline, bson.D{
 		{Key: "$sort", Value: bson.D{
 			{Key: "total_games_played", Value: -1},

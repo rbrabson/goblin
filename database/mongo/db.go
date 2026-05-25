@@ -168,7 +168,7 @@ func (m *MongoDB) FindMany(collectionName string, filter any, data any, sortBy a
 	return nil
 }
 
-// UpdateOrInsert stores data into a documeent within the specified collection.
+// UpdateOrInsert stores data into a document within the specified collection.
 func (m *MongoDB) UpdateOrInsert(collectionName string, filter any, data any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -188,7 +188,7 @@ func (m *MongoDB) UpdateOrInsert(collectionName string, filter any, data any) er
 	return nil
 }
 
-// UpdateMany stores data into multiple documeents within the specified collection.
+// UpdateMany stores data into multiple documents within the specified collection.
 func (m *MongoDB) UpdateMany(collectionName string, filter any, data any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -290,7 +290,7 @@ func (m *MongoDB) Delete(collectionName string, filter any) error {
 	return nil
 }
 
-// DeleteMany removes all documents from the collection that matche the filter.
+// DeleteMany removes all documents from the collection that match the filter.
 func (m *MongoDB) DeleteMany(collectionName string, filter any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DbTimeout)
 	defer cancel()
@@ -363,7 +363,7 @@ func (m *MongoDB) getCollection(collectionName string) (*mongo.Collection, error
 	db := m.Client.Database(m.dbname)
 	collection := db.Collection(collectionName)
 	if collection == nil {
-		slog.Error("uanble to access the collection", "database", m.dbname, "collection", collectionName)
+		slog.Error("unable to access the collection", "database", m.dbname, "collection", collectionName)
 		return nil, ErrCollectionNotAccessible
 	}
 

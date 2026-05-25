@@ -15,7 +15,7 @@ func GetSlotMachine() *SlotMachine {
 	return newSlotMachine()
 }
 
-// newSlotMachine creates a new instance of the SlotMachine with initialized lookup table, payout table, and symbol table.
+// newSlotMachine creates a new instance of the SlotMachine with an initialized lookup table, payout table, and symbol table.
 func newSlotMachine() *SlotMachine {
 	slotMachine := &SlotMachine{
 		slotMachine: *rslots.NewSlotMachine(

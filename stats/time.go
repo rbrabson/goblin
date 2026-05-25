@@ -34,33 +34,39 @@ func today() time.Time {
 	return time.Date(year, month, day, 0, 0, 0, 0, now.Location()).UTC()
 }
 
-// getDuration calculates the duration from the start date to today based on the specified period.
-func getDuration(period string, firstGameDate time.Time) time.Duration {
-	today := today().UTC()
-
+// periodStartDate calculates the start date for a given period relative to the base date, considering the first game date.
+func periodStartDate(period string, baseDate time.Time, firstGameDate time.Time) time.Time {
 	var startDate time.Time
 	switch period {
-	case OneDay:
-		startDate = today.AddDate(0, 0, -1).UTC()
-	case OneWeek:
-		startDate = today.AddDate(0, 0, -7).UTC()
-	case OneMonth:
-		startDate = today.AddDate(0, -1, 0).UTC()
-	case ThreeMonths:
-		startDate = today.AddDate(0, -3, 0).UTC()
-	case SixMonths:
-		startDate = today.AddDate(0, -6, 0).UTC()
-	case NineMonths:
-		startDate = today.AddDate(0, -9, 0).UTC()
-	case TwelveMonths:
-		startDate = today.AddDate(-1, 0, 0).UTC()
+	case OneDay, OneDayAgo:
+		startDate = baseDate.AddDate(0, 0, -1).UTC()
+	case OneWeek, LastWeek:
+		startDate = baseDate.AddDate(0, 0, -7).UTC()
+	case OneMonth, LastMonth:
+		startDate = baseDate.AddDate(0, -1, 0).UTC()
+	case ThreeMonths, ThreeMonthsAgo:
+		startDate = baseDate.AddDate(0, -3, 0).UTC()
+	case SixMonths, SixMonthsAgo:
+		startDate = baseDate.AddDate(0, -6, 0).UTC()
+	case NineMonths, NineMonthsAgo:
+		startDate = baseDate.AddDate(0, -9, 0).UTC()
+	case TwelveMonths, TwelveMonthsAgo:
+		startDate = baseDate.AddDate(-1, 0, 0).UTC()
 	default:
 		startDate = firstGameDate
 	}
 
 	if firstGameDate.After(startDate) {
-		startDate = firstGameDate
+		return firstGameDate
 	}
+
+	return startDate
+}
+
+// getDuration calculates the duration from the start date to today based on the specified period.
+func getDuration(period string, firstGameDate time.Time) time.Duration {
+	today := today().UTC()
+	startDate := periodStartDate(period, today, firstGameDate)
 
 	return today.Sub(startDate)
 }
@@ -68,30 +74,7 @@ func getDuration(period string, firstGameDate time.Time) time.Duration {
 // getTime calculates the time period based on the specified period and first game date.
 func getTime(period string, firstGameDate time.Time) time.Time {
 	yesterday := today().UTC().AddDate(0, 0, -1).UTC()
-
-	var timePeriod time.Time
-	switch period {
-	case OneDayAgo:
-		timePeriod = yesterday.AddDate(0, 0, -1).UTC()
-	case LastWeek:
-		timePeriod = yesterday.AddDate(0, 0, -7).UTC()
-	case LastMonth:
-		timePeriod = yesterday.AddDate(0, -1, 0).UTC()
-	case ThreeMonthsAgo:
-		timePeriod = yesterday.AddDate(0, -3, 0).UTC()
-	case SixMonthsAgo:
-		timePeriod = yesterday.AddDate(0, -6, 0).UTC()
-	case NineMonthsAgo:
-		timePeriod = yesterday.AddDate(0, -9, 0).UTC()
-	case TwelveMonthsAgo:
-		timePeriod = yesterday.AddDate(-1, 0, 0).UTC()
-	default:
-		timePeriod = firstGameDate
-	}
-
-	if firstGameDate.After(timePeriod) {
-		timePeriod = firstGameDate
-	}
+	timePeriod := periodStartDate(period, yesterday, firstGameDate)
 
 	if firstGameDate.Equal(timePeriod) {
 		timePeriod = timePeriod.AddDate(0, 0, -1).UTC()

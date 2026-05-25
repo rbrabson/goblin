@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	CONFIG_TABLE_NAME = "config"
+	ConfigFileName = "config"
 )
 
 // Config represents the configuration for the slots game.
@@ -30,7 +30,7 @@ func newConfig() *Config {
 
 // readConfigFromFile reads the configuration from a JSON file and returns a Config instance.
 func readConfigFromFile() *Config {
-	configFileName := filepath.Join(discord.ConfigDir, "slots", "config", CONFIG_TABLE_NAME+".json")
+	configFileName := filepath.Join(discord.ConfigDir, "slots", "config", ConfigFileName+".json")
 	bytes, _ := os.ReadFile(configFileName)
 
 	var config Config

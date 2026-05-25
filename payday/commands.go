@@ -33,13 +33,7 @@ var (
 
 // payday handles the `/payday` command.
 func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response", "error", err)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -59,7 +53,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	paydayAmount := paydayAccount.getPayAmmount()
+	paydayAmount := paydayAccount.getPayAmount()
 
 	account := bank.GetAccount(i.GuildID, i.Member.User.ID)
 	if err := account.Deposit(paydayAmount); err != nil {
@@ -81,13 +75,7 @@ func payday(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	p := message.NewPrinter(language.AmericanEnglish)
 
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("error sending response", "guildID", i.GuildID, "memberID", i.Member.User.ID, "error", err)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -95,7 +83,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	paydayAccount := payday.GetAccount(i.Member.User.ID)
 	currentStreak := paydayAccount.CurrentStreak
 	maxStreak := paydayAccount.MaxStreak
-	pay := paydayAccount.getPayAmmount()
+	pay := paydayAccount.getPayAmount()
 	nextPayday := paydayAccount.getNextPayday().Format(time.DateTime)
 
 	embeds := []*discordgo.MessageEmbed{

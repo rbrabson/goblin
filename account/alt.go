@@ -1,6 +1,7 @@
 package account
 
 import (
+	"log/slog"
 	"sync"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -18,7 +19,7 @@ type AltID struct {
 	AltID   string        `json:"alt_id" bson:"alt_id"`
 }
 
-// GetAltID retrieves an existing alt ID from the database, or creates a new one if it does not exist.
+// GetAltID retrieves an existing alt ID from the database or creates a new one if it does not exist.
 func GetAltID(guildID string, ownerID string, altID string) *AltID {
 	lock.Lock()
 	defer lock.Unlock()
@@ -37,12 +38,14 @@ func newAltID(guildID string, ownerID string, altID string) *AltID {
 		AltID:   altID,
 		OwnerID: ownerID,
 	}
-	writeAltID(alt)
+	if err := writeAltID(alt); err != nil {
+		slog.Error("error writing alt ID", "error", err)
+	}
 	return alt
 }
 
 // GetAllAltIDs retrieves all alt IDs for a given owner in a guild from the database.
-// If ownerID is an empty string, it retrieves all alt IDs for the guild.
+// If the ownerID is an empty string, it retrieves all alt IDs for the guild.
 func GetAllAltIDs(guildID string, ownerID string) []*AltID {
 	altIDs := readAllAltIDs(guildID, ownerID)
 	return altIDs

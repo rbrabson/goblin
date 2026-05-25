@@ -3,7 +3,6 @@ package leaderboard
 import (
 	"fmt"
 	"log/slog"
-	"strconv"
 	"strings"
 
 	"github.com/olekukonko/tablewriter/renderer"
@@ -99,13 +98,7 @@ var (
 
 // leaderboardAdmin updates the leaderboardAdmin channel.
 func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response", "error", err)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -130,13 +123,7 @@ func leaderboardAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // leaderboard handles the leaderboard commands.
 func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send the response", "error", err)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -171,21 +158,21 @@ func leaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// currentLeaderboard returns the top ranked accounts for the current balance.
+// currentLeaderboard returns the top-ranked accounts for the current balance.
 func currentLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getCurrentLeaderboard()
 	sendLeaderboard(s, i, CurrentLeaderboard, leaderboard)
 }
 
-// monthlyLeaderboard returns the top ranked accounts for the current months.
+// monthlyLeaderboard returns the top-ranked accounts for the current months.
 func monthlyLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getMonthlyLeaderboard()
 	sendLeaderboard(s, i, MonthlyLeaderboard, leaderboard)
 }
 
-// lifetimeLeaderboard returns the top ranked accounts for the lifetime of the server.
+// lifetimeLeaderboard returns the top-ranked accounts for the lifetime of the server.
 func lifetimeLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	lb := getLeaderboard(i.GuildID)
 	leaderboard := lb.getLifetimeLeaderboard()
@@ -274,10 +261,9 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	lb := getLeaderboard(i.GuildID)
-	currentRank := getCurrentRanking(lb, account)
-	monthlyRank := getMonthlyRanking(lb, account)
-	lifetimeRank := getLifetimeRanking(lb, account)
+	currentRank := account.GetCurrentRanking()
+	monthlyRank := account.GetMonthlyRanking()
+	lifetimeRank := account.GetLifetimeRanking()
 
 	content := p.Sprintf("**Current Rank**: %d\n**Monthly Rank**: %d\n**Lifetime Rank**: %d\n", currentRank, monthlyRank, lifetimeRank)
 	resp := disgomsg.NewResponse(
@@ -291,6 +277,7 @@ func rank(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // formatAccounts formats the leaderboard to be sent to a Discord server
 func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) []*discordgo.MessageEmbed {
 	var tableBuffer strings.Builder
+
 	table := tablewriter.NewTable(&tableBuffer,
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 			Borders: tw.BorderNone,
@@ -306,17 +293,23 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
 				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
 			},
-			Header: tw.CellConfig{
-				Padding:    tw.CellPadding{Global: tw.Padding{Left: "", Right: "", Top: "", Bottom: ""}},
-				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone}, // Wrap long content
-				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},   // Left-align rows
-			},
 		}),
 	)
+	defer func(table *tablewriter.Table) {
+		if err := table.Close(); err != nil {
+			slog.Error("failed to close the table", "error", err)
+			return
+		}
+	}(table)
 
-	table.Header([]string{"#", "Name", "Balance"})
+	header := []string{
+		fmt.Sprintf("%-3s %-25s %-15s", "#", "NAME", "BALANCE"),
+	}
+	if err := table.Append(header); err != nil {
+		slog.Error("failed to append header to the table", "error", err)
+	}
 
-	// A bit of a hack, but good enough....
+	// A bit of a hack, but good enough...
 	for i, account := range accounts {
 		member := guild.GetMember(accounts[0].GuildID, account.MemberID)
 		var balance int
@@ -330,7 +323,11 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 		default:
 			balance = account.MonthlyBalance
 		}
-		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
+		data := []string{
+			fmt.Sprintf("%-3d %-25s %-15s", i+1, member.Name, p.Sprintf("%d", balance)),
+		}
+
+		// strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", balance)}
 		if err := table.Append(data); err != nil {
 			slog.Error("failed to append data to the table", "error", err)
 		}
@@ -344,7 +341,8 @@ func formatAccounts(p *message.Printer, title string, accounts []*bank.Account) 
 			Title: title,
 			Fields: []*discordgo.MessageEmbedField{
 				{
-					Value: p.Sprintf("```\n%s```\n", tableBuffer.String()),
+					Value:  p.Sprintf("```\n%s```\n", tableBuffer.String()),
+					Inline: false,
 				},
 			},
 		},

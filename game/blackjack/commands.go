@@ -122,8 +122,7 @@ var (
 
 // blackjackAdmin handles the /blackjack-admin command and its subcommands.
 func blackjackAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		disgomsg.NewResponse(disgomsg.WithContent("The system is shutting down.")).SendEphemeral(s, i.Interaction)
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -231,8 +230,7 @@ func configInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // blackjack handles the /blackjack command and its subcommands.
 func blackjack(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		disgomsg.NewResponse(disgomsg.WithContent("The system is shutting down.")).SendEphemeral(s, i.Interaction)
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -306,7 +304,7 @@ func playRound(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game)
 	game.DealInitialCards()
 	showDeal(s, i, game, false)
 
-	// Check for dealer blackjack, and only proceed to player turns if dealer doesn't have blackjack
+	// Check for dealer blackjack and only proceed to player turns if dealer doesn't have blackjack
 	if !game.Dealer().HasBlackjack() {
 		allPlayerTurns(s, game)
 		dealerTurn(s, i, game)
@@ -334,7 +332,7 @@ func allPlayerTurns(s *discordgo.Session, game *Game) {
 	}
 }
 
-// playerTurn handles the turns for a given player in blackjack, until they have stood or busted on their all hands.
+// playerTurn handles the turns for a given player in blackjack, until they have stood or busted on their hands.
 func playerTurn(s *discordgo.Session, game *Game, player *bj.Player) {
 	playerName := guild.GetMember(game.guildID, player.Name()).Name
 	slog.Debug("starting blackjack turn for player", slog.String("playerName", playerName), slog.String("playerID", player.Name()))
@@ -353,7 +351,7 @@ func playerTurn(s *discordgo.Session, game *Game, player *bj.Player) {
 	}
 }
 
-// playHand handles the turn for a specific hand of a player in blackjack, until they have stood or busted on that hand.
+// playHand handles the turn for a specific hand of a player in blackjack, until they have stood or busted, on that hand.
 func playHand(s *discordgo.Session, game *Game, player *bj.Player) {
 	hand := player.CurrentHand()
 	handIndex := player.GetCurrentHandNumber()
@@ -366,7 +364,7 @@ func playHand(s *discordgo.Session, game *Game, player *bj.Player) {
 	hand.SetActive(false)
 }
 
-// playSingleHandTurn handles the turn for a specific hand of a player in blackjack, until they have stood or busted on that hand.
+// playSingleHandTurn handles the turn for a specific hand of a player in blackjack, until they have stood or busted, on that hand.
 func playSingleHandTurn(s *discordgo.Session, game *Game, player *bj.Player, currentHand *bj.Hand) {
 	slog.Debug("playing single hand turn", slog.String("playerID", player.Name()), slog.Any("hand", currentHand))
 	defer slog.Debug("finished single hand turn", slog.String("playerID", player.Name()), slog.Any("hand", currentHand))
@@ -740,7 +738,7 @@ func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player,
 	var m *discordgo.Message
 	var err error
 
-	if len((buttons)) == 0 {
+	if len(buttons) == 0 {
 		m, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Channel:    game.message.ChannelID,
 			ID:         game.message.ID,
@@ -938,7 +936,7 @@ func blackjackSurrender(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err := game.PlayerActionRequest(i.Member.User.ID, Surrender); err != nil {
 		disgomsg.NewResponse(disgomsg.WithContent(unicode.FirstToUpper(err.Error()))).SendEphemeral(s, i.Interaction)
-		slog.Error("error processing player surrender request", slog.String("guildID", game.guildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
+		slog.Error("error processing player surrender request", slog.String("guildID", i.GuildID), slog.String("memberID", i.Member.User.ID), slog.Any("error", err))
 		return
 	}
 
@@ -1071,7 +1069,7 @@ func showStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-// formatNetCredits formats the net credits with appropriate color coding
+// formatNetCredits formats the net credits with the appropriate color coding
 func formatNetCredits(netCredits int, p *message.Printer) string {
 	switch {
 	case netCredits > 0:

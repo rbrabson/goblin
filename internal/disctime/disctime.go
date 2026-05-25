@@ -88,33 +88,9 @@ func FormatDuration(duration time.Duration) string {
 	elapsedDay := futureDay - currentDay
 
 	sb := strings.Builder{}
-	if elapsedYear > 0 {
-		if elapsedYear == 1 {
-			sb.WriteString("1 year")
-		} else {
-			sb.WriteString(fmt.Sprintf("%d years", elapsedYear))
-		}
-	}
-	if elapsedMonth > 0 {
-		if sb.Len() > 0 {
-			sb.WriteString(", ")
-		}
-		if elapsedMonth == 1 {
-			sb.WriteString("1 month")
-		} else {
-			sb.WriteString(fmt.Sprintf("%d months", elapsedMonth))
-		}
-	}
-	if elapsedDay > 0 {
-		if sb.Len() > 0 {
-			sb.WriteString(", ")
-		}
-		if elapsedDay == 1 {
-			sb.WriteString("1 day")
-		} else {
-			sb.WriteString(fmt.Sprintf("%d days", elapsedDay))
-		}
-	}
+	appendDurationPart(&sb, int64(elapsedYear), "year")
+	appendDurationPart(&sb, int64(elapsedMonth), "month")
+	appendDurationPart(&sb, int64(elapsedDay), "day")
 	if sb.Len() > 0 {
 		return sb.String()
 	}
@@ -130,64 +106,46 @@ func FormatDuration(duration time.Duration) string {
 	remaining -= minutes * time.Minute
 	seconds := remaining / time.Second
 
-	if months == 1 {
-		if days <= 15 { // If less than half a month, round down
-			return "1 month"
-		} // If more than half a month, round up
-		return "2 months"
-	}
 	if months >= 1 {
-		if days > 15 {
-			months++
-		}
-		if months == 1 {
-			return "1 month"
-		}
-		return fmt.Sprintf("%d months", months)
-	}
-
-	if days == 1 {
-		if hours <= 12 { // If less than half a day, round down
-			return "1 day"
-		} // If more than half a day, round up
-		return "2 days"
+		return roundedDurationPart(int64(months), int64(days), 15, "month")
 	}
 	if days >= 1 {
-		if hours > 12 {
-			days++
-		}
-		if days == 1 {
-			return "1 day"
-		}
-		return fmt.Sprintf("%d days", days)
-	}
-
-	if hours == 1 {
-		if minutes <= 30 {
-			return "1 hour"
-		}
-		return "2 hours"
+		return roundedDurationPart(int64(days), int64(hours), 12, "day")
 	}
 	if hours >= 1 {
-		if minutes > 30 {
-			hours++
-		}
-		if hours == 1 {
-			return "1 hour"
-		}
-		return fmt.Sprintf("%d hours", hours)
+		return roundedDurationPart(int64(hours), int64(minutes), 30, "hour")
 	}
 	if minutes >= 1 {
-		if seconds > 30 {
-			minutes++
-		}
-		if minutes == 1 {
-			return "1 minute"
-		}
-		return fmt.Sprintf("%d minutes", minutes)
+		return roundedDurationPart(int64(minutes), int64(seconds), 30, "minute")
 	}
-	if seconds <= 1 {
-		return "1 second"
+	return durationPart(int64(seconds), "second")
+}
+
+// appendDurationPart appends a duration part to the string builder if the value is greater than 0. If the string builder
+// already has content, a comma and space are added before the new part.
+func appendDurationPart(sb *strings.Builder, value int64, unit string) {
+	if value <= 0 {
+		return
 	}
-	return fmt.Sprintf("%d seconds", seconds)
+	if sb.Len() > 0 {
+		sb.WriteString(", ")
+	}
+	sb.WriteString(durationPart(value, unit))
+}
+
+// roundedDurationPart rounds the duration part up if the remainder exceeds the roundUpAfter threshold and returns
+// the formatted duration part.
+func roundedDurationPart(value, remainder, roundUpAfter int64, unit string) string {
+	if remainder > roundUpAfter {
+		value++
+	}
+	return durationPart(value, unit)
+}
+
+// durationPart returns a formatted duration part. If the value is 1, the unit is singular; otherwise, it is plural.
+func durationPart(value int64, unit string) string {
+	if value == 1 {
+		return fmt.Sprintf("1 %s", unit)
+	}
+	return fmt.Sprintf("%d %ss", value, unit)
 }

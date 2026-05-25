@@ -191,7 +191,7 @@ func (g *Game) GetPlayer(memberID string) *bj.Player {
 	return g.game.GetPlayer(memberID)
 }
 
-// GetACtivePlayer retrieves the currently active player in the blackjack game.
+// GetActivePlayer retrieves the currently active player in the blackjack game.
 func (g *Game) GetActivePlayer() *bj.Player {
 	return g.game.GetActivePlayer()
 }

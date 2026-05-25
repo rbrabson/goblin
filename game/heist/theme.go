@@ -38,13 +38,17 @@ type HeistMessage struct {
 
 // GetThemeNames returns a list of available themes
 func GetThemeNames(guildID string) ([]string, error) {
-	var fileNames []string
-	themes := GetThemes(guildID)
+	var names []string
+
+	themes, err := readAllThemes(guildID)
+	if err != nil {
+		return nil, err
+	}
 	for _, theme := range themes {
-		fileNames = append(fileNames, theme.Name)
+		names = append(names, theme.Name)
 	}
 
-	return fileNames, nil
+	return names, nil
 }
 
 // GetThemes returns all themes for a guild.
@@ -62,19 +66,23 @@ func GetThemes(guildID string) []*Theme {
 }
 
 // GetTheme returns the theme for a guild
-func GetTheme(guildID string) *Theme {
-	theme, err := readTheme(guildID, HEIST_THEME)
+func GetTheme(guildID string, themeName string) *Theme {
+	theme, err := readTheme(guildID, themeName)
 	if err == nil && theme != nil {
 		return theme
 	}
-	slog.Error("unable to read theme",
+	slog.Warn("unable to read theme",
 		slog.String("guildID", guildID),
+		slog.String("theme", themeName),
 		slog.Any("error", err),
 	)
-	// The theme was not found in the DB, so create the default theme and use that
 
-	// The theme was found in the DB, so create the default theme and use that
-	theme = readThemeFromFile(guildID)
+	// The theme was not found in the DB, so create the default theme and use that
+	theme = readThemeFromFile(guildID, themeName)
+	if theme == nil {
+		return nil
+	}
+
 	writeTheme(theme)
 	slog.Debug("created default theme",
 		slog.String("guildID", guildID),
@@ -85,9 +93,9 @@ func GetTheme(guildID string) *Theme {
 }
 
 // readThemeFromFile returns the default theme for a guild. If the theme can't be read
-// from the configuration file or can't be decoded, then a default theme is returned
-func readThemeFromFile(guildID string) *Theme {
-	configFileName := filepath.Join(discord.ConfigDir, "heist", "themes", HEIST_THEME+".json")
+// from the configuration file or can't be decoded, nil is returned.
+func readThemeFromFile(guildID string, themeName string) *Theme {
+	configFileName := filepath.Join(discord.ConfigDir, "heist", "themes", themeName+".json")
 	bytes, err := os.ReadFile(configFileName)
 	if err != nil {
 		slog.Error("failed to read default theme",
@@ -95,6 +103,7 @@ func readThemeFromFile(guildID string) *Theme {
 			slog.String("file", configFileName),
 			slog.Any("error", err),
 		)
+		return nil
 	}
 
 	theme := &Theme{}
@@ -106,6 +115,7 @@ func readThemeFromFile(guildID string) *Theme {
 			slog.String("data", string(bytes)),
 			slog.Any("error", err),
 		)
+		return nil
 	}
 	theme.GuildID = guildID
 	theme.Name = HEIST_THEME
@@ -120,6 +130,10 @@ func readThemeFromFile(guildID string) *Theme {
 
 // String returns a string representation of the Theme.
 func (theme *Theme) String() string {
+	if theme == nil {
+		return "Theme<nil>"
+	}
+
 	return fmt.Sprintf("Theme{ID=%s, GuildID=%s, ThemeID=%s, Escaped=%d, Apprehended=%d, Died=%d, Jail=%s, OOB=%s, Police=%s, Bail=%s, Crew=%s, Sentence=%s, Heist=%s, Vault=%s}",
 		theme.ID,
 		theme.GuildID,

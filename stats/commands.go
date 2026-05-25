@@ -296,15 +296,7 @@ var (
 
 // statsAdmin handles the /stats-admin command.
 func statsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response",
-				slog.Any("error", err),
-			)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -492,7 +484,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	var embeds []*discordgo.MessageEmbed
-	if game == "" || game == "all" {
+	if game == "all" {
 		embeds = []*discordgo.MessageEmbed{
 			{
 				Title:  titleCaser.String("Games Played"),
@@ -559,15 +551,7 @@ func gamesPlayed(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // stats handles the /stats command.
 func stats(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if status == discord.PluginStopping || status == discord.PluginStopped {
-		resp := disgomsg.NewResponse(
-			disgomsg.WithContent("The system is shutting down."),
-		)
-		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
-			slog.Error("failed to send response",
-				slog.Any("error", err),
-			)
-		}
+	if discord.IsShuttingDown(s, i) {
 		return
 	}
 
@@ -738,6 +722,7 @@ func activePlayers(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // formatPlayerStats formats the player stats to be sent to a Discord server
 func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.MessageEmbed {
 	var tableBuffer strings.Builder
+
 	table := tablewriter.NewTable(&tableBuffer,
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 			Borders: tw.BorderNone,
@@ -764,7 +749,7 @@ func formatPlayerStats(title string, playerStats []*PlayerStats) []*discordgo.Me
 	table.Header([]string{"#", "Name", "Games"})
 
 	p := message.NewPrinter(language.AmericanEnglish)
-	// A bit of a hack, but good enough....
+	// A bit of a hack, but good enough...
 	for i, ps := range playerStats {
 		member := guild.GetMember(ps.GuildID, ps.MemberID)
 		data := []string{strconv.Itoa(i + 1), member.Name, p.Sprintf("%d", ps.NumberOfTimesPlayed)}
