@@ -39,7 +39,6 @@ func writeMember(member *Member) error {
 		return err
 	}
 
-	slog.Debug("write guild member to the database", "guildID", member.GuildID, "memberID", member.MemberID)
 	return nil
 }
 
@@ -63,7 +62,6 @@ func writeGuild(guild *Guild) error {
 		slog.Error("unable to save guild to the database", "guildID", guild.GuildID, "error", err)
 		return err
 	}
-	slog.Debug("save guild to the database", "guildID", guild.GuildID)
 
 	return nil
 }

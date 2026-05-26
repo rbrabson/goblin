@@ -33,7 +33,6 @@ func writeLeaderboard(lb *Leaderboard) error {
 		slog.Error("unable to save leaderboard to the database", "guildID", lb.GuildID, "error", err)
 		return err
 	}
-	slog.Debug("save leaderboard to the database", "guildID", lb.GuildID)
 
 	return nil
 }

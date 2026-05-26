@@ -191,17 +191,6 @@ func timeDiff(from, to time.Time) (years, months, days, hours, minutes, seconds,
 		years--
 	}
 
-	slog.Debug("timeDiff",
-		slog.Time("start_time", from),
-		slog.Time("end_time", to),
-		slog.Int("years", years),
-		slog.Int("months", months),
-		slog.Int("days", days),
-		slog.Int("hours", hours),
-		slog.Int("minutes", minutes),
-		slog.Int("seconds", seconds),
-	)
-
 	return years, months, days, hours, minutes, seconds, nanoseconds
 }
 

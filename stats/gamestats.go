@@ -60,38 +60,22 @@ func UpdateGameStats(guildID string, game string, memberIDs []string) {
 	var newUniquePlayersForGame, newUniquePlayersForAllGames int
 	for _, memberID := range memberIDs {
 		ps := getPlayerStats(guildID, memberID, game)
-		slog.Debug("retrieved player stats",
-			slog.String("guild_id", guildID),
-			slog.String("member_id", memberID),
-			slog.String("game", game),
-			slog.Time("last_played", ps.LastPlayed),
-			slog.Int("number_of_times_played", ps.NumberOfTimesPlayed),
-			slog.Time("today", todayTime),
-		)
+
 		// Check if this is the first time the player has played this game today
 		// and if this is the first time the player has played any game today
 		if ps.LastPlayed.Before(todayTime) {
 			newUniquePlayersForGame++
-			slog.Debug("first game played by member for today",
-				slog.String("guild_id", ps.GuildID),
-				slog.String("member_id", ps.MemberID),
-				slog.String("game", ps.Game),
-				slog.Time("day", todayTime),
-			)
 		}
 		lastDatePlayed := getLastDatePlayed(guildID, memberID)
 		if lastDatePlayed.Before(todayTime) {
 			newUniquePlayersForAllGames++
-			slog.Debug("first time playing any game by member for today",
-				slog.String("guild_id", ps.GuildID),
-				slog.String("member_id", ps.MemberID),
-				slog.Time("day", todayTime),
-			)
 		}
 
 		ps.LastPlayed = todayTime
 		ps.NumberOfTimesPlayed++
+
 		writePlayerStats(ps)
+
 		slog.Debug("player stats updated",
 			slog.String("guild_id", guildID),
 			slog.String("member_id", memberID),
@@ -105,7 +89,9 @@ func UpdateGameStats(guildID string, game string, memberIDs []string) {
 	gs.UniquePlayers += newUniquePlayersForGame
 	gs.TotalPlayers += len(memberIDs)
 	gs.GamesPlayed++
+
 	writeGameStats(gs)
+
 	slog.Debug("server stats for game updated",
 		slog.String("guild_id", gs.GuildID),
 		slog.String("game", gs.Game),
@@ -122,7 +108,9 @@ func UpdateGameStats(guildID string, game string, memberIDs []string) {
 	gsAll.UniquePlayers += newUniquePlayersForAllGames
 	gsAll.TotalPlayers += len(memberIDs)
 	gsAll.GamesPlayed++
+
 	writeGameStats(gsAll)
+
 	slog.Debug("server stats for all games updated",
 		slog.String("guild_id", gsAll.GuildID),
 		slog.String("game", gsAll.Game),
@@ -137,13 +125,6 @@ func UpdateGameStats(guildID string, game string, memberIDs []string) {
 
 // GetGamesPlayed retrieves the aggregated games played statistics from the game_stats table
 func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate time.Time) (*GamesPlayed, error) {
-	slog.Debug("calculating games played statistics from game_stats",
-		slog.String("guild_id", guildID),
-		slog.String("game", game),
-		slog.Time("start_date", startDate),
-		slog.Time("end_date", endDate),
-	)
-
 	// Default to all games
 	if game == "" {
 		game = "all"
@@ -190,19 +171,6 @@ func GetGamesPlayed(guildID string, game string, startDate time.Time, endDate ti
 	gamesPlayed.AverageGamesPerDay = float64(gamesPlayed.TotalGamesPlayed) / gamesPlayed.NumberOfDays
 	gamesPlayed.AveragePlayersPerGame = float64(gamesPlayed.TotalPlayers) / float64(gamesPlayed.TotalGamesPlayed)
 	gamesPlayed.AverageGamesPerPlayer = float64(gamesPlayed.TotalGamesPlayed) / float64(gamesPlayed.UniquePlayers)
-
-	slog.Debug("games played statistics calculated from game_stats",
-		slog.Float64("number_of_days", gamesPlayed.NumberOfDays),
-		slog.Int("total_players", gamesPlayed.TotalPlayers),
-		slog.Int("total_unique_players", gamesPlayed.TotalUniquePlayers),
-		slog.Int("unique_players", gamesPlayed.UniquePlayers),
-		slog.Int("total_games_played", gamesPlayed.TotalGamesPlayed),
-		slog.Float64("total_players_per_day", gamesPlayed.TotalPlayersPerDay),
-		slog.Float64("unique_players_per_day", gamesPlayed.UniquePlayersPerDay),
-		slog.Float64("average_games_per_day", gamesPlayed.AverageGamesPerDay),
-		slog.Float64("average_players_per_game", gamesPlayed.AveragePlayersPerGame),
-		slog.Float64("average_games_per_player", gamesPlayed.AverageGamesPerPlayer),
-	)
 
 	return gamesPlayed, nil
 }

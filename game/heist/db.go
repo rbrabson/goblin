@@ -23,7 +23,6 @@ func readConfig(guildID string) *Config {
 		slog.Debug("heist configuration not found in the database", slog.String("guildID", guildID), slog.Any("error", err))
 		return nil
 	}
-	slog.Debug("read heist configuration from the database", slog.String("guildID", guildID))
 
 	return &config
 }
@@ -51,7 +50,6 @@ func readMember(guildID string, memberID string) *HeistMember {
 		slog.Debug("heist member not found in the database", slog.String("guildID", guildID), slog.String("memberID", memberID), slog.Any("error", err))
 		return nil
 	}
-	slog.Debug("read heist member from the database", slog.String("guildID", guildID), slog.String("memberID", memberID))
 
 	return &heistMember
 }
@@ -68,7 +66,6 @@ func writeMember(member *HeistMember) {
 		slog.Error("error writing heist member to the database", slog.String("guildID", member.GuildID), slog.String("memberID", member.MemberID), slog.Any("error", err))
 		return
 	}
-	slog.Debug("write heist member to the database", slog.String("guildID", member.GuildID), slog.String("memberID", member.MemberID))
 }
 
 // readAllTargets loads the targets that may be used in heists for all guilds
@@ -111,7 +108,6 @@ func writeTarget(target *Target) {
 		slog.Error("error writing target to database", slog.String("guildID", target.GuildID), slog.String("targetID", target.Name), slog.Any("error", err))
 		return
 	}
-	slog.Debug("create or update target", slog.String("guild", target.GuildID), slog.String("target", target.Name), slog.String("theme", target.Theme))
 }
 
 // readAllThemes loads all available themes for a guild
@@ -152,5 +148,4 @@ func writeTheme(theme *Theme) {
 		slog.Error("error writing theme to the database", slog.String("guildID", theme.GuildID), slog.String("name", theme.Name), slog.Any("error", err))
 		return
 	}
-	slog.Debug("write theme to the database", slog.String("guild", theme.GuildID), slog.String("theme", theme.Name))
 }

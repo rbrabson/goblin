@@ -20,7 +20,6 @@ func ReadServer() *Server {
 		)
 		return nil
 	}
-	slog.Debug("read server from the database")
 	return &server
 }
 
@@ -39,9 +38,6 @@ func WriteServer(server *Server) error {
 		)
 		return err
 	}
-	slog.Debug("save server to the database",
-		slog.Any("filter", filter),
-	)
 
 	return nil
 }

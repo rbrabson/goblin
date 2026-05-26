@@ -22,7 +22,6 @@ func readPayday(guildID string) *Payday {
 		slog.Debug("payday not found in the database", "guildID", guildID, "error", err)
 		return nil
 	}
-	slog.Debug("read payday from the database", "guildID", payday.GuildID, "payday", payday)
 
 	return payday
 }
@@ -35,7 +34,6 @@ func writePayday(payday *Payday) error {
 		slog.Error("unable to save payday to the database", "guildID", payday.GuildID, "error", err)
 		return err
 	}
-	slog.Debug("save payday to the database", "guildID", payday.GuildID)
 	return nil
 }
 
@@ -48,7 +46,6 @@ func readAccount(payday *Payday, accountID string) *Account {
 		slog.Debug("payday account not found in the database", "guildID", payday.GuildID, "memberID", accountID, "error", err)
 		return nil
 	}
-	slog.Debug("read payday account from the database", "guildID", payday.GuildID, "memberID", accountID)
 	account.GuildID = payday.GuildID
 
 	return account
@@ -68,6 +65,5 @@ func writeAccount(account *Account) error {
 		return err
 	}
 
-	slog.Debug("wrote payday account to the database", "guildID", account.GuildID, "memberID", account.MemberID)
 	return nil
 }

@@ -424,7 +424,6 @@ func createBetButton(rp *RaceParticipant) *raceButton {
 
 	// Register the component handler for the button
 	bot.AddComponentHandler(button.label, betOnRace)
-	slog.Debug("registered button component handler", slog.String("guildID", rp.Member.GuildID), slog.String("memberID", rp.Member.MemberID), slog.String("label", button.label))
 
 	return button
 }
@@ -438,7 +437,6 @@ func removeBetButtons(race *Race) {
 	buttons := betButtons[race.GuildID]
 	for key := range buttons {
 		bot.RemoveComponentHandler(key)
-		slog.Debug("removed race button component handler", slog.String("guildID", race.GuildID), slog.String("label", key))
 	}
 	betButtons[race.GuildID] = make(map[string]*raceButton)
 }

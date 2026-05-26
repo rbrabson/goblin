@@ -435,7 +435,7 @@ func (h *Heist) String() string {
 	)
 }
 
-// String returns a string representation of the HeistResult..
+// String returns a string representation of the HeistResult.
 func (hr *HeistResult) String() string {
 	return fmt.Sprintf("HeistResult{Escaped: %d, Apprehended: %d, Dead: %d, Target: %s, TotalStolen: %d}",
 		len(hr.Escaped),

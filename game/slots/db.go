@@ -25,10 +25,6 @@ func readMember(guildID string, memberID string) *Member {
 		)
 		return nil
 	}
-	slog.Debug("read slots member from the database",
-		slog.String("guildID", guildID),
-		slog.String("memberID", memberID),
-	)
 
 	return &member
 }
@@ -48,10 +44,6 @@ func writeMember(member *Member) {
 			slog.Any("error", err),
 		)
 	}
-	slog.Debug("write slots member to the database",
-		slog.String("guildID", member.GuildID),
-		slog.String("memberID", member.MemberID),
-	)
 }
 
 // PayoutAverages represents aggregated statistics across all slots members
@@ -210,11 +202,6 @@ func GetPayoutAverages(guildID string) (*PayoutAverages, error) {
 		AverageMaxLosingStreak:  getFloatFromResult(result, "average_max_losing_streak"),
 	}
 	averages.AverageReturns = float64(averages.TotalWon) / float64(averages.TotalBet) * 100.0
-
-	slog.Debug("retrieved payout averages",
-		slog.String("guildID", guildID),
-		slog.Any("averages", averages),
-	)
 
 	return averages, nil
 }

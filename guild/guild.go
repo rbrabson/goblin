@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sync"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -17,9 +18,10 @@ const (
 
 var (
 	DefaultAdminRoles = []string{"Admin", "Admins", "Administrator", "Mod", "Mods", "Moderator"}
+	guildLock         = sync.Mutex{}
 )
 
-// Guild is the configuration for a guild (guild).
+// Guild is the configuration for a guild (server).
 type Guild struct {
 	ID         bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	GuildID    string        `json:"guild_id" bson:"guild_id"`
@@ -28,6 +30,9 @@ type Guild struct {
 
 // GetAllGuilds returns all guilds in the database.
 func GetAllGuilds() []*Guild {
+	guildLock.Lock()
+	defer guildLock.Unlock()
+
 	guilds := make([]*Guild, 0)
 	err := db.FindMany(GuildCollection, bson.M{}, &guilds, bson.M{}, 0)
 	if err != nil {
@@ -41,8 +46,11 @@ func GetAllGuilds() []*Guild {
 	return guilds
 }
 
-// GetGuild returns the guild configuration for a given guild (guild).
+// GetGuild returns the guild configuration for a given guild (server).
 func GetGuild(guildID string) *Guild {
+	guildLock.Lock()
+	defer guildLock.Unlock()
+
 	guild := readGuild(guildID)
 	if guild == nil {
 		guild = readGuildFromFile(guildID)
@@ -51,7 +59,7 @@ func GetGuild(guildID string) *Guild {
 	return guild
 }
 
-// readGuildFromFile creates a new guild configuration for a given guild (guild).
+// readGuildFromFile creates a new guild configuration for a given guild (server).
 func readGuildFromFile(guildID string) *Guild {
 	configDir := os.Getenv("DISCORD_CONFIG_DIR")
 	guildTheme := os.Getenv("DISCORD_GUILD_THEME")
@@ -81,6 +89,7 @@ func readGuildFromFile(guildID string) *Guild {
 	return guild
 }
 
+// getDefaultGuild creates a new guild configuration for a given guild (server).
 func getDefaultGuild(guildID string) *Guild {
 	guild := &Guild{
 		GuildID: guildID,
@@ -96,6 +105,11 @@ func getDefaultGuild(guildID string) *Guild {
 
 // AddAdminRole adds a role to the list of admin roles for the guild.
 func (guild *Guild) AddAdminRole(roleName string) {
+	guildLock.Lock()
+	defer guildLock.Unlock()
+
+	guild.refresh()
+
 	if slices.Contains(guild.AdminRoles, roleName) {
 		slog.Warn("role already exists", "guildID", guild.GuildID, "roleName", roleName, "adminRoles", guild.AdminRoles)
 		return
@@ -111,6 +125,11 @@ func (guild *Guild) AddAdminRole(roleName string) {
 
 // RemoveAdminRole removes a role from the list of admin roles for the guild.
 func (guild *Guild) RemoveAdminRole(roleName string) {
+	guildLock.Lock()
+	defer guildLock.Unlock()
+
+	guild.refresh()
+
 	for i, role := range guild.AdminRoles {
 		if role == roleName {
 			guild.AdminRoles = append(guild.AdminRoles[:i], guild.AdminRoles[i+1:]...)
@@ -124,9 +143,20 @@ func (guild *Guild) RemoveAdminRole(roleName string) {
 	slog.Warn("role not found", "guildID", guild.GuildID, "roleName", roleName)
 }
 
+// refresh refreshes the guild configuration.
+func (guild *Guild) refresh() {
+	currentGuild := readGuild(guild.GuildID)
+	if currentGuild == nil {
+		return
+	}
+	guild.AdminRoles = currentGuild.AdminRoles
+}
+
 // GetAdminRoles returns the list of admin roles for the guild.
 func (guild *Guild) GetAdminRoles() []string {
-	return guild.AdminRoles
+	adminRoles := make([]string, len(guild.AdminRoles))
+	copy(adminRoles, guild.AdminRoles)
+	return adminRoles
 }
 
 // String returns a string representation of the guild.

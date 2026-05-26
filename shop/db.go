@@ -39,7 +39,6 @@ func writeConfig(config *Config) error {
 		slog.Error("unable to write shop config to the database", "guildID", config.GuildID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("write shop config to the database", "guildID", config.GuildID)
 
 	return nil
 }
@@ -54,7 +53,6 @@ func readShopItems(guildID string) ([]*ShopItem, error) {
 		slog.Error("unable to read shop items from the database", "guildID", guildID, "filter", filter, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop items from the database", "guildID", guildID, "count", len(items))
 
 	return items, nil
 }
@@ -67,7 +65,6 @@ func readShopItem(guildID string, name string, itemType string) (*ShopItem, erro
 		slog.Debug("unable to read shop item from the database", "guildID", guildID, "filter", filter, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop item from the database", "guildID", guildID, "name", name, "type", itemType)
 
 	return item, nil
 }
@@ -85,7 +82,6 @@ func writeShopItem(item *ShopItem) error {
 		slog.Error("unable to save shop item to the database", "guildID", item.GuildID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("write the shop item to the database", "guildID", item.GuildID, "name", item.Name, "type", item.Type)
 
 	return nil
 }
@@ -103,7 +99,6 @@ func deleteShopItem(item *ShopItem) error {
 		slog.Error("unable to delete shop item from the database", "guildID", item.GuildID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("delete the shop item from the database", "guildID", item.GuildID, "name", item.Name, "filter", filter)
 
 	return nil
 }
@@ -142,7 +137,6 @@ func readPurchase(guildID string, memberID string, itemName string, itemType str
 		slog.Debug("unable to read purchase from the database", "filter", filter, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop item from the database", "guildID", guildID, "filter", filter)
 
 	return &item, nil
 }
@@ -160,7 +154,6 @@ func writePurchase(item *Purchase) error {
 		slog.Error("unable to write purchase to the database", "guildID", item.Item.GuildID, "filter", filter, "item", item, "error", err)
 		return err
 	}
-	slog.Debug("write purchase to the database", "guildID", item.Item.GuildID, "filter", filter, "item", item)
 
 	return nil
 }
@@ -178,7 +171,6 @@ func deletePurchase(purchase *Purchase) error {
 		slog.Error("unable to delete purchase from the database", "guildID", purchase.Item.GuildID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("delete the purchase from the database", "guildID", purchase.Item.GuildID, "filter", filter)
 
 	return nil
 }
@@ -191,7 +183,6 @@ func readMember(guildID string, memberID string) (*Member, error) {
 		slog.Debug("unable to read shop member from the database", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil, err
 	}
-	slog.Debug("read shop member from the database", "guildID", guildID, "memberID", memberID)
 
 	return member, nil
 }
@@ -209,7 +200,6 @@ func writeMember(member *Member) error {
 		slog.Error("unable to save shop member to the database", "guildID", member.GuildID, "memberID", member.MemberID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("write the shop member to the database", "guildID", member.GuildID, "memberID", member.MemberID)
 
 	return nil
 }
@@ -227,7 +217,6 @@ func deleteMember(member *Member) error {
 		slog.Error("unable to delete shop member from the database", "guildID", member.GuildID, "memberID", member.MemberID, "filter", filter, "error", err)
 		return err
 	}
-	slog.Debug("delete the shop member from the database", "guildID", member.GuildID, "memberID", member.MemberID)
 
 	return nil
 }
