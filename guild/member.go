@@ -77,7 +77,6 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	slog.Debug("setting member name", "guildID", member.GuildID, "memberID", member.MemberID, "username", username, "nickname", nickname, "globalname", globalname)
 	member.refresh()
 
 	var name string
