@@ -4,9 +4,15 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
+)
+
+var (
+	memberLock = sync.Mutex{}
+	guildLocks = make(map[string]*sync.Mutex)
 )
 
 // Member is a member of a given guild
@@ -20,13 +26,31 @@ type Member struct {
 	Name       string        `json:"name" bson:"name"`
 }
 
-// GetMember returns a member in the guild (server). If one doesnt' exist, then one is created with a blank name.
+// GetMember returns a member in the guild (server). If one doesn't exist, then one is created with a blank name.
 func GetMember(guildID string, memberID string) *Member {
+	mutex := getGuildLock(guildID)
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	member := readMember(guildID, memberID)
 
 	if member == nil {
 		member = newMember(guildID, memberID)
 	}
+
+	return member
+}
+
+// newMember creates a new member in the guild (server).
+func newMember(guildID string, memberID string) *Member {
+	member := &Member{
+		MemberID: memberID,
+		GuildID:  guildID,
+	}
+	if err := writeMember(member); err != nil {
+		slog.Error("failed to write member", "error", err)
+	}
+	slog.Info("created new member", "guildID", member.GuildID, "memberID", member.MemberID)
 
 	return member
 }
@@ -49,7 +73,12 @@ func GetMemberByUser(s *discordgo.Session, guildID string, user *discordgo.User)
 
 // SetName updates the name of the member as known on this guild (server).
 func (member *Member) SetName(username string, nickname string, globalname string) *Member {
+	mutex := getGuildLock(member.GuildID)
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	slog.Debug("setting member name", "guildID", member.GuildID, "memberID", member.MemberID, "username", username, "nickname", nickname, "globalname", globalname)
+	member.refresh()
 
 	var name string
 	nickname = strings.Trim(nickname, " ")
@@ -95,18 +124,33 @@ func (member *Member) SetName(username string, nickname string, globalname strin
 	return member
 }
 
-// newMember creates a new member in the guild (server).
-func newMember(guildID string, memberID string) *Member {
-	member := &Member{
-		MemberID: memberID,
-		GuildID:  guildID,
+// refresh refreshes the member configuration.
+func (member *Member) refresh() {
+	currentMember := readMember(member.GuildID, member.MemberID)
+	if currentMember == nil {
+		return
 	}
-	if err := writeMember(member); err != nil {
-		slog.Error("failed to write member", "error", err)
-	}
-	slog.Info("created new member", "guildID", member.GuildID, "memberID", member.MemberID)
+	member.Name = currentMember.Name
+	member.UserName = currentMember.UserName
+	member.NickName = currentMember.NickName
+	member.GlobalName = currentMember.GlobalName
+}
 
-	return member
+// getGuildLock returns a guild lock for the given guild ID. If one doesn't exist, it creates a new one.
+func getGuildLock(guildID string) *sync.Mutex {
+	memberLock.Lock()
+	defer memberLock.Unlock()
+
+	if guildID == "" {
+		slog.Warn("empty guild ID used for guild member lock")
+	}
+
+	mutex, ok := guildLocks[guildID]
+	if !ok {
+		mutex = &sync.Mutex{}
+		guildLocks[guildID] = mutex
+	}
+	return mutex
 }
 
 // String returns a string representation of the Member.

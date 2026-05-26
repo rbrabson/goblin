@@ -1,12 +1,12 @@
 package guild
 
 import (
+	"fmt"
 	"log/slog"
 	"slices"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/database/mongo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var (
@@ -22,18 +22,12 @@ func SetDB(database *mongo.MongoDB) {
 // If the guild is not found, it returns nil.
 // If there are no admin roles, it returns an empty slice.
 func GetAdminRoles(guildID string) []string {
-	filter := bson.M{"guild_id": guildID}
-	server := &Guild{}
-	err := db.FindOne(GuildCollection, filter, server)
-	if err != nil {
-		slog.Debug("server not found in the database", "guildID", guildID)
+	server := GetGuild(guildID)
+	if server == nil {
 		return nil
 	}
-	if server.GuildID == "" {
-		server = readGuildFromFile(guildID)
-	}
 
-	return server.AdminRoles
+	return server.GetAdminRoles()
 }
 
 // GetGuildRoles returns the list of roles for a guild.
@@ -61,12 +55,15 @@ func GetGuildRole(s *discordgo.Session, guildID string, roleName string) *discor
 
 // GetMemberRoles returns the list of roles names for a member with the given set of role IDs
 func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
+	roleNamesByID := make(map[string]string, len(guildRoles))
+	for _, role := range guildRoles {
+		roleNamesByID[role.ID] = role.Name
+	}
+
 	roleNames := make([]string, 0, len(roleIDs))
 	for _, roleID := range roleIDs {
-		for _, role := range guildRoles {
-			if role.ID == roleID {
-				roleNames = append(roleNames, role.Name)
-			}
+		if roleName, ok := roleNamesByID[roleID]; ok {
+			roleNames = append(roleNames, roleName)
 		}
 	}
 	return roleNames
@@ -75,11 +72,16 @@ func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
 // MemberHasRole returns a boolean indicating whether a member has a specific role in the guild.
 // It returns true if the member has the role, false otherwise.
 func MemberHasRole(s *discordgo.Session, guildID string, memberID string, role *discordgo.Role) bool {
+	if role == nil {
+		slog.Error("role is nil", "guildID", guildID, "memberID", memberID)
+		return false
+	}
+
 	// Check to see if the member already has the role
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {
 		slog.Error("failed to get member", "guildID", guildID, "memberID", memberID, "error", err)
-		return true
+		return false
 	}
 	if slices.Contains(member.Roles, role.ID) {
 		slog.Warn("member already has role", "guildID", guildID, "memberID", memberID, "roleName", role.Name, "memberRoles", member.Roles)
@@ -101,8 +103,9 @@ func AssignRole(s *discordgo.Session, guildID string, memberID string, roleName 
 		}
 	}
 	if roleID == "" {
+		err := fmt.Errorf("role %q not found", roleName)
 		slog.Error("role not found", "guildID", guildID, "roleName", roleName, "guildRoles", guildRoles)
-		return nil
+		return err
 	}
 
 	err := s.GuildMemberRoleAdd(guildID, memberID, roleID)
@@ -125,8 +128,9 @@ func UnAssignRole(s *discordgo.Session, guildID string, memberID string, roleNam
 		}
 	}
 	if roleID == "" {
+		err := fmt.Errorf("role %q not found", roleName)
 		slog.Error("role not found", "guildID", guildID, "roleName", roleName, "guildRoles", guildRoles)
-		return nil
+		return err
 	}
 
 	err := s.GuildMemberRoleRemove(guildID, memberID, roleID)
