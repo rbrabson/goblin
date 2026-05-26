@@ -619,7 +619,12 @@ func playerStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		sentence = "None"
 	}
-	theme := player.heist.config.Theme
+	theme := GetTheme(i.GuildID, HEIST_THEME)
+	if theme == nil {
+		slog.Error("failed to get heist theme", slog.String("guildID", i.GuildID))
+		disgomsg.NewResponse(disgomsg.WithContent("Internal error: failed to get the heist theme")).SendEphemeral(s, i.Interaction)
+		return
+	}
 
 	embeds := []*discordgo.MessageEmbed{
 		{
