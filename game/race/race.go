@@ -50,7 +50,7 @@ type RaceParticipant struct {
 
 // RaceBetter is a member who is betting on the outcome of the race.
 type RaceBetter struct {
-	Member   *RaceMember      // Member who is betting on the outcome of the the race
+	Member   *RaceMember      // Member who is betting on the outcome of the race
 	Racer    *RaceParticipant // Racer on which the member is betting
 	Winnings int              // Amount won by the better
 }
