@@ -51,10 +51,6 @@ func writeAltID(alt *AltID) error {
 		return err
 	}
 
-	slog.Debug("write alt ID to the database",
-		slog.String("guildID", alt.GuildID),
-		slog.String("altID", alt.AltID),
-	)
 	return nil
 }
 
@@ -99,9 +95,5 @@ func deleteAltID(guildID string, altID string) error {
 		return err
 	}
 
-	slog.Debug("deleted alt ID from the database",
-		slog.String("guildID", guildID),
-		slog.String("altID", altID),
-	)
 	return nil
 }

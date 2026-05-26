@@ -22,7 +22,6 @@ func readConfig(guildID string) *Config {
 		slog.Debug("race configuration not found in the database", slog.String("guildID", guildID), slog.Any("error", err))
 		return nil
 	}
-	slog.Debug("read race configuration from the database", slog.String("guildID", guildID), slog.String("config", config.Theme))
 
 	return &config
 }
@@ -51,7 +50,6 @@ func readRaceMember(guildID string, memberID string) *RaceMember {
 		slog.Debug("race member not found in the database", slog.String("guildID", guildID), slog.String("memberID", memberID), slog.Any("error", err))
 		return nil
 	}
-	slog.Debug("read race member from the database", slog.String("guildID", guildID), slog.String("memberID", memberID))
 
 	return &member
 }
@@ -67,7 +65,6 @@ func writeRaceMember(member *RaceMember) {
 	if err := db.UpdateOrInsert(RaceMemberCollection, filter, member); err != nil {
 		slog.Error("failed to write the race member to the database", slog.String("guildID", member.GuildID), slog.String("memberID", member.MemberID), slog.Any("error", err))
 	}
-	slog.Debug("write race member to the database", slog.String("guildID", member.GuildID), slog.String("memberID", member.MemberID))
 }
 
 // readAllRaces loads the racers that may be used in racers that match the filter criteria.
@@ -98,5 +95,4 @@ func writeRacer(racer *Avatar) {
 	if err := db.UpdateOrInsert(RacerCollection, filter, racer); err != nil {
 		slog.Error("failed to write the racer to the database", slog.String("guildID", racer.GuildID), slog.Any("error", err))
 	}
-	slog.Debug("create or update race avatar", slog.String("guildID", racer.GuildID), slog.String("theme", racer.Theme), slog.String("emoji", racer.Emoji))
 }

@@ -31,7 +31,6 @@ func readBank(guildID string) *Bank {
 		slog.Debug("bank not found in the database", "guildID", guildID, "error", err)
 		return nil
 	}
-	slog.Debug("read bank from the database", "guildID", guildID)
 	return &bank
 }
 
@@ -48,7 +47,6 @@ func writeBank(bank *Bank) error {
 		slog.Error("unable to save bank to the database", "guildID", bank.GuildID, "error", err)
 		return err
 	}
-	slog.Debug("save bank to the database", "guildID", bank.GuildID)
 
 	return nil
 }
@@ -61,7 +59,6 @@ func readAccounts(filter interface{}, sortBy interface{}, limit int64) []*Accoun
 		slog.Error("unable to read accounts from the database", "error", err)
 		return nil
 	}
-	slog.Debug("read accounts from the database", "count", len(accounts))
 
 	return accounts
 }
@@ -75,7 +72,6 @@ func readAccount(guildID string, memberID string) *Account {
 		slog.Debug("account not found in the database", "guildID", guildID, "memberID", memberID, "error", err)
 		return nil
 	}
-	slog.Debug("read account from the database", "guildID", guildID, "memberID", memberID)
 
 	return &account
 }
@@ -93,7 +89,6 @@ func writeAccount(account *Account) error {
 		slog.Error("unable to save bank account to the database", "guildID", account.GuildID, "memberID", account.MemberID, "error", err)
 		return err
 	}
-	slog.Debug("save bank account to the database", "guildID", account.GuildID, "memberID", account.MemberID)
 
 	return nil
 }

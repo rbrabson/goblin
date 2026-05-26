@@ -20,7 +20,6 @@ func readConfig(guildID string) *Config {
 		slog.Debug("blackjack config not found in the database, using default", slog.String("guildID", guildID), slog.Any("error", err))
 		return nil
 	}
-	slog.Debug("read blackjack config from the database", slog.String("guildID", guildID))
 
 	return &config
 }
@@ -36,7 +35,6 @@ func writeConfig(config *Config) {
 	if err := db.UpdateOrInsert(blackjackConfigCollection, filter, config); err != nil {
 		slog.Error("error writing blackjack config to the database", slog.String("guildID", config.GuildID), slog.Any("error", err))
 	}
-	slog.Debug("write blackjack config to the database", slog.String("guildID", config.GuildID))
 }
 
 // readMember loads the blackjack member from the database. If it does not exist, then
@@ -49,7 +47,6 @@ func readMember(guildID, memberID string) *Member {
 		slog.Debug("blackjack member not found in the database", slog.String("guildID", guildID), slog.String("memberID", memberID), slog.Any("error", err))
 		return nil
 	}
-	slog.Debug("read blackjack member from the database", slog.String("guildID", guildID), slog.String("memberID", memberID))
 
 	return &member
 }
@@ -65,5 +62,4 @@ func writeMember(member *Member) {
 	if err := db.UpdateOrInsert(blackjackMemberCollection, filter, member); err != nil {
 		slog.Error("error writing blackjack member to the database", slog.String("guildID", member.GuildID), slog.String("memberID", member.MemberID), slog.Any("error", err))
 	}
-	slog.Debug("write blackjack member to the database", slog.String("guildID", member.GuildID), slog.String("memberID", member.MemberID))
 }
