@@ -654,6 +654,10 @@ func showDeal(s *discordgo.Session, i *discordgo.InteractionCreate, game *Game, 
 
 // showCurrentTurn displays the current turn information for the active player.
 func showCurrentTurn(s *discordgo.Session, game *Game, currentPlayer *bj.Player, currentHand *bj.Hand, currentHandIndex int, waitTime time.Duration) {
+	if game == nil || game.message == nil {
+		slog.Error("cannot show current turn, game or game message is nil", slog.String("guildID", game.guildID))
+
+	}
 	embeds := make([]*discordgo.MessageEmbed, 0, len(game.Players())+1)
 
 	dealerHand := game.Dealer().Hand()
