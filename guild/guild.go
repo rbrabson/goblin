@@ -104,43 +104,43 @@ func getDefaultGuild(guildID string) *Guild {
 }
 
 // AddAdminRole adds a role to the list of admin roles for the guild.
-func (guild *Guild) AddAdminRole(roleName string) {
+func (guild *Guild) AddAdminRole(roleID string) {
 	guildLock.Lock()
 	defer guildLock.Unlock()
 
 	guild.refresh()
 
-	if slices.Contains(guild.AdminRoles, roleName) {
-		slog.Warn("role already exists", "guildID", guild.GuildID, "roleName", roleName, "adminRoles", guild.AdminRoles)
+	if slices.Contains(guild.AdminRoles, roleID) {
+		slog.Warn("role already exists", "guildID", guild.GuildID, "roleID", roleID, "adminRoles", guild.AdminRoles)
 		return
 	}
 
-	guild.AdminRoles = append(guild.AdminRoles, roleName)
+	guild.AdminRoles = append(guild.AdminRoles, roleID)
 	if err := writeGuild(guild); err != nil {
 		slog.Error("failed to write default guild config", "guildID", guild.GuildID, "file", guild.GuildID, "error", err)
 	}
-	slog.Info("added role", "guildID", guild.GuildID, "roleName", roleName)
+	slog.Info("added role", "guildID", guild.GuildID, "roleID", roleID)
 
 }
 
 // RemoveAdminRole removes a role from the list of admin roles for the guild.
-func (guild *Guild) RemoveAdminRole(roleName string) {
+func (guild *Guild) RemoveAdminRole(roleID string) {
 	guildLock.Lock()
 	defer guildLock.Unlock()
 
 	guild.refresh()
 
 	for i, role := range guild.AdminRoles {
-		if role == roleName {
+		if role == roleID {
 			guild.AdminRoles = append(guild.AdminRoles[:i], guild.AdminRoles[i+1:]...)
 			if err := writeGuild(guild); err != nil {
 				slog.Error("failed to write default guild config", "guildID", guild.GuildID, "file", guild.GuildID, "error", err)
 			}
-			slog.Info("removed admin role", "guildID", guild.GuildID, "roleName", roleName)
+			slog.Info("removed admin role", "guildID", guild.GuildID, "roleID", roleID)
 			return
 		}
 	}
-	slog.Warn("role not found", "guildID", guild.GuildID, "roleName", roleName)
+	slog.Warn("role not found", "guildID", guild.GuildID, "roleID", roleID)
 }
 
 // refresh refreshes the guild configuration.
@@ -152,8 +152,22 @@ func (guild *Guild) refresh() {
 	guild.AdminRoles = currentGuild.AdminRoles
 }
 
-// GetAdminRoles returns the list of admin roles for the guild.
+// GetAdminRoles returns the list of admin role names for the guild.
 func (guild *Guild) GetAdminRoles() []string {
+	guildRoles := GetCachedGuildRoles(guild.GuildID)
+	adminRoles := make([]string, 0, len(guild.AdminRoles))
+
+	for _, role := range guildRoles.Roles {
+		if slices.Contains(guild.AdminRoles, role.RoleID) {
+			adminRoles = append(adminRoles, role.RoleName)
+		}
+	}
+
+	return adminRoles
+}
+
+// GetAdminRoleIDs returns the list of admin role IDs for the guild.
+func (guild *Guild) GetAdminRoleIDs() []string {
 	adminRoles := make([]string, len(guild.AdminRoles))
 	copy(adminRoles, guild.AdminRoles)
 	return adminRoles

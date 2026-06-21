@@ -37,9 +37,9 @@ var (
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
 							Options: []*discordgo.ApplicationCommandOption{
 								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "The name of the role to add.",
+									Type:        discordgo.ApplicationCommandOptionRole,
+									Name:        "role",
+									Description: "The role to add.",
 									Required:    true,
 								},
 							},
@@ -50,9 +50,9 @@ var (
 							Type:        discordgo.ApplicationCommandOptionSubCommand,
 							Options: []*discordgo.ApplicationCommandOption{
 								{
-									Type:        discordgo.ApplicationCommandOptionString,
-									Name:        "name",
-									Description: "The name of the role to remove.",
+									Type:        discordgo.ApplicationCommandOptionRole,
+									Name:        "role",
+									Description: "The role to remove.",
 									Required:    true,
 								},
 							},
@@ -107,17 +107,29 @@ func role(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
 	options := i.ApplicationCommandData().Options[0].Options[0].Options
-	roleName := options[0].StringValue()
+	role := options[0].RoleValue(s, guildID)
+
+	if role == nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The role was not found. Please try again."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response", "error", err)
+		}
+		return
+	}
+
+	guild.SyncGuildRoles(s, guildID)
 
 	// Get the server configuration
 	server := guild.GetGuild(guildID)
 
 	// Add the role to the server configuration
-	server.AddAdminRole(roleName)
-	slog.Debug("/guild-admin role add", "guildID", guildID, "role", roleName)
+	server.AddAdminRole(role.ID)
+	slog.Debug("/guild-admin role add", "guildID", guildID, "roleID", role.ID, "roleName", role.Name)
 
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" added", roleName)),
+		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" added", role.Name)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("error sending response", "error", err)
@@ -127,18 +139,30 @@ func addRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // removeRole removes a role from the list of admin roles for the server.
 func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
-	options := i.ApplicationCommandData().Options[0].Options
-	roleName := options[0].StringValue()
+	options := i.ApplicationCommandData().Options[0].Options[0].Options
+	role := options[0].RoleValue(s, guildID)
+
+	if role == nil {
+		resp := disgomsg.NewResponse(
+			disgomsg.WithContent("The role was not found. Please try again."),
+		)
+		if err := resp.SendEphemeral(s, i.Interaction); err != nil {
+			slog.Error("error sending response", "error", err)
+		}
+		return
+	}
+
+	guild.SyncGuildRoles(s, guildID)
 
 	// Get the server configuration
 	server := guild.GetGuild(guildID)
 
 	// Remove the role from the server configuration
-	server.RemoveAdminRole(roleName)
-	slog.Debug("/guild-admin role remove", "guildID", guildID, "role", roleName)
+	server.RemoveAdminRole(role.ID)
+	slog.Debug("/guild-admin role remove", "guildID", guildID, "roleID", role.ID, "roleName", role.Name)
 
 	resp := disgomsg.NewResponse(
-		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" removed", roleName)),
+		disgomsg.WithContent(fmt.Sprintf("Role \"%s\" removed", role.Name)),
 	)
 	if err := resp.Send(s, i.Interaction); err != nil {
 		slog.Error("error sending response", "error", err)
@@ -148,6 +172,8 @@ func removeRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // listRoles lists the admin roles for the server.
 func listRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildID := i.GuildID
+
+	guild.SyncGuildRoles(s, guildID)
 
 	// Get the server configuration
 	server := guild.GetGuild(guildID)
