@@ -140,6 +140,40 @@ func SyncGuildRoles(s *discordgo.Session, guildID string) *GuildRoles {
 	return guildRoles
 }
 
+// SyncAllGuildRoles refreshes the guild_roles table for every guild the bot is running on.
+// It also migrates guild admin roles from role names to role IDs.
+func SyncAllGuildRoles(s *discordgo.Session) {
+	if s == nil || s.State == nil {
+		slog.Warn("unable to sync guild roles at startup: discord session state is unavailable")
+		return
+	}
+
+	guilds := s.State.Guilds
+	slog.Info("syncing guild roles at startup", "numGuilds", len(guilds))
+
+	for _, discordGuild := range guilds {
+		if discordGuild == nil {
+			continue
+		}
+
+		server := GetGuild(discordGuild.ID)
+		if server == nil {
+			slog.Warn("unable to sync guild roles at startup: guild config unavailable", "guildID", discordGuild.ID)
+			continue
+		}
+
+		guildRoles := SyncGuildRoles(s, discordGuild.ID)
+		if guildRoles == nil {
+			slog.Warn("unable to sync guild roles at startup: role cache unavailable", "guildID", discordGuild.ID)
+			continue
+		}
+
+		server.UpdateAdminRolesToIDs(guildRoles)
+	}
+
+	slog.Info("finished syncing guild roles at startup", "numGuilds", len(guilds))
+}
+
 // GetGuildRoles returns the list of roles for a guild.
 func GetGuildRoles(s *discordgo.Session, guildID string) []*discordgo.Role {
 	guildRoles, err := s.GuildRoles(guildID)
@@ -163,7 +197,7 @@ func GetGuildRole(s *discordgo.Session, guildID string, roleName string) *discor
 	return nil
 }
 
-// GetMemberRoles returns the list of roles names for a member with the given set of role IDs
+// GetMemberRoles returns the list of role names for a member with the given set of role IDs
 func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
 	roleNamesByID := make(map[string]string, len(guildRoles))
 	for _, role := range guildRoles {
@@ -259,7 +293,13 @@ func CheckAdminRole(adminRoleIDs []string, memberRoleIDs []string) bool {
 // It returns true if the member has any admin role in the server.
 // It returns false if the member does not have any admin role.
 func IsAdmin(s *discordgo.Session, guildID string, memberID string) bool {
-	SyncGuildRoles(s, guildID)
+	guildRoles := SyncGuildRoles(s, guildID)
+
+	server := GetGuild(guildID)
+	if server != nil {
+		server.UpdateAdminRolesToIDs(guildRoles)
+	}
+
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {
 		slog.Error("failed to get guild member", "guildID", guildID, "memberID", memberID, "error", err)

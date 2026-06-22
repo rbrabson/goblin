@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"maps"
 	"os"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/disgomsg"
@@ -32,6 +33,7 @@ var (
 	commandHandlers         = make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
 	commands                = make([]*discordgo.ApplicationCommand, 0, 2)
 	customComponentHandlers = make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
+	startupRoleSyncOnce     sync.Once
 )
 
 // Bot is a Discord bot which is capable of running multiple services, each of which
@@ -79,6 +81,10 @@ func NewBot(botName string, version string, revision string) *Bot {
 			slog.String("version", Version),
 			slog.String("revision", Revision),
 		)
+
+		startupRoleSyncOnce.Do(func() {
+			go guild.SyncAllGuildRoles(s)
+		})
 	})
 
 	db = mongo.NewDatabase()

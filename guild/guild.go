@@ -173,6 +173,67 @@ func (guild *Guild) GetAdminRoleIDs() []string {
 	return adminRoles
 }
 
+// UpdateAdminRolesToIDs updates admin roles from role names to role IDs.
+func (guild *Guild) UpdateAdminRolesToIDs(guildRoles *GuildRoles) {
+	guildLock.Lock()
+	defer guildLock.Unlock()
+
+	if guildRoles == nil {
+		slog.Warn("unable to update admin roles to IDs: guild roles are nil", "guildID", guild.GuildID)
+		return
+	}
+
+	guild.refresh()
+
+	roleIDs := make(map[string]struct{}, len(guildRoles.Roles))
+	roleIDsByName := make(map[string]string, len(guildRoles.Roles))
+	for _, role := range guildRoles.Roles {
+		roleIDs[role.RoleID] = struct{}{}
+		roleIDsByName[role.RoleName] = role.RoleID
+	}
+
+	updatedAdminRoles := make([]string, 0, len(guild.AdminRoles))
+	changed := false
+
+	for _, adminRole := range guild.AdminRoles {
+		if _, ok := roleIDs[adminRole]; ok {
+			if !slices.Contains(updatedAdminRoles, adminRole) {
+				updatedAdminRoles = append(updatedAdminRoles, adminRole)
+			}
+			continue
+		}
+
+		roleID, ok := roleIDsByName[adminRole]
+		if !ok {
+			slog.Warn("admin role name was not found during role ID migration",
+				"guildID", guild.GuildID,
+				"roleName", adminRole,
+			)
+			if !slices.Contains(updatedAdminRoles, adminRole) {
+				updatedAdminRoles = append(updatedAdminRoles, adminRole)
+			}
+			continue
+		}
+
+		changed = true
+		if !slices.Contains(updatedAdminRoles, roleID) {
+			updatedAdminRoles = append(updatedAdminRoles, roleID)
+		}
+	}
+
+	if !changed {
+		return
+	}
+
+	guild.AdminRoles = updatedAdminRoles
+	if err := writeGuild(guild); err != nil {
+		slog.Error("failed to migrate admin roles to role IDs", "guildID", guild.GuildID, "error", err)
+		return
+	}
+
+	slog.Info("migrated admin roles to role IDs", "guildID", guild.GuildID, "adminRoles", guild.AdminRoles)
+}
+
 // String returns a string representation of the guild.
 func (guild *Guild) String() string {
 	return fmt.Sprintf("Guild{guildID = %s, adminRoles = %v}", guild.GuildID, guild.AdminRoles)
