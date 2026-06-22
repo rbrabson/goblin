@@ -156,15 +156,15 @@ func SyncAllGuildRoles(s *discordgo.Session) {
 			continue
 		}
 
-		server := GetGuild(discordGuild.ID)
-		if server == nil {
-			slog.Warn("unable to sync guild roles at startup: guild config unavailable", "guildID", discordGuild.ID)
-			continue
-		}
-
 		guildRoles := SyncGuildRoles(s, discordGuild.ID)
 		if guildRoles == nil {
 			slog.Warn("unable to sync guild roles at startup: role cache unavailable", "guildID", discordGuild.ID)
+			continue
+		}
+
+		server := GetGuild(discordGuild.ID)
+		if server == nil {
+			slog.Warn("unable to sync guild roles at startup: guild config unavailable", "guildID", discordGuild.ID)
 			continue
 		}
 

@@ -199,19 +199,19 @@ func (guild *Guild) UpdateAdminRolesToIDs(guildRoles *GuildRoles) {
 		if _, ok := roleIDs[adminRole]; ok {
 			if !slices.Contains(updatedAdminRoles, adminRole) {
 				updatedAdminRoles = append(updatedAdminRoles, adminRole)
+			} else {
+				changed = true
 			}
 			continue
 		}
 
 		roleID, ok := roleIDsByName[adminRole]
 		if !ok {
-			slog.Warn("admin role name was not found during role ID migration",
+			slog.Warn("unable to convert admin role to role ID; pruning missing role",
 				"guildID", guild.GuildID,
-				"roleName", adminRole,
+				"adminRole", adminRole,
 			)
-			if !slices.Contains(updatedAdminRoles, adminRole) {
-				updatedAdminRoles = append(updatedAdminRoles, adminRole)
-			}
+			changed = true
 			continue
 		}
 
