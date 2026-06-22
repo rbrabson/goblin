@@ -75,6 +75,9 @@ func NewBot(botName string, version string, revision string) *Bot {
 	}
 	bot.Session.Identify.Intents = botIntents
 
+	db = mongo.NewDatabase()
+	guild.SetDB(db)
+
 	bot.Session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		slog.Info("Bot is up!",
 			slog.String("bot", BotName),
@@ -87,8 +90,57 @@ func NewBot(botName string, version string, revision string) *Bot {
 		})
 	})
 
-	db = mongo.NewDatabase()
-	guild.SetDB(db)
+	bot.Session.AddHandler(func(s *discordgo.Session, g *discordgo.GuildCreate) {
+		if g == nil || g.Guild == nil {
+			slog.Warn("unable to handle guild create event: guild is nil")
+			return
+		}
+
+		slog.Info("guild create event received", "guildID", g.ID, "guildName", g.Name)
+		go guild.SyncGuildAdminRoles(s, g.ID)
+	})
+
+	bot.Session.AddHandler(func(s *discordgo.Session, r *discordgo.GuildRoleCreate) {
+		if r == nil || r.Role == nil {
+			slog.Warn("unable to handle guild role create event: role is nil")
+			return
+		}
+
+		slog.Info("guild role create event received",
+			"guildID", r.GuildID,
+			"roleID", r.Role.ID,
+			"roleName", r.Role.Name,
+		)
+		go guild.SyncGuildAdminRoles(s, r.GuildID)
+	})
+
+	bot.Session.AddHandler(func(s *discordgo.Session, r *discordgo.GuildRoleUpdate) {
+		if r == nil || r.Role == nil {
+			slog.Warn("unable to handle guild role update event: role is nil")
+			return
+		}
+
+		slog.Info("guild role update event received",
+			"guildID", r.GuildID,
+			"roleID", r.Role.ID,
+			"roleName", r.Role.Name,
+		)
+		go guild.SyncGuildAdminRoles(s, r.GuildID)
+	})
+
+	bot.Session.AddHandler(func(s *discordgo.Session, r *discordgo.GuildRoleDelete) {
+		if r == nil {
+			slog.Warn("unable to handle guild role delete event: event is nil")
+			return
+		}
+
+		slog.Info("guild role delete event received",
+			"guildID", r.GuildID,
+			"roleID", r.RoleID,
+		)
+		go guild.SyncGuildAdminRoles(s, r.GuildID)
+	})
+
 	for _, plugin := range ListPlugin() {
 		plugin.Initialize(bot, db)
 		slog.Info("initialized plugin",

@@ -140,6 +140,33 @@ func SyncGuildRoles(s *discordgo.Session, guildID string) *GuildRoles {
 	return guildRoles
 }
 
+// SyncGuildAdminRoles refreshes a guild's role cache and migrates admin roles from role names to role IDs.
+// Missing admin roles are pruned by UpdateAdminRolesToIDs.
+func SyncGuildAdminRoles(s *discordgo.Session, guildID string) {
+	if s == nil {
+		slog.Warn("unable to sync guild admin roles: discord session is nil", "guildID", guildID)
+		return
+	}
+	if guildID == "" {
+		slog.Warn("unable to sync guild admin roles: guild ID is empty")
+		return
+	}
+
+	guildRoles := SyncGuildRoles(s, guildID)
+	if guildRoles == nil {
+		slog.Warn("unable to sync guild admin roles: role cache unavailable", "guildID", guildID)
+		return
+	}
+
+	server := GetGuild(guildID)
+	if server == nil {
+		slog.Warn("unable to sync guild admin roles: guild config unavailable", "guildID", guildID)
+		return
+	}
+
+	server.UpdateAdminRolesToIDs(guildRoles)
+}
+
 // SyncAllGuildRoles refreshes the guild_roles table for every guild the bot is running on.
 // It also migrates guild admin roles from role names to role IDs.
 func SyncAllGuildRoles(s *discordgo.Session) {
@@ -156,19 +183,7 @@ func SyncAllGuildRoles(s *discordgo.Session) {
 			continue
 		}
 
-		guildRoles := SyncGuildRoles(s, discordGuild.ID)
-		if guildRoles == nil {
-			slog.Warn("unable to sync guild roles at startup: role cache unavailable", "guildID", discordGuild.ID)
-			continue
-		}
-
-		server := GetGuild(discordGuild.ID)
-		if server == nil {
-			slog.Warn("unable to sync guild roles at startup: guild config unavailable", "guildID", discordGuild.ID)
-			continue
-		}
-
-		server.UpdateAdminRolesToIDs(guildRoles)
+		SyncGuildAdminRoles(s, discordGuild.ID)
 	}
 
 	slog.Info("finished syncing guild roles at startup", "numGuilds", len(guilds))
