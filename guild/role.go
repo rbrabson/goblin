@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rbrabson/goblin/database/mongo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var (
@@ -18,7 +20,52 @@ func SetDB(database *mongo.MongoDB) {
 	db = database
 }
 
-// GetAdminRoles returns the list of admin roles for a given guild.
+// GuildRoles is the cached Discord role list for a guild.
+type GuildRoles struct {
+	ID       bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	GuildID  string        `json:"guild_id" bson:"guild_id"`
+	Roles    []*GuildRole  `json:"roles" bson:"roles"`
+	SyncedAt time.Time     `json:"synced_at" bson:"synced_at"`
+	Version  int           `json:"version" bson:"version"`
+}
+
+// GuildRole is a Discord role cached for slash command display and ID lookups.
+type GuildRole struct {
+	RoleID   string `json:"role_id" bson:"role_id"`
+	RoleName string `json:"role_name" bson:"role_name"`
+	Position int    `json:"position" bson:"position"`
+}
+
+// Sort keeps roles ordered by Discord position.
+func (guildRoles *GuildRoles) Sort() {
+	slices.SortFunc(guildRoles.Roles, func(a *GuildRole, b *GuildRole) int {
+		return a.Position - b.Position
+	})
+}
+
+// GetRoleName returns a role name by role ID.
+func (guildRoles *GuildRoles) GetRoleName(roleID string) string {
+	for _, role := range guildRoles.Roles {
+		if role.RoleID == roleID {
+			return role.RoleName
+		}
+	}
+
+	return roleID
+}
+
+// GetRoleID returns a role ID by role name.
+func (guildRoles *GuildRoles) GetRoleID(roleName string) string {
+	for _, role := range guildRoles.Roles {
+		if role.RoleName == roleName {
+			return role.RoleID
+		}
+	}
+
+	return ""
+}
+
+// GetAdminRoles returns the list of admin role names for a given guild.
 // If the guild is not found, it returns nil.
 // If there are no admin roles, it returns an empty slice.
 func GetAdminRoles(guildID string) []string {
@@ -28,6 +75,118 @@ func GetAdminRoles(guildID string) []string {
 	}
 
 	return server.GetAdminRoles()
+}
+
+// GetAdminRoleIDs returns the list of admin role IDs for a given guild.
+func GetAdminRoleIDs(guildID string) []string {
+	server := GetGuild(guildID)
+	if server == nil {
+		return nil
+	}
+
+	return server.GetAdminRoleIDs()
+}
+
+// GetCachedGuildRoles returns cached roles for a guild, sorted by position.
+func GetCachedGuildRoles(guildID string) *GuildRoles {
+	guildRoles := readGuildRoles(guildID)
+	if guildRoles == nil {
+		return &GuildRoles{
+			GuildID: guildID,
+			Roles:   []*GuildRole{},
+		}
+	}
+
+	guildRoles.Sort()
+	return guildRoles
+}
+
+// SyncGuildRoles refreshes the guild_roles table from Discord.
+func SyncGuildRoles(s *discordgo.Session, guildID string) *GuildRoles {
+	roles := GetGuildRoles(s, guildID)
+	if roles == nil {
+		return GetCachedGuildRoles(guildID)
+	}
+
+	guildRoles := &GuildRoles{
+		GuildID:  guildID,
+		Roles:    make([]*GuildRole, 0, len(roles)),
+		SyncedAt: time.Now(),
+	}
+
+	for _, role := range roles {
+		guildRoles.Roles = append(guildRoles.Roles, &GuildRole{
+			RoleID:   role.ID,
+			RoleName: role.Name,
+			Position: role.Position,
+		})
+	}
+
+	guildRoles.Sort()
+
+	current := readGuildRoles(guildID)
+	if current != nil {
+		guildRoles.ID = current.ID
+		guildRoles.Version = current.Version + 1
+	} else {
+		guildRoles.Version = 1
+	}
+
+	if err := writeGuildRoles(guildRoles); err != nil {
+		slog.Error("failed to sync guild roles", "guildID", guildID, "error", err)
+		return current
+	}
+
+	return guildRoles
+}
+
+// SyncGuildAdminRoles refreshes a guild's role cache and migrates admin roles from role names to role IDs.
+// Missing admin roles are pruned by UpdateAdminRolesToIDs.
+func SyncGuildAdminRoles(s *discordgo.Session, guildID string) {
+	if s == nil {
+		slog.Warn("unable to sync guild admin roles: discord session is nil", "guildID", guildID)
+		return
+	}
+	if guildID == "" {
+		slog.Warn("unable to sync guild admin roles: guild ID is empty")
+		return
+	}
+
+	guildRoles := SyncGuildRoles(s, guildID)
+	if guildRoles == nil {
+		slog.Warn("unable to sync guild admin roles: role cache unavailable", "guildID", guildID)
+		return
+	}
+
+	server := GetGuild(guildID)
+	if server == nil {
+		slog.Warn("unable to sync guild admin roles: guild config unavailable", "guildID", guildID)
+		return
+	}
+
+	server.UpdateAdminRolesToIDs(guildRoles)
+}
+
+// SyncAllGuildRoles refreshes the guild_roles table for every guild the bot is running on.
+// It also migrates guild admin roles from role names to role IDs.
+func SyncAllGuildRoles(s *discordgo.Session) {
+	if s == nil || s.State == nil {
+		slog.Warn("unable to sync guild roles at startup: discord session state is unavailable")
+		return
+	}
+
+	guilds := s.State.Guilds
+	slog.Info("syncing guild roles at startup", "numGuilds", len(guilds))
+
+	for _, discordGuild := range guilds {
+		if discordGuild == nil {
+			continue
+		}
+
+		SyncGuildAdminRoles(s, discordGuild.ID)
+	}
+
+	slog.Info("finished syncing guild roles at startup", "numGuilds", len(guilds))
 }
 
 // GetGuildRoles returns the list of roles for a guild.
@@ -53,7 +212,7 @@ func GetGuildRole(s *discordgo.Session, guildID string, roleName string) *discor
 	return nil
 }
 
-// GetMemberRoles returns the list of roles names for a member with the given set of role IDs
+// GetMemberRoles returns the list of role names for a member with the given set of role IDs
 func GetMemberRoles(guildRoles []*discordgo.Role, roleIDs []string) []string {
 	roleNamesByID := make(map[string]string, len(guildRoles))
 	for _, role := range guildRoles {
@@ -93,15 +252,10 @@ func MemberHasRole(s *discordgo.Session, guildID string, memberID string, role *
 }
 
 // AssignRole assigns a role to the member in the guild.
+// AssignRole assigns a role to the member in the guild.
 func AssignRole(s *discordgo.Session, guildID string, memberID string, roleName string) error {
-	guildRoles := GetGuildRoles(s, guildID)
-	roleID := ""
-	for _, role := range guildRoles {
-		if role.Name == roleName {
-			roleID = role.ID
-			break
-		}
-	}
+	guildRoles := SyncGuildRoles(s, guildID)
+	roleID := guildRoles.GetRoleID(roleName)
 	if roleID == "" {
 		err := fmt.Errorf("role %q not found", roleName)
 		slog.Error("role not found", "guildID", guildID, "roleName", roleName, "guildRoles", guildRoles)
@@ -119,14 +273,8 @@ func AssignRole(s *discordgo.Session, guildID string, memberID string, roleName 
 
 // UnAssignRole removes a role to the member in the guild.
 func UnAssignRole(s *discordgo.Session, guildID string, memberID string, roleName string) error {
-	guildRoles := GetGuildRoles(s, guildID)
-	roleID := ""
-	for _, role := range guildRoles {
-		if role.Name == roleName {
-			roleID = role.ID
-			break
-		}
-	}
+	guildRoles := SyncGuildRoles(s, guildID)
+	roleID := guildRoles.GetRoleID(roleName)
 	if roleID == "" {
 		err := fmt.Errorf("role %q not found", roleName)
 		slog.Error("role not found", "guildID", guildID, "roleName", roleName, "guildRoles", guildRoles)
@@ -143,13 +291,13 @@ func UnAssignRole(s *discordgo.Session, guildID string, memberID string, roleNam
 }
 
 // CheckAdminRole checks if a member has any admin role in the server.
-func CheckAdminRole(adminRoles []string, memberRoles []string) bool {
-	if len(adminRoles) == 0 {
+func CheckAdminRole(adminRoleIDs []string, memberRoleIDs []string) bool {
+	if len(adminRoleIDs) == 0 {
 		return true
 	}
 
-	for _, memberRole := range memberRoles {
-		if slices.Contains(adminRoles, memberRole) {
+	for _, memberRoleID := range memberRoleIDs {
+		if slices.Contains(adminRoleIDs, memberRoleID) {
 			return true
 		}
 	}
@@ -160,16 +308,21 @@ func CheckAdminRole(adminRoles []string, memberRoles []string) bool {
 // It returns true if the member has any admin role in the server.
 // It returns false if the member does not have any admin role.
 func IsAdmin(s *discordgo.Session, guildID string, memberID string) bool {
-	guildRoles := GetGuildRoles(s, guildID)
+	guildRoles := SyncGuildRoles(s, guildID)
+
+	server := GetGuild(guildID)
+	if server != nil {
+		server.UpdateAdminRolesToIDs(guildRoles)
+	}
+
 	member, err := s.GuildMember(guildID, memberID)
 	if err != nil {
 		slog.Error("failed to get guild member", "guildID", guildID, "memberID", memberID, "error", err)
 		return false
 	}
-	memberRoles := GetMemberRoles(guildRoles, member.Roles)
-	adminRoles := GetAdminRoles(guildID)
-	isAdmin := CheckAdminRole(adminRoles, memberRoles)
-	slog.Debug("isAdmin", "guildID", guildID, "memberID", memberID, "isAdmin", isAdmin, "adminRoles", adminRoles, "memberRoles", memberRoles)
+	adminRoleIDs := GetAdminRoleIDs(guildID)
+	isAdmin := CheckAdminRole(adminRoleIDs, member.Roles)
+	slog.Debug("isAdmin", "guildID", guildID, "memberID", memberID, "isAdmin", isAdmin, "adminRoleIDs", adminRoleIDs, "memberRoleIDs", member.Roles)
 
 	return isAdmin
 }

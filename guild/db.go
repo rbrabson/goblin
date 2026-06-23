@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	GuildCollection  = "guilds"
-	MemberCollection = "guild_members"
+	GuildCollection      = "guilds"
+	GuildRolesCollection = "guild_roles"
+	MemberCollection     = "guild_members"
 )
 
 // readMember reads the member from the database and returns the value, if it exists, or returns nil if the
@@ -60,6 +61,32 @@ func writeGuild(guild *Guild) error {
 	err := db.UpdateOrInsert(GuildCollection, filter, guild)
 	if err != nil {
 		slog.Error("unable to save guild to the database", "guildID", guild.GuildID, "error", err)
+		return err
+	}
+
+	return nil
+}
+
+// readGuildRoles gets the role cache for a guild from the database.
+func readGuildRoles(guildID string) *GuildRoles {
+	filter := bson.M{"guild_id": guildID}
+	var guildRoles GuildRoles
+	err := db.FindOne(GuildRolesCollection, filter, &guildRoles)
+	if err != nil {
+		slog.Debug("guild roles not found in the database", "guildID", guildID, "error", err)
+		return nil
+	}
+
+	guildRoles.Sort()
+	return &guildRoles
+}
+
+// writeGuildRoles creates or updates the guild role cache in the database.
+func writeGuildRoles(guildRoles *GuildRoles) error {
+	filter := bson.M{"guild_id": guildRoles.GuildID}
+	err := db.UpdateOrInsert(GuildRolesCollection, filter, guildRoles)
+	if err != nil {
+		slog.Error("unable to save guild roles to the database", "guildID", guildRoles.GuildID, "error", err)
 		return err
 	}
 
